@@ -6,7 +6,7 @@ Ludl_la_LIBADD = ../../MMDevice/.libs/libMMDevice.a
 Ludl_la_LDFLAGS = -module
 
 install:
-	cp .libs/Ludl.so $(DEVICEADAPTERPATH)/$(MMPREFIX)$(thislib)$(MMSUFFIX)
+	cp .libs/Ludl.so $(DEVICEADAPTERPATH)/$(MMPREFIX)Ludl$(MMSUFFIX)
 
 install-strip:
 	cp .libs/$(MMPREFIX)Ludl.so $(DEVICEADAPTERPATH)/Ludl$(MMSUFFIX)
