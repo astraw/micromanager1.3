@@ -504,10 +504,6 @@ int Shutter::Initialize()
    AddAllowedValue(MM::g_Keyword_State, "0");
    AddAllowedValue(MM::g_Keyword_State, "1");
 
-   ret = UpdateStatus();
-   if (ret != DEVICE_OK)
-      return ret;
-
    // Shutter mode
    // ------------
    pAct = new CPropertyAction (this, &Shutter::OnMode);
@@ -515,7 +511,7 @@ int Shutter::Initialize()
    modes.push_back(g_FastMode);
    modes.push_back(g_SoftMode);
 
-   CreateProperty(g_ShutterModeProperty, g_FastMode, MM::String, false, pAct, true);
+   CreateProperty(g_ShutterModeProperty, g_FastMode, MM::String, false, pAct);
    SetAllowedValues(g_ShutterModeProperty, modes);
 
    // Transfer to On Line
@@ -526,6 +522,11 @@ int Shutter::Initialize()
 
    // set initial values
    SetProperty(g_ShutterModeProperty, curMode_.c_str());
+
+   ret = UpdateStatus();
+   if (ret != DEVICE_OK)
+      return ret;
+
 
    // Needed for Busy flag
    changedTime_ = GetCurrentMMTime();
