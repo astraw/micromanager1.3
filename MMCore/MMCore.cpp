@@ -154,6 +154,7 @@ CMMCore::CMMCore() :
    errorText_[MMERR_CircularBufferFailedToInitialize] = "Failed to intialize circular buffer - memory requirements not adequate.";
    errorText_[MMERR_CircularBufferEmpty] = "Circular buffer is empty.";
    errorText_[MMERR_ContFocusNotAvailable] = "Auto-focus focus device not defined.";
+   errorText_[MMERR_BadConfigName] = "Configuration name contains illegale characters (/\\*!')";
 
    // open the log output stream
    logStream_= new std::ofstream();
@@ -2770,8 +2771,10 @@ void CMMCore::deleteConfigGroup(const char* groupName) throw (CMMError)
  * @param propName property name
  * @param value property value
  */
-void CMMCore::defineConfig(const char* groupName, const char* configName, const char* deviceLabel, const char* propName, const char* value)
+void CMMCore::defineConfig(const char* groupName, const char* configName, const char* deviceLabel, const char* propName, const char* value) throw (CMMError)
 {
+   if (strcspn(configName, "/\\*!'") != strlen(configName))
+      throw CMMError(configName, getCoreErrorText(MMERR_BadConfigName).c_str(), MMERR_BadConfigName);
    configGroups_->Define(groupName, configName, deviceLabel, propName, value);
    ostringstream txt;
    txt << groupName << "/" << configName;

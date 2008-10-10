@@ -193,7 +193,7 @@ public:
     * A single configuration applies to multiple devices at the same time.
     */
    //@ {
-   void defineConfig(const char* groupName, const char* configName, const char* deviceName, const char* propName, const char* value);
+   void defineConfig(const char* groupName, const char* configName, const char* deviceName, const char* propName, const char* value) throw (CMMError);
    void defineConfigGroup(const char* groupName) throw (CMMError);
    void deleteConfigGroup(const char* groupName) throw (CMMError);
    bool isGroupDefined(const char* groupName);
