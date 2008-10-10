@@ -18,6 +18,9 @@ endif
 if BUILD_DC1394
    DC1394 = dc1394
 endif
+if BUILD_NIDAQ
+   NIDAQ = NIDAQ
+endif
 if BUILD_K8055
    K8055 = K8055
 endif
@@ -28,5 +31,5 @@ if BUILD_USBMANAGER
    USBMANAGER = USBManager 
 endif
 
-SUBDIRS =  AOTF Andor ASIFW1000 ASIStage DAZStage DAShutter DTOpenLayer DemoCamera DemoStreamingCamera SerialManager SerialManagerUNIX Ludl LudlLow PI PI_GCS Prior ParallelPort Pecon Sensicam ZeissCAN ZeissCAN29 Vincent Conix $(HAMAMATSU) $(PVCAM) $(QCAM) MultiShutter NikonTE2000 $(TE2000) $(AZ100) $(K8055) $(K8061) NIDAQ $(USBMANAGER) Nikon StanfordPhotonics SpectralLMM5 SutterLambda $(DC1394) Yokogawa
+SUBDIRS =  AOTF Andor ASIFW1000 ASIStage DAZStage DAShutter DTOpenLayer DemoCamera DemoStreamingCamera SerialManager SerialManagerUNIX Ludl LudlLow PI PI_GCS Prior ParallelPort Pecon Sensicam ZeissCAN ZeissCAN29 Vincent Conix $(HAMAMATSU) $(PVCAM) $(QCAM) MultiShutter NikonTE2000 $(TE2000) $(AZ100) $(K8055) $(K8061) $(NIDAQ) $(USBMANAGER) Nikon StanfordPhotonics SpectralLMM5 SutterLambda $(DC1394) Yokogawa
 

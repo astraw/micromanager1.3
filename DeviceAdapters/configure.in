@@ -8,12 +8,7 @@ AC_CONFIG_SRCDIR([DemoCamera/DemoCamera.cpp])
 AC_CANONICAL_HOST
 AM_INIT_AUTOMAKE
 
-
 m4_include([../configure.common])
-
-
-
-
 
 
 # Checks for header files.
@@ -49,6 +44,15 @@ fi
 AC_MSG_CHECKING(for libdc1394)
 AM_CONDITIONAL([BUILD_DC1394],[test -f "/usr/local/include/dc1394/control.h"])
 if test -z "${BUILD_DC1394}" ; then
+   AC_MSG_RESULT([found])
+else
+   AC_MSG_RESULT([not found])
+fi
+
+# and for National Instrumenst boards 
+AC_MSG_CHECKING(for NIDaQ)
+AM_CONDITIONAL([BUILD_NIDAQ],[test -f "../../../3rdParty/trunk/NationalInstruments/NI-DAQmxBase/includes/NIDAQmxBase.h"])
+if test -z "${BUILD_NIDAQ}" ; then
    AC_MSG_RESULT([found])
 else
    AC_MSG_RESULT([not found])

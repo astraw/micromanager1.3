@@ -7,16 +7,9 @@ AC_INIT([Micro-Manager], 1.2.0, info@micro-manager.org)
 AC_CONFIG_SRCDIR([MMCore/MMCore.cpp])
 AC_CANONICAL_HOST
 AM_INIT_AUTOMAKE
-
 AC_LIBTOOL_DLOPEN
 
-#AC_PROG_CXX
-#AC_PROG_CC
-#AC_PROG_LIBTOOL
-
 m4_include([configure.common])
-
-
 
 #----------------------------------------------------------------
 # Look for java binaries and headers
@@ -97,11 +90,6 @@ AC_SUBST(JAVACXXSHARED)
 AC_SUBST(JAVACFLAGS)
 AC_SUBST(I5DJARPATH)
 
-
-
-
-
-
 # Checks for programs.
 AC_CHECK_PROGS(SWIG, swig)
 if test "$SWIG" = "" ; then
@@ -123,7 +111,12 @@ AC_C_INLINE
 AC_HEADER_STDC
 AC_CHECK_FUNCS([memset])
 
+# Check for Device Adapters with proprietary code
+AC_MSG_CHECKING(for proprietary DeviceAdapters)
+AM_CONDITIONAL(BUILD_SECRETDEVICEADAPTERS, test -f "SecretDeviceAdapters/configure.in")
+if test -z "${BUILD_SECRETDEVICEADAPTERS}" ; then
+   AC_CONFIG_SUBDIRS([SecretDeviceAdapters])
+fi
 
-# AC_CONFIG_FILES([Makefile])
 AC_CONFIG_SUBDIRS(DeviceAdapters)
 AC_OUTPUT(Makefile ModuleTest/Makefile MMCore/Makefile MMCoreJ_wrap/Makefile Test_MMCore/Makefile Test_Serial/Makefile mmstudio/Makefile Tracking/Makefile Bleach/Makefile autofocus/Makefile MMDevice/Makefile bin/Makefile)
