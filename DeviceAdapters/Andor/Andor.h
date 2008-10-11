@@ -38,6 +38,7 @@
 #define _ANDOR_H_
 
 #include "../../MMDevice/DeviceBase.h"
+#include "../../MMDevice/MMDevice.h"
 #include "../../MMDevice/ImgBuffer.h"
 #include "../../MMDevice/DeviceUtils.h"
 #include "../../MMDevice/DeviceThreads.h"
@@ -250,11 +251,20 @@ class AcqSequenceThread : public MMDeviceThreadBase
 {
 public:
    AcqSequenceThread(Ixon* pCam) : 
-      intervalMs_(100.0), numImages_(1), busy_(false), stop_(false) {camera_ = pCam;}
+      intervalMs_(100.0), 
+      numImages_(1),
+      waitTime_(10),
+      busy_(false), 
+      stop_(false) 
+   {
+      camera_ = pCam;
+   };
    ~AcqSequenceThread() {}
+ 
    int svc(void);
 
    void SetInterval(double intervalMs) {intervalMs_ = intervalMs;}
+   void SetWaitTime (long waitTime) { waitTime_ = waitTime;}
    void SetLength(long images) {numImages_ = images;}
    void Stop() {stop_ = true;}
    void Start() {stop_ = false; activate();}
@@ -263,6 +273,7 @@ private:
    Ixon* camera_;
    double intervalMs_;
    long numImages_;
+   long waitTime_;
    bool busy_;
    bool stop_;
 };
