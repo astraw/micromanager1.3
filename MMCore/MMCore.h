@@ -243,6 +243,7 @@ public:
    bool getAutoShutter();
    void setShutterOpen(bool state) throw (CMMError);
    bool getShutterOpen() throw (CMMError);
+
    void startSequenceAcquisition(long numImages, double intervalMs) throw (CMMError);
    void stopSequenceAcquisition() throw (CMMError);
    void* getLastImage() const throw (CMMError);
@@ -261,7 +262,7 @@ public:
    double getBufferIntervalMs() const;
    bool isBufferOverflowed() const;
    void setCircularBufferMemoryFootprint(unsigned sizeMB) throw (CMMError);
-   //@ }
+  //@ }
 
    /** @name Auto-focusing
     * API for controlling auto-focusing devices or software modules.

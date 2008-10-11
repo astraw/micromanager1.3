@@ -8,9 +8,9 @@
 
 	<!-- Specify the system path to the ImageJ root directory -->
 	<property name="ImageJPath" value="C:/Program Files/ImageJ"/>
-	<property name="InstallRoot" value="C:/projects/micromanager2/Install/micro-manager-S-1.2"/>
-	<property name="InstallScripts" value="C:/projects/micromanager2/Install"/>
-	<property name="NativeRoot" value="C:\projects\micromanager2\MMCoreJ_wrap"/>
+	<property name="InstallRoot" value="C:/projects/micromanager1.3/Install/micro-manager-1.3"/>
+	<property name="InstallScripts" value="C:/projects/micromanager1.3/Install"/>
+	<property name="NativeRoot" value="C:\projects\micromanager1.3\MMCoreJ_wrap"/>
 
 	<!-- Do not modify from this point on -->
 	<property name="MMPluginDir" value="${ImageJPath}/plugins/Micro-Manager"/>
@@ -160,15 +160,5 @@
 			<arg line="/F${InstallerName} ${InstallScripts}/MM-ImageJ-Install.iss"/>
 		</exec>
 	</target>
-
-	<target name="buildNative" description="Build native dlls">
-		<exec dir="C:\Program Files\Microsoft Visual Studio .NET 2003\Common7\Tools" executable="cmd">
-			<arg line="/k vsvars32.bat"/>
-		</exec>
-		<exec dir="${NativeRoot}" executable="devenv.exe">
-			<arg line="MMCoreJ_wrap.sln /REBUILD Release"/>
-		</exec>
-	</target>
-
 
 </project>

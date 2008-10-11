@@ -39,6 +39,11 @@ int CoreCallback::InsertImage(const MM::Device* /*caller*/, const unsigned char*
       return DEVICE_BUFFER_OVERFLOW;
 }
 
+void CoreCallback::ClearImageBuffer(const MM::Device* /*caller*/)
+{
+   core_->cbuf_->Clear();
+}
+
 int CoreCallback::InsertMultiChannel(const MM::Device* /*caller*/,
                               const unsigned char* buf,
                               unsigned numChannels,
