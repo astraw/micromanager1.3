@@ -5,6 +5,7 @@ response = acq.installAutofocusPlugin("Autofocus_");
 mmc.logMessage(response);
 
 // load plugins
+// 100X imaging High COntent Screening Plugin
 response = gui.installPlugin("com.imaging100x.hcs.PlateEditor", "HCS Plate...");
 mmc.logMessage(response);
 

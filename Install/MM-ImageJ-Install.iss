@@ -98,7 +98,10 @@ Source: micro-manager-1.3\ImageJ.exe; DestDir: {app}; Flags: ignoreversion
 Source: micro-manager-1.3\ij.jar; DestDir: {app}; Flags: ignoreversion
 Source: micro-manager-1.3\IJ_Prefs.txt; DestDir: {app}; Flags: onlyifdoesntexist
 Source: micro-manager-1.3\macros\*; DestDir: {app}\macros; Flags: ignoreversion recursesubdirs createallsubdirs
-Source: micro-manager-1.3\plugins\*; DestDir: {app}\plugins; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: micro-manager-1.3\plugins\Micro-Manager\bsh-2.0b4.jar; DestDir: {app}\plugins\MicroManager; Flags: ignoreversion
+Source: micro-manager-1.3\plugins\Micro-Manager\MMCoreJ.jar; DestDir: {app}\plugins\MicroManager; Flags: ignoreversion
+Source: micro-manager-1.3\plugins\Micro-Manager\MMJ_.jar; DestDir: {app}\plugins\MicroManager; Flags: ignoreversion
+Source: micro-manager-1.3\plugins\Micro-Manager\MMAutofocus_.jar; DestDir: {app}\plugins\MicroManager; Flags: ignoreversion
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]
