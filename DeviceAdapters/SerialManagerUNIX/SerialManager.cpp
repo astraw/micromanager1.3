@@ -732,7 +732,7 @@ void SerialPortLister::ListCurrentPorts(std::vector<std::string> &availablePorts
 void SerialPortLister::ListSerialPorts(std::vector<std::string> &availablePorts)
 {
 #ifdef WIN32
-   // WIndows has its port names pre-defined:
+   // WIndows has its port names pre-defined (I guess this code can go):
    availablePorts.push_back("COM1");
    availablePorts.push_back("COM2");
    availablePorts.push_back("COM3");
@@ -741,9 +741,15 @@ void SerialPortLister::ListSerialPorts(std::vector<std::string> &availablePorts)
    availablePorts.push_back("COM6");
    availablePorts.push_back("COM7");
    availablePorts.push_back("COM8");
-#endif
+#endif // Windows
 
-//TODO: Need port discovery code for linus
+#ifdef linux
+//TODO: do runtime discovery.  Figure out situation with USB serial ports on linux
+availablePorts_.push_back("/dev/ttyS0");
+availablePorts_.push_back("/dev/ttyS1");
+availablePorts_.push_back("/dev/ttyS2");
+availablePorts_.push_back("/dev/ttyS3");
+#endif // linux
    
 #ifdef __APPLE__    
    // port discovery code for Darwin/Mac OS X
