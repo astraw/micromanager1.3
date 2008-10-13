@@ -160,6 +160,7 @@ public:
    int InsertMultiChannel(const MM::Device* caller, const unsigned char* buf, unsigned numChannels, unsigned width, unsigned height, unsigned byteDepth, MM::ImageMetadata* pMd = 0);
    void SetAcqStatus(const MM::Device* caller, int statusCode);
    void ClearImageBuffer(const MM::Device* caller);
+   bool InitializeImageBuffer(unsigned channels, unsigned slices, unsigned int w, unsigned int h, unsigned int pixDepth);
 
    int OpenFrame(const MM::Device* caller);
    int CloseFrame(const MM::Device* caller);

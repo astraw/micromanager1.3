@@ -157,11 +157,12 @@ namespace MM {
 
    struct ImageMetadata
    {
-      ImageMetadata() : exposureMs(0.0) {}
+      ImageMetadata() : exposureMs(0.0), ZUm(0.0) {}
       ImageMetadata(MMTime& time, double expMs) : exposureMs(expMs), timestamp(time) {}
 
       double exposureMs;
       MMTime timestamp;
+      double ZUm;
    };
 
    /**
@@ -491,6 +492,7 @@ namespace MM {
       virtual int PrepareForAcq(const Device* caller) = 0;
       virtual int InsertImage(const Device* caller, const unsigned char* buf, unsigned width, unsigned height, unsigned byteDepth, ImageMetadata* md = 0) = 0;
       virtual void ClearImageBuffer(const Device* caller) = 0;
+      virtual bool InitializeImageBuffer(unsigned channels, unsigned slices, unsigned int w, unsigned int h, unsigned int pixDepth) = 0;
       virtual int InsertMultiChannel(const Device* caller, const unsigned char* buf, unsigned numChannels, unsigned width, unsigned height, unsigned byteDepth, ImageMetadata* md = 0) = 0;
       virtual void SetAcqStatus(const Device* caller, int statusCode) = 0;
 
