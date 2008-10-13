@@ -135,9 +135,11 @@ public interface ScriptInterface {
 
    /**
     * Executes Acquisition for a single well, using the plate scanning convention and data structure.
-    * Returns after Acquisition finishes
+    * Returns after Acquisition finishes.
+    * @param wad - well acquisition data object
+    * @param incrementalAF - enable or disable incremental autofocusing between imaging sites
     */
-   public void runWellScan(WellAcquisitionData wad) throws MMScriptException;
+   public void runWellScan(WellAcquisitionData wad, boolean incrementalAF) throws MMScriptException;
 
    /**
     * Loads setting for Acquisition Dialog from file

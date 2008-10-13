@@ -108,7 +108,7 @@ public class MMAboutDlg extends JDialog {
       homeHttphcs100ximagingcomBugTextArea.setBorder(new LineBorder(Color.black, 1, false));
       homeHttphcs100ximagingcomBugTextArea.setBackground(new Color(192, 192, 192));
       homeHttphcs100ximagingcomBugTextArea.setFont(new Font("Courier New", Font.PLAIN, 12));
-      homeHttphcs100ximagingcomBugTextArea.setText(" home:               http://hcs.100ximaging.com\r\n bug reports:        bugs@100ximaging.com\r\n feature requests:   features@100ximaging.com\r\n");
+      homeHttphcs100ximagingcomBugTextArea.setText(" home:               http://www.micro-manager.org\r\n bug reports:        bugs@micro-manager.org\r\n feature requests:   features@micro-manager.org\r\n");
       homeHttphcs100ximagingcomBugTextArea.setBounds(5, 219, 368, 47);
       getContentPane().add(homeHttphcs100ximagingcomBugTextArea);
 

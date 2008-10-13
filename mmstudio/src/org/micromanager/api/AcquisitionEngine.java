@@ -100,6 +100,7 @@ public interface AcquisitionEngine {
    public void setPositionMode(int mode);
    public void enableAutoFocus(boolean enabled);
    public boolean isAutoFocusEnabled();
+   public void enableIncrementalAutoFocus(boolean enabled);
    public void setParameterPreferences(Preferences prefs);
    public void setContinuousFocusOffForXYMove(boolean state);
    public void setContinuousFocusOffForZMove(boolean state);

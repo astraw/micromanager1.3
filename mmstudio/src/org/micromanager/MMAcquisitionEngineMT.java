@@ -161,6 +161,7 @@ public class MMAcquisitionEngineMT implements AcquisitionEngine {
    // auto-focus module
    Autofocus autofocusPlugin_ = null;
    boolean autofocusEnabled_ = false;
+   boolean incrementalFocus_ = false;
 
 
    /**
@@ -741,7 +742,12 @@ public class MMAcquisitionEngineMT implements AcquisitionEngine {
 
             // perform auto focusing if the module is available
             if (autofocusPlugin_ != null && autofocusEnabled_) {
-               autofocusPlugin_.fullFocus();
+               if (posIdx == 0 || incrementalFocus_ == false) {
+                  // perform always full focus on the first position in the list
+                  autofocusPlugin_.fullFocus();
+               } else {
+                  autofocusPlugin_.incrementalFocus();
+               }
 
                // update the Z-position based on the autofocus
                if (pos != null)
@@ -1587,5 +1593,9 @@ public class MMAcquisitionEngineMT implements AcquisitionEngine {
 
    public void setFinished() {
       acqFinished_ = true;
+   }
+
+   public void enableIncrementalAutoFocus(boolean enabled) {
+      incrementalFocus_ = enabled;
    }
 }

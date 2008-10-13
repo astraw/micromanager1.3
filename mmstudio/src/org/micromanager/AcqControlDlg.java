@@ -1467,6 +1467,9 @@ public class AcqControlDlg extends JDialog implements PropertyChangeListener {
 
       try {
          applySettings();
+         // disable incremental focusing to ensure performance
+         // consistent with previous versions
+         acqEng_.enableIncrementalAutoFocus(false);
          acqEng_.acquire();
       }  catch (MMAcqDataException e) {
          handleException(e);
@@ -1498,7 +1501,7 @@ public class AcqControlDlg extends JDialog implements PropertyChangeListener {
       }
    }
       
-   public boolean runWellScan(WellAcquisitionData wad) {
+   public boolean runWellScan(WellAcquisitionData wad, boolean incrementalFocus) {
       if (acqEng_.isAcquisitionRunning()) {
          JOptionPane.showMessageDialog(this, "Unable to start the new acquisition task: previous acquisition still in progress.");
          return false;
@@ -1506,6 +1509,7 @@ public class AcqControlDlg extends JDialog implements PropertyChangeListener {
 
       try {
          applySettings();
+         acqEng_.enableIncrementalAutoFocus(incrementalFocus);
          acqEng_.setSaveFiles(true);
          acqEng_.acquireWellScan(wad);
          // wait until acquisition is done
