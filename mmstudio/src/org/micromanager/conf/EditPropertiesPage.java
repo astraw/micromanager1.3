@@ -64,7 +64,6 @@ public class EditPropertiesPage extends PagePanel {
       propTable_.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
       propTable_.setAutoCreateColumnsFromModel(false);
       scrollPane_.setViewportView(propTable_);
-      //
    }
    
    

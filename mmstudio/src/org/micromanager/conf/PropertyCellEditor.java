@@ -26,12 +26,16 @@ package org.micromanager.conf;
 import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 
 import javax.swing.AbstractCellEditor;
 import javax.swing.JComboBox;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.table.TableCellEditor;
+import javax.swing.event.DocumentListener;
+import javax.swing.event.DocumentEvent;
 
 /**
  * In-place table editor for string cells.
@@ -68,12 +72,27 @@ public class PropertyCellEditor extends AbstractCellEditor implements TableCellE
                   fireEditingStopped();
                }
             });
+            text_.getDocument().addDocumentListener(new DocumentListener() {
+               public void changedUpdate (DocumentEvent e) {
+                  fireEditingStopped();
+               }
+               public void insertUpdate (DocumentEvent e) {
+                  fireEditingStopped();
+               }
+               public void removeUpdate (DocumentEvent e) {
+                  fireEditingStopped();
+               }
+            });
+
             return text_;
          }
       
          ActionListener[] l = combo_.getActionListeners();
-         for (int i=0; i<l.length; i++)
+         for (int i=0; i<l.length; i++) 
             combo_.removeActionListener(l[i]);
+         ItemListener[] il = combo_.getItemListeners();
+         for (int i=0; i<il.length; i++) 
+            combo_.removeItemListener(il[i]);
          combo_.removeAllItems();
          for (int i=0; i<item_.allowedValues_.length; i++){
             combo_.addItem(item_.allowedValues_[i]);
@@ -83,6 +102,12 @@ public class PropertyCellEditor extends AbstractCellEditor implements TableCellE
          // end editing on selection change
          combo_.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
+               fireEditingStopped();
+            }
+         });
+         // end editing on selection change
+         combo_.addItemListener(new ItemListener() {
+            public void itemStateChanged(ItemEvent e) {
                fireEditingStopped();
             }
          });
