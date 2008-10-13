@@ -68,20 +68,20 @@ public class MMAboutDlg extends JDialog {
       setResizable(false);
       setModal(true);
       getContentPane().setLayout(null);
-      setTitle("About Micro-Manager-S");
+      setTitle("About Micro-Manager 1.3");
       
       Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
       setLocation(screenSize.width/2 - (winSize.width/2), screenSize.height/2 - (winSize.height/2));
 
       final JLabel micromanageLabel = new JLabel();
       micromanageLabel.setFont(new Font("", Font.BOLD, 16));
-      micromanageLabel.setText("Micro-Manager-S 1.2");
+      micromanageLabel.setText("Micro-Manager 1.3");
       micromanageLabel.setBounds(44, 11, 176, 23);
       getContentPane().add(micromanageLabel);
 
       final JLabel openSourceAutomatedLabel = new JLabel();
       openSourceAutomatedLabel.setFont(new Font("Arial", Font.PLAIN, 10));
-      openSourceAutomatedLabel.setText("The Open Source High Content Screening (HCS) Software");
+      openSourceAutomatedLabel.setText("The Open Source Microscopy Software");
       openSourceAutomatedLabel.setBounds(44, 30, 329, 18);
       getContentPane().add(openSourceAutomatedLabel);
 
