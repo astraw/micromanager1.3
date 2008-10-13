@@ -27,7 +27,7 @@ using namespace std;
 // ImgBuffer class
 //
 ImgBuffer::ImgBuffer(unsigned xSize, unsigned ySize, unsigned pixDepth) :
-   pixels_(0), width_(xSize), height_(ySize), pixDepth_(pixDepth), imageMetadata_(0.0)
+   pixels_(0), width_(xSize), height_(ySize), pixDepth_(pixDepth)
 {
    pixels_ = new unsigned char[xSize * ySize * pixDepth];
    assert(pixels_);
@@ -38,8 +38,7 @@ ImgBuffer::ImgBuffer() :
    pixels_(0),
    width_(0),
    height_(0),
-   pixDepth_(0),
-   imageMetadata_(0)
+   pixDepth_(0)
 {
 }
 
