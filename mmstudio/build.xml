@@ -11,10 +11,10 @@
 	<property name="InstallRoot" value="C:/projects/micromanager1.3/Install/micro-manager-1.3"/>
 	<property name="InstallScripts" value="C:/projects/micromanager1.3/Install"/>
 	<property name="NativeRoot" value="C:/projects\micromanager1.3\MMCoreJ_wrap"/>
-   <property name="ScriptsRoot" value="C:/projects/micromanager1.3/scripts"/>
-   <property name="ScriptsInstall" value="C:/projects/micromanager1.3/Install/micro-manager-1.3/scripts"/>
-   <property name="DriversRoot" value="C:/projects/micromanager1.3/scripts"/>
-   <property name="DriversInstall" value="C:/projects/micromanager1.3/Install/micro-manager-1.3/scripts"/>
+        <property name="ScriptsRoot" value="C:/projects/micromanager1.3/scripts"/>
+        <property name="ScriptsInstall" value="C:/projects/micromanager1.3/Install/micro-manager-1.3/scripts"/>
+        <property name="DriversRoot" value="C:/projects/micromanager1.3/drivers"/>
+        <property name="DriversInstall" value="C:/projects/micromanager1.3/Install/micro-manager-1.3/drivers"/>
 
 	<!-- Do not modify from this point on -->
 	<property name="MMPluginDir" value="${ImageJPath}/plugins/Micro-Manager"/>
@@ -123,7 +123,7 @@
 
 		<copy file="${BinRoot}/MMDeviceList.txt" todir="${InstallRoot}" />
 
-		<!-- <copy file="${BinRoot}/MMStartup.bsh" todir="${InstallRoot}" /> -->
+		<copy file="${BinRoot}/MMStartup.bsh" todir="${InstallRoot}" />
 
 		<copy file="${BinRoot}/conf_intro_page.html" todir="${InstallRoot}" />
 		<copy file="${BinRoot}/conf_comport_page.html" todir="${InstallRoot}" />
@@ -145,8 +145,9 @@
       <copy file="${ScriptsRoot}/live_demo.bsh" todir="${ScriptsInstall}" />
       <copy file="${ScriptsRoot}/manualAcq.bsh" todir="${ScriptsInstall}" />
       <copy file="${ScriptsRoot}/Init.bsh" todir="${ScriptsInstall}" />
-      <copy file="${ScriptsRoot}/config_test.bsh" todir="${ScriptsInstall}" /> 
-      <copy file="${ScriptsRoot}/AutoExpose.bsh" todir="${ScriptsInstall}" />                                 
+      <copy file="${ScriptsRoot}/config_test.bsh" todir="${ScriptsInstall}" />
+      <copy file="${ScriptsRoot}/AutoExpose.bsh" todir="${ScriptsInstall}" />
+
       <copy file="${DriversRoot}/K8055_libusb.inf" todir="${DriversInstall}" />
       <copy file="${DriversRoot}/K8055_libusb.cat" todir="${DriversInstall}" />
       <copy file="${DriversRoot}/K8061_libusb.inf" todir="${DriversInstall}" />
