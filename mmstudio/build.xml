@@ -1,16 +1,20 @@
-<!-- Ant makefile for the Micro-Manager-S 1.2 for Windows distribution -->
-<!-- This file assumes Micro-Manager-S 1.2 project tree structure      -->
+<!-- Ant makefile for the Micro-Manager-1.3 for Windows distribution -->
+<!-- This file assumes Micro-Manager-1.3 project tree structure      -->
 
 <project name="MMJ" default="buildMMStudio">
 
 	<!-- Specify version in the installer name -->
-	<property name="InstallerName" value="MMSetup-S_1_2_xx"/>
+	<property name="InstallerName" value="MMSetup-1_3_xx"/>
 
 	<!-- Specify the system path to the ImageJ root directory -->
 	<property name="ImageJPath" value="C:/Program Files/ImageJ"/>
 	<property name="InstallRoot" value="C:/projects/micromanager1.3/Install/micro-manager-1.3"/>
 	<property name="InstallScripts" value="C:/projects/micromanager1.3/Install"/>
-	<property name="NativeRoot" value="C:\projects\micromanager1.3\MMCoreJ_wrap"/>
+	<property name="NativeRoot" value="C:/projects\micromanager1.3\MMCoreJ_wrap"/>
+   <property name="ScriptsRoot" value="C:/projects/micromanager1.3/scripts"/>
+   <property name="ScriptsInstall" value="C:/projects/micromanager1.3/Install/micro-manager-1.3/scripts"/>
+   <property name="DriversRoot" value="C:/projects/micromanager1.3/scripts"/>
+   <property name="DriversInstall" value="C:/projects/micromanager1.3/Install/micro-manager-1.3/scripts"/>
 
 	<!-- Do not modify from this point on -->
 	<property name="MMPluginDir" value="${ImageJPath}/plugins/Micro-Manager"/>
@@ -82,56 +86,35 @@
 		<copy file="${beanshell}" todir="${MMPluginDir-inst}" />
 		<copy file="${MMCoreJ}" todir="${MMPluginDir-inst}" />
 		<copy file="${BinRoot}/MMCoreJ_wrap.dll" todir="${InstallRoot}" />
+		<copy file="${BinRoot}/MMConfig_demo.cfg" todir="${InstallRoot}" />
 
 		<copy file="${BinRoot}/mmgr_dal_DemoCamera.dll" todir="${InstallRoot}" />
-		<copy file="${BinRoot}/MMConfig_demo.cfg" todir="${InstallRoot}" />
 		<copy file="${BinRoot}/mmgr_dal_DemoStreamingCamera.dll" todir="${InstallRoot}" />
-
 		<copy file="${BinRoot}/mmgr_dal_ZeissCAN.dll" todir="${InstallRoot}" />
 		<copy file="${BinRoot}/mmgr_dal_ZeissCAN29.dll" todir="${InstallRoot}" />
-
 		<copy file="${BinRoot}/mmgr_dal_AOTF.dll" todir="${InstallRoot}" />
-
 		<copy file="${BinRoot}/mmgr_dal_Hamamatsu.dll" todir="${InstallRoot}" />
-
 		<copy file="${BinRoot}/mmgr_dal_SerialManager.dll" todir="${InstallRoot}" />
 		<copy file="${BinRoot}/mmgr_dal_ParallelPort.dll" todir="${InstallRoot}" />
 		<copy file="${BinRoot}/mmgr_dal_Pecon.dll" todir="${InstallRoot}" />
-
 		<copy file="${BinRoot}/mmgr_dal_Ludl.dll" todir="${InstallRoot}" />
-
 		<copy file="${BinRoot}/mmgr_dal_PVCAM.dll" todir="${InstallRoot}" />
-
 		<copy file="${BinRoot}/mmgr_dal_SutterLambda.dll" todir="${InstallRoot}" />
-
 		<copy file="${BinRoot}/mmgr_dal_Sensicam.dll" todir="${InstallRoot}" />
-
 		<copy file="${BinRoot}/mmgr_dal_Vincent.dll" todir="${InstallRoot}" />
-
 		<copy file="${BinRoot}/mmgr_dal_NikonTE2000.dll" todir="${InstallRoot}" />
-
 		<copy file="${BinRoot}/mmgr_dal_Nikon.dll" todir="${InstallRoot}" />
-
 		<copy file="${BinRoot}/mmgr_dal_Prior.dll" todir="${InstallRoot}" />
-
 		<copy file="${BinRoot}/mmgr_dal_DTOpenLayer.dll" todir="${InstallRoot}" />
-
 		<copy file="${BinRoot}/mmgr_dal_SpectralLMM5.dll" todir="${InstallRoot}" />
-
 		<copy file="${BinRoot}/mmgr_dal_Andor.dll" todir="${InstallRoot}" />
-
 		<copy file="${BinRoot}/mmgr_dal_QCam.dll" todir="${InstallRoot}" />
-
 		<copy file="${BinRoot}/mmgr_dal_ASIStage.dll" todir="${InstallRoot}" />
 		<copy file="${BinRoot}/mmgr_dal_ASIFW1000.dll" todir="${InstallRoot}" />
-
 		<copy file="${BinRoot}/mmgr_dal_Yokogawa.dll" todir="${InstallRoot}" />
-
 		<copy file="${BinRoot}/mmgr_dal_USBManager.dll" todir="${InstallRoot}" />
-
 		<copy file="${BinRoot}/mmgr_dal_K8055.dll" todir="${InstallRoot}" />
 		<copy file="${BinRoot}/mmgr_dal_K8061.dll" todir="${InstallRoot}" />
-
 		<copy file="${BinRoot}/mmgr_dal_Conix.dll" todir="${InstallRoot}" />
 		<copy file="${BinRoot}/mmgr_dal_CSUX.dll" todir="${InstallRoot}" />
 		<copy file="${BinRoot}/mmgr_dal_PI_GCS.dll" todir="${InstallRoot}" />
@@ -152,6 +135,27 @@
 		<copy file="${BinRoot}/conf_roles_page.html" todir="${InstallRoot}" />
 		<copy file="${BinRoot}/conf_synchro_page.html" todir="${InstallRoot}" />
 		<copy file="${BinRoot}/conf_preinit_page.html" todir="${InstallRoot}" />
+
+      <copy file="${ScriptsRoot}/sdemo1.bsh" todir="${ScriptsInstall}" />
+      <copy file="${ScriptsRoot}/sdemo2.bsh" todir="${ScriptsInstall}" />
+      <copy file="${ScriptsRoot}/setZoom.bsh" todir="${ScriptsInstall}" />
+      <copy file="${ScriptsRoot}/camera_test.bsh" todir="${ScriptsInstall}" />
+      <copy file="${ScriptsRoot}/image_snap_example.bsh" todir="${ScriptsInstall}" />
+      <copy file="${ScriptsRoot}/image_snap_example_2.bsh" todir="${ScriptsInstall}" />
+      <copy file="${ScriptsRoot}/live_demo.bsh" todir="${ScriptsInstall}" />
+      <copy file="${ScriptsRoot}/manualAcq.bsh" todir="${ScriptsInstall}" />
+      <copy file="${ScriptsRoot}/Init.bsh" todir="${ScriptsInstall}" />
+      <copy file="${ScriptsRoot}/config_test.bsh" todir="${ScriptsInstall}" /> 
+      <copy file="${ScriptsRoot}/AutoExpose.bsh" todir="${ScriptsInstall}" />                                 
+      <copy file="${DriversRoot}/K8055_libusb.inf" todir="${DriversInstall}" />
+      <copy file="${DriversRoot}/K8055_libusb.cat" todir="${DriversInstall}" />
+      <copy file="${DriversRoot}/K8061_libusb.inf" todir="${DriversInstall}" />
+      <copy file="${DriversRoot}/K8061_libusb.cat" todir="${DriversInstall}" />
+      <copy file="${DriversRoot}/NikonAZ100.inf" todir="${DriversInstall}" />
+      <copy file="${DriversRoot}/NikonAZ100.cat" todir="${DriversInstall}" />
+      <copy file="${DriversRoot}/libusb0.dll" todir="${DriversInstall}" />
+      <copy file="${DriversRoot}/libusb0.dll" todir="${InstallRoot}" />
+      <copy file="${DriversRoot}/libusb0.sys" todir="${DriversInstall}" />
 
 	</target>
 
