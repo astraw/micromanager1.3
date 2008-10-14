@@ -59,4 +59,40 @@ class NIDAQDO : public CShutterBase<NIDAQDO>
       bool initialized_;
 };
 
+class NIDAQAO : public CSignalIOBase<NIDAQAO>
+{
+   public:
+      NIDAQAO();
+      ~NIDAQAO();
+
+      // MMDevice API
+      int Initialize();
+      int Shutdown();
+
+      void GetName(char* pszName) const;
+      bool Busy();
+
+      // SIgnal IO API
+      int SetGateOpen(bool open);
+      int GetGateOpen(bool& open) {open = gateOpen_; return DEVICE_OK;}
+      int SetSignal(double volts);
+      int GetSignal (double& /* volts */) {return DEVICE_UNSUPPORTED_COMMAND;}
+      int GetLimits (double& minVolts, double& maxVolts) {minVolts = minV_; maxVolts = maxV_; return DEVICE_OK;}
+
+      // Action Interface
+      int OnDevice(MM::PropertyBase* pProp, MM::ActionType eAct);
+      int OnVolts(MM::PropertyBase* pProp, MM::ActionType eAct);
+
+   private:
+      TaskHandle taskHandle_;
+      MM::MMTime changedTime_;
+      std::string deviceName_;
+      bool initialized_;
+      bool busy_;
+      double minV_;
+      double maxV_;
+      bool gateOpen_;
+};
+
+
 #endif // _NIDAQ_H_
