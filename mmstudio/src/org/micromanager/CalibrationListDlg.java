@@ -30,7 +30,6 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.awt.Point;
 
 import java.util.prefs.Preferences;
 
@@ -44,7 +43,6 @@ import javax.swing.table.AbstractTableModel;
 
 import mmcorej.CMMCore;
 import mmcorej.Configuration;
-import mmcorej.PropertySetting;
 
 import org.micromanager.api.DeviceControlGUI;
 import org.micromanager.utils.GUIColors;
@@ -62,9 +60,9 @@ public class CalibrationListDlg extends MMDialog {
    private JTable calTable_;
    private SpringLayout springLayout;
    private CMMCore core_;
-   private MMOptions opts_;
+   //private MMOptions opts_;
    private Preferences prefs_;
-   private GUIColors guiColors_;
+   //private GUIColors guiColors_;
    private CalibrationList calibrationList_;
    private DeviceControlGUI parentGUI_;
 
@@ -142,8 +140,8 @@ public class CalibrationListDlg extends MMDialog {
          }
       });
       core_ = core;
-      opts_ = opts;
-      guiColors_ = new GUIColors();
+      //opts_ = opts;
+      //guiColors_ = new GUIColors();
       setTitle("Pixel Size calibration");
       springLayout = new SpringLayout();
       getContentPane().setLayout(springLayout);
