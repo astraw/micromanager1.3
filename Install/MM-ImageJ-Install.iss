@@ -81,16 +81,16 @@ Source: micro-manager-1.3\MMDeviceList.txt; DestDir: {app}; Flags: ignoreversion
 Source: micro-manager-1.3\MMStartup.bsh; DestDir: {app}; Flags: onlyifdoesntexist
 
 ; configurator help files
-Source: micro-manager-1.3\conf_intro_page.html; DestDir: {app}; Flags: onlyifdoesntexist
-Source: micro-manager-1.3\conf_comport_page.html; DestDir: {app}; Flags: onlyifdoesntexist
-Source: micro-manager-1.3\conf_devices_page.html; DestDir: {app}; Flags: onlyifdoesntexist
-Source: micro-manager-1.3\conf_delays_page.html; DestDir: {app}; Flags: onlyifdoesntexist
-Source: micro-manager-1.3\conf_finish_page.html; DestDir: {app}; Flags: onlyifdoesntexist
-Source: micro-manager-1.3\conf_labels_page.html; DestDir: {app}; Flags: onlyifdoesntexist
-Source: micro-manager-1.3\conf_presets_page.html; DestDir: {app}; Flags: onlyifdoesntexist
-Source: micro-manager-1.3\conf_roles_page.html; DestDir: {app}; Flags: onlyifdoesntexist
-Source: micro-manager-1.3\conf_synchro_page.html; DestDir: {app}; Flags: onlyifdoesntexist
-Source: micro-manager-1.3\conf_preinit_page.html; DestDir: {app}; Flags: onlyifdoesntexist
+Source: micro-manager-1.3\conf_intro_page.html; DestDir: {app}; Flags: ignoreversion
+Source: micro-manager-1.3\conf_comport_page.html; DestDir: {app}; Flags: ignoreversion
+Source: micro-manager-1.3\conf_devices_page.html; DestDir: {app}; Flags: ignoreversion
+Source: micro-manager-1.3\conf_delays_page.html; DestDir: {app}; Flags: ignoreversion
+Source: micro-manager-1.3\conf_finish_page.html; DestDir: {app}; Flags: ignoreversion
+Source: micro-manager-1.3\conf_labels_page.html; DestDir: {app}; Flags: ignoreversion
+Source: micro-manager-1.3\conf_presets_page.html; DestDir: {app}; Flags: ignoreversion
+Source: micro-manager-1.3\conf_roles_page.html; DestDir: {app}; Flags: ignoreversion
+Source: micro-manager-1.3\conf_synchro_page.html; DestDir: {app}; Flags: ignoreversion
+Source: micro-manager-1.3\conf_preinit_page.html; DestDir: {app}; Flags: ignoreversion
 
 ; ImageJ files
 Source: micro-manager-1.3\ImageJ.exe; DestDir: {app}; Flags: ignoreversion
@@ -102,6 +102,7 @@ Source: micro-manager-1.3\plugins\Micro-Manager\bsh-2.0b4.jar; DestDir: {app}\pl
 Source: micro-manager-1.3\plugins\Micro-Manager\MMCoreJ.jar; DestDir: {app}\plugins\MicroManager; Flags: ignoreversion
 Source: micro-manager-1.3\plugins\Micro-Manager\MMJ_.jar; DestDir: {app}\plugins\MicroManager; Flags: ignoreversion
 Source: micro-manager-1.3\plugins\Micro-Manager\MMAutofocus_.jar; DestDir: {app}\plugins\MicroManager; Flags: ignoreversion
+Source: micro-manager-1.3\plugins\Micro-Manager\MMAutofocusTB_.jar; DestDir: {app}\plugins\MicroManager; Flags: ignoreversion
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]

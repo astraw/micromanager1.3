@@ -4,7 +4,7 @@
 <project name="MMJ" default="buildMMStudio">
 
 	<!-- Specify version in the installer name -->
-	<property name="InstallerName" value="MMSetup-1_3_xx"/>
+	<property name="InstallerName" value="MMSetup_1_3_xx"/>
 
 	<!-- Specify the system path to the ImageJ root directory -->
 	<property name="ImageJPath" value="C:/Program Files/ImageJ"/>
