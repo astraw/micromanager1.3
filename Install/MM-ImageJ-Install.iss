@@ -51,6 +51,8 @@ Source: micro-manager-1.3\mmgr_dal_Andor.dll; DestDir: {app}; Flags: ignoreversi
 Source: micro-manager-1.3\ATMCD32D.dll; DestDir: {app}; Flags: ignoreversion
 Source: micro-manager-1.3\mmgr_dal_DTOpenLayer.dll; DestDir: {app}; Flags: ignoreversion
 Source: micro-manager-1.3\mmgr_dal_Nikon.dll; DestDir: {app}; Flags: ignoreversion
+Source: micro-manager-1.3\mmgr_dal_NikonTI.dll; DestDir: {app}; Flags: ignoreversion
+Source: micro-manager-1.3\mmgr_dal_NikonAZ100.dll; DestDir: {app}; Flags: ignoreversion
 Source: micro-manager-1.3\mmgr_dal_ASIFW1000.dll; DestDir: {app}; Flags: ignoreversion
 Source: micro-manager-1.3\mmgr_dal_ASIStage.dll; DestDir: {app}; Flags: ignoreversion
 Source: micro-manager-1.3\mmgr_dal_Yokogawa.dll; DestDir: {app}; Flags: ignoreversion

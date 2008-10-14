@@ -104,6 +104,8 @@
 		<copy file="${BinRoot}/mmgr_dal_Vincent.dll" todir="${InstallRoot}" />
 		<copy file="${BinRoot}/mmgr_dal_NikonTE2000.dll" todir="${InstallRoot}" />
 		<copy file="${BinRoot}/mmgr_dal_Nikon.dll" todir="${InstallRoot}" />
+		<copy file="${BinRoot}/mmgr_dal_NikonTI.dll" todir="${InstallRoot}" />
+		<copy file="${BinRoot}/mmgr_dal_NikonAZ100.dll" todir="${InstallRoot}" />
 		<copy file="${BinRoot}/mmgr_dal_Prior.dll" todir="${InstallRoot}" />
 		<copy file="${BinRoot}/mmgr_dal_DTOpenLayer.dll" todir="${InstallRoot}" />
 		<copy file="${BinRoot}/mmgr_dal_SpectralLMM5.dll" todir="${InstallRoot}" />
