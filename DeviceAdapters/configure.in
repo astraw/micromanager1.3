@@ -51,7 +51,7 @@ fi
 
 # and for National Instrumenst boards 
 AC_MSG_CHECKING(for NIDaQ)
-AM_CONDITIONAL([BUILD_NIDAQ],[test -f "../../../3rdParty/trunk/NationalInstruments/NI-DAQmxBase/includes/NIDAQmxBase.h"])
+AM_CONDITIONAL([BUILD_NIDAQ],[test -f "../../3rdParty/trunk/NationalInstruments/NI-DAQmxBase/includes/NIDAQmxBase.h"])
 if test -z "${BUILD_NIDAQ}" ; then
    AC_MSG_RESULT([found])
 else
