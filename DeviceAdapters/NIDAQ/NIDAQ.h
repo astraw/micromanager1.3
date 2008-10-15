@@ -45,9 +45,9 @@ class NIDAQDO : public CShutterBase<NIDAQDO>
       int OnState(MM::PropertyBase* pProp, MM::ActionType eAct);
 
    private:
-      int handleDAQError(int ret, TaskHandle taskHandle);
+      int HandleDAQError(int ret, TaskHandle taskHandle);
       int WriteToDevice(long lnValue);
-      int initializeDevice();
+      int InitializeDevice();
 
       TaskHandle taskHandle_;
       MM::MMTime changedTime_;
@@ -76,21 +76,28 @@ class NIDAQAO : public CSignalIOBase<NIDAQAO>
       int SetGateOpen(bool open);
       int GetGateOpen(bool& open) {open = gateOpen_; return DEVICE_OK;}
       int SetSignal(double volts);
-      int GetSignal (double& /* volts */) {return DEVICE_UNSUPPORTED_COMMAND;}
-      int GetLimits (double& minVolts, double& maxVolts) {minVolts = minV_; maxVolts = maxV_; return DEVICE_OK;}
+      int GetSignal (double& volts) {volts = volts_; return DEVICE_OK;}
+      int GetLimits (double& minVolts, double& maxVolts) {minVolts = minVolt_; maxVolts = maxVolt_; return DEVICE_OK;}
 
       // Action Interface
       int OnDevice(MM::PropertyBase* pProp, MM::ActionType eAct);
-      int OnVolts(MM::PropertyBase* pProp, MM::ActionType eAct);
+      int OnMinVolt(MM::PropertyBase* pProp, MM::ActionType eAct);
+      int OnMaxVolt(MM::PropertyBase* pProp, MM::ActionType eAct);
+      int OnVolt(MM::PropertyBase* pProp, MM::ActionType eAct);
 
    private:
+      int HandleDAQError(int ret, TaskHandle taskHandle);
+      int WriteToDevice(double volt);
+      int InitializeDevice();
+
       TaskHandle taskHandle_;
       MM::MMTime changedTime_;
       std::string deviceName_;
       bool initialized_;
       bool busy_;
-      double minV_;
-      double maxV_;
+      double volts_;
+      double minVolt_;
+      double maxVolt_;
       bool gateOpen_;
 };
 
