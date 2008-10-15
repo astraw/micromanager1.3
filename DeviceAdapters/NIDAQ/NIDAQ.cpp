@@ -372,7 +372,11 @@ int NIDAQAO::InitializeDevice()
    if (DAQmxFailed(ret))
       return HandleDAQError(ret, taskHandle_);
 
-   return DEVICE_OK;
+   ret = DAQmxBaseStartTask(taskHandle_);
+   if (DAQmxFailed(ret))
+      return HandleDAQError(ret, taskHandle_);
+
+   return WriteToDevice(volts_);
 }
 
 
@@ -425,6 +429,10 @@ int NIDAQAO::OnDevice(MM::PropertyBase* pProp, MM::ActionType eAct)
    } else if (eAct ==MM::AfterSet) {
       pProp->Get(deviceName_);
       LogMessage(deviceName_.c_str());
+      if (taskHandle_ != 0) {
+         DAQmxBaseStopTask(taskHandle_);
+         DAQmxBaseClearTask(taskHandle_);
+      }
       return InitializeDevice();
    }
 
