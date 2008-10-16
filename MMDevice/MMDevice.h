@@ -501,6 +501,10 @@ namespace MM {
       virtual int GetImageDimensions(int& width, int& height, int& depth) = 0;
       virtual int GetFocusPosition(double& pos) = 0;
       virtual int SetFocusPosition(double pos) = 0;
+      virtual int SetExposure(double expMs) = 0;
+      virtual int GetExposure(double& expMs) = 0;
+      virtual int SetConfig(const char* group, const char* name) = 0;
+      virtual int GetCurrentConfig(const char* group, int bufLen, char* name) = 0;
 
       // device management
       virtual MM::ImageProcessor* GetImageProcessor(const MM::Device* caller) = 0;

@@ -172,6 +172,10 @@ public:
    int GetImageDimensions(int& width, int& height, int& depth);
    int GetFocusPosition(double& pos);
    int SetFocusPosition(double pos);
+   int SetExposure(double expMs);
+   int GetExposure(double& expMs);
+   int SetConfig(const char* group, const char* name);
+   int GetCurrentConfig(const char* group, int bufLen, char* name);
 
    // notification handlers
    int OnStatusChanged(const MM::Device* /* caller */);

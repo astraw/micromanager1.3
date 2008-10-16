@@ -1551,12 +1551,19 @@ void* CMMCore::popNextImageMD(unsigned channel, unsigned slice, Metadata& md) th
       md.Clear();
       const MM::ImageMetadata imd = pBuf->GetMetadata();
       MetadataSingleTag mt;
+      
       mt.SetName(MM::g_Keyword_Elapsed_Time_ms);
       mt.SetValue(CDeviceUtils::ConvertToString(imd.timestamp.getMsec()));
       md.SetTag(mt);
-      mt.SetName(MM::g_Keyword_Exposure);
+      
+      mt.SetName(MM::g_Keyword_Meatdata_Exposure);
       mt.SetValue(CDeviceUtils::ConvertToString(imd.exposureMs));
       md.SetTag(mt);
+
+      mt.SetName(MM::g_Keyword_Metadata_Z);
+      mt.SetValue(CDeviceUtils::ConvertToString(imd.ZUm));
+      md.SetTag(mt);
+
       return const_cast<unsigned char*>(pBuf->GetPixels());
    }
    else

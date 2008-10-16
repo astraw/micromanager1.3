@@ -256,18 +256,93 @@ const char* CoreCallback::GetImage()
    }
 }
 
-int CoreCallback::GetImageDimensions(int& /*width*/, int& /*height*/, int& /*depth*/)
+int CoreCallback::GetImageDimensions(int& width, int& height, int& depth)
 {
+   width = core_->getImageWidth();
+   height = core_->getImageHeight();
+   depth = core_->getBytesPerPixel();
    return DEVICE_OK;
 }
 
-int CoreCallback::GetFocusPosition(double& /*pos*/)
+int CoreCallback::GetFocusPosition(double& pos)
 {
+   if (core_->focusStage_)
+   {
+      return core_->focusStage_->GetPositionUm(pos);
+   }
+   pos = 0.0;
+   return DEVICE_CORE_FOCUS_STAGE_UNDEF;
+}
+
+int CoreCallback::SetFocusPosition(double pos)
+{
+   if (core_->focusStage_)
+   {
+      int ret = core_->focusStage_->SetPositionUm(pos);
+      if (ret != DEVICE_OK)
+         return ret;
+      core_->waitForDevice(core_->focusStage_);
+   }
+   return DEVICE_CORE_FOCUS_STAGE_UNDEF;
+}
+
+int CoreCallback::SetExposure(double expMs)
+{
+   try 
+   {
+      core_->setExposure(expMs);
+   }
+   catch (...)
+   {
+      // TODO: log
+      return DEVICE_CORE_EXPOSURE_FAILED;
+   }
+
    return DEVICE_OK;
 }
 
-int CoreCallback::SetFocusPosition(double /*pos*/)
+int CoreCallback::GetExposure(double& expMs) 
 {
+   try 
+   {
+      expMs = core_->getExposure();
+   }
+   catch (...)
+   {
+      // TODO: log
+      return DEVICE_CORE_EXPOSURE_FAILED;
+   }
+
    return DEVICE_OK;
 }
 
+int CoreCallback::SetConfig(const char* group, const char* name)
+{
+   try 
+   {
+      core_->setConfig(group, name);
+      core_->waitForConfig(group, name);
+   }
+   catch (...)
+   {
+      // TODO: log
+      return DEVICE_CORE_CONFIG_FAILED;
+   }
+
+   return DEVICE_OK;
+}
+
+int CoreCallback::GetCurrentConfig(const char* group, int bufLen, char* name)
+{
+   try 
+   {
+      string name = core_->getCurrentConfig(group);
+   }
+   catch (...)
+   {
+      // TODO: log
+      return DEVICE_CORE_CONFIG_FAILED;
+   }
+
+   return DEVICE_OK;
+}
