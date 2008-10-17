@@ -30,6 +30,7 @@ import org.micromanager.metadata.WellAcquisitionData;
 import org.micromanager.navigation.PositionList;
 import org.micromanager.utils.MMScriptException;
 
+import mmcorej.CMMCore;
 /**
  * Interface to execute commands in the main panel.
  * All functions throw MMScriptException (TBD)
@@ -220,4 +221,5 @@ public interface ScriptInterface {
    
    public String installPlugin(String className, String menuName);
    
+   public CMMCore getMMCore();
 }
