@@ -745,10 +745,10 @@ void SerialPortLister::ListSerialPorts(std::vector<std::string> &availablePorts)
 
 #ifdef linux
 //TODO: do runtime discovery.  Figure out situation with USB serial ports on linux
-availablePorts_.push_back("/dev/ttyS0");
-availablePorts_.push_back("/dev/ttyS1");
-availablePorts_.push_back("/dev/ttyS2");
-availablePorts_.push_back("/dev/ttyS3");
+availablePorts.push_back("/dev/ttyS0");
+availablePorts.push_back("/dev/ttyS1");
+availablePorts.push_back("/dev/ttyS2");
+availablePorts.push_back("/dev/ttyS3");
 #endif // linux
    
 #ifdef __APPLE__    
