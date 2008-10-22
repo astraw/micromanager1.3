@@ -1466,9 +1466,6 @@ public class AcqControlDlg extends JDialog implements PropertyChangeListener {
 
       try {
          applySettings();
-         // disable incremental focusing to ensure performance
-         // consistent with previous versions
-         acqEng_.enableIncrementalAutoFocus(false);
          acqEng_.acquire();
       }  catch (MMAcqDataException e) {
          handleException(e);
@@ -1508,7 +1505,6 @@ public class AcqControlDlg extends JDialog implements PropertyChangeListener {
 
       try {
          applySettings();
-         acqEng_.enableIncrementalAutoFocus(incrementalFocus);
          acqEng_.setSaveFiles(true);
          acqEng_.acquireWellScan(wad);
          // wait until acquisition is done

@@ -161,7 +161,6 @@ public class MMAcquisitionEngineMT implements AcquisitionEngine {
    // auto-focus module
    Autofocus autofocusPlugin_ = null;
    boolean autofocusEnabled_ = false;
-   boolean incrementalFocus_ = false;
 
 
    /**
@@ -742,13 +741,24 @@ public class MMAcquisitionEngineMT implements AcquisitionEngine {
 
             // perform auto focusing if the module is available
             if (autofocusPlugin_ != null && autofocusEnabled_) {
-               if (posIdx == 0 || incrementalFocus_ == false) {
-                  // perform always full focus on the first position in the list
-                  autofocusPlugin_.fullFocus();
+               
+               // check for any autofocusing instructions
+               if (pos.hasProperty(PositionList.AF_KEY)) {
+                  // check if recognize any tags and see if we can do anything about it
+                  if (pos.getProperty(PositionList.AF_KEY).equals(PositionList.AF_VALUE_INCREMENTAL))
+                     autofocusPlugin_.incrementalFocus();
+                  else if (pos.getProperty(PositionList.AF_KEY).equals(PositionList.AF_VALUE_FULL))
+                     autofocusPlugin_.fullFocus();
+                  else if (pos.getProperty(PositionList.AF_KEY).equals(PositionList.AF_VALUE_NONE))
+                     ; // do nothing
+                  else
+                     // unrecognized tag
+                     throw new MMException("Unrecognized Auto-focus property in position list");
                } else {
-                  autofocusPlugin_.incrementalFocus();
+                  // no instructions, so do full focus on each position
+                  autofocusPlugin_.fullFocus();
                }
-
+               
                // update the Z-position based on the autofocus
                if (pos != null)
                {
@@ -1593,9 +1603,5 @@ public class MMAcquisitionEngineMT implements AcquisitionEngine {
 
    public void setFinished() {
       acqFinished_ = true;
-   }
-
-   public void enableIncrementalAutoFocus(boolean enabled) {
-      incrementalFocus_ = enabled;
    }
 }

@@ -58,6 +58,11 @@ public class PositionList {
    private final static String GRID_ROW_KEY = "GRID_ROW";
    private final static String GRID_COL_KEY = "GRID_COL";
    private final static String PROPERTIES_KEY = "PROPERTIES";
+   
+   public final static String AF_KEY = "AUTOFOCUS";
+   public final static String AF_VALUE_FULL = "full";
+   public final static String AF_VALUE_INCREMENTAL = "incremental";
+   public final static String AF_VALUE_NONE = "none";
       
    public PositionList() {
       positions_ = new ArrayList<MultiStagePosition>();
