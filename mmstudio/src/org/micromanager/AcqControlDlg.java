@@ -1497,7 +1497,7 @@ public class AcqControlDlg extends JDialog implements PropertyChangeListener {
       }
    }
       
-   public boolean runWellScan(WellAcquisitionData wad, boolean incrementalFocus) {
+   public boolean runWellScan(WellAcquisitionData wad) {
       if (acqEng_.isAcquisitionRunning()) {
          JOptionPane.showMessageDialog(this, "Unable to start the new acquisition task: previous acquisition still in progress.");
          return false;

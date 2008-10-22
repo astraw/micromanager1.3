@@ -140,7 +140,7 @@ public interface ScriptInterface {
     * @param wad - well acquisition data object
     * @param incrementalAF - enable or disable incremental autofocusing between imaging sites
     */
-   public void runWellScan(WellAcquisitionData wad, boolean incrementalAF) throws MMScriptException;
+   public void runWellScan(WellAcquisitionData wad) throws MMScriptException;
 
    /**
     * Loads setting for Acquisition Dialog from file

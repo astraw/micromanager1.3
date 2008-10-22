@@ -2989,13 +2989,13 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI, Scrip
       acq.setContrastBasedOnFrame(frame, slice);
    }
 
-   public void runWellScan(WellAcquisitionData wad, boolean incrementalFocus) throws MMScriptException {
+   public void runWellScan(WellAcquisitionData wad) throws MMScriptException {
       testForAbortRequests();
       if (acqControlWin_ == null)
          openAcqControlDialog();
 
       engine_.setPositionList(posList_);
-      if (acqControlWin_.runWellScan(wad, incrementalFocus) == false)
+      if (acqControlWin_.runWellScan(wad) == false)
          throw new MMScriptException("Scanning error.");
       try {
          while (acqControlWin_.isAcquisitionRunning()) {
