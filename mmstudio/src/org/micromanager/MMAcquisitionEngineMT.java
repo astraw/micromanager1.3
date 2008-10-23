@@ -159,7 +159,7 @@ public class MMAcquisitionEngineMT implements AcquisitionEngine {
    boolean continuousFocusOffForXYMove_ = true;
 
    // auto-focus module
-   Autofocus autofocusPlugin_ = null;
+   Autofocus autofocusPlugin_;
    boolean autofocusEnabled_ = false;
 
 
@@ -307,6 +307,7 @@ public class MMAcquisitionEngineMT implements AcquisitionEngine {
       rootName_ = new String(DEFAULT_ROOT_NAME);
       channelGroup_ = new String(ChannelSpec.DEFAULT_CHANNEL_GROUP);
       posList_ = new PositionList();
+      autofocusPlugin_ = new CoreAutofocus();
    }
 
    @SuppressWarnings("unchecked")
@@ -332,6 +333,8 @@ public class MMAcquisitionEngineMT implements AcquisitionEngine {
 
    public void setCore(CMMCore c) {
       core_ = c;
+      if (autofocusPlugin_ != null)
+         autofocusPlugin_.setMMCore(c);
    }
 
    public void setPositionList(PositionList posList) {

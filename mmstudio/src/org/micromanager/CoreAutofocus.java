@@ -1,0 +1,66 @@
+package org.micromanager;
+
+import javax.swing.JOptionPane;
+
+import mmcorej.CMMCore;
+
+import org.micromanager.api.Autofocus;
+
+public class CoreAutofocus implements Autofocus {
+   
+   CMMCore core_;
+
+   @Override
+   public void focus(double coarseStep, int numCoarse, double fineStep, int numFine) {
+      // TODO Auto-generated method stub
+      
+   }
+
+   @Override
+   public double fullFocus() {
+      if (core_ == null)
+         return 0.0;
+      
+      try {
+         core_.fullFocus();
+      } catch (Exception e) {
+         // TODO Auto-generated catch block
+         e.printStackTrace();
+         return 0.0;
+      }
+      
+      return core_.getFocusScore();
+   }
+
+   @Override
+   public String getVerboseStatus() {
+      return new String("No message at this time!");
+   }
+
+   @Override
+   public double incrementalFocus() {
+      if (core_ == null)
+         return 0.0;
+      
+      try {
+         core_.incrementalFocus();
+      } catch (Exception e) {
+         // TODO Auto-generated catch block
+         e.printStackTrace();
+         return 0.0;
+      }
+      
+      return core_.getFocusScore();
+   }
+
+   @Override
+   public void setMMCore(CMMCore core) {
+      core_ = core;
+   }
+
+   @Override
+   public void showOptionsDialog() {
+      JOptionPane.showMessageDialog(null, "Use Autofocus device properties to set parameters.");
+   }
+
+}
