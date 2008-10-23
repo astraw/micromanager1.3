@@ -20,7 +20,10 @@
 
 ////////////////////////////////////////////////
 // Error codes
-#define ERR_OPEN_DEVICE_FAILED 200
+#define ERR_OPEN_DEVICE_FAILED      200
+#define ERR_INVALID_DIGITAL_PATTERN 201
+#define ERR_INVALID_REPEAT_NR       202
+#define ERR_DP_NOT_INITIALIZED      203
 
 
 class NIDAQDO : public CShutterBase<NIDAQDO>
@@ -99,6 +102,46 @@ class NIDAQAO : public CSignalIOBase<NIDAQAO>
       double minVolt_;
       double maxVolt_;
       bool gateOpen_;
+};
+
+class NIDAQDPattern : public CGenericBase<NIDAQDPattern>
+{
+   public:
+      NIDAQDPattern();
+      ~NIDAQDPattern();
+
+      // MMDevice API
+      int Initialize();
+      int Shutdown();
+
+      void GetName(char* pszName) const;
+      bool Busy();
+
+      // Action Interface
+      int OnDevice(MM::PropertyBase* pProp, MM::ActionType eAct);
+      int OnExternalClockPort(MM::PropertyBase* pProp, MM::ActionType eAct);
+      int OnEdge(MM::PropertyBase* pProp, MM::ActionType eAct);
+      int OnDigitalPattern(MM::PropertyBase* pProp, MM::ActionType eAct);
+      int OnRepeat(MM::PropertyBase* pProp, MM::ActionType eAct);
+      int OnStatus(MM::PropertyBase* pProp, MM::ActionType eAct);
+
+   private:
+      int HandleDAQError(int ret, TaskHandle taskHandle);
+      int InitializeDevice();
+
+      std::string digitalPattern_;
+      std::string edge_;
+      std::string status_;
+      int nrRepeats_;
+      int samples_;
+      static const int maxNrSamples_ = 8;
+      uInt32 data_[maxNrSamples_];
+
+      TaskHandle taskHandle_;
+      MM::MMTime changedTime_;
+      std::string externalClockPort_;
+      std::string deviceName_;
+      bool initialized_;
 };
 
 

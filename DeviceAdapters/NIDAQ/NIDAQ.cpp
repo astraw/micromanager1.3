@@ -25,13 +25,14 @@
 
 const char* g_DeviceNameNIDAQDO = "NI-DAQ-DO";
 const char* g_DeviceNameNIDAQAO = "NI-DAQ-AO";
-//const char* 
+const char* g_DeviceNameNIDAQDPattern = "NI-DAQ-Digital Pattern";
 
 MODULE_API void InitializeModuleData()
 {
    AddAvailableDeviceName(g_DeviceNameNIDAQDO, "NI-DAQ DIO");
    AddAvailableDeviceName(g_DeviceNameNIDAQAO, "NI-DAQ AO");
-   printf ("Added NI-DAQ DIO and AO");
+   AddAvailableDeviceName(g_DeviceNameNIDAQDPattern, "NI-DAQ Triggered digital patterns");
+   printf ("Added NI-DAQ DIO and AO\n");
 }
 
 MODULE_API MM::Device* CreateDevice(const char* deviceName)
@@ -45,6 +46,9 @@ MODULE_API MM::Device* CreateDevice(const char* deviceName)
    else if (strcmp(deviceName,g_DeviceNameNIDAQAO) == 0)
       return new NIDAQAO;
 
+   else if (strcmp(deviceName,g_DeviceNameNIDAQDPattern) == 0)
+      return new NIDAQDPattern;
+
    return 0;
 }
 
@@ -53,6 +57,9 @@ MODULE_API void DeleteDevice(MM::Device* pDevice)
    delete pDevice;
 }
 
+/*
+ * NIDAQDO: Digital out.  
+ */
 NIDAQDO::NIDAQDO() : 
    taskHandle_(0),
    state_(0),
@@ -98,17 +105,11 @@ int NIDAQDO::Initialize()
       return ret;
    // This needs to be changed for devices with more than 8 outputs
    SetPropertyLimits("State", 0, 255);
-printf("H1\n");
+
    ret = UpdateStatus();
    if (ret != DEVICE_OK)
       return ret;
-printf("H2\n");
  
-/*
-   ret = initializeDevice();
-   if (ret != DEVICE_OK)
-      return ret;
-*/
    initialized_ = true;
 
    return DEVICE_OK;
@@ -116,6 +117,10 @@ printf("H2\n");
 
 int NIDAQDO::Shutdown()
 {
+   if (taskHandle_ != 0) {
+      DAQmxBaseStopTask (taskHandle_);
+      DAQmxBaseClearTask (taskHandle_);
+   }                                                                         
    initialized_ = false;
    return DEVICE_OK;
 }
@@ -238,7 +243,7 @@ int NIDAQDO::OnDevice(MM::PropertyBase* pProp, MM::ActionType eAct)
 }
 
 /*
- * Analog output device
+ * NIDAQAO: Analog output device
  */
 NIDAQAO::NIDAQAO() : 
    taskHandle_(0),
@@ -297,6 +302,10 @@ int NIDAQAO::Initialize()
 
 int NIDAQAO::Shutdown()
 {
+   if (taskHandle_ != 0) {
+      DAQmxBaseStopTask (taskHandle_);
+      DAQmxBaseClearTask (taskHandle_);
+   }                                                                         
    initialized_ = false;
    return DEVICE_OK;
 }
@@ -334,7 +343,7 @@ int NIDAQAO::HandleDAQError(int ret, TaskHandle taskHandle)
    DAQmxBaseGetExtendedErrorInfo (errBuff, 2048);
    SetErrorText(ret, errBuff);
 
-   if (taskHandle != 0) {
+   if (taskHandle_ != 0) {
       DAQmxBaseStopTask (taskHandle);
       DAQmxBaseClearTask (taskHandle);
    }                                                                         
@@ -438,4 +447,268 @@ int NIDAQAO::OnDevice(MM::PropertyBase* pProp, MM::ActionType eAct)
 
    return DEVICE_OK;
 }
+
+
+/**
+ * NIDAQDPattern
+ * Generic device that generates a digital pattern triggered by an external clock
+ */
+
+NIDAQDPattern::NIDAQDPattern() :
+   digitalPattern_("0,0"),
+   edge_("Rising"),
+   status_("Idle"),
+   nrRepeats_ (1),
+   taskHandle_(0),
+   deviceName_("/Dev1/port0"),
+   externalClockPort_ ("/Dev1/PFI0"),
+   initialized_ (false)
+{
+   InitializeDefaultErrorMessages();
+
+   SetErrorText(ERR_OPEN_DEVICE_FAILED, "Failed communicating with National Instruments Device");
+   SetErrorText(ERR_INVALID_DIGITAL_PATTERN, "Digital Pattern should be up to 8 numbers separated by commas, e.g.: 2,4,6");
+   SetErrorText(ERR_INVALID_REPEAT_NR, "Nr. of Repeats should be an integer number greater than 0");
+   SetErrorText(ERR_DP_NOT_INITIALIZED, "Digital Pattern not initialized (maybe not all parameters were entered yet?");
+
+   CPropertyAction* pAct = new CPropertyAction(this, &NIDAQDPattern::OnDevice);
+   CreateProperty("DeviceName", deviceName_.c_str(), MM::String, false, pAct, true);
+
+   pAct = new CPropertyAction(this, &NIDAQDPattern::OnExternalClockPort);
+   CreateProperty("External Clock Port", externalClockPort_.c_str(), MM::String, false, pAct, true);
+}
+
+NIDAQDPattern::~NIDAQDPattern()
+{
+   Shutdown();
+}
+
+int NIDAQDPattern::Initialize()
+{
+   int ret = CreateProperty(MM::g_Keyword_Name, g_DeviceNameNIDAQDPattern, MM::String, true);
+   if (ret != DEVICE_OK)
+      return ret;
+
+   CPropertyAction* pAct = new CPropertyAction(this, &NIDAQDPattern::OnEdge);
+   ret = CreateProperty("Edge", "Rising", MM::String, false, pAct);
+   if (ret != DEVICE_OK)
+      return ret;
+   AddAllowedValue("Edge", "Rising");
+   AddAllowedValue("Edge", "Falling");
+   
+   pAct = new CPropertyAction(this, &NIDAQDPattern::OnDigitalPattern);
+   ret = CreateProperty("Digital Pattern", digitalPattern_.c_str(), MM::String, false, pAct);
+   if (ret != DEVICE_OK)
+      return ret;
+
+   pAct = new CPropertyAction(this, &NIDAQDPattern::OnRepeat);
+   ret = CreateProperty("Repeat", "1", MM::Integer, false, pAct);
+   if (ret != DEVICE_OK)
+      return ret;
+
+   pAct = new CPropertyAction(this, &NIDAQDPattern::OnStatus);
+   ret = CreateProperty("Status", status_.c_str(), MM::String, false, pAct);
+   if (ret != DEVICE_OK)
+      return ret;
+   AddAllowedValue("Status", "Start");
+   AddAllowedValue("Status", "Stop");
+   AddAllowedValue("Status", "Idle");
+   AddAllowedValue("Status", "Busy");
+
+   ret = UpdateStatus();
+   if (ret != DEVICE_OK)
+      return ret;
+ 
+   initialized_ = true;
+
+   return DEVICE_OK;
+} 
+
+int NIDAQDPattern::HandleDAQError(int ret, TaskHandle taskHandle)
+{
+   char errBuff[2048];
+   DAQmxBaseGetExtendedErrorInfo (errBuff, 2048);
+   SetErrorText(ret, errBuff);
+
+   if (taskHandle_ != 0) {
+      DAQmxBaseStopTask (taskHandle);
+      DAQmxBaseClearTask (taskHandle);
+   }                                                                         
+
+   std::ostringstream os;
+   os << "DAQmxBase Error: " << ret << "-" << errBuff;
+   LogMessage(os.str().c_str());
+
+   return ret;
+}
+
+
+int NIDAQDPattern::InitializeDevice()
+{
+   // Create task
+   int ret = DAQmxBaseCreateTask("", &taskHandle_);
+   if (DAQmxFailed(ret))
+      return HandleDAQError(ret, taskHandle_);
+
+   ret = DAQmxBaseCreateDOChan(taskHandle_,deviceName_.c_str(),"", DAQmx_Val_ChanForAllLines);
+   if (DAQmxFailed(ret))
+      return HandleDAQError(ret, taskHandle_);
+
+   int32 edge = DAQmx_Val_Falling;
+   if (edge_ == "Falling")
+      edge = DAQmx_Val_Rising;
+   // note: parameter frequency now fixed at 10000 (0.1 msec).  Could be exposed
+   ret = DAQmxBaseCfgSampClkTiming(taskHandle_,externalClockPort_.c_str(),10000, edge, DAQmx_Val_FiniteSamps, (uInt64) ((uInt64)nrRepeats_ * (uInt64) samples_));
+   if (DAQmxFailed(ret))
+      return HandleDAQError(ret, taskHandle_);
+
+   // Write Code
+   // TODO: fix data_!!!
+   ret = DAQmxBaseWriteDigitalU32(taskHandle_, samples_ * nrRepeats_, 0, 60, DAQmx_Val_GroupByChannel, data_, NULL, NULL);
+   if (DAQmxFailed(ret))
+      return HandleDAQError(ret, taskHandle_);
+
+   return DEVICE_OK;
+}
+
+//////////////////////////////////
+// NIDAQDPattern Action interfaces
+//////////////////////////////////
+
+int NIDAQDPattern::OnDevice(MM::PropertyBase* pProp, MM::ActionType eAct)
+{
+   if (eAct == MM::BeforeGet) {
+      pProp->Set(deviceName_.c_str());
+   } else if (eAct ==MM::AfterSet) {
+      pProp->Get(deviceName_);
+      LogMessage(deviceName_.c_str(), true);
+      if (taskHandle_ != 0) {
+         DAQmxBaseStopTask(taskHandle_);
+         DAQmxBaseClearTask(taskHandle_);
+      }
+      return InitializeDevice();
+   }
+
+   return DEVICE_OK;
+}
+
+int NIDAQDPattern::OnExternalClockPort(MM::PropertyBase* pProp, MM::ActionType eAct)
+{
+   if (eAct == MM::BeforeGet) {
+      pProp->Set(externalClockPort_.c_str());
+   } else if (eAct ==MM::AfterSet) {
+      pProp->Get(externalClockPort_);
+      LogMessage(externalClockPort_.c_str(), true);
+      if (taskHandle_ != 0) {
+         DAQmxBaseStopTask(taskHandle_);
+         DAQmxBaseClearTask(taskHandle_);
+      }
+      return InitializeDevice();
+   }
+
+   return DEVICE_OK;
+}
+
+int NIDAQDPattern::OnEdge(MM::PropertyBase* pProp, MM::ActionType eAct)
+{
+   if (eAct == MM::BeforeGet) {
+      pProp->Set(edge_.c_str());
+   } else if (eAct ==MM::AfterSet) {
+      pProp->Get(edge_);
+      LogMessage(edge_.c_str(), true);
+      if (taskHandle_ != 0) {
+         DAQmxBaseStopTask(taskHandle_);
+         DAQmxBaseClearTask(taskHandle_);
+      }
+      return InitializeDevice();
+   }
+
+   return DEVICE_OK;
+}
+
+int NIDAQDPattern::OnDigitalPattern(MM::PropertyBase* pProp, MM::ActionType eAct)
+{
+   if (eAct == MM::BeforeGet) {
+      pProp->Set(digitalPattern_.c_str());
+   } else if (eAct ==MM::AfterSet) {
+      std::string pattern;
+      pProp->Get(pattern);
+      // tokenize pattern 
+      std::string::size_type lastPos = pattern.find_first_not_of(",", 0);
+      std::string::size_type pos = pattern.find_first_of(",", lastPos);
+      int counter = 0;
+      while ( (pos != std::string::npos || lastPos != std::string::npos) && counter < maxNrSamples_) {
+         std::istringstream is(pattern.substr(lastPos, pos - lastPos));
+         if (! (is >> data_[counter]))
+           return ERR_INVALID_DIGITAL_PATTERN;
+         lastPos = pattern.find_first_not_of(",", pos);
+         pos = pattern.find_first_of(",", lastPos);
+         counter++;
+      }
+      samples_ = counter;
+      digitalPattern_ = pattern;
+
+      if (taskHandle_ != 0) {
+         DAQmxBaseStopTask(taskHandle_);
+         DAQmxBaseClearTask(taskHandle_);
+      }
+      return InitializeDevice();
+   }
+
+   return DEVICE_OK;
+}
+
+int NIDAQDPattern::OnRepeat(MM::PropertyBase* pProp, MM::ActionType eAct)
+{
+   if (eAct == MM::BeforeGet) {
+      std::ostringstream os;
+      os << nrRepeats_;
+      pProp->Set(os.str().c_str());
+   } else if (eAct ==MM::AfterSet) {
+      std::string repeat;
+      pProp->Get(repeat);
+      std::istringstream is(repeat);
+      if (!(is >> nrRepeats_) || nrRepeats_ < 1)
+         return ERR_INVALID_REPEAT_NR;
+
+      if (taskHandle_ != 0) {
+         DAQmxBaseStopTask(taskHandle_);
+         DAQmxBaseClearTask(taskHandle_);
+      }
+      return InitializeDevice();
+   }
+
+   return DEVICE_OK;
+}
+
+
+int NIDAQDPattern::OnStatus(MM::PropertyBase* pProp, MM::ActionType eAct)
+{
+   if (eAct == MM::BeforeGet) {
+      if (Busy())
+         pProp->Set("Busy");
+      else
+         pProp->Set("Idle");
+   } else if (eAct ==MM::AfterSet) {
+      std::string status;
+      pProp->Get(status);
+      if (status == "Start") {
+         if (taskHandle_ == 0)
+            return ERR_DP_NOT_INITIALIZED;
+         int ret = DAQmxBaseStartTask(taskHandle_);
+         if (DAQmxFailed(ret))
+            return HandleDAQError(ret, taskHandle_);
+      } else if (status == "Stop") {
+         if (taskHandle_ != 0) {
+            int ret = DAQmxBaseStopTask(taskHandle_);
+            if (DAQmxFailed(ret))
+               return HandleDAQError(ret, taskHandle_);
+         }
+      }
+   }
+
+   return DEVICE_OK;
+}
+
+
 
