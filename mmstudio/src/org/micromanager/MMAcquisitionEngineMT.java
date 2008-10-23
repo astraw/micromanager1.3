@@ -7,7 +7,7 @@
 //AUTHOR:       Nenad Amodaj, nenad@amodaj.com, Dec 1, 2007
 
 //COPYRIGHT:    University of California, San Francisco, 2007
-//100X Imaging Inc, www.100ximaging.com, 2008
+//              100X Imaging Inc, www.100ximaging.com, 2008
 
 //LICENSE:      This file is distributed under the BSD license.
 //License text is included with the source distribution.
