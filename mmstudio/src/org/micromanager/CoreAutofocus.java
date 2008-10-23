@@ -10,13 +10,11 @@ public class CoreAutofocus implements Autofocus {
    
    CMMCore core_;
 
-   @Override
    public void focus(double coarseStep, int numCoarse, double fineStep, int numFine) {
       // TODO Auto-generated method stub
       
    }
 
-   @Override
    public double fullFocus() {
       if (core_ == null)
          return 0.0;
@@ -32,12 +30,10 @@ public class CoreAutofocus implements Autofocus {
       return core_.getFocusScore();
    }
 
-   @Override
    public String getVerboseStatus() {
       return new String("No message at this time!");
    }
 
-   @Override
    public double incrementalFocus() {
       if (core_ == null)
          return 0.0;
@@ -53,12 +49,10 @@ public class CoreAutofocus implements Autofocus {
       return core_.getFocusScore();
    }
 
-   @Override
    public void setMMCore(CMMCore core) {
       core_ = core;
    }
 
-   @Override
    public void showOptionsDialog() {
       JOptionPane.showMessageDialog(null, "Use Autofocus device properties to set parameters.");
    }
