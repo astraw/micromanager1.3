@@ -245,11 +245,11 @@ public class MMAcquisitionEngineMT implements AcquisitionEngine {
             posCount_++;
 
             // shut down window if more data is coming       
-            if (/*posCount_ < posList_.getNumberOfPositions() && */  saveFiles_) {
-               SwingUtilities.invokeLater((new DisposeI5d(i5dWin_[0])));
-               i5dWin_[0] = null;
-               img5d_[0] = null;
-            }
+//            if (/*posCount_ < posList_.getNumberOfPositions() && */  saveFiles_) {
+//               SwingUtilities.invokeLater((new DisposeI5d(i5dWin_[0])));
+//               i5dWin_[0] = null;
+//               img5d_[0] = null;
+//            }
          }
       }
    }
@@ -1337,6 +1337,13 @@ public class MMAcquisitionEngineMT implements AcquisitionEngine {
       if (useMultiplePositions_ && posMode_ == PositionMode.TIME_LAPSE) {
          img5d_ = new Image5D[posList_.getNumberOfPositions()]; 
          i5dWin_ = new Image5DWindow[posList_.getNumberOfPositions()];
+      } else if (useMultiplePositions_ && posMode_ == PositionMode.MULTI_FIELD) {
+         if (posIndex == 0) {
+            img5d_ = new Image5D[1];
+            i5dWin_ = new Image5DWindow[1];
+         } else {
+            // reset
+         }
       } else {
          img5d_ = new Image5D[1];
          i5dWin_ = new Image5DWindow[1];
