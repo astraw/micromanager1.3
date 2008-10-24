@@ -205,7 +205,7 @@ public:
    std::string getCurrentConfig(const char* groupName) const throw (CMMError);
    Configuration getConfigData(const char* configGroup, const char* configName) const throw (CMMError);
    double getPixelSizeUm() const;
-   double getPixelSizeUm(const char* resolutionID) throw (CMMError);
+   double getPixelSizeUmByID(const char* resolutionID) throw (CMMError);
    double getMagnificationFactor() const;
    void setPixelSizeUm(const char* resolutionID, double pixSize)  throw (CMMError);
    void definePixelSizeConfig(const char* resolutionID, const char* deviceName, const char* propName, const char* value);

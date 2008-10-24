@@ -100,8 +100,8 @@ HDEVMODULE CPluginManager::LoadPluginLibrary(const char* shortName)
       #ifdef linux
       // Linux-specific code block by Johan Henriksson
       else {
-         string name2(shortName);
-         name2 += ".so.0";
+         string name2 = (string) LIB_NAME_PREFIX + (string) shortName + (string) ".so.0";
+printf("%s\n", name2.c_str());
          hMod = dlopen(name2.c_str(), RTLD_LAZY);
          if (hMod)
             return (HDEVMODULE) hMod;

@@ -3066,7 +3066,7 @@ double CMMCore::getPixelSizeUm() const
 /**
  * Returns the pixel size in um for the requested pixel size group
  */
-double CMMCore::getPixelSizeUm(const char* resolutionID) throw (CMMError)
+double CMMCore::getPixelSizeUmByID(const char* resolutionID) throw (CMMError)
 {
    PixelSizeConfiguration* psc = pixelSizeGroup_->Find(resolutionID);
    if (psc == 0)

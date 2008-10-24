@@ -54,7 +54,7 @@ public class CalibrationList {
             Calibration cal = new Calibration();
             cal.setConfiguration(core_.getPixelSizeConfigData(calibrations.get(i)));
             cal.setLabel(calibrations.get(i));
-            cal.setPixelSizeUm(core_.getPixelSizeUm(calibrations.get(i)));
+            cal.setPixelSizeUm(core_.getPixelSizeUmByID(calibrations.get(i)));
 
             calibrationList_.add(cal);
          } catch (Exception e) {

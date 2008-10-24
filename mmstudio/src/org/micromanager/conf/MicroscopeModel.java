@@ -30,6 +30,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.GregorianCalendar;
 import java.util.Hashtable;
@@ -62,7 +63,7 @@ public class MicroscopeModel {
    
    public static boolean generateDeviceListFile() {
       CMMCore core = new CMMCore();
-      StrVector libs = core.getDeviceLibraries("");
+      StrVector libs = getDeviceLibraries(core);
       ArrayList<Device> devs = new ArrayList<Device>();
             
       for (int i=0; i<libs.size(); i++) {
@@ -141,7 +142,6 @@ public class MicroscopeModel {
    }
    
    public void loadStateLabelsFromHardware(CMMCore core) throws Exception {
-      System.out.println("In Load State Labels From Hardware");
       for (int i=0; i<devices_.size(); i++) {
          Device dev = devices_.get(i);
          // do not override existing device labels:
@@ -152,12 +152,10 @@ public class MicroscopeModel {
       
    public void scanComPorts(CMMCore core) {
       ArrayList<Device> ports = new ArrayList<Device>();
-      StrVector libs = core.getDeviceLibraries("");
+      StrVector libs = getDeviceLibraries(core);
       
-      System.out.println("Libraries :");
       for (int i=0; i<libs.size(); i++) {
          if (!isLibraryAvailable(libs.get(i))) {
-            System.out.println(libs.get(i));         
             Device devs[] = new Device[0];
             try {
                devs = Device.getLibraryContents(libs.get(i), core);
@@ -182,6 +180,34 @@ public class MicroscopeModel {
          comPortInUse_[i] = false;
       }
    }
+
+   /**
+    * Match the file list against currently available DLLs and add ones that are missing         
+    * Find all paths on java.library.path and add an empty (current) directory
+    * Then assemble a lits with DeviceLibraries on all these paths
+    */
+   public static StrVector getDeviceLibraries(CMMCore core) {
+      String libPath = System.getProperty("java.library.path");
+      String[] libPaths = null;
+      if (libPath != null)
+         libPaths = libPath.split(":");
+      ArrayList<String> pathList;
+      if (libPaths != null)
+         pathList = new ArrayList(Arrays.asList(libPaths));
+      else
+         pathList = new ArrayList<String>();
+      pathList.add("");
+
+      StrVector libs = new StrVector();
+      for (String path : pathList) {
+         StrVector tmp = core.getDeviceLibraries(path);
+         if (!tmp.isEmpty())
+            for (int i=0; i < tmp.size(); i++)
+               libs.add(tmp.get(i));
+      }
+      return libs;
+   }
+
    /**
     * Inspects the Micro-manager software and gathers information about all available devices.
     */
@@ -199,27 +225,25 @@ public class MicroscopeModel {
       for (int i=0; i<devsTotal.size(); i++) {
          availableDevices_[i] = devsTotal.get(i);
       }  
-      
-      // match the file list against currently available DLLs and add ones that are missing         
-      StrVector libs = core.getDeviceLibraries("");
-      
-      System.out.println("Libraries :");
+         
+      StrVector libs = getDeviceLibraries(core);
+	      
       for (int i=0; i<libs.size(); i++) {
          if (!isLibraryAvailable(libs.get(i))) {
             System.out.println(libs.get(i));         
-            Device devs[] = new Device[0];
-            try {
-               devs = Device.getLibraryContents(libs.get(i), core);
-               for (int j=0; j<devs.length; j++) {
-                  if (!devs[j].isSerialPort()) {
-                     System.out.println("   " + devs[j].getAdapterName() + ", " + devs[j].getDescription());
-                     devsTotal.add(devs[j]);
-                  }
-               }
-            } catch (Exception e) {
-               System.out.println("Unable to load " + libs.get(i) + " library.");
-               System.out.println(e.getMessage());
-            }
+		      Device devs[] = new Device[0];
+		      try {
+		          devs = Device.getLibraryContents(libs.get(i), core);
+		          for (int j=0; j<devs.length; j++) {
+			          if (!devs[j].isSerialPort()) {
+			             System.out.println("   " + devs[j].getAdapterName() + ", " + devs[j].getDescription());
+			             devsTotal.add(devs[j]);
+			          }
+		         }
+		      } catch (Exception e) {
+		         System.out.println("Unable to load " + libs.get(i) + " library.");
+		         System.out.println(e.getMessage());
+		      }
          }
       }
       
@@ -400,7 +424,7 @@ public class MicroscopeModel {
                Configuration pcfg;
                pcfg = core.getPixelSizeConfigData(pixelSizeConfigs.get(j));
                ConfigPreset p = new ConfigPreset(pixelSizeConfigs.get(j));
-               p.setPixelSizeUm(core.getPixelSizeUm(pixelSizeConfigs.get(j)));
+               p.setPixelSizeUm(core.getPixelSizeUmByID(pixelSizeConfigs.get(j)));
                for (int k=0; k<pcfg.size(); k++) {
                   PropertySetting ps = pcfg.getSetting(k);
                   Setting s = new Setting(ps.getDeviceLabel(), ps.getPropertyName(), ps.getPropertyValue());

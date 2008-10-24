@@ -45,6 +45,10 @@
 #include <IOKit/IOBSD.h>                                                     
 #endif
 
+#ifdef linux
+#include <dirent.h>
+#endif
+
 #include "../../MMDevice/ModuleInterface.h"
 #include "SerialManager.h"
 #include <sstream>
@@ -744,11 +748,26 @@ void SerialPortLister::ListSerialPorts(std::vector<std::string> &availablePorts)
 #endif // Windows
 
 #ifdef linux
+// Look for /dev files with correct signature in their name
+// We could check if these can be written to...
+DIR* pdir = opendir("/dev");
+struct dirent *pent;
+if (pdir) {
+   while (pent = readdir(pdir)) {
+      if (strstr(pent->d_name, "ttyS") != 0)  {
+         string p = ("/dev/");
+         p.append(pent->d_name);
+         availablePorts.push_back(p.c_str());
+      } else if (strstr(pent->d_name, "ttyUSB") != 0) {
+         string p = ("/dev/");
+         p.append(pent->d_name);
+         availablePorts.push_back(pent->d_name);
+      }
+   }
+}
+
 //TODO: do runtime discovery.  Figure out situation with USB serial ports on linux
-availablePorts.push_back("/dev/ttyS0");
-availablePorts.push_back("/dev/ttyS1");
-availablePorts.push_back("/dev/ttyS2");
-availablePorts.push_back("/dev/ttyS3");
+//availablePorts.push_back("/dev/ttyS0");
 #endif // linux
    
 #ifdef __APPLE__    
