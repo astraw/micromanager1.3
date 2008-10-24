@@ -163,7 +163,8 @@ public class MicroscopeModel {
                   if (devs[j].isSerialPort()) {
                      System.out.println("   " + devs[j].getAdapterName() + ", " + devs[j].getDescription());
                      devs[j].setName(devs[j].getAdapterName());
-                     ports.add(devs[j]);
+                     if (!ports.contains(devs[j]))
+                        ports.add(devs[j]);
                   }
                }
             } catch (Exception e) {
@@ -196,14 +197,16 @@ public class MicroscopeModel {
          pathList = new ArrayList(Arrays.asList(libPaths));
       else
          pathList = new ArrayList<String>();
-      pathList.add("");
+      //pathList.add("");
 
       StrVector libs = new StrVector();
       for (String path : pathList) {
          StrVector tmp = core.getDeviceLibraries(path);
-         if (!tmp.isEmpty())
-            for (int i=0; i < tmp.size(); i++)
+         if (!tmp.isEmpty()) {
+            for (int i=0; i < tmp.size(); i++) {
                libs.add(tmp.get(i));
+            }
+         }
       }
       return libs;
    }
