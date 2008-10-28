@@ -619,7 +619,7 @@ public class MMAcquisitionEngineMT implements AcquisitionEngine {
 
    /**
     * Find out if the configuration is compatible with the current group.
-    * This method should be used to verify if the acquistion protocol is consistent
+    * This method should be used to verify if the acquisition protocol is consistent
     * with the current settings.
     */
    public boolean isConfigAvailable(String config) {
@@ -1327,20 +1327,24 @@ public class MMAcquisitionEngineMT implements AcquisitionEngine {
       // create a new Image5D object
       int numSlices = useSliceSetting_ ? sliceDeltaZ_.length : 1;
 
-      if (i5dWin_ != null) {
-         for (int i=0; i<i5dWin_.length; i++) {
-            i5dWin_[i] = null;
-            img5d_[i] = null;
-         }
-      }
+      // TODO: was this necessary to avoid memory leaks?
+//      if (i5dWin_ != null) {
+//         for (int i=0; i<i5dWin_.length; i++) {
+//            i5dWin_[i] = null;
+//            img5d_[i] = null;
+//         }
+//      }
 
       if (useMultiplePositions_ && posMode_ == PositionMode.TIME_LAPSE) {
          img5d_ = new Image5D[posList_.getNumberOfPositions()]; 
          i5dWin_ = new Image5DWindow[posList_.getNumberOfPositions()];
       } else if (useMultiplePositions_ && posMode_ == PositionMode.MULTI_FIELD) {
+         // multi-field mode special handling
          if (posIndex == 0) {
-            img5d_ = new Image5D[1];
-            i5dWin_ = new Image5DWindow[1];
+            if (img5d_ == null || img5d_.length != 1) {
+               img5d_ = new Image5D[1];
+               i5dWin_ = new Image5DWindow[1];
+            }
          } else {
             // reset
          }
@@ -1352,7 +1356,19 @@ public class MMAcquisitionEngineMT implements AcquisitionEngine {
       for (int i=0; i < img5d_.length; i++) {
          int actualFrames = singleFrame_ ? 1 : numFrames_;
 
-         img5d_[i] = new Image5D(acqName_, type, (int)imgWidth_, (int)imgHeight_, channels_.size(), numSlices, actualFrames, false);
+         boolean newWindow = false;
+         if (!(useMultiplePositions_ && posMode_ == PositionMode.MULTI_FIELD) || posIndex == 0)
+            if (posMode_ == PositionMode.MULTI_FIELD) {
+               if (img5d_[i] == null || img5d_[i].getType() != type || img5d_[i].getWidth() != imgWidth_ || img5d_[i].getHeight() != imgHeight_ ||
+                   img5d_[i].getNSlices() != numSlices || img5d_[i].getNFrames() != actualFrames || img5d_[i].getNChannels() != channels_.size()) {
+                  img5d_[i] = new Image5D(acqName_, type, (int)imgWidth_, (int)imgHeight_, channels_.size(), numSlices, actualFrames, false);
+                  newWindow = true;
+               }
+            } else {
+               img5d_[i] = new Image5D(acqName_, type, (int)imgWidth_, (int)imgHeight_, channels_.size(), numSlices, actualFrames, false);
+               newWindow = true;
+            }
+            
 
          // Set ImageJ calibration:
          Calibration cal = new Calibration();
@@ -1382,7 +1398,8 @@ public class MMAcquisitionEngineMT implements AcquisitionEngine {
          }
 
          // pop-up 5d image window
-         i5dWin_[i] = new Image5DWindow(img5d_[i]);
+         if (newWindow || i5dWin_[i] == null)
+            i5dWin_[i] = new Image5DWindow(img5d_[i]);
 
          // set the desired display mode.  This needs to be called after opening the Window
          // Note that OVERLAY mode is much slower than others, so show a single channel in a fast mode
