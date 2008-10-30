@@ -319,7 +319,7 @@ int ZeissTurret::GetPosition(MM::Device& device, MM::Core& core, int turretNr, i
       return ret;
 
    if (response.substr(0,2) == "PH") 
-      position = atoi(response.substr(2,1).c_str());
+      position = atoi(response.substr(2).c_str());
    else
       return ERR_UNEXPECTED_ANSWER;
 
@@ -420,7 +420,7 @@ int ZeissTurret::GetPresence(MM::Device& device, MM::Core& core,  int turretNr, 
 
    int answer;
    if (response.substr(0,2) == "PH") 
-      answer = atoi(response.substr(2,1).c_str());
+      answer = atoi(response.substr(2).c_str());
    else
       return ERR_UNEXPECTED_ANSWER;
 
