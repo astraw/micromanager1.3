@@ -50,12 +50,17 @@
 #endif
 
 #include "../../MMDevice/ModuleInterface.h"
+#include "../../MMDevice/DeviceBase.h"
 #include "SerialManager.h"
 #include <sstream>
 
 using namespace std;
 
+// declaration of global variables
 SerialManager g_serialManager;
+std::vector<std::string>* g_storedAvailablePorts = 0;
+MM::MMTime g_lastUpdated = MM::MMTime(0);
+
 
 const char* g_StopBits_1 = "1";
 //const char* g_StopBits_1_5 = "1.5";
@@ -131,6 +136,7 @@ MM::Device* SerialManager::CreatePort(const char* portName)
 
    // no such port found, so try to create a new one
    MDSerialPort* pPort = new MDSerialPort(portName);
+   /*
    // try opening, do not check whether this succeeded
    // printf("Opening port %s\n",portName);
    pPort->Open(portName);
@@ -140,7 +146,10 @@ MM::Device* SerialManager::CreatePort(const char* portName)
    pPort->AddReference();
    // printf("Reference added\n");
    return pPort;
-      /*
+  
+   */
+
+     
    if (pPort->Open(portName) == DEVICE_OK)
    {
       // open port succeeded, so add it to the list
@@ -149,10 +158,11 @@ MM::Device* SerialManager::CreatePort(const char* portName)
       return pPort;
    }
 
-   // open port failed
+   // open port failed, note that failure to open one port causes no ports to appear in the UI
    delete pPort;
    return 0;
-   */
+   
+   
 }
 
 void SerialManager::DestroyPort(MM::Device* port)
@@ -178,7 +188,6 @@ void SerialManager::DestroyPort(MM::Device* port)
 
 MDSerialPort::MDSerialPort(std::string portName) :
    refCount_(0),
-   //port_(0),
    busy_(false),
    initialized_(false),
    portTimeoutMs_(2000.0),
@@ -261,7 +270,6 @@ MDSerialPort::MDSerialPort(std::string portName) :
    assert(ret == DEVICE_OK);
    vector<string> stopBitValues;
    stopBitValues.push_back(g_StopBits_1);
-   //stopBitValues.push_back(g_StopBits_1_5);
    stopBitValues.push_back(g_StopBits_2);
    ret = SetAllowedValues(MM::g_Keyword_StopBits,stopBitValues);
 
@@ -697,7 +705,6 @@ int MDSerialPort::OnTransmissionDelay(MM::PropertyBase* pProp, MM::ActionType eA
    {  
       double transmitCharWaitMs;
       pProp->Get(transmitCharWaitMs);
-      printf ("Settings transmit delay to: %f\n", transmitCharWaitMs);
       if (transmitCharWaitMs >= 0 && transmitCharWaitMs < 250)
          transmitCharWaitMs_ = transmitCharWaitMs;
    }     
@@ -705,69 +712,98 @@ int MDSerialPort::OnTransmissionDelay(MM::PropertyBase* pProp, MM::ActionType eA
    return DEVICE_OK;
 }
 
+
 /*
  * Class whose sole function is to list serial ports available on the user's system
  * Methods are provided to give a fresh or a cached list
  */
 SerialPortLister::SerialPortLister()
 {
-   // TODO make storedAvailablePorts_ persist between instances
-   ListSerialPorts(storedAvailablePorts_);
+   if (g_storedAvailablePorts == 0) {
+      g_storedAvailablePorts = new (std::vector<std::string>);
+      *g_storedAvailablePorts = ListSerialPorts();
+      g_lastUpdated = GetCurrentMMTime();
+   } else if ((GetCurrentMMTime() - g_lastUpdated) > MM::MMTime(serialPortListTimeout_, 0)) {
+      *g_storedAvailablePorts = ListSerialPorts();
+      g_lastUpdated = GetCurrentMMTime();
+   }
 }
 
 SerialPortLister::~SerialPortLister()
 {
 }
 
+MM::MMTime SerialPortLister::GetCurrentMMTime()
+{
+   #ifdef __APPLE__
+      struct timeval t;
+      gettimeofday(&t,NULL);
+      return MM::MMTime(t.tv_sec, t.tv_usec);
+   #else
+      ACE_High_Res_Timer timer;
+      ACE_Time_Value t = timer.gettimeofday();
+      return MM::MMTime((long)t.sec(), (long)t.usec());
+   #endif
+}
+
 void SerialPortLister::ListPorts(std::vector<std::string> &availablePorts)
 {
    // TODO check that we actually have a list
-   availablePorts =  storedAvailablePorts_;
+   availablePorts = *g_storedAvailablePorts;
 }
 
 void SerialPortLister::ListCurrentPorts(std::vector<std::string> &availablePorts)
 {
-   ListSerialPorts(storedAvailablePorts_);
-   availablePorts =  storedAvailablePorts_;
+   *g_storedAvailablePorts = ListSerialPorts();
+   availablePorts = *g_storedAvailablePorts;
 }
 
-// lists all serial ports available on this system
-//std::vector<string> SerialManager::ListPorts()
-void SerialPortLister::ListSerialPorts(std::vector<std::string> &availablePorts)
-{
-#ifdef WIN32
-   // WIndows has its port names pre-defined (I guess this code can go):
-   availablePorts.push_back("COM1");
-   availablePorts.push_back("COM2");
-   availablePorts.push_back("COM3");
-   availablePorts.push_back("COM4");
-   availablePorts.push_back("COM5");
-   availablePorts.push_back("COM6");
-   availablePorts.push_back("COM7");
-   availablePorts.push_back("COM8");
-#endif // Windows
+/*
+ * Tests whether given serial port can be used by opening it
+ * Closes port on succss
+ */
+bool SerialPortLister::portAccessible(const char* portName)
+{ 
+   printf("Testing port %s\n", portName);
+   SerialPort* port = new SerialPort(portName);
+   try {
+      port->Open(9600, 8, port->PARITY_NONE, 1, port->FLOW_CONTROL_DEFAULT);
+   } catch ( SerialPort::OpenFailed ) {
+      printf("OpenFailed\n");
+		return false;
+   } catch (SerialPort::AlreadyOpen) {
+      printf("Port already open\n");
+      return false;
+   } 
+   port->Close();
+   delete port;
+   return true;
+   return false;
+}
 
+/**
+ * Lists all serial ports available on this system
+ * Use platform specific mechanism for dicovery
+ * Checks whether dicovered ports can be opened using function portAccessible
+ */
+std::vector<std::string> SerialPortLister::ListSerialPorts()
+{
+   printf ("Listing serial ports\n");
+   std::vector<std::string> availablePorts;
 #ifdef linux
-// Look for /dev files with correct signature in their name
-// We could check if these can be written to...
-DIR* pdir = opendir("/dev");
-struct dirent *pent;
-if (pdir) {
-   while (pent = readdir(pdir)) {
-      if (strstr(pent->d_name, "ttyS") != 0)  {
-         string p = ("/dev/");
-         p.append(pent->d_name);
-         availablePorts.push_back(p.c_str());
-      } else if (strstr(pent->d_name, "ttyUSB") != 0) {
-         string p = ("/dev/");
-         p.append(pent->d_name);
-         availablePorts.push_back(pent->d_name);
+   // Look for /dev files with correct signature in their name
+   DIR* pdir = opendir("/dev");
+   struct dirent *pent;
+   if (pdir) {
+      while (pent = readdir(pdir)) {
+         if ( (strstr(pent->d_name, "ttyS") != 0) || (strstr(pentt->d_name, "ttyUSB" != 0)) )  {
+            string p = ("/dev/");
+            p.append(pent->d_name);
+            if (portAccessible(p.c_str())) 
+               availablePorts.push_back(p.c_str());
+         }
       }
    }
-}
-
-//TODO: do runtime discovery.  Figure out situation with USB serial ports on linux
-//availablePorts.push_back("/dev/ttyS0");
 #endif // linux
    
 #ifdef __APPLE__    
@@ -775,7 +811,7 @@ if (pdir) {
    // Derived from Apple's examples at: http://developer.apple.com/samplecode/SerialPortSample/SerialPortSample.html
    io_iterator_t   serialPortIterator;
    char            bsdPath[256];
-   kern_return_t       kernResult;                                          
+   kern_return_t       kernResult;
    CFMutableDictionaryRef classesToMatch;
        
    // Serial devices are instances of class IOSerialBSDClient               
@@ -797,7 +833,7 @@ if (pdir) {
    io_object_t      modemService;
    Boolean       modemFound = false;    
       
-    // Initialize the returned path    
+    // Initialize the returned path
     *bsdPath = '\0';    
     // Iterate across all modems found. 
     while ( (modemService = IOIteratorNext(serialPortIterator)) ) {
@@ -808,6 +844,7 @@ if (pdir) {
                                                            kCFAllocatorDefault,
                                                            0);              
       if (bsdPathAsCFString) { 
+         printf("Found one");
           Boolean result;                                                  
           // Convert the path from a CFString to a C (NUL-terminated) string for use     
           // with the POSIX open() call.                                      
@@ -817,23 +854,27 @@ if (pdir) {
                                       kCFStringEncodingUTF8);              
 
           CFRelease(bsdPathAsCFString);                                    
+         printf("%s\n", bsdPath);
 
 	       // add the name to our vector<string> only when this is not a dialup port
           string rresult (bsdPath);
           string::size_type loc = rresult.find("DialupNetwork", 0);
           if (result && (loc == string::npos)) {
-               availablePorts.push_back(bsdPath);
-               modemFound = true;                                           
-               kernResult = KERN_SUCCESS;
-           }                                                                
-        }
-     }
+             if (portAccessible(bsdPath))  {
+                printf("Port was opened\n");
+                availablePorts.push_back(bsdPath);
+             }
+             modemFound = true;                                           
+             kernResult = KERN_SUCCESS;
+          }                                                                
+       }
+    }
  
     // Release the io_service_t now that we are done with it.            
     (void) IOObjectRelease(modemService);                                  
 
-    return;
 #endif
+    return availablePorts;
 }
 
 
