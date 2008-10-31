@@ -1357,10 +1357,11 @@ public class MMAcquisitionEngineMT implements AcquisitionEngine {
          int actualFrames = singleFrame_ ? 1 : numFrames_;
 
          boolean newWindow = false;
-         if (!(useMultiplePositions_ && posMode_ == PositionMode.MULTI_FIELD) || posIndex == 0)
+         if (!(useMultiplePositions_ && posMode_ == PositionMode.MULTI_FIELD) || posIndex == 0) {
             if (posMode_ == PositionMode.MULTI_FIELD) {
                if (img5d_[i] == null || img5d_[i].getType() != type || img5d_[i].getWidth() != imgWidth_ || img5d_[i].getHeight() != imgHeight_ ||
-                   img5d_[i].getNSlices() != numSlices || img5d_[i].getNFrames() != actualFrames || img5d_[i].getNChannels() != channels_.size()) {
+                   img5d_[i].getNSlices() != numSlices || img5d_[i].getNFrames() != actualFrames || img5d_[i].getNChannels() != channels_.size() ||
+                   (i5dWin_[i] != null && i5dWin_[i].isClosed())) {
                   img5d_[i] = new Image5D(acqName_, type, (int)imgWidth_, (int)imgHeight_, channels_.size(), numSlices, actualFrames, false);
                   newWindow = true;
                }
@@ -1368,6 +1369,7 @@ public class MMAcquisitionEngineMT implements AcquisitionEngine {
                img5d_[i] = new Image5D(acqName_, type, (int)imgWidth_, (int)imgHeight_, channels_.size(), numSlices, actualFrames, false);
                newWindow = true;
             }
+         }
             
 
          // Set ImageJ calibration:
