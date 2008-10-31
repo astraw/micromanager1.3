@@ -67,8 +67,10 @@ void CPluginManager::ReleasePluginLibrary(HDEVMODULE hLib)
       BOOL ret = FreeLibrary((HMODULE)hLib);
       assert(ret);
    #else
-      int nRet = dlclose(hLib);
-      assert(nRet == 0);
+      // closing dlls makes it impossible to have globals in the device adapters
+      // there do not seem to be side-effects to simply not closing them
+      //int nRet = dlclose(hLib);
+      //assert(nRet == 0);
    #endif
 }
 #ifdef WIN32
@@ -94,17 +96,26 @@ HDEVMODULE CPluginManager::LoadPluginLibrary(const char* shortName)
       if (hMod)
          return (HDEVMODULE) hMod;
    #else
-      HDEVMODULE hMod = dlopen(name.c_str(), RTLD_LAZY);
+      // Npte: the flag RTLD_NODELETE is used so that plugin adapters can maintain globals
+      // that persist over multiple loads of the adpater (which - regretfully - happens in the
+      // hardware config wizard
+      HDEVMODULE hMod = dlopen(name.c_str(), RTLD_LAZY | RTLD_NOLOAD);
       if (hMod)
-         return (HDEVMODULE) hMod;
+         return hMod;
+      hMod = dlopen(name.c_str(), RTLD_LAZY | RTLD_NODELETE);
+      if (hMod)
+         return  hMod;
       #ifdef linux
       // Linux-specific code block by Johan Henriksson
       else {
          string name2 = (string) LIB_NAME_PREFIX + (string) shortName + (string) ".so.0";
 printf("%s\n", name2.c_str());
-         hMod = dlopen(name2.c_str(), RTLD_LAZY);
+         hMod = dlopen(name2.c_str(), RTLD_LAZY | RTLD_NOLOAD);
          if (hMod)
-            return (HDEVMODULE) hMod;
+            return hMod;
+         hMod = dlopen(name2.c_str(), RTLD_LAZY | RTLD_NODELETE);
+         if (hMod)
+            return hMod;
       }
       #endif // linux
    #endif // WIN32
