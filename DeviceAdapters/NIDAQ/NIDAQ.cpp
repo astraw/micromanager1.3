@@ -25,7 +25,7 @@
 
 const char* g_DeviceNameNIDAQDO = "NI-DAQ-DO";
 const char* g_DeviceNameNIDAQAO = "NI-DAQ-AO";
-const char* g_DeviceNameNIDAQDPattern = "NI-DAQ-Digital Pattern";
+const char* g_DeviceNameNIDAQDPattern = "NI-DAQ-Digital-Pattern";
 
 MODULE_API void InitializeModuleData()
 {
@@ -455,10 +455,11 @@ int NIDAQAO::OnDevice(MM::PropertyBase* pProp, MM::ActionType eAct)
  */
 
 NIDAQDPattern::NIDAQDPattern() :
-   digitalPattern_("0,0"),
+   digitalPattern_("0 0"),
    edge_("Rising"),
    status_("Idle"),
    nrRepeats_ (1),
+   samples_ (2),
    taskHandle_(0),
    deviceName_("/Dev1/port0"),
    externalClockPort_ ("/Dev1/PFI0"),
@@ -481,6 +482,31 @@ NIDAQDPattern::NIDAQDPattern() :
 NIDAQDPattern::~NIDAQDPattern()
 {
    Shutdown();
+}
+
+int NIDAQDPattern::Shutdown()
+{
+   // Don't return errors, just log them.  We are shutting down after all...
+   bool32 isTaskDone;
+   int ret = DAQmxBaseIsTaskDone(taskHandle_, &isTaskDone);
+   if (DAQmxFailed(ret))
+      HandleDAQError(ret, taskHandle_);
+
+   if (isTaskDone) {
+      int ret = DAQmxBaseStopTask (taskHandle_);
+      if (DAQmxFailed(ret))
+         HandleDAQError(ret, taskHandle_);
+   }
+   ret = DAQmxBaseClearTask(taskHandle_);
+   if (DAQmxFailed(ret))
+      HandleDAQError(ret, taskHandle_);
+
+   return DEVICE_OK;
+}
+
+void NIDAQDPattern::GetName(char* name) const
+{
+   CDeviceUtils::CopyLimitedString(name, g_DeviceNameNIDAQDPattern);
 }
 
 int NIDAQDPattern::Initialize()
@@ -543,6 +569,11 @@ int NIDAQDPattern::HandleDAQError(int ret, TaskHandle taskHandle)
 }
 
 
+bool NIDAQDPattern::Busy()
+{
+   return false;
+}
+      
 int NIDAQDPattern::InitializeDevice()
 {
    // Create task
@@ -555,15 +586,13 @@ int NIDAQDPattern::InitializeDevice()
       return HandleDAQError(ret, taskHandle_);
 
    int32 edge = DAQmx_Val_Falling;
-   if (edge_ == "Falling")
+   if (edge_ != "Falling")
       edge = DAQmx_Val_Rising;
    // note: parameter frequency now fixed at 10000 (0.1 msec).  Could be exposed
-   ret = DAQmxBaseCfgSampClkTiming(taskHandle_,externalClockPort_.c_str(),10000, edge, DAQmx_Val_FiniteSamps, (uInt64) ((uInt64)nrRepeats_ * (uInt64) samples_));
+    ret = DAQmxBaseCfgSampClkTiming(taskHandle_,externalClockPort_.c_str(),10000, edge, DAQmx_Val_ContSamps, (uInt64) ((uInt64)nrRepeats_ * (uInt64) samples_));
    if (DAQmxFailed(ret))
       return HandleDAQError(ret, taskHandle_);
 
-   // Write Code
-   // TODO: fix data_!!!
    ret = DAQmxBaseWriteDigitalU32(taskHandle_, samples_ * nrRepeats_, 0, 60, DAQmx_Val_GroupByChannel, data_, NULL, NULL);
    if (DAQmxFailed(ret))
       return HandleDAQError(ret, taskHandle_);
@@ -634,15 +663,16 @@ int NIDAQDPattern::OnDigitalPattern(MM::PropertyBase* pProp, MM::ActionType eAct
       std::string pattern;
       pProp->Get(pattern);
       // tokenize pattern 
-      std::string::size_type lastPos = pattern.find_first_not_of(",", 0);
-      std::string::size_type pos = pattern.find_first_of(",", lastPos);
+      char* seperator = " ";
+      std::string::size_type lastPos = pattern.find_first_not_of(seperator, 0);
+      std::string::size_type pos = pattern.find_first_of(seperator, lastPos);
       int counter = 0;
       while ( (pos != std::string::npos || lastPos != std::string::npos) && counter < maxNrSamples_) {
          std::istringstream is(pattern.substr(lastPos, pos - lastPos));
          if (! (is >> data_[counter]))
            return ERR_INVALID_DIGITAL_PATTERN;
-         lastPos = pattern.find_first_not_of(",", pos);
-         pos = pattern.find_first_of(",", lastPos);
+         lastPos = pattern.find_first_not_of(seperator, pos);
+         pos = pattern.find_first_of(seperator, lastPos);
          counter++;
       }
       samples_ = counter;
