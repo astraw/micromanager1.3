@@ -62,7 +62,6 @@ const char* const LIB_NAME_PREFIX = "mmgr_dal_";
 ///////////////////////////////////////////////////////////////////////////////
 // Exported module interface
 ///////////////////////////////////////////////////////////////////////////////
-
 extern "C" {
    MODULE_API MM::Device* CreateDevice(const char* name);
    MODULE_API void DeleteDevice(MM::Device* pDevice);
@@ -71,6 +70,13 @@ extern "C" {
    MODULE_API unsigned GetNumberOfDevices();
    MODULE_API bool GetDeviceName(unsigned deviceIndex, char* name, unsigned bufferLength);
    MODULE_API bool GetDeviceDescription(unsigned deviceIndex, char* name, unsigned bufferLength);
+   /**
+    * The pluginManager maintains a map with persistentData for each module.
+    * This function is guaranteed to be called everytime the module is opened.
+    * The persistentData data structure can be used by the module to maintain data 
+    *   between succesive loading and unloading of the library
+    */
+   MODULE_API void GetPersistentData(std::vector<std::string>& persistentData);
    /**
     * Intializes the list of available devices and perhaps other global initialization tasks.
     * The method may be called any number of times during the uManager session.
@@ -86,9 +92,10 @@ typedef long (*fnGetDeviceInterfaceVersion) ();
 typedef unsigned (*fnGetNumberOfDevices)();
 typedef bool (*fnGetDeviceName)(unsigned, char*, unsigned);
 typedef bool (*fnGetDeviceDescription)(unsigned, char*, unsigned);
+typedef void (*fnGetPersistentData)(std::vector<std::string>&);
 typedef void (*fnInitializeModuleData)();
 
-// functions fore internal use
+// functions for internal use
 void AddAvailableDeviceName(const char* deviceName, const char* description = "Description N/A");
 
 

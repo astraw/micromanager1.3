@@ -46,6 +46,8 @@ using namespace std;
 // CPluginManager class
 // --------------------
 
+CPluginManager::CPersistentDataMap CPluginManager::persistentDataMap;
+
 CPluginManager::CPluginManager() 
 {
 }
@@ -67,10 +69,8 @@ void CPluginManager::ReleasePluginLibrary(HDEVMODULE hLib)
       BOOL ret = FreeLibrary((HMODULE)hLib);
       assert(ret);
    #else
-      // closing dlls makes it impossible to have globals in the device adapters
-      // there do not seem to be side-effects to simply not closing them
-      //int nRet = dlclose(hLib);
-      //assert(nRet == 0);
+      int nRet = dlclose(hLib);
+      assert(nRet == 0);
    #endif
 }
 #ifdef WIN32
@@ -96,24 +96,14 @@ HDEVMODULE CPluginManager::LoadPluginLibrary(const char* shortName)
       if (hMod)
          return (HDEVMODULE) hMod;
    #else
-      // Npte: the flag RTLD_NODELETE is used so that plugin adapters can maintain globals
-      // that persist over multiple loads of the adpater (which - regretfully - happens in the
-      // hardware config wizard
-      HDEVMODULE hMod = dlopen(name.c_str(), RTLD_LAZY | RTLD_NOLOAD);
-      if (hMod)
-         return hMod;
-      hMod = dlopen(name.c_str(), RTLD_LAZY | RTLD_NODELETE);
+      HDEVMODULE hMod = dlopen(name.c_str(), RTLD_LAZY);
       if (hMod)
          return  hMod;
       #ifdef linux
       // Linux-specific code block by Johan Henriksson
       else {
          string name2 = (string) LIB_NAME_PREFIX + (string) shortName + (string) ".so.0";
-printf("%s\n", name2.c_str());
-         hMod = dlopen(name2.c_str(), RTLD_LAZY | RTLD_NOLOAD);
-         if (hMod)
-            return hMod;
-         hMod = dlopen(name2.c_str(), RTLD_LAZY | RTLD_NODELETE);
+         hMod = dlopen(name2.c_str(), RTLD_LAZY);
          if (hMod)
             return hMod;
       }
@@ -170,8 +160,6 @@ void CPluginManager::GetSystemError(string& errorText)
    }
    #else
       errorText = dlerror();  
-   //TODO: >> obtain error text on Linux/Mac
-   ;
    #endif
 }
 
@@ -282,6 +270,7 @@ MM::Device* CPluginManager::LoadDevice(const char* label, const char* moduleName
    try
    {
       CheckVersion(hLib); // verify that versions match
+      SetPersistentData(hLib, moduleName);
       hCreateDeviceFunc = (fnCreateDevice) GetModuleFunction(hLib, "CreateDevice");
       assert(hCreateDeviceFunc);
    }
@@ -422,6 +411,7 @@ vector<string> CPluginManager::GetAvailableDevices(const char* moduleName) throw
    vector<string> devices;
    HDEVMODULE hLib = LoadPluginLibrary(moduleName);
    CheckVersion(hLib); // verify that versions match
+   SetPersistentData(hLib, moduleName);
 
    fnGetNumberOfDevices hGetNumberOfDevices(0);
    fnGetDeviceName hGetDeviceName(0);
@@ -456,6 +446,25 @@ vector<string> CPluginManager::GetAvailableDevices(const char* moduleName) throw
    return devices;
 }
 
+void CPluginManager::SetPersistentData(HDEVMODULE hLib, const char* moduleName)
+{
+   fnGetPersistentData hGetPersistentData(0);
+
+   hGetPersistentData = (fnGetPersistentData) GetModuleFunction(hLib, "GetPersistentData");
+   assert (hGetPersistentData);
+
+   CPersistentDataMap::iterator it = persistentDataMap.find(moduleName);
+   if (it != persistentDataMap.end())
+      hGetPersistentData(it->second);
+   else {
+      CPersistentData* persistentData = new CPersistentData;
+      pair<CPersistentDataMap::iterator, bool> ret;
+      ret = persistentDataMap.insert(std::pair<std::string, CPersistentData> (moduleName, *persistentData) );
+      hGetPersistentData((*ret.first).second);
+   }
+}
+
+
 /**
  * List all available devices in the specified module.
  */
@@ -464,6 +473,7 @@ vector<string> CPluginManager::GetAvailableDeviceDescriptions(const char* module
    vector<string> descriptions;
    HDEVMODULE hLib = LoadPluginLibrary(moduleName);
    CheckVersion(hLib); // verify that versions match
+   SetPersistentData(hLib, moduleName);
 
    fnGetNumberOfDevices hGetNumberOfDevices(0);
    fnGetDeviceDescription hGetDeviceDescription(0);
@@ -505,6 +515,7 @@ vector<long> CPluginManager::GetAvailableDeviceTypes(const char* moduleName) thr
    vector<long> types;
    HDEVMODULE hLib = LoadPluginLibrary(moduleName);
    CheckVersion(hLib); // verify that versions match
+   SetPersistentData(hLib, moduleName);
 
    fnGetNumberOfDevices hGetNumberOfDevices(0);
    fnInitializeModuleData hInitializeModuleData(0);

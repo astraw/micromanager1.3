@@ -88,6 +88,10 @@ MODULE_API void InitializeModuleData()
    AddAvailableDeviceName(g_DeviceMicromax, "Princeton Intruments Micromax");
 }
 
+MODULE_API void GetPersistentData(std::vector<std::string>& persistentData)
+{
+}
+
 MODULE_API void DeleteDevice(MM::Device* pDevice)
 {
    delete pDevice;

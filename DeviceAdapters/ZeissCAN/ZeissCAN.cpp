@@ -105,6 +105,11 @@ MODULE_API void InitializeModuleData()
    AddAvailableDeviceName(g_ZeissFilterWheel1,"FilterWheel 1"); 
    AddAvailableDeviceName(g_ZeissFilterWheel2,"FilterWheel 2"); 
 }
+
+MODULE_API void GetPersistentData(std::vector<std::string>& persistentData)
+{
+}
+
 using namespace std;
 
 ///////////////////////////////////////////////////////////////////////////////

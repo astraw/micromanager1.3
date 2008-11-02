@@ -731,6 +731,14 @@ public:
    }
 
    /**
+    * Continuous sequence acquisition.  Default to sequence acquisition with a high number of images
+    */
+   int StartSequenceAcquisition(double interval)
+   {
+      return StartSequenceAcquisition(ULONG_MAX, interval);;
+   }
+
+   /**
     * Since we don't support streaming mode this command has no effect.
     */
    int StopSequenceAcquisition()

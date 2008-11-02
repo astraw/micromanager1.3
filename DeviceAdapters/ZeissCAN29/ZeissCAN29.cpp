@@ -175,6 +175,11 @@ MODULE_API void InitializeModuleData()
    AddAvailableDeviceName(g_ZeissUniblitz,"Uniblitz Shutter"); 
    AddAvailableDeviceName(g_ZeissFilterWheel,"Filter Wheel"); 
 }
+
+MODULE_API void GetPersistentData(std::vector<std::string>& persistentData)
+{
+}
+
 using namespace std;
 
 ///////////////////////////////////////////////////////////////////////////////

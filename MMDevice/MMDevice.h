@@ -34,7 +34,7 @@
 // Header version
 // If any of the class declarations changes, the interface version
 // must be incremented
-#define DEVICE_INTERFACE_VERSION 28
+#define DEVICE_INTERFACE_VERSION 29
 ///////////////////////////////////////////////////////////////////////////////
 
 #ifndef _MMDEVICE_H_
@@ -46,6 +46,7 @@
 #include <climits>
 #include <cstdlib>
 #include <vector>
+#include <sstream>
 
 
 #define HDEVMODULE void*
@@ -75,6 +76,18 @@ namespace MM {
          }
 
          ~MMTime() {}
+
+         MMTime(std::string serialized) {
+            std::stringstream is(serialized);
+            is >> sec_ >> uSec_;
+            Normalize();
+         }
+
+         std::string serialize() {
+            std::ostringstream os;
+            os << sec_ << " " << uSec_;
+            return os.str().c_str();
+         }
 
          long sec_;
          long uSec_;
@@ -241,6 +254,7 @@ namespace MM {
       virtual int ClearROI() = 0;
 
       virtual int StartSequenceAcquisition(long numImages, double interval_ms) = 0;
+      virtual int StartSequenceAcquisition(double interval_ms) = 0;
       virtual int StopSequenceAcquisition() = 0;
    };
 

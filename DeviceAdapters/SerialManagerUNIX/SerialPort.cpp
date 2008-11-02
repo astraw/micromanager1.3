@@ -563,7 +563,6 @@ SerialPort::SerialPortImpl::SerialPortImpl( const std::string& serialPortName ) 
     mFileDescriptor(-1),
     mOldPortSettings()
 {
-   printf("Opening port with name: %s\n", serialPortName.c_str() );
     /* empty */
 }
 

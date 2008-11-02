@@ -144,6 +144,10 @@ MODULE_API void InitializeModuleData()
 	AddAvailableDeviceName(g_CameraDeviceName, "QImaging universal camera adapter");
 }
 
+MODULE_API void GetPersistentData(std::vector<std::string>& persistentData)
+{
+}
+
 MODULE_API MM::Device* CreateDevice(const char* deviceName)
 {
 	#ifdef PRINT_FUNCTION_NAMES

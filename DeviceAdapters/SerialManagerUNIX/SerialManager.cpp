@@ -59,6 +59,7 @@ using namespace std;
 // declaration of global variables
 SerialManager g_serialManager;
 std::vector<std::string>* g_storedAvailablePorts = 0;
+std::vector<std::string>* g_persistentData = 0;
 MM::MMTime g_lastUpdated = MM::MMTime(0);
 
 
@@ -72,6 +73,7 @@ static const char* FLOW_CONTROL_HARD = "Hardware";
 ///////////////////////////////////////////////////////////////////////////////
 // Exported MMDevice API
 ///////////////////////////////////////////////////////////////////////////////
+
 MODULE_API void InitializeModuleData()
 {
    std::string portName;
@@ -89,9 +91,12 @@ MODULE_API void InitializeModuleData()
       AddAvailableDeviceName(portName.c_str(),"Serial communication port");
       ++iter;                                                                
    }
-   // Todo: output to log message
-   //this->LogMessage(logMsg.str().c_str(), true);
-   //cout << logMsg.str();
+   // Todo: output to log message (needs static LogMsg)
+}
+
+MODULE_API void GetPersistentData(std::vector<std::string>& persistentData)
+{
+   g_persistentData = &persistentData;
 }
 
 MODULE_API MM::Device* CreateDevice(const char* deviceName)
@@ -134,35 +139,10 @@ MM::Device* SerialManager::CreatePort(const char* portName)
       }
    }
 
-   // no such port found, so try to create a new one
+   // no such port found, so create a new one
    MDSerialPort* pPort = new MDSerialPort(portName);
-   /*
-   // try opening, do not check whether this succeeded
-   // printf("Opening port %s\n",portName);
-   pPort->Open(portName);
-   // printf("Port opened\n");
-   ports_.push_back(pPort);
-   // printf("Added to the list\n");
-   pPort->AddReference();
-   // printf("Reference added\n");
+
    return pPort;
-  
-   */
-
-     
-   if (pPort->Open(portName) == DEVICE_OK)
-   {
-      // open port succeeded, so add it to the list
-      ports_.push_back(pPort);
-      pPort->AddReference();
-      return pPort;
-   }
-
-   // open port failed, note that failure to open one port causes no ports to appear in the UI
-   delete pPort;
-   return 0;
-   
-   
 }
 
 void SerialManager::DestroyPort(MM::Device* port)
@@ -320,6 +300,16 @@ int MDSerialPort::Open(const char* portName)
       return ERR_PORT_ALREADY_OPEN;
    } 
 
+   // set-up handshaking
+   try {
+      if (flowControl_ == FLOW_CONTROL_HARD)
+         port_->SetFlowControl(port_->FLOW_CONTROL_HARD);
+      else
+         port_->SetFlowControl(port_->FLOW_CONTROL_NONE);
+   } catch ( ... ) {
+      return ERR_HANDSHAKE_SETUP_FAILED;
+   }
+
    ostringstream logMsg;
    logMsg << "Serial port " << portName_ << " opened." << endl; 
    this->LogMessage(logMsg.str().c_str());
@@ -336,33 +326,13 @@ int MDSerialPort::Initialize()
    if (!IsCallbackRegistered())
       return DEVICE_NO_CALLBACK_REGISTERED;
 
-   // long sb;
-   int ret;
-   //int ret = GetPropertyData(MM::g_Keyword_StopBits, stopBits_.c_str(), sb);
-   //assert(ret == DEVICE_OK);
-
    try {
-      port_->SetBaudRate(baudRate_);
-      port_->SetCharSize(dataBits_);
-      port_->SetParity(port_->PARITY_NONE);
-      port_->SetNumOfStopBits(stopBits_);
-      //long lastError = port_->Setup(CSerial::EBaud9600, CSerial::EData8, CSerial::EParNone, (CSerial::EStopBits)sb);
+      Open(portName_.c_str() );
    } catch ( ... ) {
 		return HandleError(ERR_SETUP_FAILED);
    }
 
-   // set-up handshaking
-   try {
-      if (flowControl_ == FLOW_CONTROL_HARD)
-         port_->SetFlowControl(port_->FLOW_CONTROL_HARD);
-      else
-         port_->SetFlowControl(port_->FLOW_CONTROL_NONE);
-   } catch ( ... ) {
-		return ERR_HANDSHAKE_SETUP_FAILED;
-   }
-   
-
-   ret = UpdateStatus();
+   int ret = UpdateStatus();
    if (ret != DEVICE_OK)
       return ret;
 
@@ -567,14 +537,16 @@ int MDSerialPort::OnPort(MM::PropertyBase* pProp, MM::ActionType eAct)
    }
    else if (eAct == MM::AfterSet)
    {
-      if (initialized_) 
-      {
-         return ERR_PORT_CHANGE_FORBIDDEN;
-      }
-      else
-      {
+      if (port_->IsOpen()) {
+         port_->Close();
+         delete port_;
          pProp->Get(portName_);
-         Open(portName_.c_str() );
+         port_ = new SerialPort(portName_.c_str());
+         int ret =  Open(portName_.c_str());
+         if (ret != DEVICE_OK)
+            return ret;
+      } else {
+            pProp->Get(portName_);
       }
    }
 
@@ -641,16 +613,18 @@ int MDSerialPort::OnFlowControl(MM::PropertyBase* pProp, MM::ActionType eAct)
    {
       std::string oldFlowControl;
       pProp->Get(flowControl_);
-      try {
-         if (flowControl_ == FLOW_CONTROL_NONE) {
-            port_->SetFlowControl(port_->FLOW_CONTROL_NONE);
-         } else if (flowControl_ == FLOW_CONTROL_HARD) {
-            port_->SetFlowControl(port_->FLOW_CONTROL_HARD);
-         }
-      } catch (...) {
-         flowControl_ = oldFlowControl;
-         pProp->Set(flowControl_.c_str());
+      if (initialized_) {
+         try {
+            if (flowControl_ == FLOW_CONTROL_NONE) {
+               port_->SetFlowControl(port_->FLOW_CONTROL_NONE);
+            } else if (flowControl_ == FLOW_CONTROL_HARD) {
+               port_->SetFlowControl(port_->FLOW_CONTROL_HARD);
+            }
+         } catch (...) {
+            flowControl_ = oldFlowControl;
+            pProp->Set(flowControl_.c_str());
          return  ERR_SETUP_FAILED;
+         }
       }
    }
    return DEVICE_OK;
@@ -719,14 +693,33 @@ int MDSerialPort::OnTransmissionDelay(MM::PropertyBase* pProp, MM::ActionType eA
  */
 SerialPortLister::SerialPortLister()
 {
-   if (g_storedAvailablePorts == 0) {
-      g_storedAvailablePorts = new (std::vector<std::string>);
+   if ((int) g_persistentData->size() == 0 || ( (GetCurrentMMTime() - MM::MMTime(*g_persistentData->begin()) > MM::MMTime(serialPortListTimeout_, 0) ) ) ) {
+      if ((int) g_persistentData->size() == 0)
+         printf("No persistentdata found\n");
+      else
+         printf ("Timeout past\n");
+
+      g_persistentData->clear();
+      if (g_storedAvailablePorts == 0)
+         g_storedAvailablePorts = new (std::vector<std::string>);
       *g_storedAvailablePorts = ListSerialPorts();
       g_lastUpdated = GetCurrentMMTime();
-   } else if ((GetCurrentMMTime() - g_lastUpdated) > MM::MMTime(serialPortListTimeout_, 0)) {
-      *g_storedAvailablePorts = ListSerialPorts();
-      g_lastUpdated = GetCurrentMMTime();
+      g_persistentData->push_back(g_lastUpdated.serialize());
+      std::vector<std::string>::iterator it;
+      for (it=g_storedAvailablePorts->begin() ; it < g_storedAvailablePorts->end(); it++ )
+         g_persistentData->push_back(*it);
+   } else {
+      if (g_storedAvailablePorts == 0)
+         g_storedAvailablePorts = new std::vector<std::string>;
+      g_storedAvailablePorts->clear();
+      std::vector<std::string>::iterator it = g_persistentData->begin();
+      it++;
+      while (it < g_persistentData->end()) {
+         g_storedAvailablePorts->push_back(*it);
+         it++;
+      }
    }
+
 }
 
 SerialPortLister::~SerialPortLister()
@@ -735,15 +728,9 @@ SerialPortLister::~SerialPortLister()
 
 MM::MMTime SerialPortLister::GetCurrentMMTime()
 {
-   #ifdef __APPLE__
-      struct timeval t;
-      gettimeofday(&t,NULL);
-      return MM::MMTime(t.tv_sec, t.tv_usec);
-   #else
-      ACE_High_Res_Timer timer;
-      ACE_Time_Value t = timer.gettimeofday();
-      return MM::MMTime((long)t.sec(), (long)t.usec());
-   #endif
+   struct timeval t;
+   gettimeofday(&t,NULL);
+   return MM::MMTime(t.tv_sec, t.tv_usec);
 }
 
 void SerialPortLister::ListPorts(std::vector<std::string> &availablePorts)

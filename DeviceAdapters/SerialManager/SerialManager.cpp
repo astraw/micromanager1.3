@@ -101,6 +101,10 @@ MODULE_API void InitializeModuleData()
    
 }
 
+MODULE_API void GetPersistentData(std::vector<std::string>& persistentData)
+{
+}
+
 MODULE_API MM::Device* CreateDevice(const char* deviceName)
 {
    return g_serialManager.CreatePort(deviceName);
