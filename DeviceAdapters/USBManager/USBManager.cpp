@@ -74,6 +74,7 @@ void __attribute__ ((destructor)) my_fini(void)
 
 
 #include "../../MMDevice/ModuleInterface.h"
+#include "../../MMDevice/DeviceBase.h"
 #include <sstream>
 #include <algorithm>
 
@@ -82,6 +83,7 @@ void __attribute__ ((destructor)) my_fini(void)
 using namespace std;
 
 USBManager g_usbManager;
+std::vector<std::string>* g_persistentData = 0;
 
 USBDeviceInfo g_knownDevices[] = {
    {"Velleman K8055-0", 0x10cf, 0x5500, 0x01, 0x81, 8},
@@ -125,6 +127,7 @@ MODULE_API void InitializeModuleData()
 
 MODULE_API void GetPersistentData(std::vector<std::string>& persistentData)
 {
+   g_persistentData = &persistentData;
 }
 
 MODULE_API MM::Device* CreateDevice(const char* deviceName)
@@ -717,12 +720,42 @@ int MDUSBDevice::OnTimeout(MM::PropertyBase* pProp, MM::ActionType eAct)
  */
 USBDeviceLister::USBDeviceLister()
 {
-   // TODO make storedAvailablePorts_ persist between instances
-   ListCurrentUSBDevices(storedAvailableUSBDevices_);
+   if ((int) g_persistentData->size() == 0 || ( (GetCurrentMMTime() - MM::MMTime(*g_persistentData->begin()) > MM::MMTime(5, 0) ) ) ) {
+
+      g_persistentData->clear();
+      ListCurrentUSBDevices(storedAvailableUSBDevices_);
+      MM::MMTime lastUpdated = GetCurrentMMTime();
+      g_persistentData->push_back(lastUpdated.serialize());
+      std::vector<std::string>::iterator it;
+      for (it=storedAvailableUSBDevices_.begin() ; it < storedAvailableUSBDevices_.end(); it++ )
+         g_persistentData->push_back(*it);
+   } else {
+      storedAvailableUSBDevices_.clear();
+      std::vector<std::string>::iterator it = g_persistentData->begin();
+      it++;
+      while (it < g_persistentData->end()) {
+         storedAvailableUSBDevices_.push_back(*it);
+         it++;
+      }
+   }
 }
 
 USBDeviceLister::~USBDeviceLister()
 {
+}
+
+MM::MMTime USBDeviceLister::GetCurrentMMTime() 
+{
+#ifdef WINDOWS
+#include <time.h>
+    time_t seconds;
+   seconds = time (NULL);
+   return MM::MMTime(seconds, 0);
+#else
+   struct timeval t;
+   gettimeofday(&t,NULL);
+   return MM::MMTime(t.tv_sec, t.tv_usec);
+#endif
 }
 
 void USBDeviceLister::ListUSBDevices(std::vector<std::string> &availableDevices)

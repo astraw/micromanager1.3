@@ -78,6 +78,7 @@ class USBDeviceLister
       void ListCurrentUSBDevices(std::vector<std::string> &availableDevices);
 
    private:
+      MM::MMTime GetCurrentMMTime();
       std::vector<std::string> storedAvailableUSBDevices_;
       void FindUSBDevices(std::vector<std::string> &availableDevices);
 };
