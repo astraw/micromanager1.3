@@ -46,6 +46,7 @@ void __attribute__ ((destructor)) my_fini(void)
 // windows dll entry code                                                    
 #ifdef WIN32    
 #include "../../../3rdparty/libusb/libusb-win32-device-bin-0.1.12.1/include/usb.h"
+#include <time.h>
 #pragma warning(disable : 4290)
    BOOL APIENTRY DllMain( HANDLE /*hModule*/,                                
                           DWORD  ul_reason_for_call,                         
@@ -403,7 +404,7 @@ int MDUSBDevice::GetAnswer(char* answer, unsigned answerLen, const char* term)
 {
    unsigned long charsRead;
    ostringstream logMsg;
-   char* termpos;
+   char* termpos = 0;
    char* internalBuf;
    bool termFound = false;
 
@@ -746,11 +747,10 @@ USBDeviceLister::~USBDeviceLister()
 
 MM::MMTime USBDeviceLister::GetCurrentMMTime() 
 {
-#ifdef WINDOWS
-#include <time.h>
+#ifdef WIN32
     time_t seconds;
    seconds = time (NULL);
-   return MM::MMTime(seconds, 0);
+   return MM::MMTime((long)seconds, 0);
 #else
    struct timeval t;
    gettimeofday(&t,NULL);
