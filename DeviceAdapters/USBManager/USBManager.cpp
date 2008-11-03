@@ -84,7 +84,8 @@ void __attribute__ ((destructor)) my_fini(void)
 using namespace std;
 
 USBManager g_usbManager;
-std::vector<std::string>* g_persistentData = 0;
+std::vector<std::string> g_deviceList;
+MM::MMTime g_deviceListLastUpdated = MM::MMTime(0);
 
 USBDeviceInfo g_knownDevices[] = {
    {"Velleman K8055-0", 0x10cf, 0x5500, 0x01, 0x81, 8},
@@ -107,29 +108,20 @@ int g_numberKnownDevices = 9;
 MODULE_API void InitializeModuleData()
 {
    std::string deviceName;
-   // Get the ports available on this system from our SerialPortLister class
+   // Get the ports available on this system from our USBDeviceLister class
    USBDeviceLister* deviceLister = new USBDeviceLister();
    std::vector<std::string> availableDevices;
-   deviceLister->ListUSBDevices(availableDevices);
-   // Now make them known to the core and output them to the log as well
+   deviceLister->ListCachedUSBDevices(availableDevices);
+
+   // Now make them known to the core
    vector<string>::iterator iter = availableDevices.begin();                  
-   ostringstream logMsg;
-   logMsg << "In InitializeModuleDataUSB devices found :"  << endl;
    while (iter != availableDevices.end()) {                                   
       deviceName = *iter;
-      logMsg << *iter << endl;
       AddAvailableDeviceName(deviceName.c_str(),"USB device");
       ++iter;                                                                
    }
-   // Todo: output to log message
-   //this->LogMessage(logMsg.str().c_str(), true);
-   cout << logMsg.str();
 }
 
-MODULE_API void GetPersistentData(std::vector<std::string>& persistentData)
-{
-   g_persistentData = &persistentData;
-}
 
 MODULE_API MM::Device* CreateDevice(const char* deviceName)
 {
@@ -173,17 +165,12 @@ MM::Device* USBManager::CreatePort(const char* deviceName)
 
    // no such port found, so try to create a new one
    MDUSBDevice* pUSBDevice = new MDUSBDevice(deviceName);
-   // try opening, do not check whether this succeeded
-   printf("Opening port %s\n",deviceName);
-   int ret = pUSBDevice->Open(deviceName);
-   if (ret != DEVICE_OK)
-      return 0;
+   //int ret = pUSBDevice->Open(deviceName);
+   //if (ret != DEVICE_OK)
+   //   return 0;
 
-    printf("Port opened\n");
    devices_.push_back(pUSBDevice);
-    printf("Added to the list\n");
    pUSBDevice->AddReference();
-    printf("Reference added\n");
    return pUSBDevice;
 }
 
@@ -218,7 +205,7 @@ MDUSBDevice::MDUSBDevice(std::string deviceName) :
    answerTimeoutMs_(20)
 {
    deviceLister = new USBDeviceLister();
-   deviceLister->ListUSBDevices(availableDevices_);
+   deviceLister->ListCachedUSBDevices(availableDevices_);
    // Debug: list the ports we found:
    vector<string>::iterator iter = availableDevices_.begin();
    ostringstream logMsg;
@@ -340,8 +327,13 @@ int MDUSBDevice::Initialize()
    // verify callbacks are supported and refuse to continue if not
    if (!IsCallbackRegistered())
       return DEVICE_NO_CALLBACK_REGISTERED;
+printf ("Initializing/opening the USB device %s \n", deviceName_.c_str());
+   // open the port:
+   int ret = Open(deviceName_.c_str());
+   if (ret != DEVICE_OK)
+      return ret;
 
-   int ret = UpdateStatus();
+   ret = UpdateStatus();
    if (ret != DEVICE_OK)
       return ret;
 
@@ -489,7 +481,7 @@ int MDUSBDevice::Write(const unsigned char* buf, unsigned long bufLen)
          }
          
          status = usb_interrupt_write(deviceHandle_, deviceOutputEndPoint_, (char *) buf + (packet * maxPacketSize_), packetLength, (int)answerTimeoutMs_);
-         printf ("status: %d, bufLen: %lu, packetLength: %d, OutputEndpoint: %d, AnswerTimeout: %f\n", status, bufLen, packetLength, deviceOutputEndPoint_, answerTimeoutMs_);
+         // printf ("status: %d, bufLen: %lu, packetLength: %d, OutputEndpoint: %d, AnswerTimeout: %f\n", status, bufLen, packetLength, deviceOutputEndPoint_, answerTimeoutMs_);
          if (status != (int) bufLen)
          {
             logMsg.clear();
@@ -533,7 +525,7 @@ int MDUSBDevice::Read(unsigned char* buf, unsigned long bufLen, unsigned long& c
    {
       memset(internalBuf, 0, maxPacketSize_);
       charsReceived = usb_interrupt_read(deviceHandle_, deviceInputEndPoint_, (char *) internalBuf, maxPacketSize_, (int)answerTimeoutMs_);
-      printf ("charsReceived: %d, packetLength: %d\n", charsReceived, maxPacketSize_);
+      // printf ("charsReceived: %d, packetLength: %d\n", charsReceived, maxPacketSize_);
       /*
       int j = 0;
       while (charsReceived < 0 && j < 4) {
@@ -553,7 +545,7 @@ int MDUSBDevice::Read(unsigned char* buf, unsigned long bufLen, unsigned long& c
          statusContinue = false;
       if (charsRead >= bufLen)
          statusContinue = false;
-      printf ("packet nr: %d\n", packet);
+      // printf ("packet nr: %d\n", packet);
    }
    for (unsigned long j=0; j<charsRead; j++)
       logMsg << hex << (unsigned int) *(buf + j) << " ";
@@ -587,7 +579,7 @@ int MDUSBDevice::HandleError(int errorCode)
          // TODO: port was not in initial list, set error accordingly
       } else {
          // Re-discover which ports are currently available
-         deviceLister->ListCurrentUSBDevices(availableDevices_);
+         deviceLister->ListUSBDevices(availableDevices_);
          pResult = find(availableDevices_.begin(),availableDevices_.end(),deviceName_);
          if (pResult == availableDevices_.end()) {
             ErrorMsg = "This Devices was disconnected.  Currently available Devices are: \n";
@@ -641,7 +633,7 @@ int MDUSBDevice::TakeOverDevice(int iface)
     usb_set_configuration(deviceHandle_, 1);
     if (usb_claim_interface(deviceHandle_, iface) < 0)
     {
-       printf("USB: Claim interface error\n");
+       // printf("USB: Claim interface error\n");
        logMsg << "Claim interface error: " << usb_strerror();
        this->LogMessage(logMsg.str().c_str(), true);
        return ERR_CLAIM_INTERFACE;
@@ -651,7 +643,7 @@ int MDUSBDevice::TakeOverDevice(int iface)
         int status = usb_set_altinterface(deviceHandle_, iface);
         if (status < 0)
         {
-          printf("USB: Set alt interface error: %d\n", status);
+          // printf("USB: Set alt interface error: %d\n", status);
           logMsg << "Set alternate interface error: " << usb_strerror();
           this->LogMessage(logMsg.str().c_str(), true);
           return ERR_CLAIM_INTERFACE;
@@ -721,23 +713,14 @@ int MDUSBDevice::OnTimeout(MM::PropertyBase* pProp, MM::ActionType eAct)
  */
 USBDeviceLister::USBDeviceLister()
 {
-   if ((int) g_persistentData->size() == 0 || ( (GetCurrentMMTime() - MM::MMTime(*g_persistentData->begin()) > MM::MMTime(5, 0) ) ) ) {
+   bool stale = GetCurrentMMTime() - g_deviceListLastUpdated > MM::MMTime(5,0) ? true : false;
 
-      g_persistentData->clear();
-      ListCurrentUSBDevices(storedAvailableUSBDevices_);
-      MM::MMTime lastUpdated = GetCurrentMMTime();
-      g_persistentData->push_back(lastUpdated.serialize());
-      std::vector<std::string>::iterator it;
-      for (it=storedAvailableUSBDevices_.begin() ; it < storedAvailableUSBDevices_.end(); it++ )
-         g_persistentData->push_back(*it);
+   if ((int) g_deviceList.size() == 0 || stale) {
+      g_deviceList.clear();
+      ListUSBDevices(g_deviceList);
+      g_deviceListLastUpdated = GetCurrentMMTime();
    } else {
-      storedAvailableUSBDevices_.clear();
-      std::vector<std::string>::iterator it = g_persistentData->begin();
-      it++;
-      while (it < g_persistentData->end()) {
-         storedAvailableUSBDevices_.push_back(*it);
-         it++;
-      }
+      storedAvailableUSBDevices_ = g_deviceList;
    }
 }
 
@@ -758,22 +741,21 @@ MM::MMTime USBDeviceLister::GetCurrentMMTime()
 #endif
 }
 
-void USBDeviceLister::ListUSBDevices(std::vector<std::string> &availableDevices)
+void USBDeviceLister::ListCachedUSBDevices(std::vector<std::string> &availableDevices)
 {
-   // TODO check that we actually have a list
    availableDevices =  storedAvailableUSBDevices_;
 }
 
-void USBDeviceLister::ListCurrentUSBDevices(std::vector<std::string> &availableDevices)
+void USBDeviceLister::ListUSBDevices(std::vector<std::string> &availableDevices)
 {
    FindUSBDevices(storedAvailableUSBDevices_);
    availableDevices =  storedAvailableUSBDevices_;
 }
 
-// lists all serial ports available on this system
-//std::vector<string> SerialManager::ListPorts()
+// lists all USB Devices on this system that we know about
 void USBDeviceLister::FindUSBDevices(std::vector<std::string> &availableDevices)
 {
+   printf("Discovering USB Devices......\n");
    static struct usb_bus *bus, *busses;
    static struct usb_device *dev;
    //static usb_dev_handle *device_handle = '\0';
@@ -790,39 +772,10 @@ void USBDeviceLister::FindUSBDevices(std::vector<std::string> &availableDevices)
             if ( (dev->descriptor.idVendor == g_knownDevices[i].idVendor) &&
                   (dev->descriptor.idProduct == g_knownDevices[i].idProduct) ) {
                availableDevices.push_back(g_knownDevices[i].name);
+               printf ("USB Device found: %s\n", g_knownDevices[i].name.c_str());
                break;
             }
          }
       }
    }
 }
-
-/*
-USBDevice::USBDevice(std::string deviceName) :
-   open_ (false)
-{
-   deviceName_ = deviceName;
-}
-
-USBDevice::~USBDevice()
-{
-}
-
-int USBDevice::Open()
-{
-   // Using the device name, find the port with matching vendor and device id and open the port
-}
-
-int USBDevice::Close()
-{
-}
-
-int USBDevice::WriteByte(const unsigned char dataByte)
-{
-}
-
-std::string USBDevice::ReadLine(const unsigned int msTimeOut, const char* lineTerminator) throw (NotOpen, ReadTimeout, std::runtime_error)
-{
-}
-
-*/

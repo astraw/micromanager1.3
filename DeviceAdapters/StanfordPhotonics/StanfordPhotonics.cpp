@@ -87,10 +87,6 @@ MODULE_API void InitializeModuleData()
    // AddAvailableDeviceName(g_MegaZName);
 }
 
-MODULE_API void GetPersistentData(std::vector<std::string>& persistentData)
-{
-}
-
 MODULE_API void DeleteDevice(MM::Device* pDevice)
 {
    delete pDevice;

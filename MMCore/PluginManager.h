@@ -81,7 +81,7 @@ private:
    static void CheckVersion(HDEVMODULE libHandle);
 
    typedef std::map<std::string, HDEVMODULE> CModuleMap;
-   typedef std::map<std::string, MM::Device*> CDeviceMap;
+   typedef std::vector<std::string, MM::Device*> CDeviceMap;
 
    typedef std::vector<std::string>  CPersistentData;
    typedef std::map<std::string, CPersistentData> CPersistentDataMap;

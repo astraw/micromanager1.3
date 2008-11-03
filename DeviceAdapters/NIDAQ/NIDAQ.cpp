@@ -35,10 +35,6 @@ MODULE_API void InitializeModuleData()
    printf ("Added NI-DAQ DIO and AO\n");
 }
 
-MODULE_API void GetPersistentData(std::vector<std::string>& persistentData)
-{
-}
-
 MODULE_API MM::Device* CreateDevice(const char* deviceName)
 {
    if (deviceName == 0)

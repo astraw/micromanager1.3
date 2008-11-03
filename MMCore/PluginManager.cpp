@@ -74,6 +74,7 @@ void CPluginManager::ReleasePluginLibrary(HDEVMODULE)
       //BOOL ret = FreeLibrary((HMODULE)hLib);
       //assert(ret);
    #else
+   // Note that even though we use the RTLD_NODELETE flag, the library still disappears (at least on the Mac) when dlclose is called...
       //int nRet = dlclose(hLib);
       //assert(nRet == 0);
    #endif
@@ -101,14 +102,20 @@ HDEVMODULE CPluginManager::LoadPluginLibrary(const char* shortName)
       if (hMod)
          return (HDEVMODULE) hMod;
    #else
-      HDEVMODULE hMod = dlopen(name.c_str(), RTLD_LAZY);
+      HDEVMODULE hMod = dlopen(name.c_str(), RTLD_LAZY | RTLD_NOLOAD);
+      if (hMod)
+         return  hMod;
+      hMod = dlopen(name.c_str(), RTLD_LAZY | RTLD_NODELETE);
       if (hMod)
          return  hMod;
       #ifdef linux
       // Linux-specific code block by Johan Henriksson
       else {
          string name2 = (string) LIB_NAME_PREFIX + (string) shortName + (string) ".so.0";
-         hMod = dlopen(name2.c_str(), RTLD_LAZY);
+         hMod = dlopen(name2.c_str(), RTLD_LAZY | RTLD_NOLOAD);
+         if (hMod)
+            return hMod;
+         hMod = dlopen(name2.c_str(), RTLD_LAZY | RTLD_NODELETE);
          if (hMod)
             return hMod;
       }
@@ -275,7 +282,6 @@ MM::Device* CPluginManager::LoadDevice(const char* label, const char* moduleName
    try
    {
       CheckVersion(hLib); // verify that versions match
-      SetPersistentData(hLib, moduleName);
       hCreateDeviceFunc = (fnCreateDevice) GetModuleFunction(hLib, "CreateDevice");
       assert(hCreateDeviceFunc);
    }
@@ -416,7 +422,6 @@ vector<string> CPluginManager::GetAvailableDevices(const char* moduleName) throw
    vector<string> devices;
    HDEVMODULE hLib = LoadPluginLibrary(moduleName);
    CheckVersion(hLib); // verify that versions match
-   SetPersistentData(hLib, moduleName);
 
    fnGetNumberOfDevices hGetNumberOfDevices(0);
    fnGetDeviceName hGetDeviceName(0);
@@ -451,24 +456,6 @@ vector<string> CPluginManager::GetAvailableDevices(const char* moduleName) throw
    return devices;
 }
 
-void CPluginManager::SetPersistentData(HDEVMODULE hLib, const char* moduleName)
-{
-   fnGetPersistentData hGetPersistentData(0);
-
-   hGetPersistentData = (fnGetPersistentData) GetModuleFunction(hLib, "GetPersistentData");
-   assert (hGetPersistentData);
-
-   CPersistentDataMap::iterator it = persistentDataMap.find(moduleName);
-   if (it != persistentDataMap.end())
-      hGetPersistentData(it->second);
-   else {
-      CPersistentData* persistentData = new CPersistentData;
-      pair<CPersistentDataMap::iterator, bool> ret;
-      ret = persistentDataMap.insert(std::pair<std::string, CPersistentData> (moduleName, *persistentData) );
-      hGetPersistentData((*ret.first).second);
-   }
-}
-
 
 /**
  * List all available devices in the specified module.
@@ -478,7 +465,6 @@ vector<string> CPluginManager::GetAvailableDeviceDescriptions(const char* module
    vector<string> descriptions;
    HDEVMODULE hLib = LoadPluginLibrary(moduleName);
    CheckVersion(hLib); // verify that versions match
-   SetPersistentData(hLib, moduleName);
 
    fnGetNumberOfDevices hGetNumberOfDevices(0);
    fnGetDeviceDescription hGetDeviceDescription(0);
@@ -520,7 +506,6 @@ vector<long> CPluginManager::GetAvailableDeviceTypes(const char* moduleName) thr
    vector<long> types;
    HDEVMODULE hLib = LoadPluginLibrary(moduleName);
    CheckVersion(hLib); // verify that versions match
-   SetPersistentData(hLib, moduleName);
 
    fnGetNumberOfDevices hGetNumberOfDevices(0);
    fnInitializeModuleData hInitializeModuleData(0);

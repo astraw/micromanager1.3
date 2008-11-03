@@ -72,10 +72,10 @@ class USBDeviceLister
       USBDeviceLister();
       ~USBDeviceLister();
 
-      // returns the list of ports discovered in the constructor
+      // returns the current list of ports
       void ListUSBDevices(std::vector<std::string> &availableDevices);
-      // returns the list of ports discover now and stored this for future use in ListPorts
-      void ListCurrentUSBDevices(std::vector<std::string> &availableDevices);
+      // returns a cached list of devices
+      void ListCachedUSBDevices(std::vector<std::string> &availableDevices);
 
    private:
       MM::MMTime GetCurrentMMTime();
@@ -104,7 +104,7 @@ public:
 class MDUSBDevice : public CSerialBase<MDUSBDevice>  
 {
 public:
-   MDUSBDevice(std::string portName);
+   MDUSBDevice(std::string deviceName);
    ~MDUSBDevice();
   
    // MMDevice API

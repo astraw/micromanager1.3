@@ -47,10 +47,6 @@ MODULE_API void InitializeModuleData()
    AddAvailableDeviceName(g_PI_ZStageDeviceName, "PI E-662 Z-stage");
 }
 
-MODULE_API void GetPersistentData(std::vector<std::string>& persistentData)
-{
-}
-
 MODULE_API MM::Device* CreateDevice(const char* deviceName)
 {
    if (deviceName == 0)

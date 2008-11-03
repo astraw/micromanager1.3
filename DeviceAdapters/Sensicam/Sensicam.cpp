@@ -74,10 +74,6 @@ MODULE_API void InitializeModuleData()
    AddAvailableDeviceName("Sensicam", "PCO Sensicam camera adapter");
 }
 
-MODULE_API void GetPersistentData(std::vector<std::string>& persistentData)
-{
-}
-
 MODULE_API void DeleteDevice(MM::Device* pDevice)
 {
    delete pDevice;

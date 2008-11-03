@@ -55,10 +55,6 @@ MODULE_API void InitializeModuleData()
    AddAvailableDeviceName(g_VincentD3Name, "Vincent controller VMM-D3/D4" );
 }
 
-MODULE_API void GetPersistentData(std::vector<std::string>& persistentData)
-{
-}
-
 MODULE_API MM::Device* CreateDevice(const char* deviceName)
 {
    if (deviceName == 0)

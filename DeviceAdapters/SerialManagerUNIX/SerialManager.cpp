@@ -58,10 +58,8 @@ using namespace std;
 
 // declaration of global variables
 SerialManager g_serialManager;
-std::vector<std::string>* g_storedAvailablePorts = 0;
-std::vector<std::string>* g_persistentData = 0;
+std::vector<std::string> g_storedAvailablePorts;
 MM::MMTime g_lastUpdated = MM::MMTime(0);
-
 
 const char* g_StopBits_1 = "1";
 //const char* g_StopBits_1_5 = "1.5";
@@ -94,10 +92,6 @@ MODULE_API void InitializeModuleData()
    // Todo: output to log message (needs static LogMsg)
 }
 
-MODULE_API void GetPersistentData(std::vector<std::string>& persistentData)
-{
-   g_persistentData = &persistentData;
-}
 
 MODULE_API MM::Device* CreateDevice(const char* deviceName)
 {
@@ -693,31 +687,12 @@ int MDSerialPort::OnTransmissionDelay(MM::PropertyBase* pProp, MM::ActionType eA
  */
 SerialPortLister::SerialPortLister()
 {
-   if ((int) g_persistentData->size() == 0 || ( (GetCurrentMMTime() - MM::MMTime(*g_persistentData->begin()) > MM::MMTime(serialPortListTimeout_, 0) ) ) ) {
-      if ((int) g_persistentData->size() == 0)
-         printf("No persistentdata found\n");
-      else
-         printf ("Timeout past\n");
+   bool stale = GetCurrentMMTime() - g_lastUpdated > MM::MMTime(15,0) ? true : false;
 
-      g_persistentData->clear();
-      if (g_storedAvailablePorts == 0)
-         g_storedAvailablePorts = new (std::vector<std::string>);
-      *g_storedAvailablePorts = ListSerialPorts();
+   if ((int) g_storedAvailablePorts.size() == 0 || stale ) {
+      g_storedAvailablePorts.clear();
+      g_storedAvailablePorts = ListSerialPorts();
       g_lastUpdated = GetCurrentMMTime();
-      g_persistentData->push_back(g_lastUpdated.serialize());
-      std::vector<std::string>::iterator it;
-      for (it=g_storedAvailablePorts->begin() ; it < g_storedAvailablePorts->end(); it++ )
-         g_persistentData->push_back(*it);
-   } else {
-      if (g_storedAvailablePorts == 0)
-         g_storedAvailablePorts = new std::vector<std::string>;
-      g_storedAvailablePorts->clear();
-      std::vector<std::string>::iterator it = g_persistentData->begin();
-      it++;
-      while (it < g_persistentData->end()) {
-         g_storedAvailablePorts->push_back(*it);
-         it++;
-      }
    }
 
 }
@@ -736,13 +711,13 @@ MM::MMTime SerialPortLister::GetCurrentMMTime()
 void SerialPortLister::ListPorts(std::vector<std::string> &availablePorts)
 {
    // TODO check that we actually have a list
-   availablePorts = *g_storedAvailablePorts;
+   availablePorts = g_storedAvailablePorts;
 }
 
 void SerialPortLister::ListCurrentPorts(std::vector<std::string> &availablePorts)
 {
-   *g_storedAvailablePorts = ListSerialPorts();
-   availablePorts = *g_storedAvailablePorts;
+   g_storedAvailablePorts = ListSerialPorts();
+   availablePorts = g_storedAvailablePorts;
 }
 
 /*
