@@ -62,15 +62,20 @@ CPluginManager::~CPluginManager()
 #pragma warning(disable : 4189)
 #endif
 
-/** Unloads the plugin library */
-void CPluginManager::ReleasePluginLibrary(HDEVMODULE hLib)
+/** 
+ * Unloads the plugin library 
+ * This function is deprecated.  Unloading the plugin libraries disallows them to maintain information
+ * between invocations.  Not releasing the libraries does not seem to have bad consequences.  
+ * This function can be removed and the code involved can be refactored
+ */
+void CPluginManager::ReleasePluginLibrary(HDEVMODULE)
 {
    #ifdef WIN32
-      BOOL ret = FreeLibrary((HMODULE)hLib);
-      assert(ret);
+      //BOOL ret = FreeLibrary((HMODULE)hLib);
+      //assert(ret);
    #else
-      int nRet = dlclose(hLib);
-      assert(nRet == 0);
+      //int nRet = dlclose(hLib);
+      //assert(nRet == 0);
    #endif
 }
 #ifdef WIN32

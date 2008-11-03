@@ -40,6 +40,9 @@ using namespace std;
 
 SerialManager g_serialManager;
 
+std::vector<std::string> g_PortList;
+time_t g_PortListLastUpdated = 0;
+
 const char* g_StopBits_1 = "1";
 const char* g_StopBits_1_5 = "1.5";
 const char* g_StopBits_2 = "2";
@@ -67,6 +70,7 @@ const char* g_Parity_Mark = "Mark";
 const char* g_Parity_Space = "Space";
 
 #ifdef WIN32
+#include <time.h>
    BOOL APIENTRY DllMain( HANDLE /*hModule*/, 
                           DWORD  ul_reason_for_call, 
                           LPVOID /*lpReserved*/
@@ -88,17 +92,33 @@ const char* g_Parity_Space = "Space";
 ///////////////////////////////////////////////////////////////////////////////
 // Exported MMDevice API
 ///////////////////////////////////////////////////////////////////////////////
+/*
+ * Determines list of available ports and feeds this back to the Core
+ * Caches this list in g_PortList and only queries hardware when this cache is absent or stale
+ */
 MODULE_API void InitializeModuleData()
 {
-   char portName[16];
-   for (int i=0; i<16; i++)
-   {
-      sprintf(portName, "COM%d", i);
-      if (CSerial::EPortAvailable == CSerial::CheckPort(portName))
-         AddAvailableDeviceName(portName, "Serial communication port");
+   // Determine whether portList is fresh enough (i.e. younger than 15 seconds):
+   time_t seconds = time(NULL);
+   time_t timeout = 15;
+   bool stale = seconds - g_PortListLastUpdated > timeout ? true : false;
+
+   if (g_PortList.size() == 0 || stale) {
+      char portName[16];
+      for (int i=0; i<16; i++) {
+         sprintf(portName, "COM%d", i);
+         if (CSerial::EPortAvailable == CSerial::CheckPort(portName)){
+            g_PortList.push_back(portName);
+         }
+      }
+      g_PortListLastUpdated = time(NULL);
    }
 
-   
+   std::vector<std::string>::iterator it = g_PortList.begin();
+   while (it < g_PortList.end()) {
+      AddAvailableDeviceName((*it).c_str(), "Serial communication port");
+      it++;
+   }
 }
 
 MODULE_API void GetPersistentData(std::vector<std::string>& persistentData)
@@ -142,18 +162,18 @@ MM::Device* SerialManager::CreatePort(const char* portName)
    }
 
    // no such port found, so try to create a new one
-   SerialPort* pPort = new SerialPort;
-   if (pPort->Open(portName) == DEVICE_OK)
-   {
+   SerialPort* pPort = new SerialPort(portName);
+//   if (pPort->Open(portName) == DEVICE_OK)
+//   {
       // open port succeeded, so add it to the list
       ports_.push_back(pPort);
       pPort->AddReference();
       return pPort;
-   }
+//   }
 
    // open port failed
-   delete pPort;
-   return 0;
+//   delete pPort;
+//   return 0;
 }
 
 void SerialManager::DestroyPort(MM::Device* port)
@@ -176,7 +196,7 @@ void SerialManager::DestroyPort(MM::Device* port)
    }
 }
 
-SerialPort::SerialPort() :
+SerialPort::SerialPort(const char* portName) :
    refCount_(0),
    port_(0),
    busy_(false),
@@ -188,6 +208,7 @@ SerialPort::SerialPort() :
    parity_(g_Parity_None)
 {
    port_ = new CSerial();
+   portName_ = portName;
 
    InitializeDefaultErrorMessages();
 
@@ -259,8 +280,8 @@ SerialPort::SerialPort() :
    ret = CreateProperty("DelayBetweenCharsMs", "0", MM::Float, false, pActTD, true);
    assert(ret == DEVICE_OK);                                                 
 
-   ret = UpdateStatus();
-   assert(ret == DEVICE_OK);
+   // ret = UpdateStatus();
+   // assert(ret == DEVICE_OK);
 }
 
 SerialPort::~SerialPort()
@@ -269,16 +290,15 @@ SerialPort::~SerialPort()
    delete port_;
 }
 
-int SerialPort::Open(const char* portName)
+int SerialPort::Open()
 {
    assert(port_);
 
    long lastError;
-   lastError = port_->Open(portName, 0, 0, false);
+   lastError = port_->Open(portName_.c_str(), 0, 0, false);
 	if (lastError != ERROR_SUCCESS)
 		return ERR_OPEN_FAILED;
 
-   portName_ = portName;
    ostringstream logMsg;
    logMsg << "Serial port " << portName_ << " opened." << endl; 
    this->LogMessage(logMsg.str().c_str());
@@ -294,8 +314,12 @@ int SerialPort::Initialize()
    if (!IsCallbackRegistered())
       return DEVICE_NO_CALLBACK_REGISTERED;
 
+   int ret = Open();
+   if (ret != DEVICE_OK)
+      return ret;
+
    long sb;
-   int ret = GetPropertyData(MM::g_Keyword_StopBits, stopBits_.c_str(), sb);
+   ret = GetPropertyData(MM::g_Keyword_StopBits, stopBits_.c_str(), sb);
    assert(ret == DEVICE_OK);
 
    long parity;
@@ -443,8 +467,6 @@ int SerialPort::GetAnswer(char* answer, unsigned bufLen, const char* term)
    }
 
    // wait a little more for the proper termination sequence
-   //unsigned long startTime = GetClockTicksUs();
-   //unsigned long newTime = startTime;
    MM::MMTime startTime = GetCurrentMMTime();
    MM::MMTime answerTimeout(answerTimeoutMs_ * 1000.0);
    while ((GetCurrentMMTime() - startTime)  < answerTimeout)

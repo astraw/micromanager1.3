@@ -52,7 +52,7 @@ class CSerial;
 class SerialPort : public CSerialBase<SerialPort>  
 {
 public:
-   SerialPort();
+   SerialPort(const char* portName);
    ~SerialPort();
   
    // MMDevice API
@@ -79,7 +79,7 @@ public:
    int OnTimeout(MM::PropertyBase* pProp, MM::ActionType eAct);
    int OnDelayBetweenCharsMs(MM::PropertyBase* pProp, MM::ActionType eAct);
 
-   int Open(const char* portName);
+   int Open();
    void Close();
    void AddReference() {refCount_++;}
    void RemoveReference() {refCount_--;}
