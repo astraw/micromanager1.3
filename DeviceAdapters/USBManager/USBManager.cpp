@@ -78,6 +78,7 @@ void __attribute__ ((destructor)) my_fini(void)
 #include "../../MMDevice/DeviceBase.h"
 #include <sstream>
 #include <algorithm>
+#include <sys/time.h>
 
 #define USB_TIMEOUT 20
 
