@@ -58,25 +58,6 @@ else
    AC_MSG_RESULT([not found])
 fi
 
-# and for Velleman K8055 
-# TODO: Need better test here
-AC_MSG_CHECKING(for libk8055)
-AM_CONDITIONAL(BUILD_K8055, test -f "/usr/local/include/usb.h")
-if test -z "${BUILD_K8055}" ; then
-   AC_MSG_RESULT([found])
-else
-   AC_MSG_RESULT([not found])
-fi
-
-# and for Velleman K8061 
-# TODO: Need better test here
-AC_MSG_CHECKING(for libk8061)
-AM_CONDITIONAL(BUILD_K8061, test -f "/usr/local/include/usb.h")
-if test -z "${BUILD_K8061}" ; then
-   AC_MSG_RESULT([found])
-else
-   AC_MSG_RESULT([not found])
-fi
 # and for libUSB 
 # TODO: Need better test here
 AC_MSG_CHECKING(for libusb)
