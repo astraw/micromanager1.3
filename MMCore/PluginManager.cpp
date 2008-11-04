@@ -206,7 +206,6 @@ void CPluginManager::CheckVersion(HDEVMODULE hLib)
 /**
  * Unloads the specified device from the core.
  * @param pDevice pointer to the device to unload
- * TODO: remove this method !!!!!
  */
 void CPluginManager::UnloadDevice(MM::Device* pDevice)
 {
@@ -232,6 +231,15 @@ void CPluginManager::UnloadDevice(MM::Device* pDevice)
    // invalidate the entry in the label-device map
    string label = GetDeviceLabel(*pDevice);
    devices_[label] = 0;
+
+   // remove the entry from the device array
+   DeviceArray::iterator it;
+   for (it = devArray_.begin(); it != devArray_.end(); it++)
+      if (*it == pDevice)
+      {
+         devArray_.erase(it);
+         break;
+      }
 }
 
 /**
