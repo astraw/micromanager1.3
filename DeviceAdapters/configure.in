@@ -59,15 +59,20 @@ else
 fi
 
 # and for libUSB 
-# TODO: Need better test here
 AC_MSG_CHECKING(for libusb)
-AM_CONDITIONAL(BUILD_USBMANAGER, test -f "/usr/local/include/usb.h")
-if test -z "$LIBUSB" ; then
-   if test -r /usr/local/lib/libUSB.a ; then
-      LIBUSB="/usr/local/lib/libUSB.a"
-      AC_MSG_RESULT([found])
-   else
-      AC_MSG_RESULT([not found])
+AC_FIND_FILE([usb.h], [/usr/include /usr/local/include], USBINCDIR)
+if test x$USBINCDIR = xNO; then
+   AC_MSG_RESULT([not found])
+else
+   AC_CHECK_HEADERS([$USBINCDIR/usb.h])
+   if test -z "$LIBUSB" ; then
+      AC_FIND_FILE([libUSB.a], [/usr/lib /usr/local/lib], USBLIBDIR)
+      if test x$USBLIBDIR = xNO; then
+         AC_MSG_RESULT([lib not found])
+      else
+         LIBUSB="$USBLIBDIR/libUSB.a"
+         AM_CONDITIONAL(BUILD_USBMANAGER, true)
+      fi
    fi
 fi
 AC_SUBST(LIBUSB)
