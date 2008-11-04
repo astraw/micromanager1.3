@@ -53,6 +53,7 @@
 #include "../../MMDevice/DeviceBase.h"
 #include "SerialManager.h"
 #include <sstream>
+#include <sys/time.h>
 
 using namespace std;
 
