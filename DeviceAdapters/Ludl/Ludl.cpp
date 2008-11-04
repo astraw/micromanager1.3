@@ -397,7 +397,7 @@ int Hub::OnReset(MM::PropertyBase* pProp, MM::ActionType pAct)
       if (request == "Reset")
       {
          // Send the Reset Command
-         char* cmd = "Remres";
+         const char* cmd = "Remres";
          int ret = SendSerialCommand(port_.c_str(), cmd, "\r");
          if (ret !=DEVICE_OK)
             return ret;

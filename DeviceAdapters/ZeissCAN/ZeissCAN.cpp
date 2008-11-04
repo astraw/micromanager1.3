@@ -187,7 +187,7 @@ void ZeissHub::ClearRcvBuf()
 int ZeissHub::GetVersion(MM::Device& device, MM::Core& core, std::string& ver)
 {
    // get the stand firmware
-   char* command = "HPTv0";
+   const char* command = "HPTv0";
    int ret = ExecuteCommand(device, core,  command);
    if (ret != DEVICE_OK)
       return ret;
