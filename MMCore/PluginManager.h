@@ -82,11 +82,13 @@ private:
 
    typedef std::map<std::string, HDEVMODULE> CModuleMap;
    typedef std::map<std::string, MM::Device*> CDeviceMap;
+   typedef std::vector<MM::Device*> DeviceArray;
 
    typedef std::vector<std::string>  CPersistentData;
    typedef std::map<std::string, CPersistentData> CPersistentDataMap;
    static CPersistentDataMap persistentDataMap;
    CDeviceMap devices_;
+   DeviceArray devArray_;
 };
 
 #endif //_PLUGIN_MANAGER_H_

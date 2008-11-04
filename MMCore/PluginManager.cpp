@@ -206,6 +206,7 @@ void CPluginManager::CheckVersion(HDEVMODULE hLib)
 /**
  * Unloads the specified device from the core.
  * @param pDevice pointer to the device to unload
+ * TODO: remove this method !!!!!
  */
 void CPluginManager::UnloadDevice(MM::Device* pDevice)
 {
@@ -252,6 +253,7 @@ void CPluginManager::UnloadAllDevices()
          UnloadDevice(it->second);
 
    devices_.clear();
+   devArray_.clear();
 }
 
 /**
@@ -303,6 +305,7 @@ MM::Device* CPluginManager::LoadDevice(const char* label, const char* moduleName
 
    // assign label
    devices_[label] = pDevice;
+   devArray_.push_back(pDevice);
 
    return pDevice;
 }
@@ -353,11 +356,14 @@ string CPluginManager::GetDeviceLabel(const MM::Device& device) const
 vector<string> CPluginManager::GetDeviceList(MM::DeviceType type) const
 {
    vector<string> labels;
-   CDeviceMap::const_iterator it;
-   for (it=devices_.begin(); it != devices_.end(); it++)
+   for (size_t i=0; i<devArray_.size(); i++)
    {
-      if (type == MM::AnyType || type == it->second->GetType())
-         labels.push_back(it->first);
+      char buf[MM::MaxStrLength];
+      if (type == MM::AnyType || type == devArray_[i]->GetType())
+      {
+         devArray_[i]->GetLabel(buf);
+         labels.push_back(buf);
+      }
    }
    return labels;
 }
