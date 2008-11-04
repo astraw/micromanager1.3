@@ -759,7 +759,7 @@ std::vector<std::string> SerialPortLister::ListSerialPorts()
    struct dirent *pent;
    if (pdir) {
       while (pent = readdir(pdir)) {
-         if ( (strstr(pent->d_name, "ttyS") != 0) || (strstr(pentt->d_name, "ttyUSB" != 0)) )  {
+         if ( (strstr(pent->d_name, "ttyS") != 0) || (strstr(pent->d_name, "ttyUSB") != 0) )  {
             string p = ("/dev/");
             p.append(pent->d_name);
             if (portAccessible(p.c_str())) 
