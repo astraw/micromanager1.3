@@ -604,58 +604,57 @@ int MDUSBDevice::HandleError(int errorCode)
 int MDUSBDevice::TakeOverDevice(int iface)
 {
    ostringstream logMsg;
-    char driver_name[256];
-    memset(driver_name, 0, 256);
+   char driver_name[256];
+   memset(driver_name, 0, 256);
 
-    assert(deviceHandle_ != NULL);
+   assert(deviceHandle_ != NULL);
 #ifdef LIBUSB_HAS_GET_DRIVER_NP
-    int ret = K8055_ERROR;
-    ret = usb_get_driver_np(deviceHandle_, interface, driver_name, sizeof(driver_name));
-    if (ret == 0)
-    {
-       logMsg << "USB Drive name : " << driver_name;
-       this->LogMessage(logMsg.str().c_str(), true);
-       if (0 > usb_detach_kernel_driver_np(udev, interface)) {
-          logMsg.clear();
-          logMesg << "Disconnect OS driver: " << usb_strerror();
-          this->LogMessage(logMsg.str().c_str(), true);
-        }
-        else {
-          logMsg.clear();
-          logMesg << "Disconnected OS driver: " << usb_strerror();
-          this->LogMessage(logMsg.str().c_str(), true);
-        }
-    }
-    else  {
-       logMsg << "get driver name: " << usb_strerror();
-       this->LogMessage(logMsg.str().c_str(), true);
-    }
+   int ret = usb_get_driver_np(deviceHandle_, iface, driver_name, sizeof(driver_name));
+   if (ret == 0)
+   {
+      logMsg << "USB Drive name : " << driver_name;
+      this->LogMessage(logMsg.str().c_str(), true);
+      if (0 > usb_detach_kernel_driver_np(deviceHandle_, iface)) {
+         logMsg.clear();
+         logMsg << "Disconnect OS driver: " << usb_strerror();
+         this->LogMessage(logMsg.str().c_str(), true);
+      }
+      else {
+         logMsg.clear();
+         logMsg << "Disconnected OS driver: " << usb_strerror();
+         this->LogMessage(logMsg.str().c_str(), true);
+      }
+   }
+   else  {
+      logMsg << "get driver name: " << usb_strerror();
+      this->LogMessage(logMsg.str().c_str(), true);
+   }
 #endif
-    /* claim interface */
-    usb_set_configuration(deviceHandle_, 1);
-    if (usb_claim_interface(deviceHandle_, iface) < 0)
-    {
-       // printf("USB: Claim interface error\n");
-       logMsg << "Claim interface error: " << usb_strerror();
-       this->LogMessage(logMsg.str().c_str(), true);
-       return ERR_CLAIM_INTERFACE;
-    }
-    else
-    {
-        int status = usb_set_altinterface(deviceHandle_, iface);
-        if (status < 0)
-        {
-          // printf("USB: Set alt interface error: %d\n", status);
-          logMsg << "Set alternate interface error: " << usb_strerror();
-          this->LogMessage(logMsg.str().c_str(), true);
-          return ERR_CLAIM_INTERFACE;
-        }
-    }
+   /* claim interface */
+   usb_set_configuration(deviceHandle_, 1);
+   if (usb_claim_interface(deviceHandle_, iface) < 0)
+   {
+      // printf("USB: Claim interface error\n");
+      logMsg << "Claim interface error: " << usb_strerror();
+      this->LogMessage(logMsg.str().c_str(), true);
+      return ERR_CLAIM_INTERFACE;
+   }
+   else
+   {
+       int status = usb_set_altinterface(deviceHandle_, iface);
+       if (status < 0)
+       {
+         // printf("USB: Set alt interface error: %d\n", status);
+         logMsg << "Set alternate interface error: " << usb_strerror();
+         this->LogMessage(logMsg.str().c_str(), true);
+         return ERR_CLAIM_INTERFACE;
+       }
+   }
 
-    logMsg << "Found interface " << iface << "\nTook over the device";
-    this->LogMessage(logMsg.str().c_str(), false);
+   logMsg << "Found interface " << iface << "\nTook over the device";
+   this->LogMessage(logMsg.str().c_str(), false);
 
-    return DEVICE_OK;
+   return DEVICE_OK;
 }
 
 

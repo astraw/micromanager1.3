@@ -66,16 +66,16 @@ if test x$USBINCDIR = xNO; then
 else
    AC_CHECK_HEADERS([$USBINCDIR/usb.h])
    if test -z "$LIBUSB" ; then
-      AC_FIND_FILE([libUSB.a], [/usr/lib /usr/local/lib], USBLIBDIR)
+      AC_FIND_FILE([libusb.a], [/usr/lib /usr/local/lib], USBLIBDIR)
       if test x$USBLIBDIR = xNO; then
          AC_MSG_RESULT([lib not found])
       else
-         LIBUSB="$USBLIBDIR/libUSB.a"
-         AM_CONDITIONAL(BUILD_USBMANAGER, true)
+         LIBUSB="$USBLIBDIR/libusb.a"
       fi
    fi
 fi
 AC_SUBST(LIBUSB)
+AM_CONDITIONAL([BUILD_USBMANAGER], [test -f $(LIBUSB)])
 
 # Only build the Nikon TE2000 when the code is there
 AM_CONDITIONAL([BUILD_TE2000],[test -f "NikonTE2000/NikonTE2000.h"])

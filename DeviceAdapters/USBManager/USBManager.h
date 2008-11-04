@@ -152,7 +152,7 @@ private:
    int deviceOutputEndPoint_;
    int maxPacketSize_;
 
-   int MDUSBDevice::HandleError(int errorCode);
+   int HandleError(int errorCode);
 
    char* buffer_;
    unsigned bufferLen_;
