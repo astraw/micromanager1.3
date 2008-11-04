@@ -34,6 +34,7 @@ import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.GregorianCalendar;
 import java.util.Hashtable;
+import java.util.Vector;
 
 import mmcorej.CMMCore;
 import mmcorej.Configuration;
@@ -185,7 +186,7 @@ public class MicroscopeModel {
    /**
     * Match the file list against currently available DLLs and add ones that are missing         
     * Find all paths on java.library.path and add an empty (current) directory
-    * Then assemble a lits with DeviceLibraries on all these paths
+    * Then assemble a list with DeviceLibraries on all these paths
     */
    public static StrVector getDeviceLibraries(CMMCore core) {
       String libPath = System.getProperty("java.library.path");
@@ -197,14 +198,21 @@ public class MicroscopeModel {
          pathList = new ArrayList(Arrays.asList(libPaths));
       else
          pathList = new ArrayList<String>();
-      //pathList.add("");
+      pathList.add("");
 
+      // Construct vector with libraries, but avoid adding the same library twice
       StrVector libs = new StrVector();
+      Vector<String> tmpLibs = new Vector<String>();
       for (String path : pathList) {
          StrVector tmp = core.getDeviceLibraries(path);
          if (!tmp.isEmpty()) {
             for (int i=0; i < tmp.size(); i++) {
-               libs.add(tmp.get(i));
+               int j = tmp.get(i).lastIndexOf("/");
+               String tmpLib = tmp.get(i).substring(j+1);
+               if (! tmpLibs.contains(tmpLib)) {
+                  libs.add(tmp.get(i));
+                  tmpLibs.add(tmpLib);
+               }
             }
          }
       }
