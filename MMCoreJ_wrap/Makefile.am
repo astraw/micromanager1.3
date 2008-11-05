@@ -23,7 +23,6 @@ nodist_libMMCoreJ_wrap_la_SOURCES = MMCoreJ_wrap.cxx
 libMMCoreJ_wrap_la_SOURCES = $(SWIGLIB_SOURCES) \
 	$(top_srcdir)/MMDevice/DeviceUtils.cpp \
 	$(top_srcdir)/MMDevice/ImgBuffer.cpp \
-	$(top_srcdir)/MMDevice/ModuleInterface.cpp \
 	$(top_srcdir)/MMDevice/Property.cpp \
 	$(top_srcdir)/MMCore/CircularBuffer.cpp \
 	$(top_srcdir)/MMCore/Configuration.cpp \
