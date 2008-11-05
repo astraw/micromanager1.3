@@ -102,20 +102,20 @@ HDEVMODULE CPluginManager::LoadPluginLibrary(const char* shortName)
       if (hMod)
          return (HDEVMODULE) hMod;
    #else
-      HDEVMODULE hMod = dlopen(name.c_str(), RTLD_LAZY | RTLD_NOLOAD);
+      HDEVMODULE hMod = dlopen(name.c_str(), RTLD_LAZY | RTLD_NOLOAD| RTLD_LOCAL);
       if (hMod)
          return  hMod;
-      hMod = dlopen(name.c_str(), RTLD_LAZY | RTLD_NODELETE);
+      hMod = dlopen(name.c_str(), RTLD_LAZY | RTLD_NODELETE | RTLD_LOCAL);
       if (hMod)
          return  hMod;
       #ifdef linux
       // Linux-specific code block by Johan Henriksson
       else {
          string name2 = (string) LIB_NAME_PREFIX + (string) shortName + (string) ".so.0";
-         hMod = dlopen(name2.c_str(), RTLD_LAZY | RTLD_NOLOAD);
+         hMod = dlopen(name2.c_str(), RTLD_LAZY | RTLD_NOLOAD | RTLD_LOCAL);
          if (hMod)
             return hMod;
-         hMod = dlopen(name2.c_str(), RTLD_LAZY | RTLD_NODELETE);
+         hMod = dlopen(name2.c_str(), RTLD_LAZY | RTLD_NODELETE | RTLD_LOCAL);
          if (hMod)
             return hMod;
       }
@@ -453,6 +453,7 @@ vector<string> CPluginManager::GetAvailableDevices(const char* moduleName) throw
       assert(hGetDeviceName);
 
       unsigned numDev = hGetNumberOfDevices();
+printf("Number of Devices: %d\n", numDev);
       for (unsigned i=0; i<numDev; i++)
       {
          char deviceName[MM::MaxStrLength];
