@@ -610,10 +610,10 @@ LONG CSerial::SetupHandshaking (EHandshake eHandshake)
 	case EHandshakeOff:
 		dcb.fOutxCtsFlow = false;					// Disable CTS monitoring
 		dcb.fOutxDsrFlow = false;					// Disable DSR monitoring
-		dcb.fDtrControl = DTR_CONTROL_DISABLE;		// Disable DTR monitoring
+		dcb.fDtrControl = DTR_CONTROL_HANDSHAKE;		// Disable DTR monitoring
 		dcb.fOutX = false;							// Disable XON/XOFF for transmission
 		dcb.fInX = false;							// Disable XON/XOFF for receiving
-		dcb.fRtsControl = RTS_CONTROL_DISABLE;		// Disable RTS (Ready To Send)
+		dcb.fRtsControl = RTS_CONTROL_HANDSHAKE;		// Disable RTS (Ready To Send)
 		break;
 
 	case EHandshakeHardware:
