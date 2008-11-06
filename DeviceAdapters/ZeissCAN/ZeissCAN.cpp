@@ -474,15 +474,16 @@ int ZeissScope::OnPort(MM::PropertyBase* pProp, MM::ActionType eAct)
       pProp->Set(g_hub.port_.c_str());
    } else if (eAct == MM::AfterSet) {
       if (initialized_) {
-         // revert
+         // TODO: allow port changes
          pProp->Set(g_hub.port_.c_str());
-         return ERR_PORT_CHANGE_FORBIDDEN;
-      }
-      // take this port.  TODO: should we check if this is a valid port?
-      pProp->Get(g_hub.port_);
+         //return ERR_PORT_CHANGE_FORBIDDEN;
+      } else {
+       // take this port.  TODO: should we check if this is a valid port?
+         pProp->Get(g_hub.port_);
 
-      g_hub.initialized_ = true;
-      initialized_ = true;
+         g_hub.initialized_ = true;
+         initialized_ = true;
+      }
    }
 
    return DEVICE_OK;
@@ -529,7 +530,7 @@ bool ZeissScope::Busy()
 ZeissShutter::ZeissShutter () :
    initialized_ (false),
    name_ (g_ZeissShutter),
-   shutterNr_ (0),
+   shutterNr_ (1),
    external_ (false),
    state_ (1)
 {
