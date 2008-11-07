@@ -110,7 +110,7 @@ Source: micro-manager-1.3\plugins\Micro-Manager\MMAutofocusTB_.jar; DestDir: {ap
 [Icons]
 Name: {group}\Micro-Manager-1.3; Filename: {app}\ImageJ.exe; WorkingDir: {app}
 Name: {group}\{cm:UninstallProgram,Micro-Manager-1.3}; Filename: {uninstallexe}
-Name: {commondesktop}\Micro-Manager-1.3; Filename: {app}\ImageJ.exe; Tasks: desktopicon; WorkingDir: {app}; IconIndex: 0
+Name: {commondesktop}\Micro-Manager 1.3; Filename: {app}\ImageJ.exe; Tasks: desktopicon; WorkingDir: {app}; IconIndex: 0
 
 [Run]
 Filename: {app}\ImageJ.exe; Description: {cm:LaunchProgram,Micro-Manager-1.3}; Flags: nowait postinstall skipifsilent
