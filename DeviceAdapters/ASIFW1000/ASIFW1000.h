@@ -137,6 +137,7 @@ public:
    int OnWheelNr(MM::PropertyBase* pProp, MM::ActionType eAct);                
                                                                              
 private:                                                                     
+   bool open_;
    bool initialized_;                                                        
    std::string name_;  
    long  pos_;

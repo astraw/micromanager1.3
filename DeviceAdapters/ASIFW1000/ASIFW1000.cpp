@@ -263,6 +263,9 @@ int FilterWheel::Initialize()
    if (ret != DEVICE_OK) 
       return ret; 
 
+   // Gate Closed Position
+   ret = CreateProperty(MM::g_Keyword_Closed_Position,"", MM::String, false);
+
    // Get the number of filters in this wheel and add these as allowed values
    ret = g_hub.SetCurrentWheel(*this, *GetCoreCallback(), wheelNr_);
    if (ret != DEVICE_OK)
@@ -275,6 +278,7 @@ int FilterWheel::Initialize()
    {
       sprintf(pos, "%d", i);
       AddAllowedValue(MM::g_Keyword_State, pos);
+      AddAllowedValue(MM::g_Keyword_Closed_Position, pos);
    }
 
    // Get current position
@@ -297,6 +301,8 @@ int FilterWheel::Initialize()
       sprintf(state, "State-%d", i);
       SetPositionLabel(i,state);
    }
+
+   open_ = gateOpen_;
 
    ret = UpdateStatus();
    if (ret != DEVICE_OK) 
@@ -338,22 +344,25 @@ int FilterWheel::OnState(MM::PropertyBase* pProp, MM::ActionType eAct)
    else if (eAct == MM::AfterSet)
    {
       long pos;
+      int ret;
       pProp->Get(pos);
-      if (pos == pos_)
-         return DEVICE_OK;
       // sanity check
       if (pos < 0)
          pos = 0;
       if (pos >= numPos_)
          pos = numPos_ - 1;
-      int ret = g_hub.SetFilterWheelPosition(*this, *GetCoreCallback(), wheelNr_, pos);
-      if (ret == DEVICE_OK) {
-         pos_ = pos;
-         pProp->Set(pos_);
+      if ((pos == pos_) && (open_ == gateOpen_))
          return DEVICE_OK;
-      }
+      if (gateOpen_)
+         ret = g_hub.SetFilterWheelPosition(*this, *GetCoreCallback(), wheelNr_, pos);
       else
-         return  ret;
+         ret = g_hub.SetFilterWheelPosition(*this, *GetCoreCallback(), wheelNr_, gateClosedPosition_);
+      if (ret != DEVICE_OK)
+         return ret;
+
+      pos_ = pos;
+      open_ = gateOpen_;
+      pProp->Set(pos_);
    }
    return DEVICE_OK;
 }
