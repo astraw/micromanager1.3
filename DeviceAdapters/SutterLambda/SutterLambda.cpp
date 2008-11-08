@@ -251,6 +251,8 @@ int Wheel::Initialize()
       AddAllowedValue(MM::g_Keyword_Closed_Position, buf); 
    }
 
+   open_ = gateOpen_;
+
    ret = UpdateStatus();
    if (ret != DEVICE_OK)
       return ret;
@@ -356,23 +358,37 @@ int Wheel::OnState(MM::PropertyBase* pProp, MM::ActionType eAct)
       long pos;
       pProp->Get(pos);
 
-      //check if we are already in that state
-      if ((unsigned)pos == curPos_)
-         return DEVICE_OK;
-
       if (pos >= (long)numPos_ || pos < 0)
       {
          pProp->Set((long)curPos_); // revert
          return ERR_UNKNOWN_POSITION;
       }
 
-      // try to apply the value
-      if (!SetWheelPosition(pos))
-      {
-         pProp->Set((long)curPos_); // revert
-         return ERR_SET_POSITION_FAILED;
+      // For efficiency, the previous state and gateOpen position is cached
+      if (gateOpen_) {
+         // check if we are already in that state
+         if (((unsigned)pos == curPos_) && open_)
+            return DEVICE_OK;
+
+         // try to apply the value
+         if (!SetWheelPosition(pos))
+         {
+            pProp->Set((long)curPos_); // revert
+            return ERR_SET_POSITION_FAILED;
+         }
+      } else {
+         if (!open_) {
+            curPos_ = pos;
+            return DEVICE_OK;
+         }
+         if (!SetWheelPosition(gateClosedPosition_))
+         {
+            pProp->Set((long) curPos_); // revert
+            return ERR_SET_POSITION_FAILED;
+         }
       }
       curPos_ = pos;
+      open_ = gateOpen_;
    }
 
    return DEVICE_OK;
