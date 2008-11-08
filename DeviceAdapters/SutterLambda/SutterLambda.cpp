@@ -198,11 +198,14 @@ int Wheel::Initialize()
 
    // set property list
    // -----------------
-   
+
+   // Gate Closed Position
+   int ret = CreateProperty(MM::g_Keyword_Closed_Position,"", MM::String, false);
+
    // State
    // -----
    CPropertyAction* pAct = new CPropertyAction (this, &Wheel::OnState);
-   int ret = CreateProperty(MM::g_Keyword_State, "0", MM::Integer, false, pAct);
+   ret = CreateProperty(MM::g_Keyword_State, "0", MM::Integer, false, pAct);
    if (ret != DEVICE_OK)
       return ret;
 
@@ -243,6 +246,9 @@ int Wheel::Initialize()
    {
       snprintf(buf, bufSize, "Filter-%d", i);
       SetPositionLabel(i, buf);
+      // Also give values for Closed-Position state whil we are at it
+      snprintf(buf, bufSize, "%ld", i);
+      AddAllowedValue(MM::g_Keyword_Closed_Position, buf); 
    }
 
    ret = UpdateStatus();
