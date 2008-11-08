@@ -70,7 +70,7 @@ private:
    std::string name_;
    std::string port_;
    unsigned curPos_;
-   unsigned open_;
+   bool open_;
    unsigned speed_;
    bool busy_;
    double answerTimeoutMs_;
