@@ -36,7 +36,8 @@
 #define ERR_VOLT_OUT_OF_RANGE              10003
 #define ERR_POS_OUT_OF_RANGE               10004
 #define ERR_NO_DA_DEVICE_FOUND             10005
-
+#define ERR_NO_STATE_DEVICE                10006
+#define ERR_NO_STATE_DEVICE_FOUND          10007
 
 /*
  * MultiShutter: Combines multiple physical shutters into one logical device
@@ -155,6 +156,40 @@ private:
    double maxStagePos_;
    double pos_;
    double originPos_;
+};
+
+/**
+ * StateDeviceShutter: Adds shuttering capabilities to a State Device
+ */
+class StateDeviceShutter : public CShutterBase<StateDeviceShutter>
+{
+public:
+   StateDeviceShutter();
+   ~StateDeviceShutter();
+  
+   // Device API
+   // ----------
+   int Initialize();
+   int Shutdown() {initialized_ = false; return DEVICE_OK;}
+  
+   void GetName(char* pszName) const;
+   bool Busy();
+
+   // Shutter API
+   int SetOpen(bool open = true);
+   int GetOpen(bool& open);
+   int Fire (double /* deltaT */) { return DEVICE_UNSUPPORTED_COMMAND;}
+   // ---------
+
+   // action interface
+   // ----------------
+   int OnStateDevice(MM::PropertyBase* pProp, MM::ActionType eAct);
+
+private:
+   std::vector<std::string> availableStateDevices_;
+   std::string stateDeviceName_;
+   MM::State* stateDevice_;
+   bool initialized_;
 };
 
 #endif //_UTILITIES_H_

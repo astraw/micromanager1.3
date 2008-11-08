@@ -34,6 +34,7 @@ const char* g_DeviceNameMultiShutter = "Multi Shutter";
 const char* g_Undefined = "Undefined";
 const char* g_DeviceNameDAShutter = "DA Shutter";
 const char* g_DeviceNameDAZStage = "DA Z Stage";
+const char* g_DeviceNameStateDeviceShutter = "State Device Shutter";
 
 ///////////////////////////////////////////////////////////////////////////////
 // Exported MMDevice API
@@ -43,6 +44,7 @@ MODULE_API void InitializeModuleData()
    AddAvailableDeviceName(g_DeviceNameMultiShutter, "Combine multiple physical shutters into a single logical shutter");
    AddAvailableDeviceName(g_DeviceNameDAShutter, "DA used as a shutter");
    AddAvailableDeviceName(g_DeviceNameDAZStage, "DA-controlled Z-stage");
+   AddAvailableDeviceName(g_DeviceNameStateDeviceShutter, "State device used as a shutter");
 }
 
 MODULE_API MM::Device* CreateDevice(const char* deviceName)                  
@@ -56,6 +58,8 @@ MODULE_API MM::Device* CreateDevice(const char* deviceName)
       return new DAShutter();
    } else if (strcmp(deviceName, g_DeviceNameDAZStage) == 0) { 
       return new DAZStage();
+   } else if (strcmp(deviceName, g_DeviceNameStateDeviceShutter) == 0) {
+      return new StateDeviceShutter();
    }
 
    return 0;
@@ -599,3 +603,116 @@ int DAZStage::OnStageMaxPos(MM::PropertyBase* pProp, MM::ActionType eAct)
    }
    return DEVICE_OK;
 }
+
+
+/**********************************************************************
+ * StateDeviceShutter implementation
+ */
+StateDeviceShutter::StateDeviceShutter() :
+   stateDeviceName_ (""),
+   initialized_ (false)
+{
+   InitializeDefaultErrorMessages();
+
+   SetErrorText(ERR_INVALID_DEVICE_NAME, "Please select a valid State device");
+   SetErrorText(ERR_NO_STATE_DEVICE, "No State Device selected");
+   SetErrorText(ERR_NO_STATE_DEVICE_FOUND, "No State Device loaded");
+
+   // Name                                                                   
+   CreateProperty(MM::g_Keyword_Name, g_DeviceNameStateDeviceShutter, MM::String, true); 
+                                                                             
+   // Description                                                            
+   CreateProperty(MM::g_Keyword_Description, "State device that is used as a shutter", MM::String, true);
+
+}  
+ 
+StateDeviceShutter::~StateDeviceShutter()
+{
+   Shutdown();
+}
+
+void StateDeviceShutter::GetName(char* Name) const
+{
+   CDeviceUtils::CopyLimitedString(Name, g_DeviceNameStateDeviceShutter);
+}                                                                            
+                                                                             
+int StateDeviceShutter::Initialize() 
+{
+  // get list with available DA devices.   TODO: this is a initialization parameter, which makes it harder for the end-user to set up!
+   availableStateDevices_ = GetLoadedDevicesOfType(MM::StateDevice);
+
+   CPropertyAction* pAct = new CPropertyAction (this, &StateDeviceShutter::OnStateDevice);      
+   std::string defaultStateDevice = "Undefined";
+   if (availableStateDevices_.size() >= 1)
+      defaultStateDevice = availableStateDevices_[0];
+   CreateProperty("State Device", defaultStateDevice.c_str(), MM::String, false, pAct, false);         
+   if (availableStateDevices_.size() >= 1)
+      SetAllowedValues("State Device", availableStateDevices_);
+   else
+      return ERR_NO_STATE_DEVICE_FOUND;
+
+   // This is needed, otherwise DeviceDA_ is not always set resulting in crashes
+   // This could lead to strange problems if multiple DA devices are loaded
+   SetProperty("State Device", defaultStateDevice.c_str());
+
+   int ret = UpdateStatus();
+   if (ret != DEVICE_OK)
+      return ret;
+
+   initialized_ = true;
+
+   return DEVICE_OK;
+}
+
+bool StateDeviceShutter::Busy()
+{
+   if (stateDevice_ != 0)
+      return stateDevice_->Busy();
+
+   // If we are here, there is a problem.  No way to report it.
+   return false;
+}
+
+/*
+ * Opens or closes the shutter.  Remembers voltage from the 'open' position
+ */
+int StateDeviceShutter::SetOpen(bool open)
+{
+   if (stateDevice_ == 0)
+      return ERR_NO_STATE_DEVICE;
+
+   return stateDevice_->SetGateOpen(open);
+}
+
+int StateDeviceShutter::GetOpen(bool& open)
+{
+   if (stateDevice_ == 0)
+      return ERR_NO_STATE_DEVICE;
+
+   return stateDevice_->GetGateOpen(open);
+}
+
+///////////////////////////////////////
+// Action Interface
+//////////////////////////////////////
+int StateDeviceShutter::OnStateDevice(MM::PropertyBase* pProp, MM::ActionType eAct)
+{
+   if (eAct == MM::BeforeGet)
+   {
+      pProp->Set(stateDeviceName_.c_str());
+   }
+   else if (eAct == MM::AfterSet)
+   {
+      std::string stateDeviceName;
+      pProp->Get(stateDeviceName);
+      MM::State* stateDevice = (MM::State*) GetDevice(stateDeviceName.c_str());
+      if (stateDevice != 0) {
+         stateDevice_ = stateDevice;
+         stateDeviceName_ = stateDeviceName;
+      } else
+         return ERR_INVALID_DEVICE_NAME;
+   }
+   return DEVICE_OK;
+}
+
+
