@@ -118,6 +118,7 @@ namespace MM {
    const char* const g_Keyword_Transpose_MirrorX = "TransposeMirrorX";
    const char* const g_Keyword_Transpose_MirrorY = "TransposeMirrorY";
    const char* const g_Keyword_Transpose_Correction = "TransposeCorrection";
+   const char* const g_Keyword_Closed_Position = "ClosedPosition";
 
    // image annotations
    const char* const g_Keyword_Metadata_Z           = "Z-um";

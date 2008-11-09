@@ -751,15 +751,8 @@ public:
     */
    double GetPixelSizeUm() const {return GetBinning();}
 
-   /**
-    * The following methods are only temporary solutions to avoid breaking older drivers
-    * TODO: they should be removed to force correct implementation for each camera
-    * N.A. 7-25-07
-    */
-   // Now make these two mandatory (NS, 5/24/08)
-   // int GetBinning() const {return 1;}
-   // int SetBinning(int /* binSize */) {return DEVICE_OK;}
    unsigned GetNumberOfChannels() const {return 1;}
+
    int GetChannelName(unsigned channel, char* name)
    {
       if (channel > 0)
@@ -768,6 +761,7 @@ public:
       CDeviceUtils::CopyLimitedString(name, "Grayscale");
       return DEVICE_OK;
    }
+   
    const unsigned int* GetImageBufferAsRGB32()
    {
       return 0;
@@ -1005,6 +999,13 @@ public:
 
    typedef CStateDeviceBase<U> CStateBase;
 
+   CStateDeviceBase(): gateOpen_(true)
+   {
+      // set-up Position to move to when the state device's gate is closed
+      // Allowed values should be set in the state device adapter
+      // this->CreateProperty(MM::g_Keyword_Closed_Position, "0", MM::String, false);
+   }
+
    /**
     * Sets the state (position) of the device based on the state index.
     * Assumes that "State" property is implemented for the device.
@@ -1026,6 +1027,31 @@ public:
          return DEVICE_UNKNOWN_LABEL;
    
       return SetPosition(it->second);
+   }
+
+
+   /**
+    * Implements a gate, i.e. a position where the state device is closed
+    * The gate needs to be implemented in the adapter's 'OnState function
+    * (which is called through SetPosition)
+    */
+   int SetGateOpen(bool open)
+   {  
+      if (gateOpen_ != open) {
+         gateOpen_ = open;
+         long position;
+         int ret = GetPosition(position);
+         if  (ret != DEVICE_OK)
+            return ret;
+         return SetPosition(position);
+      }
+      return DEVICE_OK;
+   }
+
+   int GetGateOpen(bool& open) 
+   {
+      open = gateOpen_; 
+      return DEVICE_OK;
    }
 
    /**
@@ -1155,6 +1181,9 @@ public:
       return DEVICE_OK;
    }
 
+protected:
+   long gateClosedPosition_;
+   bool gateOpen_;
 
 private:
    std::map<std::string, long> labels_;

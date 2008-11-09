@@ -354,6 +354,8 @@ namespace MM {
       virtual int GetLabelPosition(const char* label, long& pos) const = 0;
       virtual int SetPositionLabel(long pos, const char* label) = 0;
       virtual unsigned long GetNumberOfPositions() const = 0;
+      virtual int SetGateOpen(bool open = true) = 0;
+      virtual int GetGateOpen(bool& open) = 0;
    };
 
    /**
