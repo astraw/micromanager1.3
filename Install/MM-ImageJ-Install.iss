@@ -66,7 +66,7 @@ Source: micro-manager-1.3\mmgr_dal_SpectralLMM5.dll; DestDir: {app}; Flags: igno
 Source: micro-manager-1.3\mmgr_dal_PI_GCS.dll; DestDir: {app}; Flags: ignoreversion
 Source: micro-manager-1.3\mmgr_dal_PI.dll; DestDir: {app}; Flags: ignoreversion
 Source: micro-manager-1.3\mmgr_dal_Pecon.dll; DestDir: {app}; Flags: ignoreversion
-Source: micro-manager-1.3\mmgr_dal_DAZStage.dll; DestDir: {app}; Flags: ignoreversion
+Source: micro-manager-1.3\mmgr_dal_Utilities.dll; DestDir: {app}; Flags: ignoreversion
 Source: micro-manager-1.3\ace.dll; DestDir: {app}; Flags: ignoreversion
 
 ; drivers
