@@ -54,6 +54,10 @@ MultiShutter,Multi Shutter,Combine multiple physical shutters into a single logi
 Nikon,ZStage,Remote accessory Z-stage,5
 Nikon,TIRFShutter,TIRF Laser Shutter controller T-LUSU(2),3
 Nikon,IntensiLightShutter,IntensiLight Shutter,3
+NikonAZ100,AZ100,AZ100 controller - required for all other devices,8
+NikonAZ100,Nosepiece,Nosepiece (objective turret),4
+NikonAZ100,Focus,Z-stage,5
+NikonAZ100,Zoom,Zoom,14
 NikonTE2000,TE2000,TE2000 controller - required for all other devices,8
 NikonTE2000,Nosepiece,Nosepiece (objective turret),4
 NikonTE2000,Focus,Z-stage,5
@@ -65,6 +69,18 @@ NikonTE2000,Epi-Shutter,Epi-fluorescence shutter,3
 NikonTE2000,Uniblitz-Shutter,Uniblitz shutter,3
 NikonTE2000,PerfectFocus,PFS autofocus device,9
 NikonTE2000,PFS-Offset,PFS Offset Lens,5
+NikonTI,TIScope,Nikon TI microscope,8
+NikonTI,TINosePiece,Objective Turret,4
+NikonTI,TIFilterBlock1,FilterBlock 1,4
+NikonTI,TIFilterBlock2,FilterBlock 2,4
+NikonTI,TILightPath,LightPath,4
+NikonTI,TIZDrive,Z-Stage,5
+NikonTI,TIXYDrive,XY-Stage,6
+NikonTI,TIPFSOffset,PFS Offset,5
+NikonTI,TIPFSStatus,PFS Status,9
+NikonTI,TIEpiShutter,Epi Shutter,3
+NikonTI,TIDiaShutter,Dia Shutter,1
+NikonTI,TIAuxShutter,Aux Shutter,1
 ParallelPort,LPT1,Printer port TTL digital output,4
 ParallelPort,LPT-Shutter,Printer port TTLs used as shutters,3
 Pecon,TempControl,Temperature controller 37-2 digital,8
@@ -98,6 +114,10 @@ SutterLambda,Shutter-A,Lambda 10 shutter A,3
 SutterLambda,Shutter-B,Lambda 10 shutter B,3
 SutterLambda,Shutter-DG4,DG4 shutter,3
 SutterLambda,Wheel-DG4,DG4 filter changer,4
+Utilities,Multi Shutter,Combine multiple physical shutters into a single logical shutter,3
+Utilities,DA Shutter,DA used as a shutter,3
+Utilities,DA Z Stage,DA-controlled Z-stage,5
+Utilities,State Device Shutter,State device used as a shutter,3
 Vincent,Vincent-D1,Vincent controller VMM-D1/T1 and D122,3
 Vincent,Vincent-D3,Vincent controller VMM-D3/D4,3
 Yokogawa,Hub,CSU22 Hub (Needed for CSU22),8
