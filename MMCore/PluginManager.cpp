@@ -453,7 +453,6 @@ vector<string> CPluginManager::GetAvailableDevices(const char* moduleName) throw
       assert(hGetDeviceName);
 
       unsigned numDev = hGetNumberOfDevices();
-printf("Number of Devices: %d\n", numDev);
       for (unsigned i=0; i<numDev; i++)
       {
          char deviceName[MM::MaxStrLength];
