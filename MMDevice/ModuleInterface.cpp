@@ -49,12 +49,10 @@ void AddAvailableDeviceName(const char* name, const char* descr)
 
    // add to the list
    g_availableDevices.push_back(std::make_pair(name, descr));   
-   printf("Address in AddAvailableDeviceName %x\n", &g_availableDevices);
 }
 
 MODULE_API unsigned GetNumberOfDevices()
 {
-   printf("Address in GetNumberOfDevices %x\n", &g_availableDevices);
    return (unsigned) g_availableDevices.size();
 }
 
