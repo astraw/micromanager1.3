@@ -422,8 +422,12 @@ int CHamamatsu::OnScanMode(MM::PropertyBase* pProp, MM::ActionType eAct)
    }
    else if (eAct == MM::BeforeGet)
    {
-      if (!dcam_extended(m_hDCAM,DCAM_IDMSG_GETPARAM, (LPVOID)&ScanMode, sizeof(DCAM_PARAM_SCANMODE)))
-         return ReportError("Error in dcam_extended (ScanMode): ");
+      if (!dcam_extended(m_hDCAM,DCAM_IDMSG_GETPARAM, (LPVOID)&ScanMode, sizeof(DCAM_PARAM_SCANMODE))) {
+         LogMessage("Failed to get ScanMode from the Camera");
+         // Do not return error since this leaves the camera in a bad state
+         return DEVICE_OK;
+        // return ReportError("Error in dcam_extended (ScanMode): ");
+      } 
       pProp->Set(ScanMode.speed);
    }
    return DEVICE_OK;
@@ -520,6 +524,52 @@ int CHamamatsu::OnPhotonImagingMode(MM::PropertyBase* pProp, MM::ActionType eAct
       if (!dcam_getpropertyvalue(m_hDCAM, DCAM_IDPROP_PHOTONIMAGINGMODE, &photonMode))
          return ReportError("Error in dcam_getpropertyvalue (photonimagingmode): ");
       pProp->Set(photonMode);
+   }
+   return DEVICE_OK;
+}
+
+// Senesitivitye
+int CHamamatsu::OnSensitivity(MM::PropertyBase* pProp, MM::ActionType eAct)
+{
+   if (eAct == MM::AfterSet)
+   {
+      double mode;
+      pProp->Get(mode);
+      int ret = ShutdownImageBuffer();
+      if (ret != DEVICE_OK)
+         return ret;
+      if (!dcam_setpropertyvalue(m_hDCAM, DCAM_IDPROP_SENSITIVITY, mode))
+         return ReportError("Error in dcam_setpropertyvalue (Sensitivity): ");
+
+      ret = ResizeImageBuffer();
+      if (ret != DEVICE_OK)
+         return ret;
+
+      // Reset allowedValues for binning and gain
+      DWORD	cap;
+      if(!dcam_getcapability(m_hDCAM, &cap, DCAM_QUERYCAPABILITY_FUNCTIONS))
+         return ReportError("Error in dcam_getcapability: ");
+      ret = SetAllowedBinValues(cap);
+      if (ret != DEVICE_OK)
+         return ret;
+      if (IsFeatureSupported(DCAM_IDFEATURE_GAIN)) 
+      {
+         DCAM_PARAM_FEATURE_INQ featureInq = GetFeatureInquiry(DCAM_IDFEATURE_GAIN);
+         ret = SetAllowedGainValues(featureInq);
+         if (ret != DEVICE_OK)
+            return ret;
+      }
+      // propagate changes to GUI
+      ret = OnPropertiesChanged();
+      if (ret != DEVICE_OK)
+         return ret;
+   }
+   else if (eAct == MM::BeforeGet)
+   {
+      double mode;
+      if (!dcam_getpropertyvalue(m_hDCAM, DCAM_IDPROP_SENSITIVITY, &mode))
+         return ReportError("Error in dcam_getpropertyvalue (sensitivity): ");
+      pProp->Set(mode);
    }
    return DEVICE_OK;
 }
@@ -642,7 +692,53 @@ int CHamamatsu::OnOffset(MM::PropertyBase* pProp, MM::ActionType eAct)
    return DEVICE_OK;
 }
 
-// Extended
+// Extended Property
+int CHamamatsu::OnExtendedProperty(MM::PropertyBase* pProp, MM::ActionType eAct, long propertyId)
+{
+   if (eAct == MM::AfterSet)
+   {
+      double value;
+      pProp->Get(value);
+      int ret = ShutdownImageBuffer();
+      if (ret != DEVICE_OK)
+         return ret;
+      if (!dcam_setpropertyvalue(m_hDCAM, propertyId, value))
+         return ReportError("Error in dcam_setpropertyvalue (): ");
+
+      ret = ResizeImageBuffer();
+      if (ret != DEVICE_OK)
+         return ret;
+
+      // Reset allowedValues for binning and gain
+      DWORD	cap;
+      if(!dcam_getcapability(m_hDCAM, &cap, DCAM_QUERYCAPABILITY_FUNCTIONS))
+         return ReportError("Error in dcam_getcapability: ");
+      ret = SetAllowedBinValues(cap);
+      if (ret != DEVICE_OK)
+         return ret;
+      if (IsFeatureSupported(DCAM_IDFEATURE_GAIN)) 
+      {
+         DCAM_PARAM_FEATURE_INQ featureInq = GetFeatureInquiry(DCAM_IDFEATURE_GAIN);
+         ret = SetAllowedGainValues(featureInq);
+         if (ret != DEVICE_OK)
+            return ret;
+      }
+      // propagate changes to GUI
+      ret = OnPropertiesChanged();
+      if (ret != DEVICE_OK)
+         return ret;
+   }
+   else if (eAct == MM::BeforeGet)
+   {
+      double value;
+      if (!dcam_getpropertyvalue(m_hDCAM, propertyId, &value))
+         return ReportError("Error in dcam_getpropertyvalue (value): ");
+      pProp->Set(value);
+   }
+   return DEVICE_OK;
+}
+
+// Extended Feature
 int CHamamatsu::OnExtended(MM::PropertyBase* pProp, MM::ActionType eAct, long featureId)
 {
 	DCAM_PARAM_FEATURE FeatureValue;
@@ -814,9 +910,9 @@ int CHamamatsu::Initialize()
 	} else {    
 		if (!dcam_settriggermode(m_hDCAM, DCAM_TRIGMODE_SOFTWARE)) {
 			LogMessage("This camera says it supports software triggers, but when I try to set it, the camera fails");
-		}
-		else {
+      } else {
 	       softwareTriggerEnabled_ = true;
+          triggerMode_ = g_TrigMode_Software;
 		}
 	}
 
@@ -965,6 +1061,21 @@ int CHamamatsu::Initialize()
          return nRet;
    }
 
+   // Sensitivity Mode
+   if (IsPropertySupported(propAttr, DCAM_IDPROP_SENSITIVITY))
+   {
+      ostringstream defaultValue;
+      defaultValue << propAttr.valuedefault;
+      pAct = new CPropertyAction (this, &CHamamatsu::OnSensitivity);
+      nRet = CreateProperty("Sensitivity", defaultValue.str().c_str(), MM::Integer, false, pAct);
+      if (nRet != DEVICE_OK)
+         return nRet;
+      nRet = SetPropertyLimits("Sensitivity", propAttr.valuemin, propAttr.valuemax);
+      //nRet = SetAllowedPropValues(propAttr, "Sensitivity");
+      if (nRet != DEVICE_OK)
+         return nRet;
+   }
+/*
    // Sensivity (=EM GAIN?)
    if (IsFeatureSupported(DCAM_IDFEATURE_SENSITIVITY))
    {
@@ -981,6 +1092,46 @@ int CHamamatsu::Initialize()
       {
          nRet = SetPropertyLimits("Sensitivity", featureInq.min, featureInq.max);
       }
+   }
+*/
+ 
+   // Direct EM Gain mode
+   if (IsPropertySupported(propAttr, DCAM_IDPROP_DIRECTEMGAIN_MODE))
+   {
+      ostringstream defaultValue;
+      defaultValue << propAttr.valuedefault;
+      CPropertyActionEx* pActEx = new CPropertyActionEx (this, &CHamamatsu::OnExtendedProperty, (long) DCAM_IDPROP_DIRECTEMGAIN_MODE);
+      nRet = CreateProperty("Direct EM Gain Mode", defaultValue.str().c_str(), MM::Integer, false, pActEx);
+      if (nRet != DEVICE_OK)
+         return nRet;
+      nRet = SetAllowedPropValues(propAttr, "Direct EM Gain Mode");
+      if (nRet != DEVICE_OK)
+         return nRet;
+   }
+
+   // Sensor temperature readout
+   if (IsPropertySupported(propAttr, DCAM_IDPROP_SENSORTEMPERATURE))
+   {
+      ostringstream defaultValue;
+      defaultValue << propAttr.valuedefault;
+      CPropertyActionEx* pActEx = new CPropertyActionEx (this, &CHamamatsu::OnExtendedProperty, (long) DCAM_IDPROP_SENSORTEMPERATURE);
+      nRet = CreateProperty("Temperature", defaultValue.str().c_str(), MM::Float, true, pActEx);
+      if (nRet != DEVICE_OK)
+         return nRet;
+   }
+
+   // Sensor temperature target
+   if (IsPropertySupported(propAttr, DCAM_IDPROP_SENSORTEMPERATURETARGET))
+   {
+      ostringstream defaultValue;
+      defaultValue << propAttr.valuedefault;
+      CPropertyActionEx* pActEx = new CPropertyActionEx (this, &CHamamatsu::OnExtendedProperty, (long) DCAM_IDPROP_SENSORTEMPERATURETARGET);
+      nRet = CreateProperty("Temperature Set Point", defaultValue.str().c_str(), MM::Float, false, pActEx);
+      if (nRet != DEVICE_OK)
+         return nRet;
+      nRet = SetAllowedPropValues(propAttr, "Temperature Set Point");
+      if (nRet != DEVICE_OK)
+         return nRet;
    }
 
    // camera gain
@@ -1451,9 +1602,10 @@ bool CHamamatsu::IsScanModeSupported(int32_t& maxSpeed)
    ZeroMemory((LPVOID)&ScanMode, sizeof(DCAM_PARAM_SCANMODE));
    ScanMode.hdr.cbSize = sizeof(DCAM_PARAM_SCANMODE);
    ScanMode.hdr.id = (DWORD) DCAM_IDPARAM_SCANMODE;
-
+printf("Enquirying about Scanmode");
    if (dcam_extended(m_hDCAM, DCAM_IDMSG_GETPARAM,(LPVOID)&featureInquiry, sizeof(DCAM_PARAM_SCANMODE_INQ)) == TRUE && dcam_extended(m_hDCAM,DCAM_IDMSG_GETPARAM, (LPVOID)&ScanMode, sizeof(DCAM_PARAM_SCANMODE)) == TRUE) {
       maxSpeed = featureInquiry.speedmax;
+LogMessage("ScanMode works");
       return true;
    }
    return false;

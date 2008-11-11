@@ -111,12 +111,13 @@ public:
    int OnOutTrigPolarity(MM::PropertyBase* pProp, MM::ActionType eAct);
    int OnExposure(MM::PropertyBase* pProp, MM::ActionType eAct);
    int OnExtended(MM::PropertyBase* pProp, MM::ActionType eAct, long featureId);
+   int OnExtendedProperty(MM::PropertyBase* pProp, MM::ActionType eAct, long propertyId);
    int OnGain(MM::PropertyBase* pProp, MM::ActionType eAct);
    int OnOffset(MM::PropertyBase* pProp, MM::ActionType eAct);
    int OnPixelType(MM::PropertyBase* pProp, MM::ActionType eAct);
    int OnReadoutTime(MM::PropertyBase* pProp, MM::ActionType eAct);
    int OnActualIntervalMs(MM::PropertyBase* pProp, MM::ActionType eAct);
-   //int OnSensitivity(MM::PropertyBase* pProp, MM::ActionType eAct);
+   int OnSensitivity(MM::PropertyBase* pProp, MM::ActionType eAct);
    int OnScanMode(MM::PropertyBase* pProp, MM::ActionType eAct);
    int OnCCDMode(MM::PropertyBase* pProp, MM::ActionType eAct);
    int OnPhotonImagingMode(MM::PropertyBase* pProp, MM::ActionType eAct);
