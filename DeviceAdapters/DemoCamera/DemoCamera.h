@@ -126,6 +126,7 @@ public:
    // action interface
    // ----------------
    int OnState(MM::PropertyBase* pProp, MM::ActionType eAct);
+   int GetGateOpen(bool& open) {open = gateOpen_; return DEVICE_OK;};
 
 private:
    long numPos_;

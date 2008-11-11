@@ -768,6 +768,11 @@ int CDemoFilterWheel::Initialize()
    // Set timer for the Busy signal, or we'll get a time-out the first time we check the state of the shutter, for good measure, go back 'delay' time into the past
    changedTime_ = GetCurrentMMTime();   
 
+   // Gate Closed Position
+   ret = CreateProperty(MM::g_Keyword_Closed_Position,"", MM::Integer, false);
+   if (ret != DEVICE_OK)
+      return ret;
+
    // create default positions and labels
    const int bufSize = 1024;
    char buf[bufSize];
@@ -775,6 +780,8 @@ int CDemoFilterWheel::Initialize()
    {
       snprintf(buf, bufSize, "State-%ld", i);
       SetPositionLabel(i, buf);
+      snprintf(buf, bufSize, "%ld", i);
+      AddAllowedValue(MM::g_Keyword_Closed_Position, buf);
    }
 
    // State
@@ -843,6 +850,10 @@ int CDemoFilterWheel::OnState(MM::PropertyBase* pProp, MM::ActionType eAct)
          pProp->Set(position_); // revert
          return ERR_UNKNOWN_POSITION;
       }
+      if (gateOpen_)
+         printf("Gate was Open\n");
+      else
+         printf("Gate was Closed\n");
       position_ = pos;
    }
 
@@ -901,6 +912,9 @@ int CDemoStateDevice::Initialize()
    // Set timer for the Busy signal, or we'll get a time-out the first time we check the state of the shutter, for good measure, go back 'delay' time into the past
    changedTime_ = GetCurrentMMTime();   
 
+   // Gate Closed Position
+   ret = CreateProperty(MM::g_Keyword_Closed_Position,"", MM::String, false);
+
    // create default positions and labels
    const int bufSize = 1024;
    char buf[bufSize];
@@ -908,6 +922,7 @@ int CDemoStateDevice::Initialize()
    {
       snprintf(buf, bufSize, "State-%ld", i);
       SetPositionLabel(i, buf);
+      AddAllowedValue(MM::g_Keyword_Closed_Position, buf);
    }
 
    // State
@@ -923,6 +938,8 @@ int CDemoStateDevice::Initialize()
    ret = CreateProperty(MM::g_Keyword_Label, "", MM::String, false, pAct);
    if (ret != DEVICE_OK)
       return ret;
+
+
 
    ret = UpdateStatus();
    if (ret != DEVICE_OK)
