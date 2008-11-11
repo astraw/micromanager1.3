@@ -134,7 +134,8 @@ private:
    int ShutdownImageBuffer();
    bool IsFeatureSupported(int featureId);
    bool IsScanModeSupported(int32_t& maxSpeed);
-   bool IsPropertySupported(DCAM_PROPERTYATTR& propAttr, long property);
+   bool IsPropertySupported(DCAM_PROPERTYATTR& propAttr, long propertyId);
+   int AddExtendedProperty(std::string propName, long propertyId);
    long ReportError(std::string message);
    int SetAvailableTriggerModes(DWORD cap);
    int SetAllowedBinValues(DWORD cap);
@@ -142,6 +143,9 @@ private:
    int SetAllowedGainValues(DCAM_PARAM_FEATURE_INQ featureInq);
    int SetAllowedPropValues(DCAM_PROPERTYATTR propAttr, std::string propName);
    DCAM_PARAM_FEATURE_INQ GetFeatureInquiry(int featureId);
+
+   typedef std::map<std::string, long> MapStringToLong;
+   std::map<long, MapStringToLong> dcamTextValues_;
 
  //  static CHamamatsu* m_pInstance;
    static unsigned refCount_;

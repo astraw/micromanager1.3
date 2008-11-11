@@ -482,7 +482,7 @@ int CHamamatsu::OnCCDMode(MM::PropertyBase* pProp, MM::ActionType eAct)
    return DEVICE_OK;
 }
 
-// PhotonImagingDMode
+// PhotonImagingMode
 int CHamamatsu::OnPhotonImagingMode(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
    if (eAct == MM::AfterSet)
@@ -528,7 +528,7 @@ int CHamamatsu::OnPhotonImagingMode(MM::PropertyBase* pProp, MM::ActionType eAct
    return DEVICE_OK;
 }
 
-// Senesitivitye
+// Sensitivity (Em Gain?)
 int CHamamatsu::OnSensitivity(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
    if (eAct == MM::AfterSet)
@@ -697,11 +697,18 @@ int CHamamatsu::OnExtendedProperty(MM::PropertyBase* pProp, MM::ActionType eAct,
 {
    if (eAct == MM::AfterSet)
    {
-      double value;
-      pProp->Get(value);
       int ret = ShutdownImageBuffer();
       if (ret != DEVICE_OK)
          return ret;
+
+      double value;
+
+      if (!dcamTextValues_[propertyId].empty()) {
+         std::string strValue;
+         pProp->Get(strValue);
+         value = dcamTextValues_[propertyId][strValue];
+      } else 
+         pProp->Get(value);
       if (!dcam_setpropertyvalue(m_hDCAM, propertyId, value))
          return ReportError("Error in dcam_setpropertyvalue (): ");
 
@@ -733,7 +740,14 @@ int CHamamatsu::OnExtendedProperty(MM::PropertyBase* pProp, MM::ActionType eAct,
       double value;
       if (!dcam_getpropertyvalue(m_hDCAM, propertyId, &value))
          return ReportError("Error in dcam_getpropertyvalue (value): ");
-      pProp->Set(value);
+      if (!dcamTextValues_[propertyId].empty()) {
+         DCAM_PROPERTYVALUETEXT propText;
+         propText.value = value;
+         propText.iProp = propertyId;
+         if (dcam_getpropertyvaluetext(m_hDCAM, &propText)) 
+            pProp->Set(propText.text);
+      } else
+         pProp->Set(value);
    }
    return DEVICE_OK;
 }
@@ -988,7 +1002,6 @@ int CHamamatsu::Initialize()
    AddAllowedValue("TriggerPolarity", g_TrigPolarity_Positive);
    AddAllowedValue("TriggerPolarity", g_TrigPolarity_Negative);
 
-
    // pixel type
    pAct = new CPropertyAction (this, &CHamamatsu::OnPixelType);
    nRet = CreateProperty(MM::g_Keyword_PixelType, CameraID, MM::String, false, pAct);
@@ -1067,11 +1080,10 @@ int CHamamatsu::Initialize()
       ostringstream defaultValue;
       defaultValue << propAttr.valuedefault;
       pAct = new CPropertyAction (this, &CHamamatsu::OnSensitivity);
-      nRet = CreateProperty("Sensitivity", defaultValue.str().c_str(), MM::Integer, false, pAct);
+      nRet = CreateProperty("EMGain", defaultValue.str().c_str(), MM::Integer, false, pAct);
       if (nRet != DEVICE_OK)
          return nRet;
-      nRet = SetPropertyLimits("Sensitivity", propAttr.valuemin, propAttr.valuemax);
-      //nRet = SetAllowedPropValues(propAttr, "Sensitivity");
+   nRet = SetPropertyLimits("EMGain", propAttr.valuemin, propAttr.valuemax);
       if (nRet != DEVICE_OK)
          return nRet;
    }
@@ -1133,6 +1145,31 @@ int CHamamatsu::Initialize()
       if (nRet != DEVICE_OK)
          return nRet;
    }
+
+   nRet = AddExtendedProperty("Sensor Cooler", DCAM_IDPROP_SENSORCOOLER);
+   if (nRet != DEVICE_OK)
+      return nRet;
+
+   nRet = AddExtendedProperty("Sensor Cooler Fan", DCAM_IDPROP_SENSORCOOLERFAN);
+   if (nRet != DEVICE_OK)
+      return nRet;
+
+   nRet = AddExtendedProperty("Output Trigger Polarity", DCAM_IDPROP_OUTPUTTRIGGER_POLARITY);
+   if (nRet != DEVICE_OK)
+      return nRet;
+
+   nRet = AddExtendedProperty("Output Trigger Active", DCAM_IDPROP_OUTPUTTRIGGER_ACTIVE);
+   if (nRet != DEVICE_OK)
+      return nRet;
+
+   nRet = AddExtendedProperty("Output Trigger Delay", DCAM_IDPROP_OUTPUTTRIGGER_DELAY);
+   if (nRet != DEVICE_OK)
+      return nRet;
+
+   nRet = AddExtendedProperty("Output Trigger Period", DCAM_IDPROP_OUTPUTTRIGGER_PERIOD);
+   if (nRet != DEVICE_OK)
+      return nRet;
+
 
    // camera gain
    if (IsFeatureSupported(DCAM_IDFEATURE_GAIN)) 
@@ -1602,23 +1639,66 @@ bool CHamamatsu::IsScanModeSupported(int32_t& maxSpeed)
    ZeroMemory((LPVOID)&ScanMode, sizeof(DCAM_PARAM_SCANMODE));
    ScanMode.hdr.cbSize = sizeof(DCAM_PARAM_SCANMODE);
    ScanMode.hdr.id = (DWORD) DCAM_IDPARAM_SCANMODE;
-printf("Enquirying about Scanmode");
    if (dcam_extended(m_hDCAM, DCAM_IDMSG_GETPARAM,(LPVOID)&featureInquiry, sizeof(DCAM_PARAM_SCANMODE_INQ)) == TRUE && dcam_extended(m_hDCAM,DCAM_IDMSG_GETPARAM, (LPVOID)&ScanMode, sizeof(DCAM_PARAM_SCANMODE)) == TRUE) {
       maxSpeed = featureInquiry.speedmax;
-LogMessage("ScanMode works");
+      LogMessage("ScanMode works");
       return true;
    }
    return false;
 }
 
-bool CHamamatsu::IsPropertySupported(DCAM_PROPERTYATTR& propAttr, long property)
+bool CHamamatsu::IsPropertySupported(DCAM_PROPERTYATTR& propAttr, long propertyId)
 {
    memset(&propAttr, 0, sizeof(propAttr));
    propAttr.cbSize = sizeof(propAttr);
-   propAttr.iProp = property;
+   propAttr.iProp = propertyId;
    if (dcam_getpropertyattr(m_hDCAM, &propAttr))
       return true;
    return false;
+}
+
+/*
+ * Adds the DCAM property 'property' as Micro-Manager property 'propName'
+ * Sets the Micro-Manager type based on the step size of the property
+ * Also sets limits based on the values it finds in the property
+ * Works closely together with OnExtendedProperty
+ */
+int CHamamatsu::AddExtendedProperty(std::string propName, long propertyId)
+{
+   DCAM_PROPERTYATTR propAttr;
+   if (IsPropertySupported(propAttr, propertyId))
+   {
+      int nRet;
+      ostringstream defaultValue;
+      defaultValue << propAttr.valuedefault;
+      CPropertyActionEx* pActEx = new CPropertyActionEx (this, &CHamamatsu::OnExtendedProperty, propertyId);
+      if (propAttr.attribute & DCAMPROP_ATTR_HASVALUETEXT) {
+         DCAM_PROPERTYVALUETEXT propText;
+         propText.value = propAttr.valuedefault;
+         propText.iProp = propertyId;
+         if (dcam_getpropertyvaluetext(m_hDCAM, &propText)) {
+            nRet = CreateProperty(propName.c_str(), propText.text, MM::String, false, pActEx);
+            for (long i = propAttr.valuemin; i <= propAttr.valuemax; i+= propAttr.valuestep) {
+               propText.value = i;
+               dcam_getpropertyvaluetext(m_hDCAM, &propText);
+               AddAllowedValue(propName.c_str(), propText.text);
+               dcamTextValues_[propertyId].insert(MapStringToLong::value_type(propText.text, i));
+            }
+         }
+
+         return DEVICE_OK;
+      } else if (propAttr.valuestep == 1.0) 
+         nRet = CreateProperty(propName.c_str(), defaultValue.str().c_str(), MM::Integer, false, pActEx);
+      else
+         nRet = CreateProperty(propName.c_str(), defaultValue.str().c_str(), MM::Float, false, pActEx);
+      if (nRet != DEVICE_OK)
+         return nRet;
+      nRet = SetAllowedPropValues(propAttr, propName.c_str());
+      if (nRet != DEVICE_OK)
+         return nRet;
+   }
+
+   return DEVICE_OK;
 }
 
 
@@ -1695,20 +1775,21 @@ int CHamamatsu::SetAllowedPropValues(DCAM_PROPERTYATTR propAttr, std::string pro
 {
    int ret;
    vector<string>values;
+ 
    // clear existing values
    SetAllowedValues(propName.c_str(), values);
+
    // low number of values, make a list
-   if ( (propAttr.valuemax >= propAttr.valuemin) && ((propAttr.valuemax - propAttr.valuemin) < 10) && (propAttr.valuestep == 1.0 || propAttr.valuestep==0.0) )
-   {
+   if ( (propAttr.valuemax >= propAttr.valuemin) && ((propAttr.valuemax - propAttr.valuemin) < 10) && (propAttr.valuestep == 1.0 || propAttr.valuestep==0.0) ) {
       for (long i = (long) propAttr.valuemin; i<= (long) propAttr.valuemax; i++) {
          ostringstream value;
          value << i;
          values.push_back(value.str());
       }
       return SetAllowedValues(propName.c_str(), values);
-   } else if (propAttr.valuemax > propAttr.valuemin)
+
+   } else if (propAttr.valuemax > propAttr.valuemin) {
       // higher number: set limits
-   {
       ret = SetPropertyLimits(propName.c_str(), propAttr.valuemin, propAttr.valuemax);
       if (ret != DEVICE_OK)
          return ret;
