@@ -68,6 +68,10 @@ public:
 
    int SetFilterBlockPosition(MM::Device& device, MM::Core& core, int pos);
    int GetFilterBlockPosition(MM::Device& device, MM::Core& core, int& pos);
+   bool IsExcitationFilterBlockBusy(MM::Device& device, MM::Core& core);
+
+   int SetExcitationFilterBlockPosition(MM::Device& device, MM::Core& core, int pos);
+   int GetExcitationFilterBlockPosition(MM::Device& device, MM::Core& core, int &pos);
    bool IsFilterBlockBusy(MM::Device& device, MM::Core& core);
 
    int SetOpticalPathPosition(MM::Device& device, MM::Core& core, int pos);

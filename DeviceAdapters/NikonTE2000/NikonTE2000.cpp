@@ -47,6 +47,7 @@ const char* g_HubName = "TE2000";
 const char* g_Control = "Control";
 const char* g_ControlMicroscope = "Microscope";
 const char* g_ControlPad = "Control Pad";
+const char* g_ExcitationFilterWheelName = "T-FLEW";
 
 using namespace std;
 
@@ -98,6 +99,7 @@ MODULE_API void InitializeModuleData()
    AddAvailableDeviceName(g_UniblitzShutterName, "Uniblitz shutter");
    AddAvailableDeviceName(g_AutoFocusName,  "PFS autofocus device");
    AddAvailableDeviceName(g_PFSOffsetName,  "PFS Offset Lens");
+   AddAvailableDeviceName(g_ExcitationFilterWheelName, "Nikon T-FLEW filter wheel");
 }
 
 MODULE_API MM::Device* CreateDevice(const char* deviceName)
@@ -153,6 +155,11 @@ MODULE_API MM::Device* CreateDevice(const char* deviceName)
    else if (strcmp(deviceName, g_PFSOffsetName) == 0)
    {
       return new PFSOffset;
+   }
+   else if (strcmp (deviceName, g_ExcitationFilterWheelName) == 0)
+   {
+	   // Return the FLEW adapter object
+		 return new ExcitationFilterBlock;
    }
 
    return 0;
@@ -403,6 +410,135 @@ int Nosepiece::OnState(MM::PropertyBase* pProp, MM::ActionType eAct)
    return DEVICE_OK;
 }
 
+///////////////////////////////////////////////////////////////////////////////
+// Excitation side filter wheel
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+ExcitationFilterBlock::ExcitationFilterBlock(): initialized_(false), numPos_(8), name_(g_ExcitationFilterWheelName)
+{
+	InitializeDefaultErrorMessages();
+
+	SetErrorText(ERR_NOT_CONNECTED, "Not connected with the hardware" );
+	SetErrorText(ERR_UNKNOWN_POSITION, "Position out of range ? ");
+	SetErrorText(ERR_TYPE_NOT_DETECTED, "Device Not detected");
+}
+
+ExcitationFilterBlock::~ExcitationFilterBlock()
+{
+	Shutdown();
+}
+
+void ExcitationFilterBlock::GetName(char* name) const
+{
+   assert(name_.length() < CDeviceUtils::GetMaxStringLength());
+   CDeviceUtils::CopyLimitedString(name, name_.c_str());
+}
+
+bool ExcitationFilterBlock::Busy()
+{
+	// Change this to the appropriate value for the excitation filter 
+   return g_hub.IsExcitationFilterBlockBusy(*this, *GetCoreCallback());
+}
+
+int ExcitationFilterBlock::Initialize()
+{
+   // set property list
+   // -----------------
+   
+   // Name
+   int ret = CreateProperty(MM::g_Keyword_Name, name_.c_str(), MM::String, true);
+   if (DEVICE_OK != ret)
+      return ret;
+
+   // Description
+   ret = CreateProperty(MM::g_Keyword_Description, "Nikon TE2000 filter block changeover adapter", MM::String, true);
+   if (DEVICE_OK != ret)
+      return ret;
+
+   // State
+   // -----
+   CPropertyAction* pAct = new CPropertyAction (this, &ExcitationFilterBlock::OnState);
+   ret = CreateProperty(MM::g_Keyword_State, "1", MM::Integer, false, pAct);
+   if (ret != DEVICE_OK)
+      return ret;
+
+   // set allowed states
+   for (unsigned i=0; i<numPos_; i++)
+   {
+      ostringstream os;
+      os << i;
+      AddAllowedValue(MM::g_Keyword_State, os.str().c_str());
+   }
+
+   // Label
+   // -----
+   pAct = new CPropertyAction (this, &CStateBase::OnLabel);
+   ret = CreateProperty(MM::g_Keyword_Label, "Undefined", MM::String, false, pAct);
+   if (ret != DEVICE_OK)
+      return ret;
+
+   // create default positions and labels
+   for (unsigned i=0; i<numPos_; i++)
+   {
+      ostringstream os;
+      os << "Position-" << i+1;
+      SetPositionLabel(i, os.str().c_str());
+   }
+
+   ret = UpdateStatus();
+   if (ret != DEVICE_OK)
+      return ret;
+
+   initialized_ = true;
+
+   return DEVICE_OK;
+}
+
+int ExcitationFilterBlock::Shutdown()
+{
+   if (initialized_)
+   {
+      initialized_ = false;
+   }
+   return DEVICE_OK;
+}
+
+int ExcitationFilterBlock::OnState(MM::PropertyBase* pProp, MM::ActionType eAct)
+{
+   if (eAct == MM::BeforeGet)
+   {
+      int pos;
+	  int ret = g_hub.GetExcitationFilterBlockPosition(*this, *GetCoreCallback(), pos);
+      //int ret = g_hub.GetFilterBlockPosition(*this, *GetCoreCallback(), pos);
+      if (ret != DEVICE_OK)
+         return ret;
+      pos -= 1;
+      pProp->Set((long)pos);
+   }
+   else if (eAct == MM::AfterSet)
+   {
+      long pos;
+      pProp->Get(pos);
+      pos += 1;
+      if (pos > (long)numPos_ || pos < 1)
+      {
+         // restore current position
+         int oldPos;
+         int ret = g_hub.GetExcitationFilterBlockPosition(*this, *GetCoreCallback(), oldPos);
+         if (ret != 0)
+            return ret;
+         pProp->Set((long)oldPos-1); // revert
+         return ERR_UNKNOWN_POSITION;
+      }
+      // apply the value
+      int ret = g_hub.SetExcitationFilterBlockPosition(*this, *GetCoreCallback(), (int)pos);
+      if (ret != 0)
+         return ret;
+   }
+
+   return DEVICE_OK;
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // FilterBlock
@@ -422,6 +558,7 @@ FilterBlock::~FilterBlock()
 {
    Shutdown();
 }
+
 
 void FilterBlock::GetName(char* name) const
 {

@@ -161,6 +161,31 @@ private:
    std::string name_;
 };
 
+class ExcitationFilterBlock : public CStateDeviceBase<ExcitationFilterBlock>
+{
+public:
+	ExcitationFilterBlock();
+	~ExcitationFilterBlock();
+
+   // MMDevice API
+   // ------------
+   int Initialize();
+   int Shutdown();
+  
+   void GetName(char* pszName) const;
+   bool Busy();
+   unsigned long GetNumberOfPositions()const {return numPos_;}
+
+   // action interface
+   // ----------------
+   int OnState(MM::PropertyBase* pProp, MM::ActionType eAct);
+
+private:
+   bool initialized_;
+   unsigned numPos_;
+   std::string name_;
+};
+
 class FocusStage : public CStageBase<FocusStage>
 {
 public:

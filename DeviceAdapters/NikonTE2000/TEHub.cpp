@@ -180,6 +180,65 @@ bool TEHub::IsFilterBlockBusy(MM::Device& device, MM::Core& core)
       false;
 }
 
+
+///////////////////////////////////////////////////////////////////////////////
+// Excitation Side Filter Block Commands
+///////////////////////////////////////////////////////////////////////////////
+
+int TEHub::SetExcitationFilterBlockPosition(MM::Device& device, MM::Core& core, int pos)
+{
+   const char* command = "FDM";
+   ostringstream os;
+   os << command << "1" << pos;
+
+   // send command
+   int ret = ExecuteCommand(device, core, commandMode_.c_str(), os.str().c_str());
+   if (ret != DEVICE_OK)
+      return ret;
+
+   // parse response
+   string value;
+   ret = ParseResponse(device, core, command, value);
+   if (ret != DEVICE_OK)
+      return ret;
+
+   if (GetCommandMode() == Async)
+      waitingCommands_.insert(make_pair(command, core.GetClockTicksUs(&device)));
+   return DEVICE_OK;
+}
+
+int TEHub::GetExcitationFilterBlockPosition(MM::Device& device, MM::Core& core, int& pos)
+{
+   const char* command = "FAR";
+   int ret = ExecuteCommand(device, core, "r", command);
+   if (ret != DEVICE_OK)
+      return ret;
+
+   if (strlen(rcvBuf_) < 5)
+      return DEVICE_SERIAL_INVALID_RESPONSE;
+
+   // parse the response
+   string value;
+   ret = ParseResponse(device, core, command, value);
+   if (ret != DEVICE_OK)
+      return ret;
+
+   pos = atoi(value.c_str());
+
+   return DEVICE_OK;
+}
+
+bool TEHub::IsExcitationFilterBlockBusy(MM::Device& device, MM::Core& core)
+{
+   if (this->GetCommandMode() == Async)
+   {
+      FetchSerialData(device, core);
+      return IsCommandWaiting("FCR", device, core);
+   }
+   return
+      false;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // Focus commands
 ///////////////////////////////////////////////////////////////////////////////
