@@ -1665,6 +1665,7 @@ bool CHamamatsu::IsPropertySupported(DCAM_PROPERTYATTR& propAttr, long propertyI
  */
 int CHamamatsu::AddExtendedProperty(std::string propName, long propertyId)
 {
+   printf("%lx\n", propertyId);
    DCAM_PROPERTYATTR propAttr;
    if (IsPropertySupported(propAttr, propertyId))
    {
@@ -1676,7 +1677,7 @@ int CHamamatsu::AddExtendedProperty(std::string propName, long propertyId)
          DCAM_PROPERTYVALUETEXT propText;
          propText.value = propAttr.valuedefault;
          propText.iProp = propertyId;
-         if (dcam_getpropertyvaluetext(m_hDCAM, &propText)) {
+         if (dcam_getpropertyvaluetext(m_hDCAM, &propText) && propText.textbytes > 0) {
             nRet = CreateProperty(propName.c_str(), propText.text, MM::String, false, pActEx);
             for (long i = propAttr.valuemin; i <= propAttr.valuemax; i+= propAttr.valuestep) {
                propText.value = i;
@@ -1684,10 +1685,11 @@ int CHamamatsu::AddExtendedProperty(std::string propName, long propertyId)
                AddAllowedValue(propName.c_str(), propText.text);
                dcamTextValues_[propertyId].insert(MapStringToLong::value_type(propText.text, i));
             }
+            return DEVICE_OK;
          }
+      }
 
-         return DEVICE_OK;
-      } else if (propAttr.valuestep == 1.0) 
+      if (propAttr.valuestep == 1.0 || propAttr.valuestep == 0.0) 
          nRet = CreateProperty(propName.c_str(), defaultValue.str().c_str(), MM::Integer, false, pActEx);
       else
          nRet = CreateProperty(propName.c_str(), defaultValue.str().c_str(), MM::Float, false, pActEx);
