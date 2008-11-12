@@ -239,6 +239,10 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI, Scrip
    private ZWheelListener zWheelListener_;
    private AcquisitionManager acqMgr_;
 
+
+   // Callback
+   private CoreEventCallback cb_;
+
    private JMenuBar menuBar_;
 
    /**
@@ -1070,9 +1074,9 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI, Scrip
             xyStageLabel_ = new String("");
             engine_ = new MMAcquisitionEngineMT();
 
-            // register callback for MMCore notifications
-            CoreEventCallback cb = new CoreEventCallback();
-            core_.registerCallback(cb);
+            // register callback for MMCore notifications, this is a global to avoid garbage collection
+            cb_ = new CoreEventCallback();
+            core_.registerCallback(cb_);
 
             try {
                core_.setCircularBufferMemoryFootprint(options_.circularBufferSizeMB);
