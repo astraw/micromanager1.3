@@ -216,4 +216,21 @@ public class MMAcquisition {
       }
    }
 
+   public void setProperty(String propertyName, String value) throws MMScriptException {
+      try {
+         acqData_.setSummaryValue(propertyName, value);
+      } catch (MMAcqDataException e) {
+         throw new MMScriptException(e);
+      }
+   }
+
+   public void setProperty(int frame, int channel, int slice, String propName,
+         String value) throws MMScriptException {
+      try {
+         acqData_.setImageValue(frame, channel, slice, propName, value);
+      } catch (MMAcqDataException e) {
+         throw new MMScriptException(e);
+      }
+   }
+
 }

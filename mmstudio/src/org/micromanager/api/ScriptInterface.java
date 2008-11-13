@@ -102,12 +102,12 @@ public interface ScriptInterface {
    /**
     * Sets custom property attached to the acquisition summary
     */
-   public void setAcquisitionProperty(String acqName, String propertyName, String value);
+   public void setAcquisitionProperty(String acqName, String propertyName, String value) throws MMScriptException;
    
    /**
     * Sets property attached to an individual image
     */
-   public void setImageProperty(String acqName, int frame, int channel, int slice, String propName, String value);
+   public void setImageProperty(String acqName, int frame, int channel, int slice, String propName, String value) throws MMScriptException;
 
    /**
     * Blocks the script until the system is ready to start acquiring

@@ -2902,15 +2902,15 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI, Scrip
       updateGUI(true);
    }
 
-   public void setAcquisitionProperty(String acqName, String propertyName, String value) {
-      // TODO Auto-generated method stub
-
+   public void setAcquisitionProperty(String acqName, String propertyName, String value) throws MMScriptException {
+      MMAcquisition acq = acqMgr_.getAcquisition(acqName);
+      acq.setProperty(propertyName, value);      
    }
 
    public void setImageProperty(String acqName, int frame, int channel,
-         int slice, String propName, String value) {
-      // TODO Auto-generated method stub
-
+         int slice, String propName, String value) throws MMScriptException {
+      MMAcquisition acq = acqMgr_.getAcquisition(acqName);
+      acq.setProperty(frame, channel, slice, propName, value);      
    }
 
    public void snapAndAddImage(String name, int frame, int channel, int slice) throws MMScriptException {
