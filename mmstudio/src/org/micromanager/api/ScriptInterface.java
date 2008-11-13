@@ -74,6 +74,8 @@ public interface ScriptInterface {
     */
    public void openAcquisition(String name, String rootDir, int nrFrames, int nrChannels, int nrSlices) throws MMScriptException;
    
+   public void initializeAcquisition(String name, int width, int height, int depth) throws MMScriptException;
+   
    /**
     * Closes the acquisition.
     * After this command metadata is complete and all the references to this data set are cleaned-up
@@ -91,7 +93,12 @@ public interface ScriptInterface {
     * @throws MMScriptException 
     */
    public void snapAndAddImage(String name, int frame, int channel, int z) throws MMScriptException;
-
+   
+   /**
+    * Inserts image into the acquisition handle
+    */
+   public void addImage(String name, Object img, int frame, int channel, int z) throws MMScriptException;
+   
    /**
     * Sets custom property attached to the acquisition summary
     */

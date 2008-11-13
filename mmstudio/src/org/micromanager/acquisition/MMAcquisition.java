@@ -94,6 +94,11 @@ public class MMAcquisition {
       String names[];
       try {
          colors = acqData_.getChannelColors();
+         if (colors == null) {
+            colors = new Color[numChannels_];
+            for (int i=0; i<numChannels_; i++)
+               colors[i] = Color.GRAY;
+         }
          names = acqData_.getChannelNames();
       } catch (MMAcqDataException e) {
          throw new MMScriptException(e);

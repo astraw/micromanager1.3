@@ -2878,6 +2878,12 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI, Scrip
       acq.setDimensions(nrFrames, nrChannels, nrSlices);
    }
 
+   public void initializeAcquisition(String name, int width, int height, int depth) throws MMScriptException {
+      MMAcquisition acq = acqMgr_.getAcquisition(name);
+      acq.setImagePhysicalDimensions(width, height, depth);
+      acq.initialize();
+   }
+   
    public void closeAcquisition(String name) throws MMScriptException {
       acqMgr_.closeAcquisition(name);
 
@@ -2927,6 +2933,12 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI, Scrip
 
       acq.insertImage(img, frame, channel, slice);
    }
+   
+   public void addImage(String name, Object img, int frame, int channel, int slice) throws MMScriptException {
+      MMAcquisition acq = acqMgr_.getAcquisition(name);
+      acq.insertImage(img, frame, channel, slice);
+   }
+
 
    public void closeAllAcquisitions() {
       acqMgr_.closeAll();
