@@ -143,9 +143,12 @@ private:
    int SetAllowedGainValues(DCAM_PARAM_FEATURE_INQ featureInq);
    int SetAllowedPropValues(DCAM_PROPERTYATTR propAttr, std::string propName);
    DCAM_PARAM_FEATURE_INQ GetFeatureInquiry(int featureId);
+   void SetTextInfo();
 
-   typedef std::map<std::string, long> MapStringToLong;
-   std::map<long, MapStringToLong> dcamTextValues_;
+   typedef std::map<std::string, long> MapLongByString;
+   typedef std::map<long, std::string> MapStringByLong;
+   std::map<long, MapLongByString> dcamLongByString_;
+   std::map<long, MapStringByLong> dcamStringByLong_;
 
  //  static CHamamatsu* m_pInstance;
    static unsigned refCount_;

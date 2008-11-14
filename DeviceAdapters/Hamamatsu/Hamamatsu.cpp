@@ -703,10 +703,10 @@ int CHamamatsu::OnExtendedProperty(MM::PropertyBase* pProp, MM::ActionType eAct,
 
       double value;
 
-      if (!dcamTextValues_[propertyId].empty()) {
+      if (!dcamLongByString_[propertyId].empty()) {
          std::string strValue;
          pProp->Get(strValue);
-         value = dcamTextValues_[propertyId][strValue];
+         value = dcamLongByString_[propertyId][strValue];
       } else 
          pProp->Get(value);
       if (!dcam_setpropertyvalue(m_hDCAM, propertyId, value))
@@ -740,12 +740,8 @@ int CHamamatsu::OnExtendedProperty(MM::PropertyBase* pProp, MM::ActionType eAct,
       double value;
       if (!dcam_getpropertyvalue(m_hDCAM, propertyId, &value))
          return ReportError("Error in dcam_getpropertyvalue (value): ");
-      if (!dcamTextValues_[propertyId].empty()) {
-         DCAM_PROPERTYVALUETEXT propText;
-         propText.value = value;
-         propText.iProp = propertyId;
-         if (dcam_getpropertyvaluetext(m_hDCAM, &propText)) 
-            pProp->Set(propText.text);
+      if (!dcamStringByLong_[propertyId].empty()) {
+         pProp->Set(dcamStringByLong_[propertyId][value].c_str());
       } else
          pProp->Set(value);
    }
@@ -902,6 +898,9 @@ int CHamamatsu::Initialize()
       char msg[128] = "DCAM API Version: ";
       LogMessage (strcat(msg, dcamAPIVersion));
    }
+
+   // Set up maps that convert between property numbers and text
+   SetTextInfo();
 
    // gather information about the equipment
    // ------------------------------------------
@@ -1657,6 +1656,45 @@ bool CHamamatsu::IsPropertySupported(DCAM_PROPERTYATTR& propAttr, long propertyI
    return false;
 }
 
+
+/*
+ * Set up maps dcamLongByString_ and dcamStringByLong_
+ */
+void CHamamatsu::SetTextInfo()
+{
+   dcamLongByString_.clear();
+   dcamStringByLong_.clear();
+
+   dcamLongByString_[DCAM_IDPROP_CCDMODE]["Normal CCD"] =  DCAMPROP_CCDMODE__NORMALCCD;
+   dcamStringByLong_[DCAM_IDPROP_CCDMODE][DCAMPROP_CCDMODE__NORMALCCD]="Normal CCD";
+   dcamLongByString_[DCAM_IDPROP_CCDMODE]["EM CCD"] =  DCAMPROP_CCDMODE__EMCCD;
+   dcamStringByLong_[DCAM_IDPROP_CCDMODE][DCAMPROP_CCDMODE__EMCCD]="EM CCD";
+
+   dcamLongByString_[DCAM_IDPROP_SENSORCOOLER]["Off"] =  DCAMPROP_SENSORCOOLER__OFF;
+   dcamStringByLong_[DCAM_IDPROP_SENSORCOOLER][DCAMPROP_SENSORCOOLER__OFF]="Off";
+   dcamLongByString_[DCAM_IDPROP_SENSORCOOLER]["On"] =  DCAMPROP_SENSORCOOLER__ON;
+   dcamStringByLong_[DCAM_IDPROP_SENSORCOOLER][DCAMPROP_SENSORCOOLER__ON]="On";
+   dcamLongByString_[DCAM_IDPROP_SENSORCOOLER]["Max"] =  DCAMPROP_SENSORCOOLER__MAX;
+   dcamStringByLong_[DCAM_IDPROP_SENSORCOOLER][DCAMPROP_SENSORCOOLER__MAX]="Max";
+
+   dcamLongByString_[DCAM_IDPROP_TRIGGERSOURCE]["Internal"] = DCAMPROP_TRIGGERSOURCE__INTERNAL;
+   dcamStringByLong_[DCAM_IDPROP_TRIGGERSOURCE][DCAMPROP_TRIGGERSOURCE__INTERNAL]="Internal";
+   dcamLongByString_[DCAM_IDPROP_TRIGGERSOURCE]["External"] = DCAMPROP_TRIGGERSOURCE__EXTERNAL;
+   dcamStringByLong_[DCAM_IDPROP_TRIGGERSOURCE][DCAMPROP_TRIGGERSOURCE__EXTERNAL]="External";
+   dcamLongByString_[DCAM_IDPROP_TRIGGERSOURCE]["Software"] = DCAMPROP_TRIGGERSOURCE__SOFTWARE;
+   dcamStringByLong_[DCAM_IDPROP_TRIGGERSOURCE][DCAMPROP_TRIGGERSOURCE__SOFTWARE]="Software";
+
+   dcamLongByString_[DCAM_IDPROP_TRIGGERPOLARITY]["Negative"] = DCAMPROP_TRIGGERPOLARITY__NEGATIVE;
+   dcamStringByLong_[DCAM_IDPROP_TRIGGERPOLARITY][DCAMPROP_TRIGGERPOLARITY__NEGATIVE]="Negative";
+   dcamLongByString_[DCAM_IDPROP_TRIGGERPOLARITY]["Positive"] = DCAMPROP_TRIGGERPOLARITY__POSITIVE;
+   dcamStringByLong_[DCAM_IDPROP_TRIGGERPOLARITY][DCAMPROP_TRIGGERPOLARITY__POSITIVE]="Positive";
+
+   dcamLongByString_[DCAM_IDPROP_OUTPUTTRIGGER_POLARITY]["Negative"] = DCAMPROP_OUTPUTTRIGGER_POLARITY__NEGATIVE;
+   dcamStringByLong_[DCAM_IDPROP_OUTPUTTRIGGER_POLARITY][DCAMPROP_OUTPUTTRIGGER_POLARITY__NEGATIVE]="Negative";
+   dcamLongByString_[DCAM_IDPROP_OUTPUTTRIGGER_POLARITY]["Positive"] = DCAMPROP_OUTPUTTRIGGER_POLARITY__POSITIVE;
+   dcamStringByLong_[DCAM_IDPROP_OUTPUTTRIGGER_POLARITY][DCAMPROP_OUTPUTTRIGGER_POLARITY__POSITIVE]="Positive";
+}
+
 /*
  * Adds the DCAM property 'property' as Micro-Manager property 'propName'
  * Sets the Micro-Manager type based on the step size of the property
@@ -1673,20 +1711,12 @@ int CHamamatsu::AddExtendedProperty(std::string propName, long propertyId)
       ostringstream defaultValue;
       defaultValue << propAttr.valuedefault;
       CPropertyActionEx* pActEx = new CPropertyActionEx (this, &CHamamatsu::OnExtendedProperty, propertyId);
-      if (propAttr.attribute & DCAMPROP_ATTR_HASVALUETEXT) {
-         DCAM_PROPERTYVALUETEXT propText;
-         propText.value = propAttr.valuedefault;
-         propText.iProp = propertyId;
-         if (dcam_getpropertyvaluetext(m_hDCAM, &propText) && propText.textbytes > 0) {
-            nRet = CreateProperty(propName.c_str(), propText.text, MM::String, false, pActEx);
-            for (long i = propAttr.valuemin; i <= propAttr.valuemax; i+= propAttr.valuestep) {
-               propText.value = i;
-               dcam_getpropertyvaluetext(m_hDCAM, &propText);
-               AddAllowedValue(propName.c_str(), propText.text);
-               dcamTextValues_[propertyId].insert(MapStringToLong::value_type(propText.text, i));
-            }
-            return DEVICE_OK;
+      if (!dcamStringByLong_[propertyId].empty()) {
+         nRet = CreateProperty(propName.c_str(), dcamStringByLong_[propertyId][propAttr.valuedefault].c_str(), MM::String, false, pActEx);
+         for (long i = propAttr.valuemin; i <= propAttr.valuemax; i+= propAttr.valuestep) {
+            AddAllowedValue(propName.c_str(), dcamStringByLong_[propertyId][i].c_str());
          }
+         return DEVICE_OK;
       }
 
       if (propAttr.valuestep == 1.0 || propAttr.valuestep == 0.0) 
