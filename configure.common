@@ -80,7 +80,7 @@ AC_SUBST(LPTHREAD)
 
 # Determine if we need to look for ImageJ
 AC_MSG_CHECKING(whether to build for imagej)
-AC_ARG_WITH(imagej, [  --with-imagej=path        Path to ImageJ-based GUI], [IMAGEJDIR="$withval"], [IMAGEJDIR="yes"])
+AC_ARG_WITH([imagej], [AS_HELP_STRING([--with-imagej=path],[path to ImageJ-based GUI])], [IMAGEJDIR="$withval"], [IMAGEJDIR="yes"])
 AC_MSG_RESULT($IMAGEJDIR)
 
 # Debian IJ settings

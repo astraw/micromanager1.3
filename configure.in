@@ -12,7 +12,7 @@ AC_LIBTOOL_DLOPEN
 m4_include([configure.common])
 
 AC_MSG_CHECKING([whether to build the core])
-AC_ARG_WITH([core], [AS_HELP_STRING([--with-core],[Only build DeviceAdapters])], [], [with_core=yes])
+AC_ARG_WITH([core], [AS_HELP_STRING([--with-core],[use --without-core to only build DeviceAdapters])], [], [with_core=yes])
 if test "x$with_core" = xno; then
    AC_MSG_RESULT([no]);
 else
@@ -68,7 +68,7 @@ AC_CHECK_PROGS(JAR, jar)
 
 # Find Java header files:
 AC_MSG_CHECKING(for java include file jni.h)
-AC_ARG_WITH(javaincl, [  --with-javaincl=path    Set location of Java include directory], [JAVAINCDIR="$withval"], [JAVAINCDIR=])
+AC_ARG_WITH([javaincl], [AS_HELP_STRING([--with-javaincl=path],[set location of Java include directory])], [JAVAINCDIR="$withval"], [JAVAINCDIR=])
 
 if test -z "$JAVAINCDIR"; then  
    JAVAINCDIR="/usr/j2sdk*/include /usr/local/j2sdk*/include /usr/jdk*/include /usr/local/jdk*/include /opt/j2sdk*/include /opt/jdk*/include /usr/java/include /usr/java/j2sdk*/include /usr/java/jdk*/include /usr/local/java/include /opt/java/include /usr/include/java /usr/local/include/java /usr/lib/java/include /usr/lib/jvm/java*/include /usr/include/kaffe /usr/local/include/kaffe /usr/include"                                                                             
