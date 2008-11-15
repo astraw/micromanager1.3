@@ -11,6 +11,53 @@ AC_LIBTOOL_DLOPEN
 
 m4_include([configure.common])
 
+AC_MSG_CHECKING([whether to build the core])
+AC_ARG_WITH([core], [AS_HELP_STRING([--with-core],[Only build DeviceAdapters])], [], [with_core=yes])
+if test "x$with_core" = xno; then
+   AC_MSG_RESULT([no]);
+else
+   AC_MSG_RESULT([yes])
+   #---------------------------------------------------
+   # Check for ACE, static on Mac and libtool lib on Linux
+   #---------------------------------------------------
+   AC_MSG_CHECKING(for libACE)
+   if test -z "$LIBACE" 
+   then    
+      case $host in
+      *-*-linux*) 
+      if test -r /usr/local/lib/libACE.la ; then
+         LIBACE="/usr/local/lib/libACE.la"
+      else
+   #      if test -r /usr/lib/libACE.so ; then   #currently libMMCoreJ_wrap.so will spit linking errors when IJ loads it unless it is static
+   #        LIBACE="/usr/lib/libACE.so"
+         if test -r /usr/lib/libACE.a ; then
+           LIBACE="/usr/lib/libACE.a"
+         else
+           AC_MSG_ERROR([not found, download from http://deuce.doc.wustl.edu/Download.html, build and install (cd ACE_wrappers \ mkdir build \ cd build \ ../configure \ make \ make install ) and rerun configure])
+         fi
+      fi
+      ;;
+     *-*-darwin*) 
+     if test -r /usr/local/lib/libACE.a; then
+         LIBACE="/usr/local/lib/libACE.a"
+      else
+         AC_MSG_ERROR([not found, download from http://deuce.doc.wustl.edu/Download.html, build and install (cd ACE_wrappers \ mkdir build \ cd build \ ../configure --enable-static\ make \ make install ) and rerun configure])
+      fi
+      ;;
+      esac
+   fi
+   AC_MSG_RESULT($LIBACE)
+   AC_SUBST(LIBACE)
+
+   # Check for Siwg.
+   AC_CHECK_PROGS(SWIG, swig)
+   if test "$SWIG" = "" ; then
+      AC_MSG_ERROR([not found, swig is needed to build this application.  Please download (http://www.swig.org/download.html) and install])
+   fi
+
+fi
+AM_CONDITIONAL([BUILD_APP], test "x$with_core" = xyes)
+
 #----------------------------------------------------------------
 # Look for java binaries and headers
 #----------------------------------------------------------------
@@ -89,12 +136,6 @@ AC_SUBST(JAVALDSHARED)
 AC_SUBST(JAVACXXSHARED)
 AC_SUBST(JAVACFLAGS)
 AC_SUBST(I5DJARPATH)
-
-# Checks for programs.
-AC_CHECK_PROGS(SWIG, swig)
-if test "$SWIG" = "" ; then
-   AC_MSG_ERROR([not found, swig is needed to build this application.  Please download (http://www.swig.org/download.html) and install])
-fi
 
 # Checks for libraries.
 AC_CHECK_LIB(dl, dlopen)   # Dynamic linking for SunOS/Solaris and SYSV

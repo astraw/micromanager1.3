@@ -37,38 +37,6 @@ if test $cc_vers_major -gt 3; then
    esac
 fi
 
-#---------------------------------------------------
-# Check for ACE, static on Mac and libtool lib on Linux
-#---------------------------------------------------
-AC_MSG_CHECKING(for libACE)
-if test -z "$LIBACE" 
-then    
-   case $host in
-   *-*-linux*) 
-   if test -r /usr/local/lib/libACE.la ; then
-      LIBACE="/usr/local/lib/libACE.la"
-   else
-#      if test -r /usr/lib/libACE.so ; then   #currently libMMCoreJ_wrap.so will spit linking errors when IJ loads it unless it is static
-#        LIBACE="/usr/lib/libACE.so"
-      if test -r /usr/lib/libACE.a ; then
-        LIBACE="/usr/lib/libACE.a"
-      else
-        AC_MSG_ERROR([not found, download from http://deuce.doc.wustl.edu/Download.html, build and install (cd ACE_wrappers \ mkdir build \ cd build \ ../configure \ make \ make install ) and rerun configure])
-      fi
-   fi
-   ;;
-  *-*-darwin*) 
-  if test -r /usr/local/lib/libACE.a; then
-      LIBACE="/usr/local/lib/libACE.a"
-   else
-      AC_MSG_ERROR([not found, download from http://deuce.doc.wustl.edu/Download.html, build and install (cd ACE_wrappers \ mkdir build \ cd build \ ../configure --enable-static\ make \ make install ) and rerun configure])
-   fi
-   ;;
-   esac
-fi
-AC_MSG_RESULT($LIBACE)
-AC_SUBST(LIBACE)
-
 
 #----------------------------------------------------------------
 # LINKFORSHARED are the flags passed to the $(CC) command that links
