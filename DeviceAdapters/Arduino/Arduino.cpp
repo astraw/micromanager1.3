@@ -13,6 +13,7 @@
 
 #include "Arduino.h"
 #include "../../MMDevice/ModuleInterface.h"
+#include <sstream>
 
 #ifdef WIN32
    #define WIN32_LEAN_AND_MEAN
@@ -68,11 +69,11 @@ MODULE_API MM::Device* CreateDevice(const char* deviceName)
    {
       return new CArduinoShutter;
    }
-   /*
    else if (strcmp(deviceName, g_DeviceNameArduinoDA) == 0)
    {
       return new CArduinoDA();
    }
+   /*
    else if (strcmp(deviceName, g_DeviceNameArduinoInput) == 0)
    {
       return new CArduinoInput;
@@ -97,7 +98,7 @@ initialized_ (false)
 {
    InitializeDefaultErrorMessages();
 
-   SetErrorText(ERR_PORT_OPEN_FAILED, "Failed opening Velleman Arduino USB device");
+   SetErrorText(ERR_PORT_OPEN_FAILED, "Failed opening Arduino USB device");
 
    CPropertyAction* pAct = new CPropertyAction(this, &CArduinoHub::OnPort);
    CreateProperty(MM::g_Keyword_Port, "Undefined", MM::String, false, pAct, true);
@@ -197,6 +198,9 @@ CArduinoSwitch::CArduinoSwitch() : numPos_(64), busy_(false)
    SetErrorText(ERR_INITIALIZE_FAILED, "Initialization of the device failed");
    SetErrorText(ERR_WRITE_FAILED, "Failed to write data to the device");
    SetErrorText(ERR_CLOSE_FAILED, "Failed closing the device");
+
+   for (int i=0; i < NUMPATTERNS; i++)
+      pattern_[i] = 0;
 }
 
 CArduinoSwitch::~CArduinoSwitch()
@@ -255,6 +259,46 @@ int CArduinoSwitch::Initialize()
    if (nRet != DEVICE_OK)
       return nRet;
 
+   // Patterns are used for triggered output
+   pAct = new CPropertyAction (this, &CArduinoSwitch::OnSetPattern);
+   nRet = CreateProperty("SetPattern", "", MM::Integer, false, pAct);
+   if (nRet != DEVICE_OK)
+      return nRet;
+   pAct = new CPropertyAction (this, &CArduinoSwitch::OnGetPattern);
+   nRet = CreateProperty("GetPattern", "", MM::Integer, false, pAct);
+   if (nRet != DEVICE_OK)
+      return nRet;
+   AddAllowedValue("SetPattern", "");
+   AddAllowedValue("GetPattern", "");
+   for (int i=0; i< NUMPATTERNS; i++) {
+      std::ostringstream os;
+      os << i;
+      AddAllowedValue("SetPattern", os.str().c_str());
+      AddAllowedValue("GetPattern", os.str().c_str());
+   }
+
+   pAct = new CPropertyAction(this, &CArduinoSwitch::OnPatternsUsed);
+   nRet = CreateProperty("Nr. Patterns Used", "0", MM::Integer, false, pAct);
+   if (nRet != DEVICE_OK)
+      return nRet;
+   for (int i=0; i<NUMPATTERNS; i++) {
+      std::ostringstream os;
+      os << i;
+      AddAllowedValue("Nr.Patterns Used", os.str().c_str());
+   }
+
+   pAct = new CPropertyAction(this, &CArduinoSwitch::OnSkipTriggers);
+   nRet = CreateProperty("Skip Patterns (Nr.)", "0", MM::Integer, false, pAct);
+   if (nRet != DEVICE_OK)
+      return nRet;
+
+   pAct = new CPropertyAction(this, &CArduinoSwitch::OnStartTrigger);
+   nRet = CreateProperty("Start TriggerMode", "Stop", MM::String, false, pAct);
+   if (nRet != DEVICE_OK)
+      return nRet;
+   AddAllowedValue("Start TriggerMode", "Stop");
+   AddAllowedValue("Start TriggerMode", "Start");
+
    nRet = UpdateStatus();
    if (nRet != DEVICE_OK)
       return nRet;
@@ -276,17 +320,23 @@ int CArduinoSwitch::WriteToPort(long value)
    if (g_invertedLogic)
       value = ~value;
 
-   std::string command;
-   command[0] = 'S';
-   command[1] = (char) value;
-   int ret = WriteToComPort(g_port.c_str(), (const unsigned char*) command.c_str(), 2);
+   unsigned char command[2];
+   command[0] = 1;
+   command[1] = (unsigned char) value;
+   int ret = WriteToComPort(g_port.c_str(), (const unsigned char*) command, 2);
    if (ret != DEVICE_OK)
       return ret;
 
-   std::string answer;
-   ret = GetSerialAnswer(g_port.c_str(), ":", answer);
-   if (ret != DEVICE_OK)
-      return ret;
+   MM::MMTime startTime = GetCurrentMMTime();
+   unsigned long bytesRead = 0;
+   unsigned char answer[1];
+   while ((bytesRead < 1) && ( (GetCurrentMMTime() - startTime).getMsec() < 250)) {
+      ret = ReadFromComPort(g_port.c_str(), answer, 1, bytesRead);
+      if (ret != DEVICE_OK)
+         return ret;
+   }
+   if (answer[0] != 1)
+      return ERR_COMMUNICATION;
 
    return DEVICE_OK;
 }
@@ -299,7 +349,7 @@ int CArduinoSwitch::OnState(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
    if (eAct == MM::BeforeGet)
    {
-      // nothing to do, let the caller to use cached property
+      // nothing to do, let the caller use cached property
    }
    else if (eAct == MM::AfterSet)
    {
@@ -313,6 +363,47 @@ int CArduinoSwitch::OnState(MM::PropertyBase* pProp, MM::ActionType eAct)
    return DEVICE_OK;
 }
 
+int CArduinoSwitch::OnSetPattern(MM::PropertyBase* pProp, MM::ActionType eAct)
+{
+   if (eAct == MM::BeforeGet) {
+      // nothing to do, let the caller use cached property
+   }
+   else if (eAct == MM::AfterSet)
+   {
+      long pos;
+      pProp->Get(pos);
+
+      unsigned value = g_switchState_;
+      pattern_[pos] = g_switchState_;
+
+      value = 63 & value;
+      if (g_invertedLogic)
+         value = ~value;
+
+      unsigned char command[3];
+      command[0] = 5;
+      command[1] = (unsigned char) pos;
+      command[2] = (unsigned char) value;
+      int ret = WriteToComPort(g_port.c_str(), (const unsigned char*) command, 3);
+      if (ret != DEVICE_OK)
+         return ret;
+
+      MM::MMTime startTime = GetCurrentMMTime();
+      unsigned long bytesRead = 0;
+      unsigned char answer[3];
+      while ((bytesRead < 3) && ( (GetCurrentMMTime() - startTime).getMsec() < 250)) {
+         unsigned long br;
+         ret = ReadFromComPort(g_port.c_str(), answer + bytesRead, 3, br);
+         if (ret != DEVICE_OK)
+            return ret;
+         bytesRead += br;
+      }
+      if (answer[0] != 5)
+         return ERR_COMMUNICATION;
+
+      return DEVICE_OK;
+   }
+}
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -322,12 +413,13 @@ int CArduinoSwitch::OnState(MM::PropertyBase* pProp, MM::ActionType eAct)
 CArduinoDA::CArduinoDA() :
       busy_(false), 
       minV_(0.0), 
-      maxV_(0.0), 
+      maxV_(5.0), 
       volts_(0.0),
       gatedVolts_(0.0),
       encoding_(0), 
       resolution_(8), 
       channel_(1), 
+      maxChannel_(2),
       name_(""),
       gateOpen_(true)
 {
@@ -340,8 +432,8 @@ CArduinoDA::CArduinoDA() :
    SetErrorText(ERR_CLOSE_FAILED, "Failed closing the device");
 
    CPropertyAction* pAct = new CPropertyAction(this, &CArduinoDA::OnChannel);
-   CreateProperty("Channel", "1", MM::Integer, false, pAct, true);
-   for (int i=1; i< 9; i++){
+   CreateProperty("Channel", "2", MM::Integer, false, pAct, true);
+   for (int i=1; i<= 2; i++){
       std::ostringstream os;
       os << i;
       AddAllowedValue("Channel", os.str().c_str());
@@ -349,8 +441,7 @@ CArduinoDA::CArduinoDA() :
 
    pAct = new CPropertyAction(this, &CArduinoDA::OnMaxVolt);
    CreateProperty("MaxVolt", "5.0", MM::Float, false, pAct, true);
-   AddAllowedValue("MaxVolt", "5.0");
-   AddAllowedValue("MaxVolt", "10.0");
+
 }
 
 CArduinoDA::~CArduinoDA()
@@ -366,10 +457,6 @@ void CArduinoDA::GetName(char* name) const
 
 int CArduinoDA::Initialize()
 {
-   // obtain scaling info
-
-   minV_ = 0.0;
-   maxV_ = 5.0;
 
    // set property list
    // -----------------
@@ -390,7 +477,7 @@ int CArduinoDA::Initialize()
    nRet = CreateProperty("Volts", "0.0", MM::Float, false, pAct);
    if (nRet != DEVICE_OK)
       return nRet;
-   SetPropertyLimits("Volts", 0.0, 5.0);
+   SetPropertyLimits("Volts", minV_, maxV_);
 
    nRet = UpdateStatus();
    if (nRet != DEVICE_OK)
@@ -407,36 +494,43 @@ int CArduinoDA::Shutdown()
    return DEVICE_OK;
 }
 
-int CArduinoDA::WriteToPort(long value)
+int CArduinoDA::WriteToPort(unsigned long value)
 {
-   /*
-   int ret = g_ArduinoInterface.OutputAnalogChannel(*this, *GetCoreCallback(), channel_, (int) value);
+   unsigned char command[4];
+   command[0] = 3;
+   command[1] = (unsigned char) (channel_ -1);
+   command[2] = (unsigned char) (value / 256L);
+   command[3] = (unsigned char) (value & 255);
+   int ret = WriteToComPort(g_port.c_str(), (const unsigned char*) command, 4);
    if (ret != DEVICE_OK)
-   {
-      this->LogMessage("Error reported by libk8055 function WriteAllDigital");
       return ret;
+
+   MM::MMTime startTime = GetCurrentMMTime();
+   unsigned long bytesRead = 0;
+   unsigned char answer[4];
+   while ((bytesRead < 4) && ( (GetCurrentMMTime() - startTime).getMsec() < 2500)) {
+      unsigned long bR;
+      ret = ReadFromComPort(g_port.c_str(), answer + bytesRead, 4 - bytesRead, bR);
+      if (ret != DEVICE_OK)
+         return ret;
+      bytesRead += bR;
    }
-   */
+   if (answer[0] != 3)
+      return ERR_COMMUNICATION;
 
    return DEVICE_OK;
 }
 
+
 int CArduinoDA::WriteSignal(double volts)
 {
-   /*
-   long value = (long) ((1L<<resolution_)/((float)maxV_ - (float)minV_) * (volts - (float)minV_));
-   value = min((1L<<resolution_)-1,value);
+   long value = (long) ( (volts - minV_) / maxV_ * 4095);
 
-   if (encoding_ != 0) {
-      // convert to 2's comp by inverting the sign bit
-      long sign = 1L << (resolution_ - 1);
-      value ^= sign;
-      if (value & sign)           //sign extend
-         value |= 0xffffffffL << resolution_;
-   }
+   std::ostringstream os;
+    os << "Volts: " << volts << " Max Voltage: " << maxV_ << " digital value: " << value;
+    LogMessage(os.str().c_str(), true);
+
    return WriteToPort(value);
-   */
-   return DEVICE_OK;
 }
 
 int CArduinoDA::SetSignal(double volts)
@@ -495,14 +589,9 @@ int CArduinoDA::OnMaxVolt(MM::PropertyBase* pProp, MM::ActionType eAct)
    }
    else if (eAct == MM::AfterSet)
    {
-      double maxV;
-      pProp->Get(maxV);
-      if (maxV == 5.0 || maxV == 10.0)
-         maxV_ = maxV;
-      if (maxV == 5.0)
-         SetPropertyLimits("Volts", 0.0, 5.0);
-      else if (maxV == 10.0)
-         SetPropertyLimits("Volts", 0.0, 10.0);
+      pProp->Get(maxV_);
+      if (HasProperty("Volts"))
+         SetPropertyLimits("Volts", 0.0, maxV_);
 
    }
    return DEVICE_OK;
@@ -518,7 +607,7 @@ int CArduinoDA::OnChannel(MM::PropertyBase* pProp, MM::ActionType eAct)
    {
       long channel;
       pProp->Get(channel);
-      if (channel >=1 && channel <=8)
+      if (channel >=1 && channel <=maxChannel_)
          channel_ = channel;
    }
    return DEVICE_OK;
@@ -634,20 +723,27 @@ int CArduinoShutter::Fire(double /*deltaT*/)
 
 int CArduinoShutter::WriteToPort(long value)
 {
+   value = 63 & value;
    if (g_invertedLogic)
-      value = (63 & ~value);
+      value = ~value;
 
-   std::string command;
-   command[0] = 'S';
-   command[1] = (char) value;
-   int ret = WriteToComPort(g_port.c_str(), (const unsigned char*) command.c_str(), 2);
+   unsigned char command[2];
+   command[0] = 1;
+   command[1] = (unsigned char) value;
+   int ret = WriteToComPort(g_port.c_str(), (const unsigned char*) command, 2);
    if (ret != DEVICE_OK)
       return ret;
 
-   std::string answer;
-   ret = GetSerialAnswer(g_port.c_str(), ":", answer);
-   if (ret != DEVICE_OK)
-      return ret;
+   MM::MMTime startTime = GetCurrentMMTime();
+   unsigned long bytesRead = 0;
+   unsigned char answer[1];
+   while ((bytesRead < 1) && ( (startTime - GetCurrentMMTime()).getMsec() < 250)) {
+      ret = ReadFromComPort(g_port.c_str(), answer, 1, bytesRead);
+      if (ret != DEVICE_OK)
+         return ret;
+   }
+   if (answer[0] != 1)
+      return ERR_COMMUNICATION;
 
    return DEVICE_OK;
 }

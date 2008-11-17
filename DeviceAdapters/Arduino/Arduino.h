@@ -31,6 +31,7 @@
 #define ERR_CLOSE_FAILED 104
 #define ERR_BOARD_NOT_FOUND 105
 #define ERR_PORT_OPEN_FAILED 106
+#define ERR_COMMUNICATION 107
 
 
 class CArduinoHub : public CGenericBase<CArduinoHub>  
@@ -101,8 +102,17 @@ public:
    // action interface
    // ----------------
    int OnState(MM::PropertyBase* pProp, MM::ActionType eAct);
+   int OnSetPattern(MM::PropertyBase* pProp, MM::ActionType eAct);
+   int OnGetPattern(MM::PropertyBase* pProp, MM::ActionType eAct);
+   int OnPatternsUsed(MM::PropertyBase* pProp, MM::ActionType eAct);
+   int OnSkipTriggers(MM::PropertyBase* pProp, MM::ActionType eAct);
+   int OnStartTrigger(MM::PropertyBase* pProp, MM::ActionType eAct);
+
 
 private:
+   static const int NUMPATTERNS = 12;
+   int pattern_[NUMPATTERNS];
+   int nrPatternsUsed_;
    int OpenPort(const char* pszName, long lnValue);
    int WriteToPort(long lnValue);
    int ClosePort();
@@ -140,7 +150,7 @@ public:
    int OnChannel(MM::PropertyBase* pProp, MM::ActionType eAct);
 
 private:
-   int WriteToPort(long lnValue);
+   int WriteToPort(unsigned long lnValue);
    int WriteSignal(double volts);
 
    bool initialized_;
@@ -152,6 +162,7 @@ private:
    unsigned int encoding_;
    unsigned int resolution_;
    unsigned channel_;
+   unsigned maxChannel_;
    std::string name_;
    bool gateOpen_;
 };
