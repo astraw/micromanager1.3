@@ -1046,37 +1046,6 @@ int CHamamatsu::Initialize()
    
    DCAM_PROPERTYATTR propAttr;
 
-   // CCDMode
-   /*
-   DCAM_PROPERTYATTR propAttr;
-   if (IsPropertySupported(propAttr, DCAM_IDPROP_CCDMODE))
-   {
-      ostringstream defaultValue;
-      defaultValue << propAttr.valuedefault;
-      pAct = new CPropertyAction (this, &CHamamatsu::OnCCDMode);
-      nRet = CreateProperty("CCDMode", defaultValue.str().c_str(), MM::Integer, false, pAct);
-      if (nRet != DEVICE_OK)
-         return nRet;
-      nRet = SetAllowedPropValues(propAttr, "CCDMode");
-      if (nRet != DEVICE_OK)
-         return nRet;
-   }
-
-   // Photon Imaging Mode
-   if (IsPropertySupported(propAttr, DCAM_IDPROP_PHOTONIMAGINGMODE))
-   {
-      ostringstream defaultValue;
-      defaultValue << propAttr.valuedefault;
-      pAct = new CPropertyAction (this, &CHamamatsu::OnPhotonImagingMode);
-      nRet = CreateProperty("PhotonImagingMode", defaultValue.str().c_str(), MM::Integer, false, pAct);
-      if (nRet != DEVICE_OK)
-         return nRet;
-      nRet = SetAllowedPropValues(propAttr, "PhotonImagingMode");
-      if (nRet != DEVICE_OK)
-         return nRet;
-   }
-   */
-
    // Sensitivity Mode
    if (IsPropertySupported(propAttr, DCAM_IDPROP_SENSITIVITY))
    {
@@ -1086,7 +1055,7 @@ int CHamamatsu::Initialize()
       nRet = CreateProperty("EMGain", defaultValue.str().c_str(), MM::Integer, false, pAct);
       if (nRet != DEVICE_OK)
          return nRet;
-   nRet = SetPropertyLimits("EMGain", propAttr.valuemin, propAttr.valuemax);
+      nRet = SetPropertyLimits("EMGain", propAttr.valuemin, propAttr.valuemax);
       if (nRet != DEVICE_OK)
          return nRet;
    }
@@ -1120,22 +1089,6 @@ int CHamamatsu::Initialize()
       if (nRet != DEVICE_OK)
          return nRet;
    }
-
-   // Sensor temperature target
-   /*
-   if (IsPropertySupported(propAttr, DCAM_IDPROP_SENSORTEMPERATURETARGET))
-   {
-      ostringstream defaultValue;
-      defaultValue << propAttr.valuedefault;
-      CPropertyActionEx* pActEx = new CPropertyActionEx (this, &CHamamatsu::OnExtendedProperty, (long) DCAM_IDPROP_SENSORTEMPERATURETARGET);
-      nRet = CreateProperty("Temperature Set Point", defaultValue.str().c_str(), MM::Float, false, pActEx);
-      if (nRet != DEVICE_OK)
-         return nRet;
-      nRet = SetAllowedPropValues(propAttr, "Temperature Set Point");
-      if (nRet != DEVICE_OK)
-         return nRet;
-   }
-   */
 
    nRet = AddExtendedProperty("CCDMode",  DCAM_IDPROP_CCDMODE);
    if (nRet != DEVICE_OK)
