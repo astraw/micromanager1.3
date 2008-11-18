@@ -1044,7 +1044,10 @@ int CHamamatsu::Initialize()
       assert(nRet == DEVICE_OK);
    }
    
+   DCAM_PROPERTYATTR propAttr;
+
    // CCDMode
+   /*
    DCAM_PROPERTYATTR propAttr;
    if (IsPropertySupported(propAttr, DCAM_IDPROP_CCDMODE))
    {
@@ -1072,6 +1075,7 @@ int CHamamatsu::Initialize()
       if (nRet != DEVICE_OK)
          return nRet;
    }
+   */
 
    // Sensitivity Mode
    if (IsPropertySupported(propAttr, DCAM_IDPROP_SENSITIVITY))
@@ -1106,20 +1110,6 @@ int CHamamatsu::Initialize()
    }
 */
  
-   // Direct EM Gain mode
-   if (IsPropertySupported(propAttr, DCAM_IDPROP_DIRECTEMGAIN_MODE))
-   {
-      ostringstream defaultValue;
-      defaultValue << propAttr.valuedefault;
-      CPropertyActionEx* pActEx = new CPropertyActionEx (this, &CHamamatsu::OnExtendedProperty, (long) DCAM_IDPROP_DIRECTEMGAIN_MODE);
-      nRet = CreateProperty("Direct EM Gain Mode", defaultValue.str().c_str(), MM::Integer, false, pActEx);
-      if (nRet != DEVICE_OK)
-         return nRet;
-      nRet = SetAllowedPropValues(propAttr, "Direct EM Gain Mode");
-      if (nRet != DEVICE_OK)
-         return nRet;
-   }
-
    // Sensor temperature readout
    if (IsPropertySupported(propAttr, DCAM_IDPROP_SENSORTEMPERATURE))
    {
@@ -1132,6 +1122,7 @@ int CHamamatsu::Initialize()
    }
 
    // Sensor temperature target
+   /*
    if (IsPropertySupported(propAttr, DCAM_IDPROP_SENSORTEMPERATURETARGET))
    {
       ostringstream defaultValue;
@@ -1144,6 +1135,23 @@ int CHamamatsu::Initialize()
       if (nRet != DEVICE_OK)
          return nRet;
    }
+   */
+
+   nRet = AddExtendedProperty("CCDMode",  DCAM_IDPROP_CCDMODE);
+   if (nRet != DEVICE_OK)
+      return nRet;
+
+   nRet = AddExtendedProperty("PhotonImagingMode",  DCAM_IDPROP_PHOTONIMAGINGMODE);
+   if (nRet != DEVICE_OK)
+      return nRet;
+
+   nRet = AddExtendedProperty("Temperature Set Point",  DCAM_IDPROP_SENSORTEMPERATURETARGET);
+   if (nRet != DEVICE_OK)
+      return nRet;
+
+   nRet = AddExtendedProperty("Direct EM Gain Mode",  DCAM_IDPROP_DIRECTEMGAIN_MODE);
+   if (nRet != DEVICE_OK)
+      return nRet;
 
    nRet = AddExtendedProperty("Sensor Cooler", DCAM_IDPROP_SENSORCOOLER);
    if (nRet != DEVICE_OK)
@@ -1713,7 +1721,10 @@ int CHamamatsu::AddExtendedProperty(std::string propName, long propertyId)
       CPropertyActionEx* pActEx = new CPropertyActionEx (this, &CHamamatsu::OnExtendedProperty, propertyId);
       if (!dcamStringByLong_[propertyId].empty()) {
          nRet = CreateProperty(propName.c_str(), dcamStringByLong_[propertyId][propAttr.valuedefault].c_str(), MM::String, false, pActEx);
-         for (long i = propAttr.valuemin; i <= propAttr.valuemax; i+= propAttr.valuestep) {
+         long step = propAttr.valuestep;
+         if (step == 0)
+            step = 1; 
+         for (long i = propAttr.valuemin; i <= propAttr.valuemax; i+= step) {
             AddAllowedValue(propName.c_str(), dcamStringByLong_[propertyId][i].c_str());
          }
          return DEVICE_OK;
@@ -1721,8 +1732,12 @@ int CHamamatsu::AddExtendedProperty(std::string propName, long propertyId)
 
       if (propAttr.valuestep == 1.0 || propAttr.valuestep == 0.0) 
          nRet = CreateProperty(propName.c_str(), defaultValue.str().c_str(), MM::Integer, false, pActEx);
-      else
+      else {
          nRet = CreateProperty(propName.c_str(), defaultValue.str().c_str(), MM::Float, false, pActEx);
+         if (propAttr.valuemax > propAttr.valuemin) {
+            SetPropertyLimits(propName.c_str(), propAttr.valuemin, propAttr.valuemax);
+         }
+      }
       if (nRet != DEVICE_OK)
          return nRet;
       nRet = SetAllowedPropValues(propAttr, propName.c_str());
