@@ -741,7 +741,7 @@ int CHamamatsu::OnExtendedProperty(MM::PropertyBase* pProp, MM::ActionType eAct,
       if (!dcam_getpropertyvalue(m_hDCAM, propertyId, &value))
          return ReportError("Error in dcam_getpropertyvalue (value): ");
       if (!dcamStringByLong_[propertyId].empty()) {
-         pProp->Set(dcamStringByLong_[propertyId][value].c_str());
+         pProp->Set(dcamStringByLong_[propertyId][(long)value].c_str());
       } else
          pProp->Set(value);
    }
@@ -1673,11 +1673,11 @@ int CHamamatsu::AddExtendedProperty(std::string propName, long propertyId)
       defaultValue << propAttr.valuedefault;
       CPropertyActionEx* pActEx = new CPropertyActionEx (this, &CHamamatsu::OnExtendedProperty, propertyId);
       if (!dcamStringByLong_[propertyId].empty()) {
-         nRet = CreateProperty(propName.c_str(), dcamStringByLong_[propertyId][propAttr.valuedefault].c_str(), MM::String, false, pActEx);
-         long step = propAttr.valuestep;
+         nRet = CreateProperty(propName.c_str(), dcamStringByLong_[propertyId][(long)propAttr.valuedefault].c_str(), MM::String, false, pActEx);
+         long step = (long) propAttr.valuestep;
          if (step == 0)
             step = 1; 
-         for (long i = propAttr.valuemin; i <= propAttr.valuemax; i+= step) {
+         for (long i = (long) propAttr.valuemin; i <= propAttr.valuemax; i+= step) {
             AddAllowedValue(propName.c_str(), dcamStringByLong_[propertyId][i].c_str());
          }
          return DEVICE_OK;
