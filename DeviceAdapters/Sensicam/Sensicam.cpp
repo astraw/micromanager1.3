@@ -590,7 +590,7 @@ int CSensicam::SnapImage()
       return nErr;
 
    // wait for picture
-   int nWaittime = static_cast<int> (pictime_/1000.0 + 20);
+   int nWaittime = static_cast<int> (pictime_/1000.0 + 50);
 
    unsigned int uT1, uT2;
    int nPicstat;
