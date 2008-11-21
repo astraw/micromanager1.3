@@ -107,6 +107,8 @@ public:
    int OnPatternsUsed(MM::PropertyBase* pProp, MM::ActionType eAct);
    int OnSkipTriggers(MM::PropertyBase* pProp, MM::ActionType eAct);
    int OnStartTrigger(MM::PropertyBase* pProp, MM::ActionType eAct);
+   int OnBlanking(MM::PropertyBase* pProp, MM::ActionType eAct);
+   int OnBlankingTriggerDirection(MM::PropertyBase* pProp, MM::ActionType eAct);
 
 
 private:
@@ -117,6 +119,8 @@ private:
    int WriteToPort(long lnValue);
    int ClosePort();
 
+   bool blanking_;
+   bool blankOnTriggerLow_;
    bool initialized_;
    long numPos_;
    bool busy_;

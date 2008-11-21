@@ -189,7 +189,12 @@ int CArduinoHub::OnLogic(MM::PropertyBase* pProp, MM::ActionType pAct)
 // CArduinoSwitch implementation
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-CArduinoSwitch::CArduinoSwitch() : numPos_(64), busy_(false)
+CArduinoSwitch::CArduinoSwitch() : 
+   blanking_(false),
+   blankOnTriggerLow_(true),
+   initialized_(false),
+   numPos_(64), 
+   busy_(false)
 {
    InitializeDefaultErrorMessages();
 
@@ -198,6 +203,7 @@ CArduinoSwitch::CArduinoSwitch() : numPos_(64), busy_(false)
    SetErrorText(ERR_INITIALIZE_FAILED, "Initialization of the device failed");
    SetErrorText(ERR_WRITE_FAILED, "Failed to write data to the device");
    SetErrorText(ERR_CLOSE_FAILED, "Failed closing the device");
+   SetErrorText(ERR_COMMUNICATION, "Error in communication with Arduino board");
 
    for (int i=0; i < NUMPATTERNS; i++)
       pattern_[i] = 0;
@@ -261,18 +267,21 @@ int CArduinoSwitch::Initialize()
 
    // Patterns are used for triggered output
    pAct = new CPropertyAction (this, &CArduinoSwitch::OnSetPattern);
-   nRet = CreateProperty("SetPattern", "", MM::Integer, false, pAct);
+   nRet = CreateProperty("SetPattern", "", MM::String, false, pAct);
    if (nRet != DEVICE_OK)
       return nRet;
    pAct = new CPropertyAction (this, &CArduinoSwitch::OnGetPattern);
-   nRet = CreateProperty("GetPattern", "", MM::Integer, false, pAct);
+   nRet = CreateProperty("GetPattern", "", MM::String, false, pAct);
    if (nRet != DEVICE_OK)
       return nRet;
    AddAllowedValue("SetPattern", "");
    AddAllowedValue("GetPattern", "");
    for (int i=0; i< NUMPATTERNS; i++) {
       std::ostringstream os;
+      os.fill(' ');
+      os.width(2);
       os << i;
+      os.flags(std::ios::left);
       AddAllowedValue("SetPattern", os.str().c_str());
       AddAllowedValue("GetPattern", os.str().c_str());
    }
@@ -281,11 +290,7 @@ int CArduinoSwitch::Initialize()
    nRet = CreateProperty("Nr. Patterns Used", "0", MM::Integer, false, pAct);
    if (nRet != DEVICE_OK)
       return nRet;
-   for (int i=0; i<NUMPATTERNS; i++) {
-      std::ostringstream os;
-      os << i;
-      AddAllowedValue("Nr.Patterns Used", os.str().c_str());
-   }
+   SetPropertyLimits("Nr. Patterns Used", 0, NUMPATTERNS);
 
    pAct = new CPropertyAction(this, &CArduinoSwitch::OnSkipTriggers);
    nRet = CreateProperty("Skip Patterns (Nr.)", "0", MM::Integer, false, pAct);
@@ -319,6 +324,8 @@ int CArduinoSwitch::WriteToPort(long value)
    value = 63 & value;
    if (g_invertedLogic)
       value = ~value;
+
+   PurgeComPort(g_port.c_str());
 
    unsigned char command[2];
    command[0] = 1;
@@ -366,12 +373,16 @@ int CArduinoSwitch::OnState(MM::PropertyBase* pProp, MM::ActionType eAct)
 int CArduinoSwitch::OnSetPattern(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
    if (eAct == MM::BeforeGet) {
-      // nothing to do, let the caller use cached property
+      // Never set anything here 
+      pProp->Set(" ");
    }
    else if (eAct == MM::AfterSet)
    {
-      long pos;
-      pProp->Get(pos);
+      std::string tmp;
+      pProp->Get(tmp);
+      if (tmp == " ")
+         return DEVICE_OK;
+      int pos =  atoi(tmp.c_str());
 
       unsigned value = g_switchState_;
       pattern_[pos] = g_switchState_;
@@ -379,6 +390,8 @@ int CArduinoSwitch::OnSetPattern(MM::PropertyBase* pProp, MM::ActionType eAct)
       value = 63 & value;
       if (g_invertedLogic)
          value = ~value;
+
+      PurgeComPort(g_port.c_str());
 
       unsigned char command[3];
       command[0] = 5;
@@ -400,11 +413,234 @@ int CArduinoSwitch::OnSetPattern(MM::PropertyBase* pProp, MM::ActionType eAct)
       }
       if (answer[0] != 5)
          return ERR_COMMUNICATION;
-
-      return DEVICE_OK;
    }
+
+   return DEVICE_OK;
 }
 
+int CArduinoSwitch::OnGetPattern(MM::PropertyBase* pProp, MM::ActionType eAct)
+{
+   if (eAct == MM::BeforeGet) {
+      // find the first pattern that corresponds to the current switch state
+      int i = 0;
+      bool found = false;
+      while (!found && i<NUMPATTERNS) {
+         if (pattern_[i] == g_switchState_)
+            found = true;
+         else
+            i++;
+      }
+      std::ostringstream os;
+      if (found)
+         os << i;
+      else 
+         os << " ";
+      pProp->Set(os.str().c_str());
+   }
+   else if (eAct == MM::AfterSet)
+   {
+      std::string tmp;
+      pProp->Get(tmp);
+      if (tmp == " ")
+         return DEVICE_OK;
+      int pos =  atoi(tmp.c_str());
+
+      g_switchState_ = pattern_[pos];
+      std::ostringstream os;
+      os << g_switchState_;
+      SetProperty(MM::g_Keyword_State, os.str().c_str());
+   }
+
+   return DEVICE_OK;
+}
+
+int CArduinoSwitch::OnPatternsUsed(MM::PropertyBase* pProp, MM::ActionType eAct)
+{
+   if (eAct == MM::BeforeGet) {
+      // nothing to do, let the caller use cached property
+   }
+   else if (eAct == MM::AfterSet)
+   {
+      long pos;
+      pProp->Get(pos);
+
+      PurgeComPort(g_port.c_str());
+
+      unsigned char command[2];
+      command[0] = 6;
+      command[1] = (unsigned char) pos;
+      int ret = WriteToComPort(g_port.c_str(), (const unsigned char*) command, 2);
+      if (ret != DEVICE_OK)
+         return ret;
+
+      MM::MMTime startTime = GetCurrentMMTime();
+      unsigned long bytesRead = 0;
+      unsigned char answer[2];
+      while ((bytesRead < 2) && ( (GetCurrentMMTime() - startTime).getMsec() < 250)) {
+         unsigned long br;
+         ret = ReadFromComPort(g_port.c_str(), answer + bytesRead, 2, br);
+         if (ret != DEVICE_OK)
+            return ret;
+         bytesRead += br;
+      }
+      if (answer[0] != 6)
+         return ERR_COMMUNICATION;
+   }
+
+   return DEVICE_OK;
+}
+
+
+int CArduinoSwitch::OnSkipTriggers(MM::PropertyBase* pProp, MM::ActionType eAct)
+{
+   if (eAct == MM::BeforeGet) {
+      // nothing to do, let the caller use cached property
+   }
+   else if (eAct == MM::AfterSet)
+   {
+      long prop;
+      pProp->Get(prop);
+
+      PurgeComPort(g_port.c_str());
+      unsigned char command[2];
+      command[0] = 7;
+      command[1] = (unsigned char) prop;
+      int ret = WriteToComPort(g_port.c_str(), (const unsigned char*) command, 2);
+      if (ret != DEVICE_OK)
+         return ret;
+
+      MM::MMTime startTime = GetCurrentMMTime();
+      unsigned long bytesRead = 0;
+      unsigned char answer[2];
+      while ((bytesRead < 2) && ( (GetCurrentMMTime() - startTime).getMsec() < 250)) {
+         unsigned long br;
+         ret = ReadFromComPort(g_port.c_str(), answer + bytesRead, 2, br);
+         if (ret != DEVICE_OK)
+            return ret;
+         bytesRead += br;
+      }
+      if (answer[0] != 7)
+         return ERR_COMMUNICATION;
+   }
+
+   return DEVICE_OK;
+}
+
+int CArduinoSwitch::OnStartTrigger(MM::PropertyBase* pProp, MM::ActionType eAct)
+{
+   if (eAct == MM::BeforeGet) {
+      // nothing to do, let the caller use cached property
+   }
+   else if (eAct == MM::AfterSet)
+   {
+      std::string prop;
+      pProp->Get(prop);
+
+      if (prop =="Start") {
+         PurgeComPort(g_port.c_str());
+         unsigned char command[1];
+         command[0] = 8;
+         int ret = WriteToComPort(g_port.c_str(), (const unsigned char*) command, 1);
+         if (ret != DEVICE_OK)
+            return ret;
+
+         MM::MMTime startTime = GetCurrentMMTime();
+         unsigned long bytesRead = 0;
+         unsigned char answer[1];
+         while ((bytesRead < 1) && ( (GetCurrentMMTime() - startTime).getMsec() < 250)) {
+            unsigned long br;
+            ret = ReadFromComPort(g_port.c_str(), answer + bytesRead, 1, br);
+            if (ret != DEVICE_OK)
+               return ret;
+            bytesRead += br;
+         }
+         if (answer[0] != 8)
+            return ERR_COMMUNICATION;
+      } else {
+         unsigned char command[1];
+         command[0] = 255;
+         int ret = WriteToComPort(g_port.c_str(), (const unsigned char*) command, 1);
+         if (ret != DEVICE_OK)
+            return ret;
+
+         MM::MMTime startTime = GetCurrentMMTime();
+         unsigned long bytesRead = 0;
+         unsigned char answer[2];
+         while ((bytesRead < 2) && ( (GetCurrentMMTime() - startTime).getMsec() < 250)) {
+            unsigned long br;
+            ret = ReadFromComPort(g_port.c_str(), answer + bytesRead, 2, br);
+            if (ret != DEVICE_OK)
+               return ret;
+            bytesRead += br;
+         }
+         if (answer[0] != 8)
+            return ERR_COMMUNICATION;
+      }
+   }
+
+   return DEVICE_OK;
+}
+
+int CArduinoSwitch::OnBlanking(MM::PropertyBase* pProp, MM::ActionType eAct)
+{
+   if (eAct == MM::BeforeGet) {
+      if (blanking_)
+         pProp->Set("Start");
+      else
+         pProp->Set("Stop");
+      // nothing to do, let the caller use cached property
+   }
+   else if (eAct == MM::AfterSet)
+   {
+      std::string prop;
+      pProp->Get(prop);
+
+      if (prop =="Start" && !blanking_) {
+         PurgeComPort(g_port.c_str());
+         unsigned char command[1];
+         command[0] = 20;
+         int ret = WriteToComPort(g_port.c_str(), (const unsigned char*) command, 1);
+         if (ret != DEVICE_OK)
+            return ret;
+
+         MM::MMTime startTime = GetCurrentMMTime();
+         unsigned long bytesRead = 0;
+         unsigned char answer[1];
+         while ((bytesRead < 1) && ( (GetCurrentMMTime() - startTime).getMsec() < 250)) {
+            unsigned long br;
+            ret = ReadFromComPort(g_port.c_str(), answer + bytesRead, 1, br);
+            if (ret != DEVICE_OK)
+               return ret;
+            bytesRead += br;
+         }
+         if (answer[0] != 20)
+            return ERR_COMMUNICATION;
+         blanking_ = true;
+      } else if (prop =="Stop" && blanking_){
+         unsigned char command[1];
+         command[0] = 21;
+         int ret = WriteToComPort(g_port.c_str(), (const unsigned char*) command, 1);
+         if (ret != DEVICE_OK)
+            return ret;
+
+         MM::MMTime startTime = GetCurrentMMTime();
+         unsigned long bytesRead = 0;
+         unsigned char answer[2];
+         while ((bytesRead < 2) && ( (GetCurrentMMTime() - startTime).getMsec() < 250)) {
+            unsigned long br;
+            ret = ReadFromComPort(g_port.c_str(), answer + bytesRead, 2, br);
+            if (ret != DEVICE_OK)
+               return ret;
+            bytesRead += br;
+         }
+         if (answer[0] != 21)
+            return ERR_COMMUNICATION;
+         blanking_ = false;
+      }
+   }
+
+   return DEVICE_OK;
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 // CArduinoDA implementation
@@ -496,6 +732,8 @@ int CArduinoDA::Shutdown()
 
 int CArduinoDA::WriteToPort(unsigned long value)
 {
+   PurgeComPort(g_port.c_str());
+
    unsigned char command[4];
    command[0] = 3;
    command[1] = (unsigned char) (channel_ -1);
@@ -726,6 +964,8 @@ int CArduinoShutter::WriteToPort(long value)
    value = 63 & value;
    if (g_invertedLogic)
       value = ~value;
+
+   PurgeComPort(g_port.c_str());
 
    unsigned char command[2];
    command[0] = 1;
