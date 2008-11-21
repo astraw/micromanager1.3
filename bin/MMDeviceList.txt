@@ -1,6 +1,11 @@
 Andor,Ixon,Andor iXon camera adapter,2
 AOTF,AOTF-Switch,TLL digital out AOTF wavelength selector,4
 AOTF,AOTF-Shutter,TTL digital out AOTF shutter,3
+Arduino,Arduino-Hub,Hub,8
+Arduino,Arduino-Switch,Switch,4
+Arduino,Arduino-Shutter,Shutter,3
+Arduino,Arduino-DAC,DA,13
+Arduino,Arduino-Input,Input,1
 ASIFW1000,ASIFWController,ASIFW1000 Controller,8
 ASIFW1000,ASIFilterWheel,ASI FilterWheel,4
 ASIFW1000,ASIShutter,ASI Shutter,3
@@ -69,6 +74,7 @@ NikonTE2000,Epi-Shutter,Epi-fluorescence shutter,3
 NikonTE2000,Uniblitz-Shutter,Uniblitz shutter,3
 NikonTE2000,PerfectFocus,PFS autofocus device,9
 NikonTE2000,PFS-Offset,PFS Offset Lens,5
+NikonTE2000,T-FLEW,Nikon T-FLEW filter wheel,4
 NikonTI,TIScope,Nikon TI microscope,8
 NikonTI,TINosePiece,Objective Turret,4
 NikonTI,TIFilterBlock1,FilterBlock 1,4

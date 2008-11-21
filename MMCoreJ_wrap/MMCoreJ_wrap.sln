@@ -112,6 +112,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NikonAZ100", "..\SecretDevi
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Utilities", "..\DeviceAdapters\Utilities\Utilities.vcproj", "{E68C2689-7D9F-4B7B-9100-FAB4CF5B08FD}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Arduino", "..\DeviceAdapters\Arduino\Arduino.vcproj", "{2067D4A8-8C32-40D3-BA9F-6B388ECCD714}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -266,6 +268,10 @@ Global
 		{E68C2689-7D9F-4B7B-9100-FAB4CF5B08FD}.Debug|Win32.Build.0 = Debug|Win32
 		{E68C2689-7D9F-4B7B-9100-FAB4CF5B08FD}.Release|Win32.ActiveCfg = Release|Win32
 		{E68C2689-7D9F-4B7B-9100-FAB4CF5B08FD}.Release|Win32.Build.0 = Release|Win32
+		{2067D4A8-8C32-40D3-BA9F-6B388ECCD714}.Debug|Win32.ActiveCfg = Debug|Win32
+		{2067D4A8-8C32-40D3-BA9F-6B388ECCD714}.Debug|Win32.Build.0 = Debug|Win32
+		{2067D4A8-8C32-40D3-BA9F-6B388ECCD714}.Release|Win32.ActiveCfg = Release|Win32
+		{2067D4A8-8C32-40D3-BA9F-6B388ECCD714}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

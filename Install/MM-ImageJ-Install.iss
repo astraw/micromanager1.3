@@ -29,6 +29,7 @@ Name: desktopicon; Description: {cm:CreateDesktopIcon}; GroupDescription: {cm:Ad
 
 [Files]
 ; device libraries
+Source: micro-manager-1.3\mmgr_dal_Arduino.dll; DestDir: {app}; Flags: ignoreversion
 Source: micro-manager-1.3\mmgr_dal_DemoCamera.dll; DestDir: {app}; Flags: ignoreversion
 Source: micro-manager-1.3\mmgr_dal_DemoStreamingCamera.dll; DestDir: {app}; Flags: ignoreversion
 Source: micro-manager-1.3\mmgr_dal_Hamamatsu.dll; DestDir: {app}; Flags: ignoreversion
