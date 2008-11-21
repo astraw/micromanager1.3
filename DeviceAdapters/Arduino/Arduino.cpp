@@ -796,7 +796,7 @@ int CArduinoDA::SetGateOpen(bool open)
       return WriteSignal(0.0);
    }
 
-   return DEVICE_OK;
+   // return DEVICE_OK;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -845,7 +845,7 @@ int CArduinoDA::OnChannel(MM::PropertyBase* pProp, MM::ActionType eAct)
    {
       long channel;
       pProp->Get(channel);
-      if (channel >=1 && channel <=maxChannel_)
+      if (channel >=1 && ( (unsigned) channel <=maxChannel_) )
          channel_ = channel;
    }
    return DEVICE_OK;
@@ -1091,7 +1091,7 @@ bool CArduinoInput::Busy()
 // Action handlers
 ///////////////////////////////////////////////////////////////////////////////
 
-int CArduinoInput::OnDigitalInput(MM::PropertyBase* pProp, MM::ActionType eAct)
+int CArduinoInput::OnDigitalInput(MM::PropertyBase* /* pProp */, MM::ActionType eAct)
 {
    if (eAct == MM::BeforeGet)
    {
@@ -1107,7 +1107,7 @@ int CArduinoInput::OnDigitalInput(MM::PropertyBase* pProp, MM::ActionType eAct)
    return DEVICE_OK;
 }
 
-int CArduinoInput::OnAnalogInput(MM::PropertyBase* pProp, MM::ActionType eAct, long channel)
+int CArduinoInput::OnAnalogInput(MM::PropertyBase* /* pProp */, MM::ActionType eAct, long /* channel*/ )
 {
    if (eAct == MM::BeforeGet)
    {

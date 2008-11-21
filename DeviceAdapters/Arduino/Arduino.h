@@ -113,7 +113,7 @@ public:
 
 private:
    static const int NUMPATTERNS = 12;
-   int pattern_[NUMPATTERNS];
+   unsigned pattern_[NUMPATTERNS];
    int nrPatternsUsed_;
    int OpenPort(const char* pszName, long lnValue);
    int WriteToPort(long lnValue);
