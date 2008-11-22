@@ -43,13 +43,12 @@
  *
  * Start trigger mode: 8
  *   Controller will return 8 to indicate start of triggered mode
- *   Stop triggered mode by sending any key (including a new commands, that will be 
- *   processed). Controller will return 8x (where x is the number of triggers revieved
- *   since this is a byte, the number might easily overflow). No other command should be
- *   issued while trigger mode is active (trigger mode will stop and the new command will
- *   not be recognized).  Trigger mode will also stop blanking mode (if it was active)
+ *   Stop triggered mode by sending any key (including new commands, that will be 
+ *   processed).  Trigger mode will  stop blanking mode (if it was active)
  * 
- *
+ * Get result of Trigger mode: 9
+ *   Controller will return 9x where x is the number of triggers received during the last
+ *   trigger mode run
  *  
  * Start blanking Mode: 20
  *   In blanking mode, zeroes will be written on the output pins when the trigger pin
@@ -122,6 +121,7 @@
    if (Serial.available() > 0) {
      int inByte = Serial.read();
      switch (inByte) {
+       
        // Set digital output
        case 1 :
           if (waitForSerial(timeOut_)) {
@@ -134,11 +134,13 @@
             Serial.print(0, BYTE);
           }
           break;
+          
        // Get digital output
        case 2:
           Serial.print(2, BYTE);
           Serial.print(PORTB, BYTE);
           break;
+          
        // Set Analogue output (TODO: save for 'Get Analogue output')
        case 3:
          if (waitForSerial(timeOut_)) {
@@ -157,6 +159,7 @@
            }
          }
          break;
+         
        // Sets the specified digital pattern
        case 5:
           if (waitForSerial(timeOut_)) {
@@ -174,6 +177,7 @@
           }
           Serial.print("n:");
           break;
+          
        // Sets the number of digital patterns that will be used
        case 6:
          if (waitForSerial(timeOut_)) {
@@ -187,6 +191,7 @@
          }
          Serial.print("n:");
          break;
+         
        // Skip triggers
        case 7:
          if (waitForSerial(timeOut_)) {
@@ -195,6 +200,7 @@
            Serial.print(skipTriggers_, BYTE);
          }
          break;
+         
        //  starts trigger mode
        case 8: 
          if (patternLength_ > 0) {
@@ -203,14 +209,20 @@
            PORTB = B00000000;
            attachInterrupt(0, triggerMode, CHANGE);
            Serial.print(8, BYTE);
-           // stop after 30 seconds or when key pressed
-           waitForSerial(30000);
+           // stop after 3000 seconds or when key pressed
+           waitForSerial(3000000);
            detachInterrupt(0);
            PORTB = B00000000;
-           Serial.print(8, BYTE);
-           Serial.print(triggerNr_, BYTE);
+
          }
          break;
+         
+         // return result from last triggermode
+       case 9:
+          Serial.print(9, BYTE);
+          Serial.print(triggerNr_, BYTE);
+          break;
+          
        // Blanks output based on TTL input
        case 20:
          if (blankTTLLogicNormal_)
@@ -219,11 +231,13 @@
            attachInterrupt(0, blankInverted, CHANGE);
          Serial.print(20, BYTE);
          break;
+         
        // Stops blanking mode
        case 21:
          detachInterrupt(0);
          Serial.print(21, BYTE);
          break;
+         
        // Sets 'polarity' of input TTL for blanking mode
        case 22: 
          if (waitForSerial(timeOut_)) {
@@ -235,10 +249,12 @@
          }
          Serial.print(22, BYTE);
          break;
+         
        // Gives identification of the device
        case 30:
          Serial.println("MM-Ard");
          break;
+         
        // Returns version string
        case 31:
          Serial.println(version_);

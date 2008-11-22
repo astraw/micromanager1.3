@@ -27,14 +27,16 @@ const char* g_DeviceNameArduinoShutter = "Arduino-Shutter";
 const char* g_DeviceNameArduinoDA = "Arduino-DAC";
 const char* g_DeviceNameArduinoInput = "Arduino-Input";
 
-std::string g_port;
 
-// Global state of the Arduino switch to enable simulation of the shutter device.
-// The virtual shutter device uses this global variable to restore state of the switch
-unsigned g_switchState_ = 0;
-unsigned g_shutterState_ = 0;
-bool g_boardInitialized_ = false;
+// Global info about the state of the Arduino.  This should be folded into a class
+unsigned g_switchState = 0;
+unsigned g_shutterState = 0;
+std::string g_port;
+std::string g_version;
+const std::string g_MMVersion = "1";
+bool g_portAvailable = false;
 bool g_invertedLogic = false;
+bool g_triggerMode = false;
 const char* g_normalLogicString = "Normal";
 const char* g_invertedLogicString = "Inverted";
 
@@ -99,6 +101,10 @@ initialized_ (false)
    InitializeDefaultErrorMessages();
 
    SetErrorText(ERR_PORT_OPEN_FAILED, "Failed opening Arduino USB device");
+   SetErrorText(ERR_BOARD_NOT_FOUND, "Did not find an Arduino board with the correct firmware");
+   SetErrorText(ERR_NO_PORT_SET, "Hub Device not found.  The Arduino Hub device is needed to create this device");
+   std::string errorText = "The firmware version on the Arduino is not compatible with this adapter.  Please use firmware version " + g_MMVersion;
+   SetErrorText(ERR_VERSION_MISMATCH, errorText.c_str());
 
    CPropertyAction* pAct = new CPropertyAction(this, &CArduinoHub::OnPort);
    CreateProperty(MM::g_Keyword_Port, "Undefined", MM::String, false, pAct, true);
@@ -132,6 +138,38 @@ int CArduinoHub::Initialize()
    if (DEVICE_OK != ret)
       return ret;
 
+   // Check that we have a controller:
+   PurgeComPort(g_port.c_str());
+
+   unsigned char command[1];
+   command[0] = 30;
+   ret = WriteToComPort(g_port.c_str(), (const unsigned char*) command, 1);
+   if (ret != DEVICE_OK)
+      return ret;
+
+   std::string answer;
+   ret = GetSerialAnswer(g_port.c_str(), "\r\n", answer);
+   if (ret != DEVICE_OK)
+      return ret;
+
+   if (answer != "MM-Ard")
+      return ERR_BOARD_NOT_FOUND;
+
+   command[0] = 31;
+   ret = WriteToComPort(g_port.c_str(), (const unsigned char*) command, 1);
+   if (ret != DEVICE_OK)
+      return ret;
+
+   ret = GetSerialAnswer(g_port.c_str(), "\r\n", g_version);
+   if (ret != DEVICE_OK)
+      return ret;
+
+   if (g_version != g_MMVersion)
+      return ERR_VERSION_MISMATCH;
+
+   CPropertyAction* pAct = new CPropertyAction(this, &CArduinoHub::OnVersion);
+   CreateProperty("Version", g_version.c_str(), MM::String, true, pAct);
+
    ret = UpdateStatus();
    if (ret != DEVICE_OK)
       return ret;
@@ -155,13 +193,16 @@ int CArduinoHub::OnPort(MM::PropertyBase* pProp, MM::ActionType pAct)
    else if (pAct == MM::AfterSet)
    {
       pProp->Get(g_port);
-      /*
-      g_ArduinoInterface.SetPort(port_);
-      g_ArduinoInterface.initialized_ = true;
-      int ret = g_ArduinoInterface.OpenDevice();
-      if (ret != DEVICE_OK)
-         return ret;
-      */
+      g_portAvailable = true;
+   }
+   return DEVICE_OK;
+}
+
+int CArduinoHub::OnVersion(MM::PropertyBase* pProp, MM::ActionType pAct)
+{
+   if (pAct == MM::BeforeGet)
+   {
+      pProp->Set(g_version.c_str());
    }
    return DEVICE_OK;
 }
@@ -204,6 +245,7 @@ CArduinoSwitch::CArduinoSwitch() :
    SetErrorText(ERR_WRITE_FAILED, "Failed to write data to the device");
    SetErrorText(ERR_CLOSE_FAILED, "Failed closing the device");
    SetErrorText(ERR_COMMUNICATION, "Error in communication with Arduino board");
+   SetErrorText(ERR_NO_PORT_SET, "Hub Device not found.  The Arduino Hub device is needed to create this device");
 
    for (int i=0; i < NUMPATTERNS; i++)
       pattern_[i] = 0;
@@ -222,10 +264,8 @@ void CArduinoSwitch::GetName(char* name) const
 
 int CArduinoSwitch::Initialize()
 {
-   if (!g_boardInitialized_) {
-      // int ret = InitializeTheBoard();
-      // if (ret != DEVICE_OK)
-      //  return ret;
+   if (!g_portAvailable) {
+      return ERR_NO_PORT_SET;
    }
 
    // set property list
@@ -298,11 +338,29 @@ int CArduinoSwitch::Initialize()
       return nRet;
 
    pAct = new CPropertyAction(this, &CArduinoSwitch::OnStartTrigger);
-   nRet = CreateProperty("Start TriggerMode", "Stop", MM::String, false, pAct);
+   nRet = CreateProperty("TriggerMode", "Idle", MM::String, false, pAct);
    if (nRet != DEVICE_OK)
       return nRet;
-   AddAllowedValue("Start TriggerMode", "Stop");
-   AddAllowedValue("Start TriggerMode", "Start");
+   AddAllowedValue("TriggerMode", "Stop");
+   AddAllowedValue("TriggerMode", "Start");
+   AddAllowedValue("TriggerMode", "Running");
+   AddAllowedValue("TriggerMode", "Idle");
+
+   pAct = new CPropertyAction(this, &CArduinoSwitch::OnBlanking);
+   nRet = CreateProperty("Blanking Mode", "Idle", MM::String, false, pAct);
+   if (nRet != DEVICE_OK)
+      return nRet;
+   AddAllowedValue("Blanking Mode", "Stop");
+   AddAllowedValue("Blanking Mode", "Start");
+   AddAllowedValue("Blanking Mode", "Running");
+   AddAllowedValue("Blanking Mode", "Idle");
+
+   pAct = new CPropertyAction(this, &CArduinoSwitch::OnBlankingTriggerDirection);
+   nRet = CreateProperty("Blank On", "Low", MM::String, false, pAct);
+   if (nRet != DEVICE_OK)
+      return nRet;
+   AddAllowedValue("Blank On", "Low");
+   AddAllowedValue("Blank On", "High");
 
    nRet = UpdateStatus();
    if (nRet != DEVICE_OK)
@@ -362,8 +420,8 @@ int CArduinoSwitch::OnState(MM::PropertyBase* pProp, MM::ActionType eAct)
    {
       long pos;
       pProp->Get(pos);
-      g_switchState_ = pos;
-      if (g_shutterState_ > 0)
+      g_switchState = pos;
+      if (g_shutterState > 0)
          return WriteToPort(pos);
    }
 
@@ -384,8 +442,8 @@ int CArduinoSwitch::OnSetPattern(MM::PropertyBase* pProp, MM::ActionType eAct)
          return DEVICE_OK;
       int pos =  atoi(tmp.c_str());
 
-      unsigned value = g_switchState_;
-      pattern_[pos] = g_switchState_;
+      unsigned value = g_switchState;
+      pattern_[pos] = g_switchState;
 
       value = 63 & value;
       if (g_invertedLogic)
@@ -413,6 +471,8 @@ int CArduinoSwitch::OnSetPattern(MM::PropertyBase* pProp, MM::ActionType eAct)
       }
       if (answer[0] != 5)
          return ERR_COMMUNICATION;
+
+      g_triggerMode = false;
    }
 
    return DEVICE_OK;
@@ -425,7 +485,7 @@ int CArduinoSwitch::OnGetPattern(MM::PropertyBase* pProp, MM::ActionType eAct)
       int i = 0;
       bool found = false;
       while (!found && i<NUMPATTERNS) {
-         if (pattern_[i] == g_switchState_)
+         if (pattern_[i] == g_switchState)
             found = true;
          else
             i++;
@@ -445,9 +505,9 @@ int CArduinoSwitch::OnGetPattern(MM::PropertyBase* pProp, MM::ActionType eAct)
          return DEVICE_OK;
       int pos =  atoi(tmp.c_str());
 
-      g_switchState_ = pattern_[pos];
+      g_switchState = pattern_[pos];
       std::ostringstream os;
-      os << g_switchState_;
+      os << g_switchState;
       SetProperty(MM::g_Keyword_State, os.str().c_str());
    }
 
@@ -485,6 +545,8 @@ int CArduinoSwitch::OnPatternsUsed(MM::PropertyBase* pProp, MM::ActionType eAct)
       }
       if (answer[0] != 6)
          return ERR_COMMUNICATION;
+
+      g_triggerMode = false;
    }
 
    return DEVICE_OK;
@@ -521,6 +583,8 @@ int CArduinoSwitch::OnSkipTriggers(MM::PropertyBase* pProp, MM::ActionType eAct)
       }
       if (answer[0] != 7)
          return ERR_COMMUNICATION;
+
+      g_triggerMode = false;
    }
 
    return DEVICE_OK;
@@ -529,7 +593,10 @@ int CArduinoSwitch::OnSkipTriggers(MM::PropertyBase* pProp, MM::ActionType eAct)
 int CArduinoSwitch::OnStartTrigger(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
    if (eAct == MM::BeforeGet) {
-      // nothing to do, let the caller use cached property
+      if (g_triggerMode)
+         pProp->Set("Running");
+      else
+         pProp->Set("Idle");
    }
    else if (eAct == MM::AfterSet)
    {
@@ -556,9 +623,10 @@ int CArduinoSwitch::OnStartTrigger(MM::PropertyBase* pProp, MM::ActionType eAct)
          }
          if (answer[0] != 8)
             return ERR_COMMUNICATION;
+         g_triggerMode = true;
       } else {
          unsigned char command[1];
-         command[0] = 255;
+         command[0] = 9;
          int ret = WriteToComPort(g_port.c_str(), (const unsigned char*) command, 1);
          if (ret != DEVICE_OK)
             return ret;
@@ -573,8 +641,9 @@ int CArduinoSwitch::OnStartTrigger(MM::PropertyBase* pProp, MM::ActionType eAct)
                return ret;
             bytesRead += br;
          }
-         if (answer[0] != 8)
+         if (answer[0] != 9)
             return ERR_COMMUNICATION;
+         g_triggerMode = false;
       }
    }
 
@@ -585,10 +654,9 @@ int CArduinoSwitch::OnBlanking(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
    if (eAct == MM::BeforeGet) {
       if (blanking_)
-         pProp->Set("Start");
+         pProp->Set("Running");
       else
-         pProp->Set("Stop");
-      // nothing to do, let the caller use cached property
+         pProp->Set("Idle");
    }
    else if (eAct == MM::AfterSet)
    {
@@ -616,6 +684,7 @@ int CArduinoSwitch::OnBlanking(MM::PropertyBase* pProp, MM::ActionType eAct)
          if (answer[0] != 20)
             return ERR_COMMUNICATION;
          blanking_ = true;
+         g_triggerMode = false;
       } else if (prop =="Stop" && blanking_){
          unsigned char command[1];
          command[0] = 21;
@@ -636,7 +705,33 @@ int CArduinoSwitch::OnBlanking(MM::PropertyBase* pProp, MM::ActionType eAct)
          if (answer[0] != 21)
             return ERR_COMMUNICATION;
          blanking_ = false;
+         g_triggerMode = false;
       }
+   }
+
+   return DEVICE_OK;
+}
+
+int CArduinoSwitch::OnBlankingTriggerDirection(MM::PropertyBase* pProp, MM::ActionType eAct)
+{
+   if (eAct == MM::BeforeGet) {
+      // nothing to do, let the caller use cached property
+   }
+   else if (eAct == MM::AfterSet)
+   {
+      std::string direction;
+      pProp->Get(direction);
+
+      if (direction == "Low") 
+         blankOnTriggerLow_ = true;
+      else
+         blankOnTriggerLow_ = false;
+
+      if (blanking_) {
+         SetProperty("Blanking", "Stop");
+         SetProperty("Blanking", "Start");
+      }
+
    }
 
    return DEVICE_OK;
@@ -666,6 +761,7 @@ CArduinoDA::CArduinoDA() :
    SetErrorText(ERR_INITIALIZE_FAILED, "Initialization of the device failed");
    SetErrorText(ERR_WRITE_FAILED, "Failed to write data to the device");
    SetErrorText(ERR_CLOSE_FAILED, "Failed closing the device");
+   SetErrorText(ERR_NO_PORT_SET, "Hub Device not found.  The Arduino Hub device is needed to create this device");
 
    CPropertyAction* pAct = new CPropertyAction(this, &CArduinoDA::OnChannel);
    CreateProperty("Channel", "2", MM::Integer, false, pAct, true);
@@ -693,6 +789,9 @@ void CArduinoDA::GetName(char* name) const
 
 int CArduinoDA::Initialize()
 {
+   if (!g_portAvailable) {
+      return ERR_NO_PORT_SET;
+   }
 
    // set property list
    // -----------------
@@ -755,6 +854,9 @@ int CArduinoDA::WriteToPort(unsigned long value)
    }
    if (answer[0] != 3)
       return ERR_COMMUNICATION;
+
+   // TODO: make triggermode a global:)
+   g_triggerMode = false;
 
    return DEVICE_OK;
 }
@@ -860,6 +962,8 @@ CArduinoShutter::CArduinoShutter() : initialized_(false), name_(g_DeviceNameArdu
 {
    InitializeDefaultErrorMessages();
    EnableDelay();
+
+   SetErrorText(ERR_NO_PORT_SET, "Hub Device not found.  The Arduino Hub device is needed to create this device");
 }
 
 CArduinoShutter::~CArduinoShutter()
@@ -885,6 +989,10 @@ bool CArduinoShutter::Busy()
 
 int CArduinoShutter::Initialize()
 {
+   if (!g_portAvailable) {
+      return ERR_NO_PORT_SET;
+   }
+
    // set property list
    // -----------------
    
@@ -997,7 +1105,7 @@ int CArduinoShutter::OnOnOff(MM::PropertyBase* pProp, MM::ActionType eAct)
    if (eAct == MM::BeforeGet)
    {
       // use cached state
-      pProp->Set((long)g_shutterState_);
+      pProp->Set((long)g_shutterState);
    }
    else if (eAct == MM::AfterSet)
    {
@@ -1007,10 +1115,10 @@ int CArduinoShutter::OnOnOff(MM::PropertyBase* pProp, MM::ActionType eAct)
       if (pos == 0)
          ret = WriteToPort(0); // turn everything off
       else
-         ret = WriteToPort(g_switchState_); // restore old setting
+         ret = WriteToPort(g_switchState); // restore old setting
       if (ret != DEVICE_OK)
          return ret;
-      g_shutterState_ = pos;
+      g_shutterState = pos;
       changedTime_ = GetCurrentMMTime();
    }
 
@@ -1041,6 +1149,10 @@ int CArduinoInput::Shutdown()
 
 int CArduinoInput::Initialize()
 {
+   if (!g_portAvailable) {
+      return ERR_NO_PORT_SET;
+   }
+
    // Name
    int ret = CreateProperty(MM::g_Keyword_Name, name_.c_str(), MM::String, true);
    if (DEVICE_OK != ret)

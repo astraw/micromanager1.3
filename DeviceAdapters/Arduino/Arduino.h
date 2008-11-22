@@ -24,7 +24,6 @@
 //////////////////////////////////////////////////////////////////////////////
 // Error codes
 //
-//#define ERR_UNKNOWN_LABEL 100
 #define ERR_UNKNOWN_POSITION 101
 #define ERR_INITIALIZE_FAILED 102
 #define ERR_WRITE_FAILED 103
@@ -32,6 +31,8 @@
 #define ERR_BOARD_NOT_FOUND 105
 #define ERR_PORT_OPEN_FAILED 106
 #define ERR_COMMUNICATION 107
+#define ERR_NO_PORT_SET 108
+#define ERR_VERSION_MISMATCH 109
 
 
 class CArduinoHub : public CGenericBase<CArduinoHub>  
@@ -47,6 +48,7 @@ public:
 
    int OnPort(MM::PropertyBase* pPropt, MM::ActionType eAct);
    int OnLogic(MM::PropertyBase* pPropt, MM::ActionType eAct);
+   int OnVersion(MM::PropertyBase* pPropt, MM::ActionType eAct);
 
 private:
    std::string port_;
@@ -121,6 +123,7 @@ private:
 
    bool blanking_;
    bool blankOnTriggerLow_;
+   bool triggerMode_;
    bool initialized_;
    long numPos_;
    bool busy_;
