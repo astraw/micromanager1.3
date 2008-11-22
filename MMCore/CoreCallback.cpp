@@ -286,6 +286,29 @@ int CoreCallback::SetFocusPosition(double pos)
    return DEVICE_CORE_FOCUS_STAGE_UNDEF;
 }
 
+int CoreCallback::GetXYPosition(double& x, double& y)
+{
+   if (core_->xyStage_)
+   {
+      return core_->xyStage_->GetPositionUm(x, y);
+   }
+   x = 0.0;
+   y = 0.0;
+   return DEVICE_CORE_FOCUS_STAGE_UNDEF;
+}
+
+int CoreCallback::SetXYPosition(double x, double y)
+{
+   if (core_->xyStage_)
+   {
+      int ret = core_->xyStage_->SetPositionUm(x, y);
+      if (ret != DEVICE_OK)
+         return ret;
+      core_->waitForDevice(core_->xyStage_);
+   }
+   return DEVICE_CORE_FOCUS_STAGE_UNDEF;
+}
+
 int CoreCallback::SetExposure(double expMs)
 {
    try 

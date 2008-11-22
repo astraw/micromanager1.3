@@ -517,6 +517,8 @@ namespace MM {
       virtual int GetImageDimensions(int& width, int& height, int& depth) = 0;
       virtual int GetFocusPosition(double& pos) = 0;
       virtual int SetFocusPosition(double pos) = 0;
+      virtual int SetXYPosition(double x, double y) = 0;
+      virtual int GetXYPosition(double& x, double& y) = 0;
       virtual int SetExposure(double expMs) = 0;
       virtual int GetExposure(double& expMs) = 0;
       virtual int SetConfig(const char* group, const char* name) = 0;
