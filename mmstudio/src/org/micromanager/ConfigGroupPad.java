@@ -506,9 +506,6 @@ public class ConfigGroupPad extends JScrollPane{
          });
          
          slider_.addSliderMouseListener(new MouseAdapter() {
-            public void mousePressed(MouseEvent e) {           
-               slider_.setPosition(e.getX());
-            }
             public void mouseReleased(MouseEvent e) {
                fireEditingStopped();
             }

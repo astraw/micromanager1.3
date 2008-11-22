@@ -31,7 +31,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 
 import javax.swing.JPanel;
-import javax.swing.JSlider;
+import javax.swing.JScrollBar;
 import javax.swing.JTextField;
 import javax.swing.SpringLayout;
 import javax.swing.event.ChangeEvent;
@@ -50,7 +50,7 @@ public class SliderPanel extends JPanel {
 	private double offset_ = 0.0;
 	private boolean integer_ = false;
 
-	private JSlider slider_;
+	private JScrollBar slider_;
 	/**
 	 * Create the panel
 	 */
@@ -73,8 +73,8 @@ public class SliderPanel extends JPanel {
       springLayout_.putConstraint(SpringLayout.SOUTH, textField_, 0, SpringLayout.SOUTH, this);
       springLayout_.putConstraint(SpringLayout.NORTH, textField_, 0, SpringLayout.NORTH, this);
 
-		slider_ = new JSlider();
-		slider_.addChangeListener(new ChangeListener() {
+		slider_ = new JScrollBar(JScrollBar.HORIZONTAL);
+		slider_.getModel().addChangeListener(new ChangeListener() {
 			public void stateChanged(final ChangeEvent arg0) {
 				onSliderMove();
 			}
