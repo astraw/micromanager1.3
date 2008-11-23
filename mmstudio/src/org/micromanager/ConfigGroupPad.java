@@ -47,6 +47,8 @@ import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 
+import java.text.NumberFormat;
+
 import mmcorej.CMMCore;
 import mmcorej.Configuration;
 import mmcorej.MMCoreJ;
@@ -292,7 +294,14 @@ public class ConfigGroupPad extends JScrollPane{
                {
                   // apply selected config
                   if (item.singleProp) {
-                     core_.setProperty(item.device, item.propName, value.toString());
+                     NumberFormat form = NumberFormat.getInstance();
+                     if (item.hasLimits && item.isInt) {
+                        core_.setProperty(item.device, item.propName, new Integer (form.parse((String)value).intValue()).toString());
+                     } else if (item.hasLimits && !item.isInt) {
+                        core_.setProperty(item.device, item.propName, new Double (form.parse((String)value).doubleValue()).toString());
+                     } else  {
+                        core_.setProperty(item.device, item.propName, value.toString());
+                     }
                      core_.waitForDevice(item.device);
                   } else {
                      core_.setConfig(item.group, value.toString());
@@ -541,34 +550,7 @@ public class ConfigGroupPad extends JScrollPane{
                      slider_.setLimits(item_.lowerLimit, item_.upperLimit);
                   slider_.setText((String)value);
                   return slider_;
-               }/* else if (item_.singlePropAllowed.length > 0){
-                  // build combo box from the allowed properties
-                  // remove old listeners
-                  ActionListener[] l = combo_.getActionListeners();
-                  for (int i=0; i<l.length; i++)
-                     combo_.removeActionListener(l[i]);
-                  combo_.removeAllItems();
-                  for (int i=0; i<item_.singlePropAllowed.length; i++){
-                     combo_.addItem(item_.singlePropAllowed[i]);
-                  }
-
-                  // remove old items
-                  combo_.removeAllItems();
-
-                  // add new items
-                  for (int i=0; i<item_.singlePropAllowed.length; i++){
-                     combo_.addItem(item_.singlePropAllowed[i]);
-                  }
-                  combo_.setSelectedItem(item_.config);
-
-                  // end editing on selection change
-                  combo_.addActionListener(new ActionListener() {
-                     public void actionPerformed(ActionEvent e) {
-                        fireEditingStopped();
-                     }
-                  });
-                  return combo_;
-               }*/ else {
+               } else {
                   text_.setText((String)value);
                   return text_;
                }

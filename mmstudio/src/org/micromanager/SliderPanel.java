@@ -30,9 +30,13 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 
+import java.text.NumberFormat;
+import java.text.ParseException;
+
 import javax.swing.JPanel;
 import javax.swing.JScrollBar;
 import javax.swing.JTextField;
+import javax.swing.JOptionPane;
 import javax.swing.SpringLayout;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -47,7 +51,6 @@ public class SliderPanel extends JPanel {
 	private double upperLimit_ = 10.0;
 	private final int STEPS = 1000;
 	private double factor_ = 1.0;
-	private double offset_ = 0.0;
 	private boolean integer_ = false;
 
 	private JScrollBar slider_;
@@ -84,19 +87,23 @@ public class SliderPanel extends JPanel {
 		springLayout_.putConstraint(SpringLayout.WEST, slider_, 41, SpringLayout.WEST, this);
 		springLayout_.putConstraint(SpringLayout.SOUTH, slider_, 0, SpringLayout.SOUTH, this);
 		springLayout_.putConstraint(SpringLayout.NORTH, slider_, 0, SpringLayout.NORTH, this);
-		//
 	}
 
 	public void setText(String txt) {
-		if (integer_) {
-		   int val = enforceLimits(Integer.parseInt(txt));
-		   slider_.setValue((int)(val + offset_ + 0.5));
-		   textField_.setText(Integer.toString(val));
-		} else {
-         double val = enforceLimits(Double.parseDouble(txt));
-		   slider_.setValue((int)((val - lowerLimit_)/factor_ + 0.5));
-         textField_.setText(Double.toString(val));
-		}
+      NumberFormat form = NumberFormat.getInstance();
+      try {
+         if (integer_) {
+            int val = enforceLimits(new Integer(form.parse(txt).intValue()));
+            slider_.setValue((int)(val + 0.5));
+            textField_.setText(form.format(val));
+         } else {
+            double val = enforceLimits(new Double(form.parse(txt).doubleValue()));
+            slider_.setValue((int)((val - lowerLimit_)/factor_ + 0.5));
+            textField_.setText(form.format(val));
+         }
+		} catch (ParseException p) {
+         handleException (p);
+      }
 	}
 	
 	public String getText() {
@@ -111,10 +118,6 @@ public class SliderPanel extends JPanel {
 	
 	public void setLimits(double lowerLimit, double upperLimit) {
 		factor_ = (upperLimit - lowerLimit) / STEPS;
-      if (lowerLimit < 0)
-         offset_ = -lowerLimit;
-      else
-         offset_ = 0.0;
 		slider_.setMinimum(0);
 		slider_.setMaximum(STEPS);
 		upperLimit_ = upperLimit;
@@ -124,46 +127,43 @@ public class SliderPanel extends JPanel {
 	
 	public void setLimits(int lowerLimit, int upperLimit) {
 		factor_ = 1.0;
-		if (lowerLimit < 0)
-		   offset_ = -lowerLimit;
-		else
-		   offset_ = 0.0;
 		upperLimit_ = upperLimit;
 		lowerLimit_ = lowerLimit;
-      slider_.setMinimum((int)(lowerLimit + offset_));
-      slider_.setMaximum((int)(upperLimit + offset_));
+      slider_.setMinimum(lowerLimit);
+      slider_.setMaximum(upperLimit);
 		integer_ = true;
 	}
 
 	private void onSliderMove() {
+      NumberFormat form = NumberFormat.getInstance();
 		double value = 0.0;
 		if (integer_) {
 			value = slider_.getValue();
-	      textField_.setText(Integer.toString((int)(value - offset_)));
+	      textField_.setText(form.format((int)(value)));
 		} else { 
 			value = slider_.getValue() * factor_ + lowerLimit_;
-		   textField_.setText(TextUtils.FMT2.format(value));
+		   //textField_.setText(TextUtils.FMT2.format(value));
+		   textField_.setText(form.format(value));
 		}	
 	}
 
 	protected void onEditChange() {
+      NumberFormat form = NumberFormat.getInstance();
 		int sliderPos;
-		if (integer_) {
-         sliderPos = enforceLimits(Integer.parseInt(textField_.getText()));
-         slider_.setValue((int)(sliderPos + offset_ + 0.5));
-		} else {
-	      double val = enforceLimits(Double.parseDouble(textField_.getText()));
-			sliderPos = (int)((val - lowerLimit_)/factor_ + 0.5);
-         slider_.setValue(sliderPos);
-		}	
+      try {
+         if (integer_) {
+            sliderPos = enforceLimits(new Integer(form.parse(textField_.getText()).intValue()));
+            slider_.setValue((int)(sliderPos + 0.5));
+         } else {
+            double val = enforceLimits(new Double(form.parse(textField_.getText()).doubleValue()));
+            sliderPos = (int)((val - lowerLimit_)/factor_ + 0.5);
+            slider_.setValue(sliderPos);
+         }
+      } catch (ParseException p) {
+         handleException (p);
+      }
 	}
 	
-   public void setPosition(int xPosition) {
-      double val = lowerLimit_+ ( (upperLimit_ - lowerLimit_) * xPosition ) / slider_.getWidth()  ;
-      slider_.setValue((int) ((val - lowerLimit_) / factor_ + 0.5));
-      onSliderMove();
-   }
-
 	private double enforceLimits(double value) {
 	   double val = value;
       if (val < lowerLimit_)
@@ -197,4 +197,10 @@ public class SliderPanel extends JPanel {
 	   if (textField_ != null)
 	      textField_.setBackground(bg);
 	}
+
+   private void handleException (Exception e) {
+      String errText = "Exeption occured: " + e.getMessage();
+      JOptionPane.showMessageDialog(null, errText);
+   }
+
 }

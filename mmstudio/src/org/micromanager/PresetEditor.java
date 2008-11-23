@@ -53,6 +53,8 @@ import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 
+import java.text.NumberFormat;
+
 import mmcorej.CMMCore;
 import mmcorej.Configuration;
 import mmcorej.DeviceType;
@@ -583,11 +585,18 @@ public class PresetEditor extends MMDialog {
          PropertyItem item = propList_.get(row);
          if (col == 1) {
             try {
-               core_.setProperty(item.device, item.name, value.toString());
-               //item.m_value = core_.getProperty(item.m_device, item.m_name);
+               NumberFormat form = NumberFormat.getInstance();
+               if (item.hasRange && item.isInt) {
+                  core_.setProperty(item.device, item.name, new Integer (form.parse((String)value).intValue()).toString());
+               } else if (item.hasRange && !item.isInt) {
+                  core_.setProperty(item.device, item.name, new Double (form.parse((String)value).doubleValue()).toString());
+               } else  {
+                  core_.setProperty(item.device, item.name, value.toString());
+               }
                core_.waitForDevice(item.device);
+
                refresh();
-               //item.m_value = value.toString();
+
                if (parentGUI_ != null)
                   parentGUI_.updateGUI(true);              
                fireTableCellUpdated(row, col);

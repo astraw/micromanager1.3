@@ -60,10 +60,13 @@ import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 
+import java.text.NumberFormat;
+
 import mmcorej.CMMCore;
 import mmcorej.Configuration;
 import mmcorej.DeviceType;
 import mmcorej.PropertySetting;
+import mmcorej.PropertyType;
 import mmcorej.StrVector;
 
 import org.micromanager.api.DeviceControlGUI;
@@ -337,6 +340,8 @@ public class GroupEditor extends MMDialog {
       public String name;    // property name
       public String value;   // property value
       public boolean readOnly = false;    // is it read-only ?
+      public boolean hasRange = false;
+      public boolean isInt = false;
       public String allowed[];            // the list of allowed values
       public boolean show = true; // is it included in the current configuration ?
       public boolean orgSel = false;
@@ -451,11 +456,18 @@ public class GroupEditor extends MMDialog {
          PropertyItem item = propList_.get(row);
          if (col == 1) {
             try {
-               core_.setProperty(item.device, item.name, value.toString());
-               //item.m_value = core_.getProperty(item.m_device, item.m_name);
+               NumberFormat form = NumberFormat.getInstance();
+               if (item.hasRange && item.isInt) {
+                  core_.setProperty(item.device, item.name, new Integer (form.parse((String)value).intValue()).toString());
+               } else if (item.hasRange && !item.isInt) {
+                  core_.setProperty(item.device, item.name, new Double (form.parse((String)value).doubleValue()).toString());
+               } else  {
+                  core_.setProperty(item.device, item.name, value.toString());
+               }
                core_.waitForDevice(item.device);
+
                refresh();
-               //item.m_value = value.toString();
+
                if (parentGUI_ != null)
                   parentGUI_.updateGUI(true);              
                fireTableCellUpdated(row, col);
@@ -531,6 +543,8 @@ public class GroupEditor extends MMDialog {
                      item.name = properties.get(j);
                      item.value = core_.getProperty(devices.get(i), properties.get(j));
                      item.readOnly = core_.isPropertyReadOnly(devices.get(i), properties.get(j));
+                     item.hasRange = core_.hasPropertyLimits(devices.get(i), properties.get(j));
+                     item.isInt = PropertyType.Integer == core_.getPropertyType(item.device, item.name);
                      StrVector values = core_.getAllowedPropertyValues(devices.get(i), properties.get(j));
                      item.allowed = new String[(int)values.size()];
                      for (int k=0; k<values.size(); k++){
