@@ -117,9 +117,9 @@ public class SliderPanel extends JPanel {
 	}
 	
 	public void setLimits(double lowerLimit, double upperLimit) {
-		factor_ = (upperLimit - lowerLimit) / STEPS;
+		factor_ = (upperLimit - lowerLimit) / (STEPS);
 		slider_.setMinimum(0);
-		slider_.setMaximum(STEPS);
+		slider_.setMaximum(STEPS + slider_.getVisibleAmount());
 		upperLimit_ = upperLimit;
 		lowerLimit_ = lowerLimit;
 		integer_ = false;
@@ -130,7 +130,7 @@ public class SliderPanel extends JPanel {
 		upperLimit_ = upperLimit;
 		lowerLimit_ = lowerLimit;
       slider_.setMinimum(lowerLimit);
-      slider_.setMaximum(upperLimit);
+      slider_.setMaximum(upperLimit + slider_.getVisibleAmount());
 		integer_ = true;
 	}
 
@@ -142,7 +142,6 @@ public class SliderPanel extends JPanel {
 	      textField_.setText(form.format((int)(value)));
 		} else { 
 			value = slider_.getValue() * factor_ + lowerLimit_;
-		   //textField_.setText(TextUtils.FMT2.format(value));
 		   textField_.setText(form.format(value));
 		}	
 	}
