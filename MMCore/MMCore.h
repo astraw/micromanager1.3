@@ -67,6 +67,8 @@
 #include "Error.h"
 #include "ErrorCodes.h"
 
+class ACE_Mutex;
+
 // forward declarations
 class CircularBuffer;
 class Configuration;
@@ -342,6 +344,8 @@ private:
 
    typedef std::map<std::string, Configuration*> CConfigMap;
    typedef std::map<std::string, PropertyBlock*> CPropBlockMap;
+
+   static ACE_Mutex deviceLock_;
 
    MM::Camera* camera_;
    MM::Shutter* shutter_;

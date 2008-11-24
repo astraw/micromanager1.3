@@ -30,6 +30,8 @@
 
 #include "CoreCallback.h"
 #include "CircularBuffer.h"
+#include <ace/Mutex.h>
+#include <ace/Guard_T.h>
 
 int CoreCallback::InsertImage(const MM::Device* /*caller*/, const unsigned char* buf, unsigned width, unsigned height, unsigned byteDepth, MM::ImageMetadata* pMd)
 {
@@ -288,6 +290,8 @@ int CoreCallback::SetFocusPosition(double pos)
 
 int CoreCallback::MoveFocus(double velocity)
 {
+   ACE_Guard<ACE_Mutex> guard(CMMCore::deviceLock_);
+
    if (core_->focusStage_)
    {
       int ret = core_->focusStage_->Move(velocity);
@@ -323,6 +327,8 @@ int CoreCallback::SetXYPosition(double x, double y)
 
 int CoreCallback::MoveXYStage(double vx, double vy)
 {
+   ACE_Guard<ACE_Mutex> guard(CMMCore::deviceLock_);
+
    if (core_->xyStage_)
    {
       int ret = core_->xyStage_->Move(vx, vy);
