@@ -104,8 +104,6 @@ unsigned long CircularBuffer::GetSize() const
 
 unsigned long CircularBuffer::GetFreeSize() const
 {
-   //ACE_Guard<ACE_Mutex> guard(g_bufferLock);
-
    long freeSize = (long)frameArray_.size() - (insertIndex_ - saveIndex_);
    if (freeSize < 0)
       return 0;
@@ -115,7 +113,6 @@ unsigned long CircularBuffer::GetFreeSize() const
 
 unsigned long CircularBuffer::GetRemainingImageCount() const
 {
-   //ACE_Guard<ACE_Mutex> guard(g_bufferLock);
    return (unsigned long)(insertIndex_ - saveIndex_);
 }
 
@@ -191,7 +188,6 @@ bool CircularBuffer::InsertMultiChannel(const unsigned char* pixArray, unsigned 
 
 const unsigned char* CircularBuffer::GetTopImage() const
 {
-//   printf("Entered CB GetTopImage\n");
    ACE_Guard<ACE_Mutex> guard(g_bufferLock);
 
    if (frameArray_.size() == 0)
