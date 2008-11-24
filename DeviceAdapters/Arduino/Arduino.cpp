@@ -141,6 +141,7 @@ int CArduinoHub::Initialize()
    // Check that we have a controller:
    PurgeComPort(g_port.c_str());
 
+   /*
    unsigned char command[1];
    command[0] = 30;
    ret = WriteToComPort(g_port.c_str(), (const unsigned char*) command, 1);
@@ -148,7 +149,7 @@ int CArduinoHub::Initialize()
       return ret;
 
    std::string answer;
-   ret = GetSerialAnswer(g_port.c_str(), "\r\n", answer);
+   ret = GetSerialAnswer(g_port.c_str(), "\n", answer);
    if (ret != DEVICE_OK)
       return ret;
 
@@ -160,15 +161,23 @@ int CArduinoHub::Initialize()
    if (ret != DEVICE_OK)
       return ret;
 
-   ret = GetSerialAnswer(g_port.c_str(), "\r\n", g_version);
-   if (ret != DEVICE_OK)
-      return ret;
+   ret = GetSerialAnswer(g_port.c_str(), "\n", g_version);
+   if (ret != DEVICE_OK) {
+      // try again since we might be missing the first byte after opening the port
+      ret = WriteToComPort(g_port.c_str(), (const unsigned char*) command, 1);
+      if (ret != DEVICE_OK)
+         return ret;
+      ret = GetSerialAnswer(g_port.c_str(), "\n", g_version);
+      if (ret != DEVICE_OK) 
+         return ret;
+   }
 
    if (g_version != g_MMVersion)
       return ERR_VERSION_MISMATCH;
 
    CPropertyAction* pAct = new CPropertyAction(this, &CArduinoHub::OnVersion);
    CreateProperty("Version", g_version.c_str(), MM::String, true, pAct);
+   */
 
    ret = UpdateStatus();
    if (ret != DEVICE_OK)
