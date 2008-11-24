@@ -11,7 +11,8 @@ public class CoreAutofocus implements Autofocus {
    CMMCore core_;
 
    public void focus(double coarseStep, int numCoarse, double fineStep, int numFine) {
-      // TODO Auto-generated method stub
+      // TODO throw exception here
+      // command is obsolete
       
    }
 
