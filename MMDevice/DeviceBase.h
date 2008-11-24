@@ -792,6 +792,12 @@ class CStageBase : public CDeviceBase<MM::Stage, U>
    {
       return DEVICE_UNSUPPORTED_COMMAND;
    }
+
+   int Move(double /*velocity*/)
+   {
+      return DEVICE_UNSUPPORTED_COMMAND;
+   }
+
 };
 
 /**
@@ -919,6 +925,10 @@ public:
       return this->SetPositionSteps(xSteps+x, ySteps+y);
    }
 
+   int Move(double /*vx*/, double /*vy*/)
+   {
+      return DEVICE_UNSUPPORTED_COMMAND;
+   }
 
 private:
 

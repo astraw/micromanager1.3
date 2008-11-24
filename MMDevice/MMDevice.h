@@ -293,6 +293,7 @@ namespace MM {
       // Stage API
       virtual int SetPositionUm(double pos) = 0;
       virtual int SetRelativePositionUm(double d) = 0;
+      virtual int Move(double velocity) = 0;
       virtual int SetAdapterOriginUm(double d) = 0;
       virtual int GetPositionUm(double& pos) = 0;
       virtual int SetPositionSteps(long steps) = 0;
@@ -320,6 +321,7 @@ namespace MM {
       virtual int SetAdapterOriginUm(double x, double y) = 0;
       virtual int GetPositionUm(double& x, double& y) = 0;
       virtual int GetLimitsUm(double& xMin, double& xMax, double& yMin, double& yMax) = 0;
+      virtual int Move(double vx, double vy) = 0;
 
       virtual int SetPositionSteps(long x, long y) = 0;
       virtual int GetPositionSteps(long& x, long& y) = 0;
@@ -517,8 +519,10 @@ namespace MM {
       virtual int GetImageDimensions(int& width, int& height, int& depth) = 0;
       virtual int GetFocusPosition(double& pos) = 0;
       virtual int SetFocusPosition(double pos) = 0;
+      virtual int MoveFocus(double velocity) = 0;
       virtual int SetXYPosition(double x, double y) = 0;
       virtual int GetXYPosition(double& x, double& y) = 0;
+      virtual int MoveXYStage(double vX, double vY) = 0;
       virtual int SetExposure(double expMs) = 0;
       virtual int GetExposure(double& expMs) = 0;
       virtual int SetConfig(const char* group, const char* name) = 0;

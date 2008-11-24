@@ -286,6 +286,18 @@ int CoreCallback::SetFocusPosition(double pos)
    return DEVICE_CORE_FOCUS_STAGE_UNDEF;
 }
 
+int CoreCallback::MoveFocus(double velocity)
+{
+   if (core_->focusStage_)
+   {
+      int ret = core_->focusStage_->Move(velocity);
+      if (ret != DEVICE_OK)
+         return ret;
+   }
+   return DEVICE_CORE_FOCUS_STAGE_UNDEF;
+}
+
+
 int CoreCallback::GetXYPosition(double& x, double& y)
 {
    if (core_->xyStage_)
@@ -305,6 +317,17 @@ int CoreCallback::SetXYPosition(double x, double y)
       if (ret != DEVICE_OK)
          return ret;
       core_->waitForDevice(core_->xyStage_);
+   }
+   return DEVICE_CORE_FOCUS_STAGE_UNDEF;
+}
+
+int CoreCallback::MoveXYStage(double vx, double vy)
+{
+   if (core_->xyStage_)
+   {
+      int ret = core_->xyStage_->Move(vx, vy);
+      if (ret != DEVICE_OK)
+         return ret;
    }
    return DEVICE_CORE_FOCUS_STAGE_UNDEF;
 }
@@ -359,7 +382,8 @@ int CoreCallback::GetCurrentConfig(const char* group, int bufLen, char* name)
 {
    try 
    {
-      string name = core_->getCurrentConfig(group);
+      string cfgName = core_->getCurrentConfig(group);
+      strncpy(name, cfgName.c_str(), bufLen);
    }
    catch (...)
    {

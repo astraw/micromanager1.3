@@ -172,8 +172,10 @@ public:
    int GetImageDimensions(int& width, int& height, int& depth);
    int GetFocusPosition(double& pos);
    int SetFocusPosition(double pos);
+   int MoveFocus(double v);
    int SetXYPosition(double x, double y);
    int GetXYPosition(double& x, double& y);
+   int MoveXYStage(double vX, double vY);
    int SetExposure(double expMs);
    int GetExposure(double& expMs);
    int SetConfig(const char* group, const char* name);
