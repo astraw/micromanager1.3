@@ -63,6 +63,7 @@
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				RandomizedBaseAddress="1"
+				ImportLibrary="$(OutDir)/Arduino.lib"
 				TargetMachine="1"
 			/>
 			<Tool
@@ -139,6 +140,7 @@
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
 				RandomizedBaseAddress="1"
+				ImportLibrary="$(OutDir)/Arduino.lib"
 				TargetMachine="1"
 			/>
 			<Tool
