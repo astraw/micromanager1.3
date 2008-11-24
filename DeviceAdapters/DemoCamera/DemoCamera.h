@@ -248,18 +248,19 @@ public:
    int Shutdown();
      
    // Stage API
-   virtual int SetPositionUm(double pos) {pos_um_ = pos; return DEVICE_OK;}
-   virtual int GetPositionUm(double& pos) {pos = pos_um_; return DEVICE_OK;}
-   virtual double GetStepSize() {return stepSize_um_;}
-   virtual int SetPositionSteps(long steps) {pos_um_ = steps * stepSize_um_; return DEVICE_OK;}
-   virtual int GetPositionSteps(long& steps) {steps = (long)(pos_um_ / stepSize_um_); return DEVICE_OK;}
-   virtual int SetOrigin() {return DEVICE_OK;}
-   virtual int GetLimits(double& lower, double& upper)
+   int SetPositionUm(double pos) {pos_um_ = pos; return DEVICE_OK;}
+   int GetPositionUm(double& pos) {pos = pos_um_; return DEVICE_OK;}
+   double GetStepSize() {return stepSize_um_;}
+   int SetPositionSteps(long steps) {pos_um_ = steps * stepSize_um_; return DEVICE_OK;}
+   int GetPositionSteps(long& steps) {steps = (long)(pos_um_ / stepSize_um_); return DEVICE_OK;}
+   int SetOrigin() {return DEVICE_OK;}
+   int GetLimits(double& lower, double& upper)
    {
       lower = lowerLimit_;
       upper = upperLimit_;
       return DEVICE_OK;
    }
+   int Move(double /*v*/) {return DEVICE_OK;}
 
    // action interface
    // ----------------
@@ -330,6 +331,7 @@ public:
    }
    double GetStepSizeXUm() {return stepSize_um_;}
    double GetStepSizeYUm() {return stepSize_um_;}
+   int Move(double /*vx*/, double /*vy*/) {return DEVICE_OK;}
 
    // action interface
    // ----------------
