@@ -1,8 +1,8 @@
 mmc.logMessage("Processing startup script...");
 
 // load focusing module
-response = acq.installAutofocusPlugin("Autofocus_");
-mmc.logMessage(response);
+// response = acq.installAutofocusPlugin("Autofocus_");
+// mmc.logMessage(response);
 
 // load plugins
 // 100X imaging High COntent Screening Plugin

@@ -284,6 +284,7 @@ int CoreCallback::SetFocusPosition(double pos)
       if (ret != DEVICE_OK)
          return ret;
       core_->waitForDevice(core_->focusStage_);
+      return DEVICE_OK;
    }
    return DEVICE_CORE_FOCUS_STAGE_UNDEF;
 }
@@ -297,6 +298,7 @@ int CoreCallback::MoveFocus(double velocity)
       int ret = core_->focusStage_->Move(velocity);
       if (ret != DEVICE_OK)
          return ret;
+      return DEVICE_OK;
    }
    return DEVICE_CORE_FOCUS_STAGE_UNDEF;
 }
@@ -321,6 +323,7 @@ int CoreCallback::SetXYPosition(double x, double y)
       if (ret != DEVICE_OK)
          return ret;
       core_->waitForDevice(core_->xyStage_);
+      return DEVICE_OK;
    }
    return DEVICE_CORE_FOCUS_STAGE_UNDEF;
 }
@@ -334,6 +337,7 @@ int CoreCallback::MoveXYStage(double vx, double vy)
       int ret = core_->xyStage_->Move(vx, vy);
       if (ret != DEVICE_OK)
          return ret;
+      return DEVICE_OK;
    }
    return DEVICE_CORE_FOCUS_STAGE_UNDEF;
 }
