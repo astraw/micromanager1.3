@@ -187,8 +187,11 @@ CDemoCamera::CDemoCamera() :
    initialized_(false),
    busy_(false),
    readoutUs_(0.0),
-   scanMode_(1)
+   scanMode_(1),
+   acquiring_(false)
 {
+   acqThread_ = new AcqSequenceThread(this);
+
    // call the base class method to set-up default error codes/messages
    InitializeDefaultErrorMessages();
    readoutStartTime_ = GetCurrentMMTime();
@@ -204,6 +207,7 @@ CDemoCamera::CDemoCamera() :
 CDemoCamera::~CDemoCamera()
 {
    // no clean-up required for this device
+   delete acqThread_;
 }
 
 /**
@@ -223,7 +227,11 @@ void CDemoCamera::GetName(char* name) const
  */
 bool CDemoCamera::Busy()
 {
-   return busy_;
+   // TODO: this is controversial!
+   // Should camera appear as busy during acquistion ???
+   // is mutex neccessary ???
+   //ACE_Guard<ACE_Mutex> guard(g_lock);
+   return acquiring_;
 }
 
 /**
@@ -535,6 +543,70 @@ int CDemoCamera::SetAllowedBinning()
    LogMessage("Setting Allowed Binning settings", true);
    return SetAllowedValues(MM::g_Keyword_Binning, binValues);
 }
+
+int CDemoCamera::StartSequenceAcquisition(double /*interval*/)
+{
+   if (acquiring_)
+      return ERR_BUSY_ACQIRING;
+
+   int ret = GetCoreCallback()->PrepareForAcq(this);
+   if (ret != DEVICE_OK)
+      return ret;
+   acquiring_ = true;
+   acqThread_->Start();
+   return DEVICE_OK;
+}
+
+
+int CDemoCamera::PushImage()
+{
+   GenerateSyntheticImage(img_, GetExposure());
+
+   // process image
+   MM::ImageProcessor* ip = GetCoreCallback()->GetImageProcessor(this);
+   if (ip)
+   {
+      int ret = ip->Process(const_cast<unsigned char*>(img_.GetPixels()), GetImageWidth(), GetImageHeight(), GetImageBytesPerPixel());
+      if (ret != DEVICE_OK)
+         return ret;
+   }
+
+   // insert image into the circular buffer
+   GetImageBuffer();
+
+   // insert all three channels at once
+   return GetCoreCallback()->InsertMultiChannel(this, GetImageBuffer(), 1, GetImageWidth(), GetImageHeight(), GetImageBytesPerPixel());
+}
+
+int AcqSequenceThread::svc(void)
+{
+   while (!stop_)
+   {
+      int ret = camera_->PushImage();
+      if (ret != DEVICE_OK)
+      {
+         // error occured so the acquisition must be stopped
+         camera_->StopSequenceAcquisition();
+         printf("Overflow or image dimension mismatch!\n");
+         return 1;
+         // TODO: communicate that error has occured
+      }
+      CDeviceUtils::SleepMs(20);
+      //DWORD start = GetTickCount();
+      //Sleep((long)intervalMs_);
+      //DWORD delta = GetTickCount() - start;
+      //printf("Push image takes %ld ms\n", delta);
+   }
+   printf("Image generation thread finished\n");
+   return 0;
+}
+
+void AcqSequenceThread::Start()
+{
+   stop_ = false;
+   activate();
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // CDemoCamera Action handlers

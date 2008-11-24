@@ -735,7 +735,7 @@ public:
     */
    int StartSequenceAcquisition(double interval)
    {
-      return StartSequenceAcquisition(ULONG_MAX, interval);;
+      return StartSequenceAcquisition(ULONG_MAX, interval);
    }
 
    /**

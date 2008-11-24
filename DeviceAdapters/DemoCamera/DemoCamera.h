@@ -32,6 +32,7 @@
 #include "../../MMDevice/MMDevice.h"
 #include "../../MMDevice/DeviceBase.h"
 #include "../../MMDevice/ImgBuffer.h"
+#include "../../MMDevice/DeviceThreads.h"
 #include <string>
 #include <map>
 
@@ -40,7 +41,9 @@
 //
 #define ERR_UNKNOWN_MODE         102
 #define ERR_UNKNOWN_POSITION     103
+#define ERR_BUSY_ACQIRING        105
 
+class AcqSequenceThread;
 
 //////////////////////////////////////////////////////////////////////////////
 // CDemoCamera class
@@ -78,6 +81,7 @@ public:
    double GetPixelSizeUm() const {return nominalPixelSizeUm_ * GetBinning();}
    int GetBinning() const;
    int SetBinning(int binSize);
+   int StartSequenceAcquisition(double interval);
 
    // action interface
    // ----------------
@@ -85,6 +89,8 @@ public:
    int OnPixelType(MM::PropertyBase* pProp, MM::ActionType eAct);
    int OnReadoutTime(MM::PropertyBase* pProp, MM::ActionType eAct);
    int OnScanMode(MM::PropertyBase* pProp, MM::ActionType eAct);
+
+   int PushImage();
 
 private:
    int SetAllowedBinning();
@@ -97,6 +103,8 @@ private:
    double readoutUs_;
    MM::MMTime readoutStartTime_;
    long scanMode_;
+   bool acquiring_;
+   AcqSequenceThread* acqThread_;
 
    void GenerateSyntheticImage(ImgBuffer& img, double exp);
    int ResizeImageBuffer();
@@ -468,5 +476,26 @@ public:
 private:
    int position;
 };
+
+/**
+ * Acquisition thread
+ */
+class AcqSequenceThread : public MMDeviceThreadBase
+{
+public:
+   AcqSequenceThread(CDemoCamera* pCam) : 
+      busy_(false), stop_(false) {camera_ = pCam;}
+   ~AcqSequenceThread() {}
+   int svc(void);
+
+   void Stop() {stop_ = true;}
+   void Start();
+
+private:
+   CDemoCamera* camera_;
+   bool busy_;
+   bool stop_;
+};
+
 
 #endif //_DEMOCAMERA_H_
