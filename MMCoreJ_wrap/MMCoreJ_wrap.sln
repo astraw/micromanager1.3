@@ -112,7 +112,11 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NikonAZ100", "..\SecretDevi
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Utilities", "..\DeviceAdapters\Utilities\Utilities.vcproj", "{E68C2689-7D9F-4B7B-9100-FAB4CF5B08FD}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Polychrome5000", "..\SecretDeviceAdapters\Polychrome5000\Polychrome5000.vcproj", "{FDEFF75C-41F4-45CA-A704-05A46D9A2FAB}"
+EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Arduino", "..\DeviceAdapters\Arduino\Arduino.vcproj", "{2067D4A8-8C32-40D3-BA9F-6B388ECCD714}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "iMIC2000", "..\SecretDeviceAdapters\iMIC2000\iMIC2000.vcproj", "{D7070166-419D-4D2D-82E4-ED247A680107}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -268,10 +272,18 @@ Global
 		{E68C2689-7D9F-4B7B-9100-FAB4CF5B08FD}.Debug|Win32.Build.0 = Debug|Win32
 		{E68C2689-7D9F-4B7B-9100-FAB4CF5B08FD}.Release|Win32.ActiveCfg = Release|Win32
 		{E68C2689-7D9F-4B7B-9100-FAB4CF5B08FD}.Release|Win32.Build.0 = Release|Win32
+		{FDEFF75C-41F4-45CA-A704-05A46D9A2FAB}.Debug|Win32.ActiveCfg = Debug|Win32
+		{FDEFF75C-41F4-45CA-A704-05A46D9A2FAB}.Debug|Win32.Build.0 = Debug|Win32
+		{FDEFF75C-41F4-45CA-A704-05A46D9A2FAB}.Release|Win32.ActiveCfg = Release|Win32
+		{FDEFF75C-41F4-45CA-A704-05A46D9A2FAB}.Release|Win32.Build.0 = Release|Win32
 		{2067D4A8-8C32-40D3-BA9F-6B388ECCD714}.Debug|Win32.ActiveCfg = Debug|Win32
 		{2067D4A8-8C32-40D3-BA9F-6B388ECCD714}.Debug|Win32.Build.0 = Debug|Win32
 		{2067D4A8-8C32-40D3-BA9F-6B388ECCD714}.Release|Win32.ActiveCfg = Release|Win32
 		{2067D4A8-8C32-40D3-BA9F-6B388ECCD714}.Release|Win32.Build.0 = Release|Win32
+		{D7070166-419D-4D2D-82E4-ED247A680107}.Debug|Win32.ActiveCfg = Debug|Win32
+		{D7070166-419D-4D2D-82E4-ED247A680107}.Debug|Win32.Build.0 = Debug|Win32
+		{D7070166-419D-4D2D-82E4-ED247A680107}.Release|Win32.ActiveCfg = Release|Win32
+		{D7070166-419D-4D2D-82E4-ED247A680107}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
