@@ -355,14 +355,14 @@ void TestCameraLive(CMMCore& core)
    core.snapImage();
    core.getImage();
 
-   core.startContinuousSequenceAcquisition(10);
+   core.startContinuousSequenceAcquisition(0);
 
    int count=0;
    while (core.deviceBusy(camera.c_str()))
    {
       core.getLastImage();
       double interval = core.getBufferIntervalMs();
-      printf("Displaying current image, %ld in que, %.0f ms interval.\n", core.getRemainingImageCount(), interval);
+      printf("Displaying image %d, %ld in que, %.0f ms interval.\n", count+1, core.getRemainingImageCount(), interval);
       ACE_OS::sleep(displayTime);
       count++;
       if (count >= 100)

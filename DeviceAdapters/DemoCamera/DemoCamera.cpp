@@ -563,6 +563,7 @@ int CDemoCamera::StartSequenceAcquisition(double /*interval*/)
 int CDemoCamera::StopSequenceAcquisition()
 {   
    acqThread_->Stop();
+   acqThread_->wait();
    acquiring_ = false;
 
    // TODO: the correct termination code needs to be passed here instead of "0"
