@@ -331,9 +331,17 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI, Scrip
                toggleButtonLive_.doClick();
                return; 
             }
-            snapSingleImage();
+            Object img;
+			try {
+				img = core_.getLastImage();
+			} catch (Exception e) {
+				e.printStackTrace();
+				return;
+			}
+            displayImage(img);
          }
       };
+      
       timer_ = new Timer((int)interval_, timerHandler);
       timer_.stop();
 
@@ -1990,6 +1998,8 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI, Scrip
             if (zWheelListener_ == null)
                zWheelListener_ = new ZWheelListener(core_);
             zWheelListener_.start();
+            
+            core_.startContinuousSequenceAcquisition(0.0);
             timer_.start();
             toggleButtonLive_.setText("Stop");
             // Only hide the shutter checkbox if we are in autoshuttermode
@@ -2000,6 +2010,8 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI, Scrip
             if (!timer_.isRunning())
                return;
             timer_.stop();
+            core_.stopSequenceAcquisition();
+            
             if (zWheelListener_ != null)
                zWheelListener_.stop();
             toggleButtonLive_.setText("Live");
