@@ -247,6 +247,7 @@ public:
    bool getShutterOpen() throw (CMMError);
 
    void startSequenceAcquisition(long numImages, double intervalMs) throw (CMMError);
+   void startContinuousSequenceAcquisition(double intervalMs) throw (CMMError);
    void stopSequenceAcquisition() throw (CMMError);
    void* getLastImage() const throw (CMMError);
    void* popNextImage() throw (CMMError);

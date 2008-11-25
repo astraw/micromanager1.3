@@ -1496,6 +1496,32 @@ void CMMCore::startSequenceAcquisition(long numImages, double intervalMs) throw 
 }
 
 /**
+ * Starts the continuous camera sequence acquisition.
+ * This command does not block the calling thread for the duration of the acquisition.
+ */
+void CMMCore::startContinuousSequenceAcquisition(double intervalMs) throw (CMMError)
+{
+   if (camera_)
+   {
+      if (!cbuf_->Initialize(1, 1, camera_->GetImageWidth(), camera_->GetImageHeight(), camera_->GetImageBytesPerPixel()))
+      {
+         logError(getDeviceName(camera_).c_str(), getCoreErrorText(MMERR_CircularBufferFailedToInitialize).c_str());
+         throw CMMError(getCoreErrorText(MMERR_CircularBufferFailedToInitialize).c_str(), MMERR_CircularBufferFailedToInitialize);
+      }
+      cbuf_->Clear();
+      int nRet = camera_->StartSequenceAcquisition(intervalMs);
+      if (nRet != DEVICE_OK)
+         throw CMMError(getDeviceErrorText(nRet, camera_).c_str(), MMERR_DEVICE_GENERIC);
+   }
+   else
+   {
+      logError(getDeviceName(camera_).c_str(), getCoreErrorText(MMERR_CameraNotAvailable).c_str());
+      throw CMMError(getCoreErrorText(MMERR_CameraNotAvailable).c_str(), MMERR_CameraNotAvailable);
+   }
+   CORE_DEBUG("Sequence acquisition started.");
+}
+
+/**
  * Stops straming camera sequence acquisition.
  */
 void CMMCore::stopSequenceAcquisition() throw (CMMError)

@@ -557,32 +557,38 @@ int CDemoCamera::StartSequenceAcquisition(double /*interval*/)
    return DEVICE_OK;
 }
 
+/**
+ * Stops acquisition
+ */
+int CDemoCamera::StopSequenceAcquisition()
+{   
+   acqThread_->Stop();
+   acquiring_ = false;
 
-int CDemoCamera::PushImage()
+   // TODO: the correct termination code needs to be passed here instead of "0"
+   MM::Core* cb = GetCoreCallback();
+   if (cb)
+      cb->AcqFinished(this, 0);
+   return DEVICE_OK;
+}
+
+int CDemoCamera::InsertImage()
 {
-   GenerateSyntheticImage(img_, GetExposure());
-
-   // process image
-   MM::ImageProcessor* ip = GetCoreCallback()->GetImageProcessor(this);
-   if (ip)
-   {
-      int ret = ip->Process(const_cast<unsigned char*>(img_.GetPixels()), GetImageWidth(), GetImageHeight(), GetImageBytesPerPixel());
-      if (ret != DEVICE_OK)
-         return ret;
-   }
-
-   // insert image into the circular buffer
-   GetImageBuffer();
-
-   // insert all three channels at once
-   return GetCoreCallback()->InsertMultiChannel(this, GetImageBuffer(), 1, GetImageWidth(), GetImageHeight(), GetImageBytesPerPixel());
+   return GetCoreCallback()->InsertImage(this, GetImageBuffer(), GetImageWidth(), GetImageHeight(), GetImageBytesPerPixel());
 }
 
 int AcqSequenceThread::svc(void)
 {
    while (!stop_)
    {
-      int ret = camera_->PushImage();
+      int ret = camera_->SnapImage();
+      if (ret != DEVICE_OK)
+      {
+         camera_->StopSequenceAcquisition();
+         return 1;
+      }
+
+      ret = camera_->InsertImage();
       if (ret != DEVICE_OK)
       {
          // error occured so the acquisition must be stopped

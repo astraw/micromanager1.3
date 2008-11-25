@@ -54,6 +54,7 @@ void TestCameraStreaming(CMMCore& core);
 void TestPixelSize(CMMCore& core);
 void TestColorMode(CMMCore& core);
 void TestHam(CMMCore& core);
+void TestCameraLive(CMMCore& core);
 
 /**
  * Creates MMCore object, loads configuration, prints the status and performs
@@ -106,7 +107,8 @@ int main(int argc, char* argv[])
       // It assumes that specific demo configuration is already loaded
       //TestDemoDevices(core);
       //TestCameraStreaming(core);
-      TestColorMode(core);
+      // TestColorMode(core);
+      TestCameraLive(core);
       //TestPixelSize(core);
       //TestHam(core);
 
@@ -330,4 +332,43 @@ void TestHam(CMMCore& core)
    core.snapImage();
    core.getImage();
    cout << "CAM2 " << core.getImageWidth() << " X " << core.getImageHeight() << endl;
+}
+
+/**
+ * Test routine for the MMConfig_Demo.cfg.
+ */
+void TestCameraLive(CMMCore& core)
+{
+   const int memoryFootprintMB = 100;
+   ACE_Time_Value displayTime(0, 80000L); // us
+   ACE_Time_Value restTime(5, 0L);
+
+   core.setCircularBufferMemoryFootprint(memoryFootprintMB);
+
+   cout << "Buffer capacity: " << core.getBufferTotalCapacity() << endl;
+   string camera = core.getCameraDevice();
+   //core.setProperty(camera.c_str(), "ShutterMode", "Open");
+   //core.setProperty(camera.c_str(), "Binning", "2");
+   core.setExposure(200.0);
+
+   // test normal mode
+   core.snapImage();
+   core.getImage();
+
+   core.startContinuousSequenceAcquisition(10);
+
+   int count=0;
+   while (core.deviceBusy(camera.c_str()))
+   {
+      core.getLastImage();
+      double interval = core.getBufferIntervalMs();
+      printf("Displaying current image, %ld in que, %.0f ms interval.\n", core.getRemainingImageCount(), interval);
+      ACE_OS::sleep(displayTime);
+      count++;
+      if (count >= 100)
+         core.stopSequenceAcquisition();
+   }
+   printf("Camera finished with %.0f ms interval.\n", core.getBufferIntervalMs());
+   //core.setProperty(camera.c_str(), "ShutterMode", "Auto");
+
 }

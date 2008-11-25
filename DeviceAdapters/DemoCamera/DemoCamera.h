@@ -82,6 +82,7 @@ public:
    int GetBinning() const;
    int SetBinning(int binSize);
    int StartSequenceAcquisition(double interval);
+   int StopSequenceAcquisition();
 
    // action interface
    // ----------------
@@ -90,7 +91,7 @@ public:
    int OnReadoutTime(MM::PropertyBase* pProp, MM::ActionType eAct);
    int OnScanMode(MM::PropertyBase* pProp, MM::ActionType eAct);
 
-   int PushImage();
+   int InsertImage();
 
 private:
    int SetAllowedBinning();
