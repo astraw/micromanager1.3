@@ -97,6 +97,7 @@
    int skipTriggers_ = 0;  // # of triggers to skip before starting to generate patterns
    byte currentPattern_ = 0;
    const unsigned long timeOut_ = 1000;
+   bool blanking_ = false;
    bool blankTTLLogicNormal_ = true;
  
  void setup() {
@@ -128,10 +129,9 @@
             currentPattern_ = Serial.read();
             // Do not set bits 6 and 7 (not sure if this is needed..)
             currentPattern_ = currentPattern_ & B00111111;
-            PORTB = currentPattern_;
+            if (!blanking_)
+              PORTB = currentPattern_;
             Serial.print(1, BYTE);
-          } else {
-            Serial.print(0, BYTE);
           }
           break;
           
@@ -207,13 +207,16 @@
            sequenceNr_ = 0;
            triggerNr_ = -skipTriggers_;
            PORTB = B00000000;
-           attachInterrupt(0, triggerMode, CHANGE);
-           Serial.print(8, BYTE);
-           // stop after 3000 seconds or when key pressed
-           waitForSerial(3000000);
-           detachInterrupt(0);
+           while (Serial.available() == 0) {
+             if (triggerNr_ >=0) {
+               PORTB = triggerPattern_[sequenceNr_];
+                sequenceNr_++;
+                if (sequenceNr_ >= patternLength_)
+                  sequenceNr_ = 0;
+             }
+             triggerNr_++;
+           }
            PORTB = B00000000;
-
          }
          break;
          
@@ -225,16 +228,13 @@
           
        // Blanks output based on TTL input
        case 20:
-         if (blankTTLLogicNormal_)
-           attachInterrupt(0, blankNormal, CHANGE);
-         else
-           attachInterrupt(0, blankInverted, CHANGE);
+         blanking_ = true;
          Serial.print(20, BYTE);
          break;
          
        // Stops blanking mode
        case 21:
-         detachInterrupt(0);
+         blanking_ = false;
          Serial.print(21, BYTE);
          break;
          
@@ -259,48 +259,36 @@
        case 31:
          Serial.println(version_);
          break;
+         
+       //default:
+       //   Serial.print(0, BYTE);
+       //   break;
        }
     }
- }
+    if (blanking_) {
+      if (blankTTLLogicNormal_) {
+        if (DDRD & B00000100)
+          PORTB = currentPattern_;
+        else
+          PORTB = 0;
+      } else {
+        if (DDRD & B00000100)
+          PORTB = 0;
+        else     
+          PORTB = currentPattern_; 
+      }
+    }
+}
+
  
- bool waitForSerial(unsigned long timeOut)
- {
+bool waitForSerial(unsigned long timeOut)
+{
     unsigned long startTime = millis();
     while (Serial.available() == 0 && (millis() - startTime < timeOut) ) {}
     if (Serial.available() > 0)
        return true;
     return false;
  }
- 
- // This function is called through an interrupt   
-void triggerMode() 
-{
-  if (triggerNr_ >=0) {
-    PORTB = triggerPattern_[sequenceNr_];
-    sequenceNr_++;
-    if (sequenceNr_ >= patternLength_)
-      sequenceNr_ = 0;
-  }
-  triggerNr_++;
-}
-
-void blankNormal() 
-{
-    if (DDRD & B00000100) {
-      PORTB = currentPattern_;
-    } else
-      PORTB = 0;
-}
-
-void blankInverted()
-{
-   if (DDRD & B00000100) {
-     PORTB = 0;
-   } else {     
-     PORTB = currentPattern_;  
-   }
-}   
-  
 
 // Sets analogue output in the TLV5618
 // channel is either 0 ('A') or 1 ('B')
@@ -320,3 +308,40 @@ void analogueOut(int channel, byte msb, byte lsb)
   digitalWrite(clockPin, LOW);
   digitalWrite(latchPin, HIGH);
 }
+
+
+
+/* 
+ // This function is called through an interrupt   
+void triggerMode() 
+{
+  if (triggerNr_ >=0) {
+    PORTB = triggerPattern_[sequenceNr_];
+    sequenceNr_++;
+    if (sequenceNr_ >= patternLength_)
+      sequenceNr_ = 0;
+  }
+  triggerNr_++;
+}
+
+
+void blankNormal() 
+{
+    if (DDRD & B00000100) {
+      PORTB = currentPattern_;
+    } else
+      PORTB = 0;
+}
+
+void blankInverted()
+{
+   if (DDRD & B00000100) {
+     PORTB = 0;
+   } else {     
+     PORTB = currentPattern_;  
+   }
+}   
+
+*/
+  
+
