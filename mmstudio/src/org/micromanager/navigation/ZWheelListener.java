@@ -35,7 +35,7 @@ public class ZWheelListener implements MouseWheelListener {
    private CMMCore core_;
    private ImageCanvas canvas_;
    private static boolean isRunning_ = false;
-   private static final double moveIncrement_ = 0.10;
+   private static final double moveIncrement_ = 0.20;
 
    public ZWheelListener(CMMCore core) {
       core_ = core;
@@ -86,7 +86,7 @@ public class ZWheelListener implements MouseWheelListener {
       double moveIncrement = moveIncrement_;
       double pixSizeUm = core_.getPixelSizeUm();
       if (pixSizeUm > 0.0) {
-         moveIncrement = pixSizeUm;
+         moveIncrement = 2 * pixSizeUm;
       }
       // Get coordinates of event
       int move = e.getWheelRotation();
