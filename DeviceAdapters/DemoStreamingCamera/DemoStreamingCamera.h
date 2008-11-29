@@ -26,7 +26,6 @@
 #ifndef _DEMO_STREAMINGCAMERA_H_
 #define _DEMO_STREAMINGCAMERA_H_
 
-#include "../../MMDevice/MMDevice.h"
 #include "../../MMDevice/DeviceBase.h"
 #include "../../MMDevice/ImgBuffer.h"
 #include "../../MMDevice/DeviceThreads.h"

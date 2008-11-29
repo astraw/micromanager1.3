@@ -23,10 +23,6 @@
 // CVS:           $Id: DemoCamera.h 73 2007-04-19 00:11:35Z nenad $
 //
 
-#ifdef WIN32
-   #define snprintf _snprintf 
-#endif
-
 #include "DemoStreamingCamera.h"
 #include <string>
 #include <math.h>

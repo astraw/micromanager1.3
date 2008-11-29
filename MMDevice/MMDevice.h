@@ -37,8 +37,7 @@
 #define DEVICE_INTERFACE_VERSION 29
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef _MMDEVICE_H_
-#define _MMDEVICE_H_
+#pragma once
 
 #include "MMDeviceConstants.h"
 #include <string>
@@ -48,8 +47,14 @@
 #include <vector>
 #include <sstream>
 
+#ifdef WIN32
+   #define WIN32_LEAN_AND_MEAN
+   #include <windows.h>
+   #define snprintf _snprintf 
+#endif
 
 #define HDEVMODULE void*
+
 class Metadata;
 
 namespace MM {
@@ -256,6 +261,7 @@ namespace MM {
       virtual int StartSequenceAcquisition(long numImages, double interval_ms) = 0;
       virtual int StartSequenceAcquisition(double interval_ms) = 0;
       virtual int StopSequenceAcquisition() = 0;
+
    };
 
    /** 
@@ -535,5 +541,3 @@ namespace MM {
    };
 
 } // namespace MM
-
-#endif //_MMDEVICE_H_

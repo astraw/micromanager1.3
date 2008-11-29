@@ -24,12 +24,6 @@
 // CVS:           $Id$
 //
 
-#ifdef WIN32
-   #define WIN32_LEAN_AND_MEAN
-   #include <windows.h>
-   #define snprintf _snprintf 
-#endif
-
 #include "DemoCamera.h"
 #include <string>
 #include <math.h>
@@ -185,13 +179,9 @@ MODULE_API void DeleteDevice(MM::Device* pDevice)
 CDemoCamera::CDemoCamera() :
    CCameraBase<CDemoCamera> (),
    initialized_(false),
-   busy_(false),
    readoutUs_(0.0),
-   scanMode_(1),
-   acquiring_(false)
+   scanMode_(1)
 {
-   acqThread_ = new AcqSequenceThread(this);
-
    // call the base class method to set-up default error codes/messages
    InitializeDefaultErrorMessages();
    readoutStartTime_ = GetCurrentMMTime();
@@ -207,7 +197,6 @@ CDemoCamera::CDemoCamera() :
 CDemoCamera::~CDemoCamera()
 {
    // no clean-up required for this device
-   delete acqThread_;
 }
 
 /**
@@ -219,19 +208,6 @@ void CDemoCamera::GetName(char* name) const
    // We just return the name we use for referring to this
    // device adapter.
    CDeviceUtils::CopyLimitedString(name, g_CameraDeviceName);
-}
-
-/**
- * Tells us if device is still processing asynchronous command.
- * Required by the MM:Device API.
- */
-bool CDemoCamera::Busy()
-{
-   // TODO: this is controversial!
-   // Should camera appear as busy during acquistion ???
-   // is mutex neccessary ???
-   //ACE_Guard<ACE_Mutex> guard(g_lock);
-   return acquiring_;
 }
 
 /**
@@ -542,76 +518,6 @@ int CDemoCamera::SetAllowedBinning()
       binValues.push_back("8");
    LogMessage("Setting Allowed Binning settings", true);
    return SetAllowedValues(MM::g_Keyword_Binning, binValues);
-}
-
-int CDemoCamera::StartSequenceAcquisition(double /*interval*/)
-{
-   if (acquiring_)
-      return ERR_BUSY_ACQIRING;
-
-   int ret = GetCoreCallback()->PrepareForAcq(this);
-   if (ret != DEVICE_OK)
-      return ret;
-   acquiring_ = true;
-   acqThread_->Start();
-   return DEVICE_OK;
-}
-
-/**
- * Stops acquisition
- */
-int CDemoCamera::StopSequenceAcquisition()
-{   
-   acqThread_->Stop();
-   acqThread_->wait();
-   acquiring_ = false;
-
-   // TODO: the correct termination code needs to be passed here instead of "0"
-   MM::Core* cb = GetCoreCallback();
-   if (cb)
-      cb->AcqFinished(this, 0);
-   return DEVICE_OK;
-}
-
-int CDemoCamera::InsertImage()
-{
-   return GetCoreCallback()->InsertImage(this, GetImageBuffer(), GetImageWidth(), GetImageHeight(), GetImageBytesPerPixel());
-}
-
-int AcqSequenceThread::svc(void)
-{
-   while (!stop_)
-   {
-      int ret = camera_->SnapImage();
-      if (ret != DEVICE_OK)
-      {
-         camera_->StopSequenceAcquisition();
-         return 1;
-      }
-
-      ret = camera_->InsertImage();
-      if (ret != DEVICE_OK)
-      {
-         // error occured so the acquisition must be stopped
-         camera_->StopSequenceAcquisition();
-         printf("Overflow or image dimension mismatch!\n");
-         return 1;
-         // TODO: communicate that error has occured
-      }
-      CDeviceUtils::SleepMs(20);
-      //DWORD start = GetTickCount();
-      //Sleep((long)intervalMs_);
-      //DWORD delta = GetTickCount() - start;
-      //printf("Push image takes %ld ms\n", delta);
-   }
-   printf("Image generation thread finished\n");
-   return 0;
-}
-
-void AcqSequenceThread::Start()
-{
-   stop_ = false;
-   activate();
 }
 
 

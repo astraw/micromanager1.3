@@ -18,7 +18,6 @@
 #include <string>
 #include <deque>
 #include <map>
-#include "../../MMDevice/MMDevice.h"
 #include "../../MMDevice/DeviceBase.h"
 
 // PFS status constants

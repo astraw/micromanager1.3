@@ -26,7 +26,6 @@
 #ifndef _QICAMERA_H_
 #define _QICAMERA_H_
 
-#include "../../MMDevice/MMDevice.h"
 #include "../../MMDevice/DeviceBase.h"
 #include "../../MMDevice/ImgBuffer.h"
 #include "../../MMDevice/ModuleInterface.h"

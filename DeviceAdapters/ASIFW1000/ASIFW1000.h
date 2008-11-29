@@ -26,7 +26,6 @@
 #ifndef _ASIFW1000_H_
 #define _ASIFW1000_H_
 
-#include "../../MMDevice/MMDevice.h"
 #include "../../MMDevice/DeviceBase.h"
 #include <string>
 #include <map>

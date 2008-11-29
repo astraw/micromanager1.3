@@ -66,6 +66,8 @@
 #define DEVICE_CORE_FOCUS_STAGE_UNDEF  27
 #define DEVICE_CORE_EXPOSURE_FAILED    28
 #define DEVICE_CORE_CONFIG_FAILED      29
+#define DEVICE_CAMERA_BUSY_ACQUIRING   30
+
 
 namespace MM {
    const int MaxStrLength = 1024;

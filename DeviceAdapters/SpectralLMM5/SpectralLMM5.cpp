@@ -19,16 +19,13 @@
 // AUTHOR:        Nico Stuurman, 01/17/2008
 //
 
-#include "../../MMDevice/MMDevice.h"
-#include "../../MMDevice/DeviceBase.h"
-#include "../../MMDevice/ModuleInterface.h"
 #include "SpectralLMM5.h"
 #include "SpectralLMM5Interface.h"
 
 #ifdef WIN32
-   #include <windows.h>
+   #include <winsock.h>
 #else
-#include <netinet/in.h>
+   #include <netinet/in.h>
 #endif
 
 //////////////////////////////////////////////////////////////////////////////

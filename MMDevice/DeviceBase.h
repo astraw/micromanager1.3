@@ -30,6 +30,8 @@
 #include "MMDeviceConstants.h"
 #include "Property.h"
 #include "DeviceUtils.h"
+#include "../../MMDevice/ModuleInterface.h"
+#include "../../MMDevice/DeviceThreads.h"
 #include <assert.h>
 
 #include <string>
@@ -704,7 +706,7 @@ public:
    using CDeviceBase<MM::Camera, U>::SetAllowedValues;
    using CDeviceBase<MM::Camera, U>::GetBinning;
 
-   CCameraBase() 
+   CCameraBase() : busy_(false), thd_(0)
    {
       // create and intialize common transpose properties
       std::vector<std::string> allowedValues;
@@ -718,17 +720,17 @@ public:
       SetAllowedValues(MM::g_Keyword_Transpose_MirrorY, allowedValues);
       CreateProperty(MM::g_Keyword_Transpose_Correction, "0", MM::Integer, false);
       SetAllowedValues(MM::g_Keyword_Transpose_Correction, allowedValues);
+
+      thd_ = new BaseSequenceThread(this);
    }
 
-   ~CCameraBase() {}
-
-   /**
-    * Default implementation is to not support streaming mode.
-    */
-   int StartSequenceAcquisition(long /*numImages*/, double /*interval_ms*/)
+   ~CCameraBase()
    {
-      return DEVICE_UNSUPPORTED_COMMAND;
+      thd_->Stop();
+      delete thd_;
    }
+
+   bool Busy() {return busy_;}
 
    /**
     * Continuous sequence acquisition.  Default to sequence acquisition with a high number of images
@@ -743,6 +745,9 @@ public:
     */
    int StopSequenceAcquisition()
    {
+      thd_->Stop();
+      thd_->wait();
+      SetBusyFlag(false);
       return DEVICE_OK;
    }
 
@@ -765,6 +770,83 @@ public:
    const unsigned int* GetImageBufferAsRGB32()
    {
       return 0;
+   }
+
+   /**
+    * Default implementation is to not support streaming mode.
+    */
+   int StartSequenceAcquisition(long numImages, double /*interval_ms*/)
+   {
+      if (busy_)
+         return DEVICE_CAMERA_BUSY_ACQUIRING;
+
+      int ret = GetCoreCallback()->PrepareForAcq(this);
+      if (ret != DEVICE_OK)
+         return ret;
+      SetBusyFlag(true);
+      thd_->SetLength(numImages);
+      thd_->Start();
+      return DEVICE_OK;
+   }
+
+protected:
+   virtual void SetBusyFlag(bool state) {busy_ = state;}
+
+private:
+   class BaseSequenceThread : public MMDeviceThreadBase
+   {
+      public:
+         BaseSequenceThread(CCameraBase* pCam) : stop_(false), numImages_(0) {camera_ = pCam;}
+         ~BaseSequenceThread() {}
+
+         int svc(void)
+         {
+            long count(0);
+            while (!stop_ && count < numImages_)
+            {
+               int ret = camera_->SnapImage();
+               if (ret != DEVICE_OK)
+               {
+                  camera_->StopSequenceAcquisition();
+                  return 1;
+               }
+
+               ret = camera_->InsertImage();
+               if (ret != DEVICE_OK)
+               {
+                  // error occured so the acquisition must be stopped
+                  camera_->StopSequenceAcquisition();
+                  return 1;
+                  // TODO: communicate that error has occured
+               }
+               CDeviceUtils::SleepMs(20);
+               count++;
+            }
+            return 0;
+         }
+
+         void Stop() {stop_ = true;}
+
+         void Start()
+         {
+            stop_ = false;
+            activate();
+         }
+
+         void SetLength(long images) {numImages_ = images;}
+
+      private:
+         CCameraBase* camera_;
+         bool stop_;
+         long numImages_;
+   };
+
+   bool busy_;
+   BaseSequenceThread* thd_;
+
+   int InsertImage()
+   {
+      return GetCoreCallback()->InsertImage(this, GetImageBuffer(), GetImageWidth(), GetImageHeight(), GetImageBytesPerPixel());
    }
 };
 

@@ -37,6 +37,7 @@
    #else
       #define MODULE_API __declspec(dllimport)
    #endif
+
 #else
    #define MODULE_API
 #endif

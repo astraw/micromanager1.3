@@ -20,10 +20,6 @@
 // CVS:           $Id$
 // 
 
-#ifdef WIN32
-   #define snprintf _snprintf 
-#endif
-
 #include "NikonTE2000.h"
 #include <string>
 #include <math.h>
