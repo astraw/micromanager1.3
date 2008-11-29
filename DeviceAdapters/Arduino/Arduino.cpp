@@ -141,21 +141,26 @@ int CArduinoHub::Initialize()
    // Check that we have a controller:
    PurgeComPort(g_port.c_str());
 
-   /*
    unsigned char command[1];
    command[0] = 30;
    ret = WriteToComPort(g_port.c_str(), (const unsigned char*) command, 1);
    if (ret != DEVICE_OK)
       return ret;
 
-   std::string answer;
-   ret = GetSerialAnswer(g_port.c_str(), "\n", answer);
-   if (ret != DEVICE_OK)
-      return ret;
+   MM::MMTime startTime = GetCurrentMMTime();
+   unsigned long bytesRead = 0;
+   unsigned char answer[7];
+   while ((bytesRead < 7) && ( (GetCurrentMMTime() - startTime).getMsec() < 250)) {
+      unsigned long br;
+      ret = ReadFromComPort(g_port.c_str(), answer + bytesRead, 7, br);
+      if (ret != DEVICE_OK)
+         return ret;
+      bytesRead += br;
+   }
+   if (answer[0] != 30)
+      return ERR_COMMUNICATION;
 
-   if (answer != "MM-Ard")
-      return ERR_BOARD_NOT_FOUND;
-
+   /*
    command[0] = 31;
    ret = WriteToComPort(g_port.c_str(), (const unsigned char*) command, 1);
    if (ret != DEVICE_OK)
