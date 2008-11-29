@@ -705,6 +705,11 @@ public:
    using CDeviceBase<MM::Camera, U>::CreateProperty;
    using CDeviceBase<MM::Camera, U>::SetAllowedValues;
    using CDeviceBase<MM::Camera, U>::GetBinning;
+   using CDeviceBase<MM::Camera, U>::GetCoreCallback;
+   using CDeviceBase<MM::Camera, U>::GetImageBuffer;
+   using CDeviceBase<MM::Camera, U>::GetImageWidth;
+   using CDeviceBase<MM::Camera, U>::GetImageHeight;
+   using CDeviceBase<MM::Camera, U>::GetImageBytesPerPixel;
 
    CCameraBase() : busy_(false), thd_(0)
    {
@@ -737,7 +742,7 @@ public:
     */
    int StartSequenceAcquisition(double interval)
    {
-      return StartSequenceAcquisition(ULONG_MAX, interval);
+      return StartSequenceAcquisition(LONG_MAX, interval);
    }
 
    /**
