@@ -55,7 +55,6 @@ MMJ_.jar:  \
 	$(srcdir)/src/org/micromanager/conf/Setting.java \
 	$(srcdir)/src/org/micromanager/conf/SynchroPage.java \
 	$(srcdir)/src/org/micromanager/fastacq/DiskStreamingThread.java \
-	$(srcdir)/src/org/micromanager/fastacq/DisplayThread.java \
 	$(srcdir)/src/org/micromanager/fastacq/DisplayTimerTask.java \
 	$(srcdir)/src/org/micromanager/fastacq/GUIStatus.java \
 	$(srcdir)/src/org/micromanager/fastacq/StatusTimerTask.java \
