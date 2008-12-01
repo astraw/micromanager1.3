@@ -424,7 +424,7 @@ public:
    ~DemoDA ();
 
    int Shutdown() {return DEVICE_OK;}
-   void GetName(char* name) const {name = "Demo DA";}
+   void GetName(char* name) const {strcpy(name,"Demo DA");}
    int SetGateOpen(bool open); 
    int GetGateOpen(bool& open);
    int SetSignal(double volts);
@@ -452,7 +452,7 @@ public:
    ~DemoMagnifier () {}
 
    int Shutdown() {return DEVICE_OK;}
-   void GetName(char* name) const {name = "Demo Optovar";}
+   void GetName(char* name) const {strcpy(name,"Demo Optovar");}
 
    bool Busy() {return false;}
    int Initialize();
