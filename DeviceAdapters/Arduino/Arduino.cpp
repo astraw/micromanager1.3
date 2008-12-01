@@ -246,7 +246,6 @@ int CArduinoHub::OnLogic(MM::PropertyBase* pProp, MM::ActionType pAct)
 
 CArduinoSwitch::CArduinoSwitch() : 
    blanking_(false),
-   blankOnTriggerLow_(true),
    initialized_(false),
    numPos_(64), 
    busy_(false)
@@ -736,15 +735,31 @@ int CArduinoSwitch::OnBlankingTriggerDirection(MM::PropertyBase* pProp, MM::Acti
       std::string direction;
       pProp->Get(direction);
 
-      if (direction == "Low") 
-         blankOnTriggerLow_ = true;
-      else
-         blankOnTriggerLow_ = false;
 
-      if (blanking_) {
-         SetProperty("Blanking", "Stop");
-         SetProperty("Blanking", "Start");
+      PurgeComPort(g_port.c_str());
+      unsigned char command[1];
+      command[0] = 22;
+      if (direction == "Low") 
+         command[1] = 1;
+      else
+         command[1] = 0;
+
+      int ret = WriteToComPort(g_port.c_str(), (const unsigned char*) command, 2);
+      if (ret != DEVICE_OK)
+         return ret;
+
+      MM::MMTime startTime = GetCurrentMMTime();
+      unsigned long bytesRead = 0;
+      unsigned char answer[1];
+      while ((bytesRead < 1) && ( (GetCurrentMMTime() - startTime).getMsec() < 250)) {
+         unsigned long br;
+         ret = ReadFromComPort(g_port.c_str(), answer + bytesRead, 1, br);
+         if (ret != DEVICE_OK)
+            return ret;
+         bytesRead += br;
       }
+      if (answer[0] != 22)
+         return ERR_COMMUNICATION;
 
    }
 

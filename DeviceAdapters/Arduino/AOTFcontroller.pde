@@ -206,15 +206,21 @@
          if (patternLength_ > 0) {
            sequenceNr_ = 0;
            triggerNr_ = -skipTriggers_;
+           int state = digitalRead(inPin_);
            PORTB = B00000000;
+           Serial.print(8, BYTE);
            while (Serial.available() == 0) {
-             if (triggerNr_ >=0) {
-               PORTB = triggerPattern_[sequenceNr_];
-                sequenceNr_++;
-                if (sequenceNr_ >= patternLength_)
-                  sequenceNr_ = 0;
+             int tmp = digitalRead(inPin_);
+             if (tmp != state) {
+               if (triggerNr_ >=0) {
+                 PORTB = triggerPattern_[sequenceNr_];
+                 sequenceNr_++;
+                 if (sequenceNr_ >= patternLength_)
+                   sequenceNr_ = 0;
+               }
+               triggerNr_++;
              }
-             triggerNr_++;
+             state = tmp;
            }
            PORTB = B00000000;
          }
@@ -267,12 +273,12 @@
     }
     if (blanking_) {
       if (blankTTLLogicNormal_) {
-        if (DDRD & B00000100)
+        if (digitalRead(inPin_) == HIGH)
           PORTB = currentPattern_;
         else
           PORTB = 0;
       } else {
-        if (DDRD & B00000100)
+        if (digitalRead(inPin_) == LOW)
           PORTB = 0;
         else     
           PORTB = currentPattern_; 

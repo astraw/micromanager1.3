@@ -122,7 +122,6 @@ private:
    int ClosePort();
 
    bool blanking_;
-   bool blankOnTriggerLow_;
    bool triggerMode_;
    bool initialized_;
    long numPos_;
