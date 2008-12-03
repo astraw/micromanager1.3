@@ -1924,6 +1924,9 @@ int CHamamatsu::StartSequenceAcquisition(long numImages, double interval_ms)
       return ret;
    }
 
+   // make sure the circular buffer is properly sized
+   GetCoreCallback()->InitializeImageBuffer(1, 1, GetImageWidth(), GetImageHeight(), GetImageBytesPerPixel());
+
    // start thread
    imageCounter_ = 0;
    sequenceLength_ = numImages;

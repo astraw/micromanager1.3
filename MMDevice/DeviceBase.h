@@ -30,8 +30,8 @@
 #include "MMDeviceConstants.h"
 #include "Property.h"
 #include "DeviceUtils.h"
-#include "../../MMDevice/ModuleInterface.h"
-#include "../../MMDevice/DeviceThreads.h"
+#include "ModuleInterface.h"
+#include "DeviceThreads.h"
 #include <assert.h>
 
 #include <string>
