@@ -157,7 +157,7 @@ DemoStreamingCamera::~DemoStreamingCamera()
 {
    //acqThread_->Stop();
    delete acqThread_;
-   delete rawBuffer_;
+   delete[] rawBuffer_;
 }
 
 /**
@@ -355,7 +355,7 @@ int DemoStreamingCamera::Shutdown()
 {
    initialized_ = false;
    StopSequenceAcquisition();
-   delete rawBuffer_;
+   delete[] rawBuffer_;
    rawBuffer_ = 0;
    return DEVICE_OK;
 }
@@ -545,6 +545,7 @@ int DemoStreamingCamera::SetROI(unsigned /*x*/, unsigned /*y*/, unsigned xSize, 
       img_[0].Resize(xSize, ySize);
       img_[1].Resize(xSize, ySize);
       img_[2].Resize(xSize, ySize);
+      ResizeImageBuffer();
    }
 
    return DEVICE_OK;
@@ -752,20 +753,21 @@ int DemoStreamingCamera::OnBinning(MM::PropertyBase* pProp, MM::ActionType eAct)
       // apply this value to the 'hardware'.
       long binFactor;
       pProp->Get(binFactor);
-      const long imageSize(512);
 
       if (binFactor > 0 && binFactor < 10)
       {
-         img_[0].Resize(imageSize/binFactor, imageSize/binFactor);
-         img_[1].Resize(imageSize/binFactor, imageSize/binFactor);
-         img_[2].Resize(imageSize/binFactor, imageSize/binFactor);
+         img_[0].Resize(imageSize_/binFactor, imageSize_/binFactor);
+         img_[1].Resize(imageSize_/binFactor, imageSize_/binFactor);
+         img_[2].Resize(imageSize_/binFactor, imageSize_/binFactor);
+         ResizeImageBuffer();
      }
       else
       {
          // on failure reset default binning of 1
-         img_[0].Resize(imageSize, imageSize);
-         img_[1].Resize(imageSize, imageSize);
-         img_[2].Resize(imageSize, imageSize);
+         img_[0].Resize(imageSize_, imageSize_);
+         img_[1].Resize(imageSize_, imageSize_);
+         img_[2].Resize(imageSize_, imageSize_);
+         ResizeImageBuffer();
          pProp->Set(1L);
          return ERR_UNKNOWN_MODE;
       }
@@ -798,12 +800,14 @@ int DemoStreamingCamera::OnPixelType(MM::PropertyBase* pProp, MM::ActionType eAc
          img_[0].Resize(img_[0].Width(), img_[0].Height(), 1);
          img_[1].Resize(img_[1].Width(), img_[1].Height(), 1);
          img_[2].Resize(img_[2].Width(), img_[2].Height(), 1);
+         ResizeImageBuffer();
       }
       else if (pixelType.compare(g_PixelType_16bit) == 0)
       {
          img_[0].Resize(img_[0].Width(), img_[0].Height(), 2);
          img_[1].Resize(img_[1].Width(), img_[1].Height(), 2);
          img_[2].Resize(img_[2].Width(), img_[2].Height(), 2);
+         ResizeImageBuffer();
       }
       else
       {
@@ -812,6 +816,7 @@ int DemoStreamingCamera::OnPixelType(MM::PropertyBase* pProp, MM::ActionType eAc
          img_[1].Resize(img_[1].Width(), img_[1].Height(), 1);
          img_[2].Resize(img_[2].Width(), img_[2].Height(), 1);
          pProp->Set(g_PixelType_8bit);
+         ResizeImageBuffer();
          return ERR_UNKNOWN_MODE;
       }
    }
@@ -907,7 +912,7 @@ int DemoStreamingCamera::ResizeImageBuffer()
    img_[1].Resize(imageSize_/binSize, imageSize_/binSize, byteDepth);
    img_[2].Resize(imageSize_/binSize, imageSize_/binSize, byteDepth);
 
-   delete rawBuffer_;
+   delete[] rawBuffer_;
    if (color_)
    {
       rawBuffer_ = new unsigned char[img_[0].Width() * img_[0].Height() * img_[0].Depth() * 4];
