@@ -28,7 +28,12 @@ public class CoreAutofocus implements Autofocus {
          return 0.0;
       }
       
-      return core_.getFocusScore();
+      try {
+         return core_.getFocusScore();
+      } catch (Exception e) {
+         e.printStackTrace();
+         return 0.0;
+      }
    }
 
    public String getVerboseStatus() {
@@ -47,7 +52,13 @@ public class CoreAutofocus implements Autofocus {
          return 0.0;
       }
       
-      return core_.getFocusScore();
+      try {
+         return core_.getFocusScore();
+      } catch (Exception e) {
+         e.printStackTrace();
+         return 0.0;
+      }
+
    }
 
    public void setMMCore(CMMCore core) {
