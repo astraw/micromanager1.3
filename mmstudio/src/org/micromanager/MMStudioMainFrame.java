@@ -805,7 +805,7 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI, Scrip
              }
           }
        });
-      centerAndDragMenuItem.setText("Mouse moves the stage");
+      centerAndDragMenuItem.setText("Mouse Moves Stage");
       centerAndDragMenuItem.setSelected(false);
       toolsMenu.add(centerAndDragMenuItem);
             
