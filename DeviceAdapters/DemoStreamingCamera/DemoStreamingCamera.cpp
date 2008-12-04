@@ -617,7 +617,7 @@ int DemoStreamingCamera::SetBinning(int binFactor)
 int DemoStreamingCamera::StartSequenceAcquisition(long numImages, double interval_ms)
 {
    ostringstream os;
-   os << "Started camera streaming with an interval of " << interval_ms << " ms\n";
+   os << "Started camera streaming with an interval of " << interval_ms << " ms, for " << numImages << " images.\n";
    printf("%s", os.str().c_str());
    if (acquiring_)
       return ERR_BUSY_ACQIRING;
@@ -625,6 +625,9 @@ int DemoStreamingCamera::StartSequenceAcquisition(long numImages, double interva
    int ret = GetCoreCallback()->PrepareForAcq(this);
    if (ret != DEVICE_OK)
       return ret;
+
+   // make sure the circular buffer is properly sized
+   GetCoreCallback()->InitializeImageBuffer(1, 1, GetImageWidth(), GetImageHeight(), GetImageBytesPerPixel());
 
    imageCounter_ = 0;
    sequenceLength_ = numImages;
