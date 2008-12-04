@@ -116,6 +116,7 @@ import org.micromanager.metadata.DisplaySettings;
 import org.micromanager.metadata.MMAcqDataException;
 import org.micromanager.metadata.WellAcquisitionData;
 import org.micromanager.navigation.CenterListener;
+import org.micromanager.navigation.CenterAndDragListener;
 import org.micromanager.navigation.DragListener;
 import org.micromanager.navigation.PositionList;
 import org.micromanager.navigation.ZWheelListener;
@@ -143,7 +144,11 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI, Scrip
    public static String LIVE_WINDOW_TITLE = "AcqWindow";
 
    private static final String MICRO_MANAGER_TITLE = "Micro-Manager 1.3";
+<<<<<<< .mine
+   private static final String VERSION = "1.3.9 (beta)";
+=======
    private static final String VERSION = "1.3.11 (beta)";
+>>>>>>> .r1807
    private static final long serialVersionUID = 3556500289598574541L;
 
    private static final String MAIN_FRAME_X = "x";
@@ -233,8 +238,7 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI, Scrip
    private FastAcqDlg fastAcqWin_;
    private ScriptPanel scriptPanel_;
    private SplitView splitView_;
-   private CenterListener centerListener_;
-   private DragListener dragListener_;
+   private CenterAndDragListener centerAndDragListener_;
    private ZWheelListener zWheelListener_;
    private AcquisitionManager acqMgr_;
 
@@ -790,50 +794,25 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI, Scrip
       splitViewMenuItem.setText("Split View...");
       toolsMenu.add(splitViewMenuItem);
 
-      final JCheckBoxMenuItem centerMenuItem = new JCheckBoxMenuItem();
-      final JCheckBoxMenuItem dragMenuItem = new JCheckBoxMenuItem();
-      centerMenuItem.addActionListener(new ActionListener() {
-         public void actionPerformed(ActionEvent e) {
-            if (centerListener_ == null)
-               centerListener_ = new CenterListener(core_);
-            if (!centerListener_.isRunning()) {
-               if (dragListener_ != null && dragListener_.isRunning()) {
-                  dragListener_.stop();
-                  dragMenuItem.setSelected(false);
-               }
-               centerListener_.start();
-               centerMenuItem.setSelected(true);
-            } else {
-               centerListener_.stop();
-               centerMenuItem.setSelected(false);
-            }
-         }
-      });
-      centerMenuItem.setText("Click to Center...");
-      centerMenuItem.setSelected(false);
-      toolsMenu.add(centerMenuItem);
+      final JCheckBoxMenuItem centerAndDragMenuItem = new JCheckBoxMenuItem();
 
-      dragMenuItem.addActionListener(new ActionListener() {
-         public void actionPerformed(ActionEvent e) {
-            if (dragListener_ == null)
-               dragListener_ = new DragListener(core_);
-            if (!dragListener_.isRunning()) {
-               if (centerListener_ != null && centerListener_.isRunning()) {
-                  centerListener_.stop();
-                  centerMenuItem.setSelected(false);
-               }
-               dragListener_.start();
-               dragMenuItem.setSelected(true);
-            } else {
-               dragListener_.stop();
-               dragMenuItem.setSelected(false);
-            }
-         }
-      });
-      dragMenuItem.setText("Drag to Move...");
-      dragMenuItem.setSelected(false);
-      toolsMenu.add(dragMenuItem);
-
+      centerAndDragMenuItem.addActionListener(new ActionListener() {
+          public void actionPerformed(ActionEvent e) {
+             if (centerAndDragListener_ == null)
+                centerAndDragListener_ = new CenterAndDragListener(core_);
+             if (!centerAndDragListener_.isRunning()) {
+                centerAndDragListener_.start();
+                centerAndDragMenuItem.setSelected(true);
+             } else {
+                centerAndDragListener_.stop();
+                centerAndDragMenuItem.setSelected(false);
+             }
+          }
+       });
+      centerAndDragMenuItem.setText("Mouse moves the stage");
+      centerAndDragMenuItem.setSelected(false);
+      toolsMenu.add(centerAndDragMenuItem);
+            
       toolsMenu.addSeparator();
 
       final JMenuItem configuratorMenuItem = new JMenuItem();
@@ -1126,9 +1105,12 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI, Scrip
             // initialize controls
             initializeGUI();
             initializePluginMenu();
+            
          }
       });
 
+   
+      
       final JButton setRoiButton = new JButton();
       setRoiButton.setIcon(SwingResourceManager.getIcon(MMStudioMainFrame.class, "/org/micromanager/icons/shape_handles.png"));
       setRoiButton.setFont(new Font("Arial", Font.PLAIN, 10));
@@ -1573,10 +1555,8 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI, Scrip
          imageWin_.setBackground(guiColors_.background.get((options_.displayBackground)));
          setIJCal(imageWin_);
          // notify processes that need to attach to this acquisition window:
-         if (centerListener_ != null && centerListener_.isRunning())
-            centerListener_.attach(imp);
-         if (dragListener_ != null && dragListener_.isRunning())
-            dragListener_.attach(imp);
+         if (centerAndDragListener_ != null && centerAndDragListener_.isRunning())
+             centerAndDragListener_.attach(imp);
 
          // add listener to the IJ window to detect when it closes
          WindowListener wndCloser = new WindowAdapter() {
