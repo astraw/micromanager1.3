@@ -188,14 +188,18 @@ class AcqSequenceThread : public MMDeviceThreadBase
 {
 public:
    AcqSequenceThread(DemoStreamingCamera* pCam) : 
-      intervalMs_(100.0), numImages_(1), busy_(false), stop_(false) {camera_ = pCam;}
+      intervalMs_(100.0), numImages_(1), busy_(false), stop_(false), suspend_(false), suspended_(false)
+      {camera_ = pCam;}
    ~AcqSequenceThread() {}
    int svc(void);
 
    void SetInterval(double intervalMs) {intervalMs_ = intervalMs;}
    void SetLength(long images) {numImages_ = images;}
-   void Stop() {stop_ = true;}
+   void Stop();
    void Start();
+   void Suspend() {suspend_ = true;}
+   bool IsSuspended() {return suspended_;}
+   void Resume() {suspend_ = false;}
 
 private:
    DemoStreamingCamera* camera_;
@@ -203,6 +207,8 @@ private:
    long numImages_;
    bool busy_;
    bool stop_;
+   bool suspend_;
+   bool suspended_;
 };
 
 

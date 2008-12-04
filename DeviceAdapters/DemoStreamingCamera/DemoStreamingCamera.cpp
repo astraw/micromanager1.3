@@ -629,110 +629,6 @@ int DemoStreamingCamera::SetBinning(int binFactor)
    return SetProperty(MM::g_Keyword_Binning, CDeviceUtils::ConvertToString(binFactor));
 }
 
-/**
- * Starts continuous acquisition.
- */
-int DemoStreamingCamera::StartSequenceAcquisition(long numImages, double interval_ms, bool stopOnOverflow)
-{
-   ostringstream os;
-   os << "Started camera streaming with an interval of " << interval_ms << " ms, for " << numImages << " images.\n";
-   printf("%s", os.str().c_str());
-   if (acquiring_)
-      return ERR_BUSY_ACQIRING;
-
-   stopOnOverflow_ = stopOnOverflow;
-   int ret = GetCoreCallback()->PrepareForAcq(this);
-   if (ret != DEVICE_OK)
-      return ret;
-
-   // make sure the circular buffer is properly sized
-   GetCoreCallback()->InitializeImageBuffer(1, 1, GetImageWidth(), GetImageHeight(), GetImageBytesPerPixel());
-
-   imageCounter_ = 0;
-   sequenceLength_ = numImages;
-   //const ACE_Time_Value curr_tv = ACE_OS::gettimeofday ();
-   //ACE_Time_Value interval = ACE_Time_Value (0, (long)(interval_ms * 1000.0));
-   //acqTimer_->schedule (tcb_, &timerArg_, curr_tv + ACE_Time_Value (0, 1000), interval);
-
-   double actualIntervalMs = max(GetExposure(), interval_ms);
-   acqThread_->SetInterval(actualIntervalMs);
-   SetProperty(MM::g_Keyword_ActualInterval_ms, CDeviceUtils::ConvertToString(actualIntervalMs)); 
-   acqThread_->SetLength(numImages);
-   acquiring_ = true;
-   acqThread_->Start();
-
-   return DEVICE_OK;
-}
-
-/**
- * Stops acquisition
- */
-int DemoStreamingCamera::StopSequenceAcquisition()
-{   
-   printf("Stopped camera streaming.\n");
-   acqThread_->Stop();
-   acquiring_ = false;
-
-   // TODO: the correct termination code needs to be passed here instead of "0"
-   MM::Core* cb = GetCoreCallback();
-   if (cb)
-      cb->AcqFinished(this, 0);
-   return DEVICE_OK;
-}
-
-int DemoStreamingCamera::PushImage()
-{
-   // TODO: call core to prepare for image snap
-   if (color_)
-   {
-      GenerateSyntheticImage(img_[0], GetExposure());
-      GenerateSyntheticImage(img_[1], GetExposure());
-      GenerateSyntheticImage(img_[2], GetExposure());
-   }
-   else
-      GenerateSyntheticImage(img_[0], GetExposure());
-
-   //printf("Pushing image %d\n", imageCounter_);
-   imageCounter_++;
-   // TODO: call core to finish image snap
-
-   if (imageCounter_ >= sequenceLength_)
-      StopSequenceAcquisition();
-
-   // process image
-   MM::ImageProcessor* ip = GetCoreCallback()->GetImageProcessor(this);
-   if (ip)
-   {
-      if (color_)
-      {
-         for (int i=0; i<3; i++)
-         {
-            int ret = ip->Process(const_cast<unsigned char*>(img_[i].GetPixels()), GetImageWidth(), GetImageHeight(), GetImageBytesPerPixel());
-            if (ret != DEVICE_OK)
-               return ret;
-         }
-      }
-      else
-      {
-         int ret = ip->Process(const_cast<unsigned char*>(img_[0].GetPixels()), GetImageWidth(), GetImageHeight(), GetImageBytesPerPixel());
-         if (ret != DEVICE_OK)
-            return ret;
-      }
-   }
-
-   // insert image into the circular buffer
-   GetImageBuffer(); // this effectively copies images to rawBuffer_
-
-   // insert all three channels at once
-   int ret = GetCoreCallback()->InsertMultiChannel(this, rawBuffer_, color_ ? 4 : 1, GetImageWidth(), GetImageHeight(), GetImageBytesPerPixel());
-   if (!stopOnOverflow_ && ret == DEVICE_BUFFER_OVERFLOW)
-   {
-      // do not stop on overflow - just reset the buffer
-      GetCoreCallback()->ClearImageBuffer(this);
-      return DEVICE_OK;
-   } else
-      return ret;
-}
 
 ///////////////////////////////////////////////////////////////////////////////
 // DemoStreamingCamera Action handlers
@@ -973,11 +869,123 @@ void DemoStreamingCamera::GenerateSyntheticImage(ImgBuffer& img, double exp)
    dPhase += cPi / 4.0;
 }
 
+
+/**
+ * Starts continuous acquisition.
+ */
+int DemoStreamingCamera::StartSequenceAcquisition(long numImages, double interval_ms, bool stopOnOverflow)
+{
+   ostringstream os;
+   os << "Started camera streaming with an interval of " << interval_ms << " ms, for " << numImages << " images.\n";
+   printf("%s", os.str().c_str());
+   if (acquiring_)
+      return ERR_BUSY_ACQIRING;
+
+   stopOnOverflow_ = stopOnOverflow;
+   int ret = GetCoreCallback()->PrepareForAcq(this);
+   if (ret != DEVICE_OK)
+      return ret;
+
+   // make sure the circular buffer is properly sized
+   GetCoreCallback()->InitializeImageBuffer(1, 1, GetImageWidth(), GetImageHeight(), GetImageBytesPerPixel());
+
+   imageCounter_ = 0;
+   sequenceLength_ = numImages;
+
+   double actualIntervalMs = max(GetExposure(), interval_ms);
+   acqThread_->SetInterval(actualIntervalMs);
+   SetProperty(MM::g_Keyword_ActualInterval_ms, CDeviceUtils::ConvertToString(actualIntervalMs)); 
+   acqThread_->SetLength(numImages);
+   acquiring_ = true;
+   acqThread_->Start();
+
+   return DEVICE_OK;
+}
+
+/**
+ * Stops acquisition
+ */
+int DemoStreamingCamera::StopSequenceAcquisition()
+{   
+   printf("Stopped camera streaming.\n");
+   acqThread_->Stop();
+   acquiring_ = false;
+
+   // TODO: the correct termination code needs to be passed here instead of "0"
+   MM::Core* cb = GetCoreCallback();
+   if (cb)
+      cb->AcqFinished(this, 0);
+
+   return DEVICE_OK;
+}
+
+int DemoStreamingCamera::PushImage()
+{
+   // TODO: call core to prepare for image snap
+   if (color_)
+   {
+      GenerateSyntheticImage(img_[0], GetExposure());
+      GenerateSyntheticImage(img_[1], GetExposure());
+      GenerateSyntheticImage(img_[2], GetExposure());
+   }
+   else
+      GenerateSyntheticImage(img_[0], GetExposure());
+
+   //printf("Pushing image %d\n", imageCounter_);
+   imageCounter_++;
+   // TODO: call core to finish image snap
+
+   if (imageCounter_ >= sequenceLength_)
+      StopSequenceAcquisition();
+
+   // process image
+   MM::ImageProcessor* ip = GetCoreCallback()->GetImageProcessor(this);
+   if (ip)
+   {
+      if (color_)
+      {
+         for (int i=0; i<3; i++)
+         {
+            int ret = ip->Process(const_cast<unsigned char*>(img_[i].GetPixels()), GetImageWidth(), GetImageHeight(), GetImageBytesPerPixel());
+            if (ret != DEVICE_OK)
+               return ret;
+         }
+      }
+      else
+      {
+         int ret = ip->Process(const_cast<unsigned char*>(img_[0].GetPixels()), GetImageWidth(), GetImageHeight(), GetImageBytesPerPixel());
+         if (ret != DEVICE_OK)
+            return ret;
+      }
+   }
+
+   // insert image into the circular buffer
+   GetImageBuffer(); // this effectively copies images to rawBuffer_
+
+   // insert all three channels at once
+   int ret = GetCoreCallback()->InsertMultiChannel(this, rawBuffer_, color_ ? 4 : 1, GetImageWidth(), GetImageHeight(), GetImageBytesPerPixel());
+   if (!stopOnOverflow_ && ret == DEVICE_BUFFER_OVERFLOW)
+   {
+      // do not stop on overflow - just reset the buffer
+      GetCoreCallback()->ClearImageBuffer(this);
+      return DEVICE_OK;
+   } else
+      return ret;
+}
+
 int AcqSequenceThread::svc(void)
 {
 //   printf("Acq Thread started with interval %f ms\n", intervalMs_);
    while (!stop_)
    {
+      if (suspend_)
+      {
+         suspended_ = true;
+         continue;
+      }
+      else
+         suspended_ = false;
+
       int ret = camera_->PushImage();
       if (ret != DEVICE_OK)
       {
@@ -1000,5 +1008,14 @@ int AcqSequenceThread::svc(void)
 void AcqSequenceThread::Start()
 {
    stop_ = false;
+   suspend_ = false;
+   suspended_ = false;
    activate();
+}
+
+void AcqSequenceThread::Stop()
+{
+   stop_ = true;
+   suspend_ = false;
+   suspended_ = false;
 }
