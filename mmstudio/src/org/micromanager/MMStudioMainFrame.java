@@ -198,7 +198,6 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI, Scrip
    private ArrayList<PluginItem> plugins_;
    
    private final static String DEFAULT_CONFIG_FILE_NAME = "MMConfig_demo.cfg";
-   private final static String DEFAULT_SCRIPT_FILE_NAME = "MMStartup.bsh";
 
    private String sysConfigFile_; 
    private String startupScriptFile_; 
@@ -302,7 +301,7 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI, Scrip
       acqMgr_ = new AcquisitionManager();
 
       sysConfigFile_ = new String(System.getProperty("user.dir") + "/" + DEFAULT_CONFIG_FILE_NAME);
-      startupScriptFile_ = new String(System.getProperty("user.dir") + "/" + DEFAULT_SCRIPT_FILE_NAME);
+      startupScriptFile_ = new String(System.getProperty("user.dir") + "/" + options_.startupScript);
       // set the location for app preferences
       mainPrefs_ = Preferences.userNodeForPackage(this.getClass());
 
