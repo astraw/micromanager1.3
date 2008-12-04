@@ -3834,7 +3834,7 @@ void CMMCore::registerCallback(MMEventCallback* cb)
  * Use this value to estimate or record how reliable the focus is.
  * The range of values is device dependent.
  */
-double CMMCore::getFocusScore()
+double CMMCore::getFocusScore() throw (CMMError)
 {
    if (autoFocus_ != 0)
    {
