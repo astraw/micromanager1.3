@@ -105,8 +105,7 @@ MMJ_.jar:  \
 	$(srcdir)/src/org/micromanager/navigation/MultiStagePosition.java \
 	$(srcdir)/src/org/micromanager/navigation/PositionList.java \
 	$(srcdir)/src/org/micromanager/navigation/StagePosition.java \
-	$(srcdir)/src/org/micromanager/navigation/CenterListener.java \
-	$(srcdir)/src/org/micromanager/navigation/DragListener.java \
+	$(srcdir)/src/org/micromanager/navigation/CenterAndDragListener.java \
 	$(srcdir)/src/org/micromanager/navigation/ZWheelListener.java \
 	$(srcdir)/src/org/micromanager/script/BeanshellEngine.java \
 	$(srcdir)/src/org/micromanager/script/MMScriptFrame.java \
