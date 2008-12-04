@@ -52,6 +52,7 @@ import org.micromanager.utils.MMDialog;
  *
  */
 public class OptionsDlg extends MMDialog {
+   private JTextField startupScriptFile_;
    private static final long serialVersionUID = 1L;
    private JTextField bufSizeField_;
    private MMOptions opts_;
@@ -81,7 +82,7 @@ public class OptionsDlg extends MMDialog {
       setTitle("Micro-Manager Options");
       springLayout = new SpringLayout();
       getContentPane().setLayout(springLayout);
-      setBounds(100, 100, 362, 221);
+      setBounds(100, 100, 362, 279);
       guiColors_ = new GUIColors();
       Dimension buttonSize = new Dimension(120, 20);
 
@@ -121,9 +122,9 @@ public class OptionsDlg extends MMDialog {
       clearLogFileButton.setText("Clear log file");
       clearLogFileButton.setPreferredSize(buttonSize);
       getContentPane().add(clearLogFileButton);
+      springLayout.putConstraint(SpringLayout.EAST, clearLogFileButton, 105, SpringLayout.WEST, getContentPane());
       //springLayout.putConstraint(SpringLayout.SOUTH, clearLogFileButton, 166, SpringLayout.NORTH, getContentPane());
-      springLayout.putConstraint(SpringLayout.NORTH, clearLogFileButton, 115, SpringLayout.NORTH, getContentPane());
-      springLayout.putConstraint(SpringLayout.WEST, clearLogFileButton, 10, SpringLayout.WEST, getContentPane());
+      springLayout.putConstraint(SpringLayout.NORTH, clearLogFileButton, 175, SpringLayout.NORTH, getContentPane());
 
       final JButton clearRegistryButton = new JButton();
       clearRegistryButton.setToolTipText("Clears all persistent settings and returns to defaults");
@@ -147,8 +148,8 @@ public class OptionsDlg extends MMDialog {
       clearRegistryButton.setFont(new Font("", Font.PLAIN, 10));
       clearRegistryButton.setPreferredSize(buttonSize);
       getContentPane().add(clearRegistryButton);
-      springLayout.putConstraint(SpringLayout.NORTH, clearRegistryButton, 148, SpringLayout.NORTH, getContentPane());
-      springLayout.putConstraint(SpringLayout.WEST, clearRegistryButton, 10, SpringLayout.WEST, getContentPane());
+      springLayout.putConstraint(SpringLayout.EAST, clearRegistryButton, 105, SpringLayout.WEST, getContentPane());
+      springLayout.putConstraint(SpringLayout.NORTH, clearRegistryButton, 210, SpringLayout.NORTH, getContentPane());
       //springLayout.putConstraint(SpringLayout.EAST, clearRegistryButton, 80, SpringLayout.WEST, getContentPane());
 
       final JButton okButton = new JButton();
@@ -186,7 +187,7 @@ public class OptionsDlg extends MMDialog {
       final JLabel sequenceBufferSizeLabel = new JLabel();
       sequenceBufferSizeLabel.setText("Sequence buffer size [MB]");
       getContentPane().add(sequenceBufferSizeLabel);
-      springLayout.putConstraint(SpringLayout.EAST, sequenceBufferSizeLabel, 210, SpringLayout.WEST, getContentPane());
+      springLayout.putConstraint(SpringLayout.EAST, sequenceBufferSizeLabel, 180, SpringLayout.WEST, getContentPane());
       springLayout.putConstraint(SpringLayout.WEST, sequenceBufferSizeLabel, 15, SpringLayout.WEST, getContentPane());
       springLayout.putConstraint(SpringLayout.SOUTH, sequenceBufferSizeLabel, 84, SpringLayout.NORTH, getContentPane());
       //springLayout.putConstraint(SpringLayout.NORTH, sequenceBufferSizeLabel, 95, SpringLayout.NORTH, getContentPane());
@@ -195,8 +196,6 @@ public class OptionsDlg extends MMDialog {
       getContentPane().add(bufSizeField_);
       springLayout.putConstraint(SpringLayout.SOUTH, bufSizeField_, 85, SpringLayout.NORTH, getContentPane());
       springLayout.putConstraint(SpringLayout.NORTH, bufSizeField_, 65, SpringLayout.NORTH, getContentPane());
-      springLayout.putConstraint(SpringLayout.EAST, bufSizeField_, 300, SpringLayout.WEST, getContentPane());
-      springLayout.putConstraint(SpringLayout.WEST, bufSizeField_, 220, SpringLayout.WEST, getContentPane());
 
       final JLabel displayLabel = new JLabel();
       //displayLabel.setFont(new Font("Arial", Font.PLAIN, 10));
@@ -217,10 +216,26 @@ public class OptionsDlg extends MMDialog {
          }
       });
       getContentPane().add(comboDisplayBackground_);
+      springLayout.putConstraint(SpringLayout.EAST, bufSizeField_, 0, SpringLayout.EAST, comboDisplayBackground_);
+      springLayout.putConstraint(SpringLayout.WEST, bufSizeField_, 220, SpringLayout.WEST, getContentPane());
       springLayout.putConstraint(SpringLayout.EAST, comboDisplayBackground_, 331, SpringLayout.WEST, getContentPane());
       springLayout.putConstraint(SpringLayout.WEST, comboDisplayBackground_, 220, SpringLayout.WEST, getContentPane());
       springLayout.putConstraint(SpringLayout.SOUTH, comboDisplayBackground_, 114, SpringLayout.NORTH, getContentPane());
       springLayout.putConstraint(SpringLayout.NORTH, comboDisplayBackground_, 91, SpringLayout.NORTH, getContentPane());
+
+      final JLabel startupScriptLabel = new JLabel();
+      startupScriptLabel.setText("Startup script");
+      getContentPane().add(startupScriptLabel);
+      springLayout.putConstraint(SpringLayout.EAST, startupScriptLabel, 0, SpringLayout.EAST, displayLabel);
+      springLayout.putConstraint(SpringLayout.WEST, startupScriptLabel, 0, SpringLayout.WEST, displayLabel);
+      springLayout.putConstraint(SpringLayout.SOUTH, startupScriptLabel, 135, SpringLayout.NORTH, getContentPane());
+
+      startupScriptFile_ = new JTextField();
+      getContentPane().add(startupScriptFile_);
+      springLayout.putConstraint(SpringLayout.SOUTH, startupScriptFile_, 137, SpringLayout.NORTH, getContentPane());
+      springLayout.putConstraint(SpringLayout.NORTH, startupScriptFile_, 5, SpringLayout.SOUTH, comboDisplayBackground_);
+      springLayout.putConstraint(SpringLayout.EAST, startupScriptFile_, 131, SpringLayout.WEST, comboDisplayBackground_);
+      springLayout.putConstraint(SpringLayout.WEST, startupScriptFile_, 0, SpringLayout.WEST, comboDisplayBackground_);
    }
 
    private void changeBackground() {
