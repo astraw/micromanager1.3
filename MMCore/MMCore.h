@@ -246,7 +246,7 @@ public:
    void setShutterOpen(bool state) throw (CMMError);
    bool getShutterOpen() throw (CMMError);
 
-   void startSequenceAcquisition(long numImages, double intervalMs) throw (CMMError);
+   void startSequenceAcquisition(long numImages, double intervalMs, bool stopOnOverflow) throw (CMMError);
    void startContinuousSequenceAcquisition(double intervalMs) throw (CMMError);
    void stopSequenceAcquisition() throw (CMMError);
    void* getLastImage() const throw (CMMError);

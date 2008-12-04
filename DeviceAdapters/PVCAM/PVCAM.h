@@ -7,6 +7,8 @@
 //                
 // AUTHOR:        Nico Stuurman, Nenad Amodaj nenad@amodaj.com, 09/13/2005
 // COPYRIGHT:     University of California, San Francisco, 2006
+//                100X Imaging Inc, 2008
+//
 // LICENSE:       This file is distributed under the BSD license.
 //                License text is included with the source distribution.
 //
@@ -209,7 +211,7 @@ public:
    int ClearROI();
 
    // high-speed interface
-   int StartSequenceAcquisition(long numImages, double interval_ms);
+   int StartSequenceAcquisition(long numImages, double interval_ms, bool stopOnOverflow);
    int StopSequenceAcquisition();
 
    // action interface
@@ -272,6 +274,7 @@ private:
    unsigned long imageCounter_;
    bool init_seqStarted_;
    MM::MMTime sequenceStartTime_;
+   bool stopOnOverflow_;
 };
 
 /**

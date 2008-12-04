@@ -247,7 +247,7 @@ void TestCameraStreaming(CMMCore& core)
    core.snapImage();
    core.getImage();
 
-   core.startSequenceAcquisition(numFrames, intervalMs);
+   core.startSequenceAcquisition(numFrames, intervalMs, true);
 
    StreamTask streamWriter(&core);
    int result = streamWriter.activate ();
@@ -268,7 +268,7 @@ void TestCameraStreaming(CMMCore& core)
 
    cout << "Done! Free space =" << core.getBufferFreeCapacity() << endl;
 
-   core.startSequenceAcquisition(numFrames, intervalMs);
+   core.startSequenceAcquisition(numFrames, intervalMs, true);
 
    StreamTask streamWriter1(&core);
    result = streamWriter1.activate ();

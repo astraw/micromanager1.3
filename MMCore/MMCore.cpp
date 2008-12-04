@@ -1473,7 +1473,7 @@ long CMMCore::getImageBufferSize() const
  * Starts straming camera sequence acquisition.
  * This command does not block the calling thread for the duration of the acquisition.
  */
-void CMMCore::startSequenceAcquisition(long numImages, double intervalMs) throw (CMMError)
+void CMMCore::startSequenceAcquisition(long numImages, double intervalMs, bool stopOnOverflow) throw (CMMError)
 {
    if (camera_)
    {
@@ -1483,7 +1483,7 @@ void CMMCore::startSequenceAcquisition(long numImages, double intervalMs) throw 
          throw CMMError(getCoreErrorText(MMERR_CircularBufferFailedToInitialize).c_str(), MMERR_CircularBufferFailedToInitialize);
       }
       cbuf_->Clear();
-      int nRet = camera_->StartSequenceAcquisition(numImages, intervalMs);
+      int nRet = camera_->StartSequenceAcquisition(numImages, intervalMs, stopOnOverflow);
       if (nRet != DEVICE_OK)
          throw CMMError(getDeviceErrorText(nRet, camera_).c_str(), MMERR_DEVICE_GENERIC);
    }

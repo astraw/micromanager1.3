@@ -711,7 +711,7 @@ public:
    using CDeviceBase<MM::Camera, U>::GetImageHeight;
    using CDeviceBase<MM::Camera, U>::GetImageBytesPerPixel;
 
-   CCameraBase() : busy_(false), thd_(0)
+   CCameraBase() : busy_(false), thd_(0), stopOnOverflow_(false)
    {
       // create and intialize common transpose properties
       std::vector<std::string> allowedValues;
@@ -742,7 +742,7 @@ public:
     */
    int StartSequenceAcquisition(double interval)
    {
-      return StartSequenceAcquisition(LONG_MAX, interval);
+      return StartSequenceAcquisition(LONG_MAX, interval, false);
    }
 
    /**
@@ -778,9 +778,9 @@ public:
    }
 
    /**
-    * Default implementation is to not support streaming mode.
+    * Default implementation.
     */
-   int StartSequenceAcquisition(long numImages, double /*interval_ms*/)
+   int StartSequenceAcquisition(long numImages, double /*interval_ms*/, bool stopOnOverflow)
    {
       if (busy_)
          return DEVICE_CAMERA_BUSY_ACQUIRING;
@@ -791,6 +791,7 @@ public:
       SetBusyFlag(true);
       thd_->SetLength(numImages);
       thd_->Start();
+      stopOnOverflow_ = stopOnOverflow;
       return DEVICE_OK;
    }
 
@@ -848,10 +849,18 @@ private:
 
    bool busy_;
    BaseSequenceThread* thd_;
+   bool stopOnOverflow_;
 
    int InsertImage()
    {
-      return GetCoreCallback()->InsertImage(this, GetImageBuffer(), GetImageWidth(), GetImageHeight(), GetImageBytesPerPixel());
+      int ret = GetCoreCallback()->InsertImage(this, GetImageBuffer(), GetImageWidth(), GetImageHeight(), GetImageBytesPerPixel());
+      if (!stopOnOverflow_ && ret == DEVICE_BUFFER_OVERFLOW)
+      {
+         // do not stop on overflow - just reset the buffer
+         GetCoreCallback()->ClearImageBuffer(this);
+         return DEVICE_OK;
+      } else
+         return ret;
    }
 };
 

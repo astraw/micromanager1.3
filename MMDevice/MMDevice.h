@@ -34,7 +34,7 @@
 // Header version
 // If any of the class declarations changes, the interface version
 // must be incremented
-#define DEVICE_INTERFACE_VERSION 29
+#define DEVICE_INTERFACE_VERSION 30
 ///////////////////////////////////////////////////////////////////////////////
 
 #pragma once
@@ -258,7 +258,7 @@ namespace MM {
       virtual int GetROI(unsigned& x, unsigned& y, unsigned& xSize, unsigned& ySize) = 0;
       virtual int ClearROI() = 0;
 
-      virtual int StartSequenceAcquisition(long numImages, double interval_ms) = 0;
+      virtual int StartSequenceAcquisition(long numImages, double interval_ms, bool stopOnOverflow) = 0;
       virtual int StartSequenceAcquisition(double interval_ms) = 0;
       virtual int StopSequenceAcquisition() = 0;
 
@@ -408,6 +408,7 @@ namespace MM {
       virtual int FullFocus() = 0;
       virtual int IncrementalFocus() = 0;
       virtual int GetFocusScore(double& score) = 0;
+      virtual int CalculateFocusScore(double& score) = 0;
    };
 
    /**

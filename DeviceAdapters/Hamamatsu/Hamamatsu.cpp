@@ -142,7 +142,8 @@ CHamamatsu::CHamamatsu() :
    softwareTriggerEnabled_ (false),
    lnBin_(1),
    slot_(0),
-   originalTrigMode_("")
+   originalTrigMode_(""),
+   stopOnOverflow_(true)
 {
    InitializeDefaultErrorMessages();
    // slot
@@ -1864,11 +1865,12 @@ int AcqSequenceThread::svc(void)
 /**
  * Starts continuous acquisition
  */
-int CHamamatsu::StartSequenceAcquisition(long numImages, double interval_ms)
+int CHamamatsu::StartSequenceAcquisition(long numImages, double interval_ms, bool stopOnOverflow)
 {
    if (acquiring_)
       return ERR_BUSY_ACQUIRING;
 
+   stopOnOverflow_ = stopOnOverflow;
    // Switch from software to internal trigger, leave other trigger modes alone (needs to be done before shutting down image buffer)
    char trigMode[MM::MaxStrLength];
    int ret = GetProperty(g_TrigMode, trigMode);
@@ -2044,8 +2046,13 @@ int CHamamatsu::PushImage()
    int ret = GetCoreCallback()->InsertImage(this, (unsigned char*) imgPtr,      
                                            GetImageWidth(),                  
                                            GetImageHeight(),                 
-                                           GetImageBytesPerPixel());         
-   if (ret != DEVICE_OK)
+                                           GetImageBytesPerPixel());
+
+   if (!stopOnOverflow_ && ret == DEVICE_BUFFER_OVERFLOW)
+   {
+      // do not stop on overflow - just reset the buffer
+      GetCoreCallback()->ClearImageBuffer(this);
+   } else
       return ret;
 
    if (!dcam_unlockdata(m_hDCAM))

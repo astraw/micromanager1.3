@@ -342,7 +342,7 @@ public class FastAcqDlg extends JDialog implements GUIStatus {
          
          // start acquiring
          // ---------------
-         core_.startSequenceAcquisition(numFrames, acqIntervalMs);
+         core_.startSequenceAcquisition(numFrames, acqIntervalMs, true);
          MMLogger.getLogger().info("core_.startSequenceAcquisition() called.");            
          
          // try to get actual interval

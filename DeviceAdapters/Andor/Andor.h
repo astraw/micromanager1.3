@@ -7,6 +7,8 @@
 //                
 // AUTHOR:        Nenad Amodaj, nenad@amodaj.com, 06/30/2006
 // COPYRIGHT:     University of California, San Francisco, 2006
+//                100X Imaging Inc, 2008
+//
 // LICENSE:       This file is distributed under the BSD license.
 //                License text is included with the source distribution.
 //
@@ -95,7 +97,7 @@ public:
    int ClearROI();
 
    // high-speed interface
-   int StartSequenceAcquisition(long numImages, double interval_ms);
+   int StartSequenceAcquisition(long numImages, double interval_ms, bool stopOnOverflow);
    int StopSequenceAcquisition();
 
    // action interface for the camera
@@ -209,6 +211,7 @@ private:
    int HSSpeedIdx_;
 
    bool bSoftwareTriggerSupported;
+   bool stopOnOverflow_;
 
    long CurrentCameraID_;
    long NumberOfAvailableCameras_;

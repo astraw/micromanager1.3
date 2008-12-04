@@ -5,6 +5,8 @@
 //-----------------------------------------------------------------------------
 // DESCRIPTION:   Hamamatsu camera module based on DCAM API
 // COPYRIGHT:     University of California, San Francisco, 2006, 2007, 2008
+//                100X Imaging Inc, 2008
+//
 // LICENSE:       This library is free software; you can redistribute it and/or
 //                modify it under the terms of the GNU Lesser General Public
 //                License as published by the Free Software Foundation.
@@ -101,7 +103,7 @@ public:
    int SetBinning(int binSize); 
 
    // high-speed interface
-   int StartSequenceAcquisition(long numImages, double interval_ms);
+   int StartSequenceAcquisition(long numImages, double interval_ms, bool stopOnOverflow);
    int StopSequenceAcquisition();
 
    // action interface
@@ -172,6 +174,7 @@ private:
    AcqSequenceThread* seqThread_; // burst mode thread
    std::string triggerMode_;
    std::string originalTrigMode_;
+   bool stopOnOverflow_;
 };
 
 /*

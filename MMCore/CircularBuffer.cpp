@@ -119,7 +119,7 @@ unsigned long CircularBuffer::GetRemainingImageCount() const
 /**
  * Inserts a single image in the buffer.
  */
-bool CircularBuffer::InsertImage(const unsigned char* pixArray, unsigned int width, unsigned int height, unsigned int byteDepth, MM::ImageMetadata* pMd)
+bool CircularBuffer::InsertImage(const unsigned char* pixArray, unsigned int width, unsigned int height, unsigned int byteDepth, MM::ImageMetadata* pMd) throw (CMMError)
 {
    return InsertMultiChannel(pixArray, 1, width, height, byteDepth, pMd);
 }
@@ -127,7 +127,7 @@ bool CircularBuffer::InsertImage(const unsigned char* pixArray, unsigned int wid
 /**
  * Inserts a multi-channel frame in the buffer.
  */
-bool CircularBuffer::InsertMultiChannel(const unsigned char* pixArray, unsigned numChannels, unsigned width, unsigned height, unsigned byteDepth, MM::ImageMetadata* pMd)
+bool CircularBuffer::InsertMultiChannel(const unsigned char* pixArray, unsigned numChannels, unsigned width, unsigned height, unsigned byteDepth, MM::ImageMetadata* pMd) throw (CMMError)
 {
    ACE_Guard<ACE_Mutex> guard(g_bufferLock);
 
@@ -141,7 +141,7 @@ bool CircularBuffer::InsertMultiChannel(const unsigned char* pixArray, unsigned 
 
    // check image dimensions
    if (width != width_ || height_ != height || byteDepth != byteDepth)
-      return false; // incompatible size
+      throw CMMError("Incompatible image dimensions in the circular buffer", MMERR_CircularBufferIncompatibleImage);
 
    
    if ((long)frameArray_.size() - (insertIndex_ - saveIndex_) > 0)

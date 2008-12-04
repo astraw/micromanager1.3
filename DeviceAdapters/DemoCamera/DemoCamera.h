@@ -11,6 +11,7 @@
 // AUTHOR:        Nenad Amodaj, nenad@amodaj.com, 06/08/2005
 //
 // COPYRIGHT:     University of California, San Francisco, 2006
+//                100X Imaging Inc, 2008
 //
 // LICENSE:       This file is distributed under the BSD license.
 //                License text is included with the source distribution.
@@ -373,7 +374,8 @@ public:
    virtual bool IsContinuousFocusLocked() {return running_;}
    virtual int FullFocus() {return DEVICE_UNSUPPORTED_COMMAND;}
    virtual int IncrementalFocus() {return DEVICE_UNSUPPORTED_COMMAND;}
-   virtual int GetFocusScore(double& /*score*/) {return DEVICE_UNSUPPORTED_COMMAND;}
+   virtual int GetFocusScore(double& score) {score = 0.0; return DEVICE_OK;}
+   virtual int CalculateFocusScore(double& score) {score = 1.0; return DEVICE_OK;}
 
 private:
    bool running_;

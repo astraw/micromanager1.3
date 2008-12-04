@@ -29,6 +29,8 @@
 #include <vector>
 #include "../MMDevice/ImgBuffer.h"
 #include "../MMDevice/MMDevice.h"
+#include "ErrorCodes.h"
+#include "Error.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -50,8 +52,8 @@ public:
    unsigned int Height() const {return height_;}
    unsigned int Depth() const {return pixDepth_;}
 
-   bool InsertImage(const unsigned char* pixArray, unsigned int width, unsigned int height, unsigned int byteDepth, MM::ImageMetadata* pMd);
-   bool InsertMultiChannel(const unsigned char* pixArray, unsigned int numChannels, unsigned int width, unsigned int height, unsigned int byteDepth, MM::ImageMetadata* pMd);
+   bool InsertImage(const unsigned char* pixArray, unsigned int width, unsigned int height, unsigned int byteDepth, MM::ImageMetadata* pMd) throw (CMMError);
+   bool InsertMultiChannel(const unsigned char* pixArray, unsigned int numChannels, unsigned int width, unsigned int height, unsigned int byteDepth, MM::ImageMetadata* pMd) throw (CMMError);
    const unsigned char* GetTopImage() const;
    const unsigned char* GetNextImage();
    const ImgBuffer* GetTopImageBuffer(unsigned channel, unsigned slice) const;

@@ -184,6 +184,7 @@ public:
    virtual int FullFocus();
    virtual int IncrementalFocus();
    virtual int GetFocusScore(double& score);
+   virtual int CalculateFocusScore(double& score) {score = 0.0; return DEVICE_OK;}
 
    // action interface
    // ----------------

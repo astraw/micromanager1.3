@@ -115,7 +115,8 @@ Universal::Universal(short cameraId) :
    circBuffer_(0),
    sequenceLength_(0),
    imageCounter_(0),
-   init_seqStarted_(false)
+   init_seqStarted_(false),
+   stopOnOverflow_(true)
 {
    // ACE::init();
    InitializeDefaultErrorMessages();
@@ -1376,11 +1377,12 @@ int AcqSequenceThread::svc(void)
 /**
  * Starts continuous acquisition.
  */
-int Universal::StartSequenceAcquisition(long numImages, double interval_ms)
+int Universal::StartSequenceAcquisition(long numImages, double interval_ms, bool stopOnOverflow)
 {
    if (acquiring_)
       return ERR_BUSY_ACQUIRING;
 
+   stopOnOverflow_ = stopOnOverflow;
    ostringstream os;
    os << "Started sequnce acquisition: " << numImages << " at " << interval_ms << " ms" << endl;
    LogMessage(os.str().c_str());
@@ -1478,8 +1480,16 @@ int Universal::PushImage()
    }
 
    // This method inserts new image in the circular buffer (residing in MMCore)
-   return GetCoreCallback()->InsertImage(this, (unsigned char*) imgPtr,
+   int ret = GetCoreCallback()->InsertImage(this, (unsigned char*) imgPtr,
                                            GetImageWidth(),
                                            GetImageHeight(),
                                            GetImageBytesPerPixel());
+
+   if (!stopOnOverflow_ && ret == DEVICE_BUFFER_OVERFLOW)
+   {
+      // do not stop on overflow - just reset the buffer
+      GetCoreCallback()->ClearImageBuffer(this);
+      return DEVICE_OK;
+   } else
+      return ret;
 }

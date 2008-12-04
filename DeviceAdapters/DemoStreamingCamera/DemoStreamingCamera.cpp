@@ -8,6 +8,7 @@
 // AUTHOR:        Nenad Amodaj, nenad@amodaj.com, 06/05/2007
 //
 // COPYRIGHT:     University of California, San Francisco, 2007
+//                100X Imaging Inc, 2008
 //
 // LICENSE:       This file is distributed under the BSD license.
 //                License text is included with the source distribution.
@@ -136,7 +137,8 @@ DemoStreamingCamera::DemoStreamingCamera() :
    sequenceLength_(0),
    acquiring_(false),
    color_(false),
-   rawBuffer_(0)
+   rawBuffer_(0),
+   stopOnOverflow_(true)
 {
    // call the base class method to set-up default error codes/messages
    InitializeDefaultErrorMessages();
@@ -614,7 +616,7 @@ int DemoStreamingCamera::SetBinning(int binFactor)
 /**
  * Starts continuous acquisition.
  */
-int DemoStreamingCamera::StartSequenceAcquisition(long numImages, double interval_ms)
+int DemoStreamingCamera::StartSequenceAcquisition(long numImages, double interval_ms, bool stopOnOverflow)
 {
    ostringstream os;
    os << "Started camera streaming with an interval of " << interval_ms << " ms, for " << numImages << " images.\n";
@@ -622,6 +624,7 @@ int DemoStreamingCamera::StartSequenceAcquisition(long numImages, double interva
    if (acquiring_)
       return ERR_BUSY_ACQIRING;
 
+   stopOnOverflow_ = stopOnOverflow;
    int ret = GetCoreCallback()->PrepareForAcq(this);
    if (ret != DEVICE_OK)
       return ret;
@@ -703,8 +706,16 @@ int DemoStreamingCamera::PushImage()
 
    // insert image into the circular buffer
    GetImageBuffer(); // this effectively copies images to rawBuffer_
+
    // insert all three channels at once
-   return GetCoreCallback()->InsertMultiChannel(this, rawBuffer_, color_ ? 4 : 1, GetImageWidth(), GetImageHeight(), GetImageBytesPerPixel());
+   int ret = GetCoreCallback()->InsertMultiChannel(this, rawBuffer_, color_ ? 4 : 1, GetImageWidth(), GetImageHeight(), GetImageBytesPerPixel());
+   if (!stopOnOverflow_ && ret == DEVICE_BUFFER_OVERFLOW)
+   {
+      // do not stop on overflow - just reset the buffer
+      GetCoreCallback()->ClearImageBuffer(this);
+      return DEVICE_OK;
+   } else
+      return ret;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
