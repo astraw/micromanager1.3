@@ -730,6 +730,17 @@ public class MMAcquisitionEngineMT implements AcquisitionEngine {
             if (posIdx != previousPosIdx_) {
                if (continuousFocusOffForXYMove_ && oldFocusEnabled_) {
                   core_.enableContinuousFocus(false);
+                  // The following needs testing (request by James Lock)
+                  // Update positionList with the current Z-position
+                  MultiStagePosition previousPos = posList_.getPosition(previousPosIdx_);
+                  if (previousPos != null)
+                  {
+                     double zFocus = core_.getPosition(zStage_);
+                     StagePosition sp = previousPos.get(zStage_);
+                     if (sp != null) 
+                        sp.x = zFocus; // assuming this is a single-axis stage set the first axis to the z value
+                  }
+
                }
                pos = posList_.getPosition(posIdx);
                // TODO: in the case of multi-field mode the command below is redundant
@@ -744,6 +755,10 @@ public class MMAcquisitionEngineMT implements AcquisitionEngine {
 
             // perform auto focusing if the module is available
             if (autofocusPlugin_ != null && autofocusEnabled_) {
+               // switch off hardware autofocus if it was still on
+               boolean focusEnabled = core_.isContinuousFocusEnabled();
+               if (focusEnabled)
+                  core_.enableContinuousFocus(false);
                
                // check for any autofocusing instructions
                if (pos.hasProperty(PositionList.AF_KEY)) {
@@ -770,6 +785,9 @@ public class MMAcquisitionEngineMT implements AcquisitionEngine {
                   if (sp != null)
                      sp.x = zFocus; // assuming this is a single-axis stage set the first axis to the z value
                }
+               // if hardware autofocus was on, re-enable
+               if (focusEnabled)
+                  core_.enableContinuousFocus(true);
             }
 
             previousPosIdx_ = posIdx;
