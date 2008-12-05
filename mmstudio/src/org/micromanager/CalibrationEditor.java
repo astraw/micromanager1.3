@@ -899,8 +899,15 @@ public class CalibrationEditor extends MMDialog {
                if (item_.hasRange) {
                   if (item_.isInt)
                      slider_.setLimits((int)item_.lowerLimit, (int)item_.upperLimit);
-                  else
+                  else {
                      slider_.setLimits(item_.lowerLimit, item_.upperLimit);
+                     NumberFormat form = NumberFormat.getInstance();
+                     try {
+                        value = form.format(Double.parseDouble((String) value));
+                     } catch (Exception e) {
+                        // TODO something
+                     }
+                  }
                   slider_.setText((String)value);
                   return slider_;
                } else {
@@ -979,6 +986,12 @@ public class CalibrationEditor extends MMDialog {
             if (item_.hasRange) {
                SliderPanel slider = new SliderPanel();
                slider.setLimits(item_.lowerLimit, item_.upperLimit);
+               NumberFormat form = NumberFormat.getInstance();
+               try {
+                  value = form.format(Double.parseDouble((String) value));
+               } catch (Exception e) {
+                  // TODO something
+               }
                slider.setText((String)value);
                slider.setToolTipText((String)value);
                comp = slider;

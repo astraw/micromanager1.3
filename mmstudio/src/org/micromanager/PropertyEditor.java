@@ -547,8 +547,15 @@ public class PropertyEditor extends MMFrame {
                if (item_.hasRange) {
                   if (item_.isInt)
                      slider_.setLimits((int)item_.lowerLimit, (int)item_.upperLimit);
-                  else
+                  else {
                      slider_.setLimits(item_.lowerLimit, item_.upperLimit);
+                     NumberFormat form = NumberFormat.getInstance();
+                     try {
+                        value = form.format(Double.parseDouble((String)value));
+                     } catch (Exception e) {
+                        // TODO: Something
+                     }
+                  }
                   slider_.setText((String)value);
                   return slider_;
                } else {
@@ -585,9 +592,9 @@ public class PropertyEditor extends MMFrame {
       public Object getCellEditorValue() {
          if (editingCol_ == 1) {
             if (item_.allowed.length == 0) {
-               if (item_.hasRange)
+               if (item_.hasRange) {
                   return slider_.getText();
-               else
+               } else
                   return text_.getText();
             } else {
                return combo_.getSelectedItem();
@@ -633,6 +640,12 @@ public class PropertyEditor extends MMFrame {
             if (item_.hasRange) {
                SliderPanel slider = new SliderPanel();
                slider.setLimits(item_.lowerLimit, item_.upperLimit);
+               NumberFormat form = NumberFormat.getInstance();
+               try {
+                  value = form.format(Double.parseDouble((String)value));
+               } catch (Exception e) {
+                  // TODO: something
+               }
                slider.setText((String)value);
                slider.setToolTipText((String)value);
                comp = slider;

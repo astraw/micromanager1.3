@@ -546,8 +546,16 @@ public class ConfigGroupPad extends JScrollPane{
                   // slider editing
                   if (item_.isInt)
                      slider_.setLimits((int)item_.lowerLimit, (int)item_.upperLimit);
-                  else
+                  else {
                      slider_.setLimits(item_.lowerLimit, item_.upperLimit);
+                     // TODO: should be global
+                     NumberFormat form = NumberFormat.getInstance();
+                     try {
+                        value = form.format(Double.parseDouble((String)value));
+                     } catch (Exception e) {
+                        // TODO: something
+                     }
+                  }
                   slider_.setText((String)value);
                   return slider_;
                } else {
@@ -627,8 +635,15 @@ public class ConfigGroupPad extends JScrollPane{
             if (item_.hasLimits) {
                if (item_.isInt)
                   slider.setLimits((int)item_.lowerLimit, (int)item_.upperLimit);
-               else
+               else {
+                  NumberFormat form = NumberFormat.getInstance();
+                  try {
+                     value = form.format(Double.parseDouble((String) value));
+                  } catch (Exception e) {
+                     // TODO: something
+                  }
                   slider.setLimits(item_.lowerLimit, item_.upperLimit);
+               }
                slider.setText((String)value);
                slider.setToolTipText((String)value);
                if (isSelected)
