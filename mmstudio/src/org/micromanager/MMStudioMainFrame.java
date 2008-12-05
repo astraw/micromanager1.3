@@ -24,9 +24,9 @@
 
 package org.micromanager;
 
-import ij.ImagePlus;
-import ij.ImageJ;
 import ij.IJ;
+import ij.ImageJ;
+import ij.ImagePlus;
 import ij.WindowManager;
 import ij.gui.Line;
 import ij.gui.Roi;
@@ -87,8 +87,8 @@ import org.micromanager.acquisition.AcquisitionManager;
 import org.micromanager.acquisition.MMAcquisition;
 import org.micromanager.api.AcquisitionEngine;
 import org.micromanager.api.Autofocus;
-import org.micromanager.api.MMPlugin;
 import org.micromanager.api.DeviceControlGUI;
+import org.micromanager.api.MMPlugin;
 import org.micromanager.api.ScriptInterface;
 import org.micromanager.conf.ConfiguratorDlg;
 import org.micromanager.conf.MMConfigFileException;
@@ -115,9 +115,7 @@ import org.micromanager.metadata.AcquisitionData;
 import org.micromanager.metadata.DisplaySettings;
 import org.micromanager.metadata.MMAcqDataException;
 import org.micromanager.metadata.WellAcquisitionData;
-import org.micromanager.navigation.CenterListener;
 import org.micromanager.navigation.CenterAndDragListener;
-import org.micromanager.navigation.DragListener;
 import org.micromanager.navigation.PositionList;
 import org.micromanager.navigation.ZWheelListener;
 import org.micromanager.utils.CfgFileFilter;

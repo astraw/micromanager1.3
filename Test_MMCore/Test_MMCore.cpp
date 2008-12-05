@@ -348,7 +348,7 @@ void TestCameraLive(CMMCore& core)
    cout << "Buffer capacity: " << core.getBufferTotalCapacity() << endl;
    string camera = core.getCameraDevice();
    //core.setProperty(camera.c_str(), "ShutterMode", "Open");
-   //core.setProperty(camera.c_str(), "Binning", "2");
+   core.setProperty(camera.c_str(), "Binning", "4");
    core.setExposure(200.0);
 
    // test normal mode

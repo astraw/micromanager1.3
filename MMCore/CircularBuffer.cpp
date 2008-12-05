@@ -84,7 +84,10 @@ bool CircularBuffer::Initialize(unsigned channels, unsigned slices, unsigned int
    if (cbSize == 0)
       return false; // memory footprint too small
 
-   // TODO: verify if we have enough RAM to satisfy this request   
+   // TODO: verify if we have enough RAM to satisfy this request
+
+   for (unsigned long i=0; i<frameArray_.size(); i++)
+      frameArray_[i].Clear();
 
    // allocate buffers
    frameArray_.resize(cbSize);
