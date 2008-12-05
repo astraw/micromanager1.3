@@ -1,9 +1,10 @@
 /*
  * This goal of the application is to set the digital output on pins 8-13 
- * This can be accomplished in two ways.  First, a serial command can directly set
+ * This can be accomplished in three ways.  First, a serial command can directly set
  * the digital output pattern.  Second, a series of patterns can be stored in the 
- * Arduino and TTLs coming in on pin 2 will then trigger in an interrupt-driven
- * manner transition to the consecutive pattern.
+ * Arduino and TTLs coming in on pin 2 will then trigger to the consecutive pattern (trigger mode).
+ * Third, intervals between consecutive patterns can be specified and paterns will be 
+ * generated at these specified time points (timed trigger mode).
  *
  * Interface specifications:
  * digital pattern specification: single byte, bit 0 corresponds to pin 8, 
@@ -49,7 +50,25 @@
  * Get result of Trigger mode: 9
  *   Controller will return 9x where x is the number of triggers received during the last
  *   trigger mode run
+ *
+ * Set time interval for timed trigger mode: 10xtt
+ *   Where x is the number of the interval (currently, 12 intervals can be stored)
+ *   and tt is the interval (in ms) in Arduino unsigned int format.  
+ *   Controller will return 10x
+ *
+  * Sets how often the timed pattern will be repeated: 11x
+ *   This value will be used in timed-trigger mode and sets how often the output
+ *   pattern will be repeated. 
+ *   Controller will return 11x
  *  
+ * Starts timed trigger mode: 12
+ *   In timed trigger mode, digital patterns as set with function 5 will appear on the 
+ *   output pins with intervals (in ms) as set with function 10.  After the number of 
+ *   patterns set with function 6, the pattern will be repeated for the number of times
+ *   set with function 11.  Any input character (which will be processed) will stop 
+ *   the pattern generation.
+ *   Controller will retun 12.
+ * 
  * Start blanking Mode: 20
  *   In blanking mode, zeroes will be written on the output pins when the trigger pin
  *   is low, when the trigger pin is high, the pattern set with command #1 will be 
@@ -91,18 +110,20 @@
 
    const int SEQUENCELENGTH = 12;  // this should be good enough for everybody;)
    byte triggerPattern_[SEQUENCELENGTH] = {0,0,0,0,0,0,0,0,0,0,0,0};
+   unsigned int triggerDelay_[SEQUENCELENGTH] = {0,0,0,0,0,0,0,0,0,0,0,0};
    int patternLength_ = 0;
+   byte repeatPattern_ = 0;
    volatile int triggerNr_; // total # of triggers in this run (0-based)
    volatile int sequenceNr_; // # of trigger in sequence (0-based)
    int skipTriggers_ = 0;  // # of triggers to skip before starting to generate patterns
    byte currentPattern_ = 0;
    const unsigned long timeOut_ = 1000;
    bool blanking_ = false;
-   bool blankTTLLogicNormal_ = true;
+   bool blankOnHigh_ = true;
  
  void setup() {
    // Higher speeds do not appear to be reliable
-   Serial.begin(115200);
+   Serial.begin(57600);
   
    pinMode(inPin_, INPUT);
    pinMode (dataPin, OUTPUT);
@@ -186,10 +207,8 @@
              patternLength_ = pL;
              Serial.print(6, BYTE);
              Serial.print(patternLength_, BYTE);
-             break;
            }
          }
-         Serial.print("n:");
          break;
          
        // Skip triggers
@@ -232,6 +251,52 @@
           Serial.print(triggerNr_, BYTE);
           break;
           
+       // Sets time interval for timed trigger mode
+       // Tricky part is that we are getting an unsigned int as two bytes
+       case 10:
+          if (waitForSerial(timeOut_)) {
+            int patternNumber = Serial.read();
+            if ( (patternNumber >= 0) && (patternNumber < SEQUENCELENGTH) ) {
+              if (waitForSerial(timeOut_)) {
+                unsigned int highByte = 0;
+                unsigned int lowByte = 0;
+                highByte = Serial.read();
+                if (waitForSerial(timeOut_))
+                  lowByte = Serial.read();
+                highByte = highByte << 8;
+                triggerDelay_[patternNumber] = highByte | lowByte;
+                Serial.print(10, BYTE);
+                Serial.print(patternNumber, BYTE);
+                break;
+              }
+            }
+          }
+          break;
+
+       // Sets the number of times the patterns is repeated in timed trigger mode
+       case 11:
+         if (waitForSerial(timeOut_)) {
+           repeatPattern_ = Serial.read();
+           Serial.print(11, BYTE);
+           Serial.print(repeatPattern_, BYTE);
+         }
+         break;
+
+       //  starts timed trigger mode
+       case 12: 
+         if (patternLength_ > 0) {
+           PORTB = B00000000;
+           Serial.print(12, BYTE);
+           for (byte i = 0; i < repeatPattern_ && (Serial.available() == 0); i++) {
+             for (int j = 0; j < patternLength_ && (Serial.available() == 0); j++) {
+               PORTB = triggerPattern_[j];
+               delay(triggerDelay_[j]);
+             }
+           }
+           PORTB = B00000000;
+         }
+         break;
+
        // Blanks output based on TTL input
        case 20:
          blanking_ = true;
@@ -249,9 +314,9 @@
          if (waitForSerial(timeOut_)) {
            int mode = Serial.read();
            if (mode==0)
-             blankTTLLogicNormal_= true;
+             blankOnHigh_= true;
            else
-             blankTTLLogicNormal_= false;
+             blankOnHigh_= false;
          }
          Serial.print(22, BYTE);
          break;
@@ -272,8 +337,8 @@
        }
     }
     if (blanking_) {
-      if (blankTTLLogicNormal_) {
-        if (digitalRead(inPin_) == HIGH)
+      if (blankOnHigh_) {
+        if (digitalRead(inPin_) == LOW)
           PORTB = currentPattern_;
         else
           PORTB = 0;

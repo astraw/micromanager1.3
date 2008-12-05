@@ -37,6 +37,7 @@ const std::string g_MMVersion = "1";
 bool g_portAvailable = false;
 bool g_invertedLogic = false;
 bool g_triggerMode = false;
+bool g_timedOutputActive = false;
 const char* g_normalLogicString = "Normal";
 const char* g_invertedLogicString = "Inverted";
 
@@ -101,7 +102,7 @@ initialized_ (false)
    InitializeDefaultErrorMessages();
 
    SetErrorText(ERR_PORT_OPEN_FAILED, "Failed opening Arduino USB device");
-   SetErrorText(ERR_BOARD_NOT_FOUND, "Did not find an Arduino board with the correct firmware");
+   SetErrorText(ERR_BOARD_NOT_FOUND, "Did not find an Arduino board with the correct firmware.  Is the Arduino board connected to this serial port?");
    SetErrorText(ERR_NO_PORT_SET, "Hub Device not found.  The Arduino Hub device is needed to create this device");
    std::string errorText = "The firmware version on the Arduino is not compatible with this adapter.  Please use firmware version " + g_MMVersion;
    SetErrorText(ERR_VERSION_MISMATCH, errorText.c_str());
@@ -138,6 +139,9 @@ int CArduinoHub::Initialize()
    if (DEVICE_OK != ret)
       return ret;
 
+   // The first second or so after opening the serial port, the Arduino is waiting for firmwareupgrades.  Simply sleep 1 second.
+   CDeviceUtils::SleepMs(2000);
+
    // Check that we have a controller:
    PurgeComPort(g_port.c_str());
 
@@ -147,33 +151,22 @@ int CArduinoHub::Initialize()
    if (ret != DEVICE_OK)
       return ret;
 
-   MM::MMTime startTime = GetCurrentMMTime();
-   unsigned long bytesRead = 0;
-   unsigned char answer[7];
-   while ((bytesRead < 7) && ( (GetCurrentMMTime() - startTime).getMsec() < 250)) {
-      unsigned long br;
-      ret = ReadFromComPort(g_port.c_str(), answer + bytesRead, 7, br);
-      if (ret != DEVICE_OK)
-         return ret;
-      bytesRead += br;
-   }
-   if (answer[0] != 30)
-      return ERR_COMMUNICATION;
+   std::string answer;
+   ret = GetSerialAnswer(g_port.c_str(), "\r\n", answer);
+   if (ret != DEVICE_OK)
+      return ret;
 
-   /*
+   if (answer != "MM-Ard")
+      return ERR_BOARD_NOT_FOUND;
+
+   // Check version number of the Arduino
    command[0] = 31;
    ret = WriteToComPort(g_port.c_str(), (const unsigned char*) command, 1);
    if (ret != DEVICE_OK)
       return ret;
 
-   ret = GetSerialAnswer(g_port.c_str(), "\n", g_version);
+   ret = GetSerialAnswer(g_port.c_str(), "\r\n", g_version);
    if (ret != DEVICE_OK) {
-      // try again since we might be missing the first byte after opening the port
-      ret = WriteToComPort(g_port.c_str(), (const unsigned char*) command, 1);
-      if (ret != DEVICE_OK)
-         return ret;
-      ret = GetSerialAnswer(g_port.c_str(), "\n", g_version);
-      if (ret != DEVICE_OK) 
          return ret;
    }
 
@@ -182,7 +175,6 @@ int CArduinoHub::Initialize()
 
    CPropertyAction* pAct = new CPropertyAction(this, &CArduinoHub::OnVersion);
    CreateProperty("Version", g_version.c_str(), MM::String, true, pAct);
-   */
 
    ret = UpdateStatus();
    if (ret != DEVICE_OK)
@@ -245,6 +237,8 @@ int CArduinoHub::OnLogic(MM::PropertyBase* pProp, MM::ActionType pAct)
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 CArduinoSwitch::CArduinoSwitch() : 
+   nrPatternsUsed_(0),
+   currentDelay_(0),
    blanking_(false),
    initialized_(false),
    numPos_(64), 
@@ -319,6 +313,9 @@ int CArduinoSwitch::Initialize()
       return nRet;
 
    // Patterns are used for triggered output
+   // Set Pattern will set the current switch state in the Arduino as the specified pattern
+   // Get Pattern will match the current switch state to specified patterns
+   // Beside the switch State, also the Delay will be stored
    pAct = new CPropertyAction (this, &CArduinoSwitch::OnSetPattern);
    nRet = CreateProperty("SetPattern", "", MM::String, false, pAct);
    if (nRet != DEVICE_OK)
@@ -339,17 +336,20 @@ int CArduinoSwitch::Initialize()
       AddAllowedValue("GetPattern", os.str().c_str());
    }
 
+   // Sets how many of the patterns will actually be used
    pAct = new CPropertyAction(this, &CArduinoSwitch::OnPatternsUsed);
    nRet = CreateProperty("Nr. Patterns Used", "0", MM::Integer, false, pAct);
    if (nRet != DEVICE_OK)
       return nRet;
    SetPropertyLimits("Nr. Patterns Used", 0, NUMPATTERNS);
 
+   // How many triggers to skip before firing digital patterns in trigger mode
    pAct = new CPropertyAction(this, &CArduinoSwitch::OnSkipTriggers);
    nRet = CreateProperty("Skip Patterns (Nr.)", "0", MM::Integer, false, pAct);
    if (nRet != DEVICE_OK)
       return nRet;
 
+   // Starts producing digital output patterns upon external triggers
    pAct = new CPropertyAction(this, &CArduinoSwitch::OnStartTrigger);
    nRet = CreateProperty("TriggerMode", "Idle", MM::String, false, pAct);
    if (nRet != DEVICE_OK)
@@ -359,21 +359,51 @@ int CArduinoSwitch::Initialize()
    AddAllowedValue("TriggerMode", "Running");
    AddAllowedValue("TriggerMode", "Idle");
 
+   // Starts "blanking" mode: goal is to synchronize laser light with camera exposure
+   std::string blankMode = "Blanking Mode";
    pAct = new CPropertyAction(this, &CArduinoSwitch::OnBlanking);
-   nRet = CreateProperty("Blanking Mode", "Idle", MM::String, false, pAct);
+   nRet = CreateProperty(blankMode.c_str(), "Idle", MM::String, false, pAct);
    if (nRet != DEVICE_OK)
       return nRet;
-   AddAllowedValue("Blanking Mode", "Stop");
-   AddAllowedValue("Blanking Mode", "Start");
-   AddAllowedValue("Blanking Mode", "Running");
-   AddAllowedValue("Blanking Mode", "Idle");
+   AddAllowedValue(blankMode.c_str(), "Stop");
+   AddAllowedValue(blankMode.c_str(), "Start");
+   AddAllowedValue(blankMode.c_str(), "Running");
+   AddAllowedValue(blankMode.c_str(), "Idle");
 
+   // Starts producing timed digital output patterns 
+   // Parameters that influence the pattern are 'Repeat Timed Pattern', 'Delay', 'State' where the latter two are manipulated with the Get and SetPattern functions
+   std::string timedOutput = "Timed Output Mode";
+   pAct = new CPropertyAction(this, &CArduinoSwitch::OnStartTimedOutput);
+   nRet = CreateProperty(timedOutput.c_str(), "Idle", MM::String, false, pAct);
+   if (nRet != DEVICE_OK)
+      return nRet;
+   AddAllowedValue(timedOutput.c_str(), "Stop");
+   AddAllowedValue(timedOutput.c_str(), "Start");
+   AddAllowedValue(timedOutput.c_str(), "Running");
+   AddAllowedValue(timedOutput.c_str(), "Idle");
+
+   // Blank on TTL high or low
    pAct = new CPropertyAction(this, &CArduinoSwitch::OnBlankingTriggerDirection);
    nRet = CreateProperty("Blank On", "Low", MM::String, false, pAct);
    if (nRet != DEVICE_OK)
       return nRet;
    AddAllowedValue("Blank On", "Low");
    AddAllowedValue("Blank On", "High");
+
+   // Sets a delay (in ms) to be used in timed output mode
+   // This delay will be transferred to the Arduino using the Get and SetPattern commands
+   pAct = new CPropertyAction(this, &CArduinoSwitch::OnDelay);
+   nRet = CreateProperty("Delay (ms)", "0", MM::Integer, false, pAct);
+   if (nRet != DEVICE_OK)
+      return nRet;
+   SetPropertyLimits("Delay (ms)", 0, 65535);
+
+   // Repeat the timed Pattern this many times:
+   pAct = new CPropertyAction(this, &CArduinoSwitch::OnRepeatTimedPattern);
+   nRet = CreateProperty("Repeat Timed Pattern", "0", MM::Integer, false, pAct);
+   if (nRet != DEVICE_OK)
+      return nRet;
+   SetPropertyLimits("Repeat Timed Pattern", 0, 255);
 
    nRet = UpdateStatus();
    if (nRet != DEVICE_OK)
@@ -416,6 +446,9 @@ int CArduinoSwitch::WriteToPort(long value)
    if (answer[0] != 1)
       return ERR_COMMUNICATION;
 
+   g_triggerMode = false;
+   g_timedOutputActive = false;
+
    return DEVICE_OK;
 }
 
@@ -455,6 +488,7 @@ int CArduinoSwitch::OnSetPattern(MM::PropertyBase* pProp, MM::ActionType eAct)
          return DEVICE_OK;
       int pos =  atoi(tmp.c_str());
 
+      // Set digital pattern
       unsigned value = g_switchState;
       pattern_[pos] = g_switchState;
 
@@ -485,7 +519,38 @@ int CArduinoSwitch::OnSetPattern(MM::PropertyBase* pProp, MM::ActionType eAct)
       if (answer[0] != 5)
          return ERR_COMMUNICATION;
 
+      // Set delay
+      delay_[pos] = currentDelay_;
+      unsigned highByte = (currentDelay_ >> 8) & 255;
+      unsigned lowByte = currentDelay_ & 255;
+
+      PurgeComPort(g_port.c_str());
+
+      unsigned char commandd[4];
+      commandd[0] = 10;
+      commandd[1] = (unsigned char) pos;
+      commandd[2] = (unsigned char) highByte;
+      commandd[3] = (unsigned char) lowByte;
+      ret = WriteToComPort(g_port.c_str(), (const unsigned char*) commandd, 4);
+      if (ret != DEVICE_OK)
+         return ret;
+
+      startTime = GetCurrentMMTime();
+      bytesRead = 0;
+      unsigned char answerd[2];
+      while ((bytesRead < 2) && ( (GetCurrentMMTime() - startTime).getMsec() < 250)) {
+         unsigned long br;
+         ret = ReadFromComPort(g_port.c_str(), answerd + bytesRead, 2, br);
+         if (ret != DEVICE_OK)
+            return ret;
+         bytesRead += br;
+      }
+
+      if (answerd[0] != 10)
+         return ERR_COMMUNICATION;
+
       g_triggerMode = false;
+      g_timedOutputActive = false;
    }
 
    return DEVICE_OK;
@@ -498,7 +563,7 @@ int CArduinoSwitch::OnGetPattern(MM::PropertyBase* pProp, MM::ActionType eAct)
       int i = 0;
       bool found = false;
       while (!found && i<NUMPATTERNS) {
-         if (pattern_[i] == g_switchState)
+         if (pattern_[i] == g_switchState && delay_[i] == currentDelay_)
             found = true;
          else
             i++;
@@ -522,6 +587,9 @@ int CArduinoSwitch::OnGetPattern(MM::PropertyBase* pProp, MM::ActionType eAct)
       std::ostringstream os;
       os << g_switchState;
       SetProperty(MM::g_Keyword_State, os.str().c_str());
+      currentDelay_ = delay_[pos];
+      std::ostringstream oss;
+      SetProperty("Delay", oss.str().c_str());
    }
 
    return DEVICE_OK;
@@ -560,6 +628,7 @@ int CArduinoSwitch::OnPatternsUsed(MM::PropertyBase* pProp, MM::ActionType eAct)
          return ERR_COMMUNICATION;
 
       g_triggerMode = false;
+      g_timedOutputActive = false;
    }
 
    return DEVICE_OK;
@@ -598,6 +667,7 @@ int CArduinoSwitch::OnSkipTriggers(MM::PropertyBase* pProp, MM::ActionType eAct)
          return ERR_COMMUNICATION;
 
       g_triggerMode = false;
+      g_timedOutputActive = false;
    }
 
    return DEVICE_OK;
@@ -637,6 +707,7 @@ int CArduinoSwitch::OnStartTrigger(MM::PropertyBase* pProp, MM::ActionType eAct)
          if (answer[0] != 8)
             return ERR_COMMUNICATION;
          g_triggerMode = true;
+         g_timedOutputActive = false;
       } else {
          unsigned char command[1];
          command[0] = 9;
@@ -657,6 +728,70 @@ int CArduinoSwitch::OnStartTrigger(MM::PropertyBase* pProp, MM::ActionType eAct)
          if (answer[0] != 9)
             return ERR_COMMUNICATION;
          g_triggerMode = false;
+         g_timedOutputActive = false;
+      }
+   }
+
+   return DEVICE_OK;
+}
+
+int CArduinoSwitch::OnStartTimedOutput(MM::PropertyBase* pProp, MM::ActionType eAct)
+{
+   if (eAct == MM::BeforeGet) {
+      if (g_timedOutputActive)
+         pProp->Set("Running");
+      else
+         pProp->Set("Idle");
+   }
+   else if (eAct == MM::AfterSet)
+   {
+      std::string prop;
+      pProp->Get(prop);
+
+      if (prop =="Start") {
+         PurgeComPort(g_port.c_str());
+         unsigned char command[1];
+         command[0] = 12;
+         int ret = WriteToComPort(g_port.c_str(), (const unsigned char*) command, 1);
+         if (ret != DEVICE_OK)
+            return ret;
+
+         MM::MMTime startTime = GetCurrentMMTime();
+         unsigned long bytesRead = 0;
+         unsigned char answer[1];
+         while ((bytesRead < 1) && ( (GetCurrentMMTime() - startTime).getMsec() < 250)) {
+            unsigned long br;
+            ret = ReadFromComPort(g_port.c_str(), answer + bytesRead, 1, br);
+            if (ret != DEVICE_OK)
+               return ret;
+            bytesRead += br;
+         }
+         if (answer[0] != 12)
+            return ERR_COMMUNICATION;
+         g_timedOutputActive = true;
+         g_triggerMode = false;
+      } else {
+         unsigned char command[1];
+         command[0] = 9;
+         int ret = WriteToComPort(g_port.c_str(), (const unsigned char*) command, 1);
+         if (ret != DEVICE_OK)
+            return ret;
+
+         MM::MMTime startTime = GetCurrentMMTime();
+         unsigned long bytesRead = 0;
+         unsigned char answer[2];
+         while ((bytesRead < 2) && ( (GetCurrentMMTime() - startTime).getMsec() < 250)) {
+            unsigned long br;
+            ret = ReadFromComPort(g_port.c_str(), answer + bytesRead, 2, br);
+            if (ret != DEVICE_OK)
+               return ret;
+            bytesRead += br;
+         }
+         if (answer[0] != 9)
+            return ERR_COMMUNICATION;
+         g_triggerMode = false;
+         g_timedOutputActive = false;
+         g_timedOutputActive = false;
       }
    }
 
@@ -698,6 +833,7 @@ int CArduinoSwitch::OnBlanking(MM::PropertyBase* pProp, MM::ActionType eAct)
             return ERR_COMMUNICATION;
          blanking_ = true;
          g_triggerMode = false;
+         g_timedOutputActive = false;
       } else if (prop =="Stop" && blanking_){
          unsigned char command[1];
          command[0] = 21;
@@ -719,6 +855,7 @@ int CArduinoSwitch::OnBlanking(MM::PropertyBase* pProp, MM::ActionType eAct)
             return ERR_COMMUNICATION;
          blanking_ = false;
          g_triggerMode = false;
+         g_timedOutputActive = false;
       }
    }
 
@@ -737,7 +874,7 @@ int CArduinoSwitch::OnBlankingTriggerDirection(MM::PropertyBase* pProp, MM::Acti
 
 
       PurgeComPort(g_port.c_str());
-      unsigned char command[1];
+      unsigned char command[2];
       command[0] = 22;
       if (direction == "Low") 
          command[1] = 1;
@@ -761,6 +898,59 @@ int CArduinoSwitch::OnBlankingTriggerDirection(MM::PropertyBase* pProp, MM::Acti
       if (answer[0] != 22)
          return ERR_COMMUNICATION;
 
+   }
+
+   return DEVICE_OK;
+}
+
+int CArduinoSwitch::OnDelay(MM::PropertyBase* pProp, MM::ActionType eAct)
+{
+   if (eAct == MM::BeforeGet) {
+      pProp->Set((long int)currentDelay_);
+   }
+   else if (eAct == MM::AfterSet)
+   {
+      long prop;
+      pProp->Get(prop);
+      currentDelay_ = (int) prop;
+   }
+
+   return DEVICE_OK;
+}
+
+int CArduinoSwitch::OnRepeatTimedPattern(MM::PropertyBase* pProp, MM::ActionType eAct)
+{
+   if (eAct == MM::BeforeGet) {
+   }
+   else if (eAct == MM::AfterSet)
+   {
+      long prop;
+      pProp->Get(prop);
+
+      PurgeComPort(g_port.c_str());
+      unsigned char command[2];
+      command[0] = 11;
+      command[1] = (unsigned char) prop;
+
+      int ret = WriteToComPort(g_port.c_str(), (const unsigned char*) command, 2);
+      if (ret != DEVICE_OK)
+         return ret;
+
+      MM::MMTime startTime = GetCurrentMMTime();
+      unsigned long bytesRead = 0;
+      unsigned char answer[2];
+      while ((bytesRead < 2) && ( (GetCurrentMMTime() - startTime).getMsec() < 250)) {
+         unsigned long br;
+         ret = ReadFromComPort(g_port.c_str(), answer + bytesRead, 2, br);
+         if (ret != DEVICE_OK)
+            return ret;
+         bytesRead += br;
+      }
+      if (answer[0] != 11)
+         return ERR_COMMUNICATION;
+
+      g_triggerMode = false;
+      g_timedOutputActive = false;
    }
 
    return DEVICE_OK;
@@ -884,8 +1074,8 @@ int CArduinoDA::WriteToPort(unsigned long value)
    if (answer[0] != 3)
       return ERR_COMMUNICATION;
 
-   // TODO: make triggermode a global:)
    g_triggerMode = false;
+   g_timedOutputActive = false;
 
    return DEVICE_OK;
 }
@@ -1121,6 +1311,9 @@ int CArduinoShutter::WriteToPort(long value)
    }
    if (answer[0] != 1)
       return ERR_COMMUNICATION;
+
+   g_triggerMode = false;
+   g_timedOutputActive = false;
 
    return DEVICE_OK;
 }

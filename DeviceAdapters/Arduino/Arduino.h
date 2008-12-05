@@ -104,11 +104,14 @@ public:
    // action interface
    // ----------------
    int OnState(MM::PropertyBase* pProp, MM::ActionType eAct);
+   int OnDelay(MM::PropertyBase* pProp, MM::ActionType eAct);
+   int OnRepeatTimedPattern(MM::PropertyBase* pProp, MM::ActionType eAct);
    int OnSetPattern(MM::PropertyBase* pProp, MM::ActionType eAct);
    int OnGetPattern(MM::PropertyBase* pProp, MM::ActionType eAct);
    int OnPatternsUsed(MM::PropertyBase* pProp, MM::ActionType eAct);
    int OnSkipTriggers(MM::PropertyBase* pProp, MM::ActionType eAct);
    int OnStartTrigger(MM::PropertyBase* pProp, MM::ActionType eAct);
+   int OnStartTimedOutput(MM::PropertyBase* pProp, MM::ActionType eAct);
    int OnBlanking(MM::PropertyBase* pProp, MM::ActionType eAct);
    int OnBlankingTriggerDirection(MM::PropertyBase* pProp, MM::ActionType eAct);
 
@@ -116,13 +119,14 @@ public:
 private:
    static const int NUMPATTERNS = 12;
    unsigned pattern_[NUMPATTERNS];
+   unsigned delay_[NUMPATTERNS];
    int nrPatternsUsed_;
+   unsigned currentDelay_;
    int OpenPort(const char* pszName, long lnValue);
    int WriteToPort(long lnValue);
    int ClosePort();
 
    bool blanking_;
-   bool triggerMode_;
    bool initialized_;
    long numPos_;
    bool busy_;
