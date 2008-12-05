@@ -968,7 +968,8 @@ int DemoStreamingCamera::PushImage()
    {
       // do not stop on overflow - just reset the buffer
       GetCoreCallback()->ClearImageBuffer(this);
-      return DEVICE_OK;
+      // repeat the insert
+      return GetCoreCallback()->InsertMultiChannel(this, rawBuffer_, color_ ? 4 : 1, GetImageWidth(), GetImageHeight(), GetImageBytesPerPixel());
    } else
       return ret;
 }

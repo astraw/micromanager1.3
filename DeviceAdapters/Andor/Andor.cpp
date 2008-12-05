@@ -2934,7 +2934,10 @@ int Ixon::PushImage()
    {
       // do not stop on overflow - just reset the buffer
       GetCoreCallback()->ClearImageBuffer(this);
-      return DEVICE_OK;
+      return GetCoreCallback()->InsertImage(this, (unsigned char*) fullFrameBuffer_,
+                                           GetImageWidth(),
+                                           GetImageHeight(),
+                                           GetImageBytesPerPixel());
    } else
       return ret;
 }

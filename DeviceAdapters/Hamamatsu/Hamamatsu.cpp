@@ -2052,11 +2052,14 @@ int CHamamatsu::PushImage()
    {
       // do not stop on overflow - just reset the buffer
       GetCoreCallback()->ClearImageBuffer(this);
-   } else
-      return ret;
+      ret = GetCoreCallback()->InsertImage(this, (unsigned char*) imgPtr,      
+                                           GetImageWidth(),                  
+                                           GetImageHeight(),                 
+                                           GetImageBytesPerPixel());
+   }
 
    if (!dcam_unlockdata(m_hDCAM))
       return ReportError("Error in dcam_unlockdata: ");
 
-   return DEVICE_OK;
+   return ret;
 }

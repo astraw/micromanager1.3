@@ -858,7 +858,7 @@ private:
       {
          // do not stop on overflow - just reset the buffer
          GetCoreCallback()->ClearImageBuffer(this);
-         return DEVICE_OK;
+         return GetCoreCallback()->InsertImage(this, GetImageBuffer(), GetImageWidth(), GetImageHeight(), GetImageBytesPerPixel());
       } else
          return ret;
    }
