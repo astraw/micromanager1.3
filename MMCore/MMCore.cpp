@@ -1614,6 +1614,10 @@ void* CMMCore::popNextImageMD(unsigned channel, unsigned slice, Metadata& md) th
       mt.SetValue(CDeviceUtils::ConvertToString(imd.ZUm));
       md.SetTag(mt);
 
+      mt.SetName(MM::g_Keyword_Metadata_Score);
+      mt.SetValue(CDeviceUtils::ConvertToString(imd.score));
+      md.SetTag(mt);
+
       return const_cast<unsigned char*>(pBuf->GetPixels());
    }
    else

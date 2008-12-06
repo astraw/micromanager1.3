@@ -175,12 +175,13 @@ namespace MM {
 
    struct ImageMetadata
    {
-      ImageMetadata() : exposureMs(0.0), ZUm(0.0) {}
+      ImageMetadata() : exposureMs(0.0), ZUm(0.0), score(0.0) {}
       ImageMetadata(MMTime& time, double expMs) : exposureMs(expMs), timestamp(time) {}
 
       double exposureMs;
       MMTime timestamp;
       double ZUm;
+      double score;
    };
 
    /**

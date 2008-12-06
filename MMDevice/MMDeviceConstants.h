@@ -126,6 +126,7 @@ namespace MM {
    // image annotations
    const char* const g_Keyword_Metadata_Z           = "Z-um";
    const char* const g_Keyword_Meatdata_Exposure    = "Exposure-ms";
+   const char* const g_Keyword_Metadata_Score       = "Score";
 
    // configuration file format constants
    const char* const g_FieldDelimiters = ",";
