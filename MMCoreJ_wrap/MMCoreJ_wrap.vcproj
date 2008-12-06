@@ -43,7 +43,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;C:\Program Files\Java\jdk1.6.0_07\include\win32&quot;;&quot;C:\Program Files\Java\jdk1.6.0_07\include&quot;"
+				AdditionalIncludeDirectories="&quot;%JAVA_HOME%\include\win32&quot;;&quot;%JAVA_HOME%\include&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;MMCOREJ_WRAP_EXPORTS"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -128,7 +128,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="&quot;C:\Program Files\Java\jdk1.6.0_07\include\win32&quot;;&quot;C:\Program Files\Java\jdk1.6.0_07\include&quot;"
+				AdditionalIncludeDirectories="&quot;%JAVA_HOME%\include\win32&quot;;&quot;%JAVA_HOME%\include&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;MMCOREJ_WRAP_EXPORTS"
 				RuntimeLibrary="0"
 				RuntimeTypeInfo="true"
