@@ -30,6 +30,7 @@
 
 #include "CoreCallback.h"
 #include "CircularBuffer.h"
+#include "../MMDevice/DeviceUtils.h"
 #include <ace/Mutex.h>
 #include <ace/Guard_T.h>
 
@@ -42,7 +43,7 @@ int CoreCallback::InsertImage(const MM::Device* /*caller*/, const unsigned char*
       else
          return DEVICE_BUFFER_OVERFLOW;
    }
-   catch (CMMError& e)
+   catch (CMMError& /*e*/)
    {
       return DEVICE_INCOMPATIBLE_IMAGE;
    }
@@ -74,7 +75,7 @@ int CoreCallback::InsertMultiChannel(const MM::Device* /*caller*/,
       else
          return DEVICE_BUFFER_OVERFLOW;
    }
-   catch (CMMError& e)
+   catch (CMMError& /*e*/)
    {
       return DEVICE_INCOMPATIBLE_IMAGE;
    }
@@ -419,3 +420,34 @@ int CoreCallback::GetCurrentConfig(const char* group, int bufLen, char* name)
 
    return DEVICE_OK;
 }
+
+int CoreCallback::GetDeviceProperty(const char* deviceName, const char* propName, char* value)
+{
+   try
+   {
+      string propVal = core_->getProperty(deviceName, propName);
+      CDeviceUtils::CopyLimitedString(value, propVal.c_str());
+   }
+   catch(CMMError& e)
+   {
+      return e.getCode();
+   }
+
+   return DEVICE_OK;
+}
+
+int CoreCallback::SetDeviceProperty(const char* deviceName, const char* propName, const char* value)
+{
+   try
+   {
+      string propVal(value);
+      core_->setProperty(deviceName, propName, propVal.c_str());
+   }
+   catch(CMMError& e)
+   {
+      return e.getCode();
+   }
+
+   return DEVICE_OK;
+}
+

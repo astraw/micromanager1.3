@@ -498,6 +498,8 @@ namespace MM {
 
       virtual int LogMessage(const Device* caller, const char* msg, bool debugOnly) = 0;
       virtual Device* GetDevice(const Device* caller, const char* label) = 0;
+      virtual int GetDeviceProperty(const char* deviceName, const char* propName, char* value) = 0;
+      virtual int SetDeviceProperty(const char* deviceName, const char* propName, const char* value) = 0;
       virtual std::vector<std::string> GetLoadedDevicesOfType(const Device* caller, MM::DeviceType devType) = 0;
       virtual int SetSerialCommand(const Device* caller, const char* portName, const char* command, const char* term) = 0;
       virtual int GetSerialAnswer(const Device* caller, const char* portName, unsigned long ansLength, char* answer, const char* term) = 0;

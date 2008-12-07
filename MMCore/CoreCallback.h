@@ -56,6 +56,9 @@ public:
    CoreCallback(CMMCore* c) : core_(c) {assert(core_);}
    ~CoreCallback() {}
 
+   int GetDeviceProperty(const char* deviceName, const char* propName, char* value);
+   int SetDeviceProperty(const char* deviceName, const char* propName, const char* value);
+
    /**
     * Writes a message to the Micro-Manager log file.
     */
