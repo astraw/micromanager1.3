@@ -70,6 +70,8 @@ public:
    int SetROI(unsigned uX, unsigned uY, unsigned uXSize, unsigned uYSize); 
    int GetROI(unsigned& uX, unsigned& uY, unsigned& uXSize, unsigned& uYSize); 
    int ClearROI();
+   int StartSequenceAcquisition(long numImages, double /*interval_ms*/, bool stopOnOverflow);
+   int StopSequenceAcquisition();
 
    // action interface
    int OnBoard(MM::PropertyBase* pProp, MM::ActionType eAct);
@@ -97,10 +99,43 @@ private:
    CSensicam();
    int ResizeImageBuffer();
 
+   class SequenceThread : public MMDeviceThreadBase
+   {
+      public:
+         SequenceThread(CSensicam* pCam) : stop_(false), numImages_(0) {camera_ = pCam;}
+         ~SequenceThread() {}
+
+         int svc (void);
+
+         void Stop() {stop_ = true;}
+
+         void Start()
+         {
+            stop_ = false;
+            activate();
+         }
+
+         void SetLength(long images) {numImages_ = images;}
+
+      private:
+         CSensicam* camera_;
+         bool stop_;
+         long numImages_;
+   };
+
+   SequenceThread* sthd_;
+   bool stopOnOverflow_;
+
+   int InsertImage();
+
+
    static CSensicam* m_pInstance;
    ImgBuffer img_;
    int pixelDepth_;
    float pictime_;
+   bool sequenceRunning_;
+
+
    double m_dExposure; 
    bool m_bBusy;
    bool m_bInitialized;

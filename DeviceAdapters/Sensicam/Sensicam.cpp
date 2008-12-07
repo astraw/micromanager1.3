@@ -98,9 +98,12 @@ MODULE_API MM::Device* CreateDevice(const char* pszDeviceName)
 
 CSensicam::CSensicam() :
    CCameraBase<CSensicam> (),
+   sequenceRunning_(false),
    m_bInitialized(false),
    m_bBusy(false),
    m_dExposure(0.0),
+   sthd_(0), 
+   stopOnOverflow_(false),
    pixelDepth_(2),
    pictime_(0.0)
 {
@@ -121,6 +124,7 @@ CSensicam::CSensicam() :
    m_nTimesLen = MMSENSICAM_MAX_STRLEN;
 
    InitializeDefaultErrorMessages();
+   sthd_ = new SequenceThread(this);
 }
 
 CSensicam::~CSensicam()
@@ -590,7 +594,7 @@ int CSensicam::SnapImage()
       return nErr;
 
    // wait for picture
-   int nWaittime = static_cast<int> (pictime_/1000.0 + 50);
+   int nWaittime = static_cast<int> (pictime_/1000.0 + 100);
 
    unsigned int uT1, uT2;
    int nPicstat;
@@ -760,4 +764,68 @@ int CSensicam::ResizeImageBuffer()
 	assert(pixelDepth_ == 1 || pixelDepth_ == 2);
 	img_.Resize(nWidth, nHeight, pixelDepth_);
 	return DEVICE_OK;
+}
+
+int CSensicam::StartSequenceAcquisition(long numImages, double /*interval_ms*/, bool stopOnOverflow)
+{
+   if (Busy() || sequenceRunning_)
+      return DEVICE_CAMERA_BUSY_ACQUIRING;
+
+   int ret = GetCoreCallback()->PrepareForAcq(this);
+   if (ret != DEVICE_OK)
+      return ret;
+   sequenceRunning_ = true;
+   sthd_->SetLength(numImages);
+   sthd_->Start();
+   stopOnOverflow_ = stopOnOverflow;
+   return DEVICE_OK;
+}
+
+int CSensicam::StopSequenceAcquisition()
+{
+   sthd_->Stop();
+   sthd_->wait();
+   sequenceRunning_ = false;
+   return DEVICE_OK;
+}
+
+int CSensicam::InsertImage()
+{
+   const unsigned char* img = GetImageBuffer();
+   if (img == 0) 
+      return ERR_TIMEOUT;
+
+   int ret = GetCoreCallback()->InsertImage(this, img, GetImageWidth(), GetImageHeight(), GetImageBytesPerPixel());
+   if (!stopOnOverflow_ && ret == DEVICE_BUFFER_OVERFLOW)
+   {
+      // do not stop on overflow - just reset the buffer
+      GetCoreCallback()->ClearImageBuffer(this);
+      return GetCoreCallback()->InsertImage(this, GetImageBuffer(), GetImageWidth(), GetImageHeight(), GetImageBytesPerPixel());
+   } else
+      return ret;
+}
+
+
+int CSensicam::SequenceThread::svc()
+{
+   long count(0);
+   while (!stop_ && count < numImages_)
+   {
+      int ret = camera_->SnapImage();
+      if (ret != DEVICE_OK)
+      {
+         camera_->StopSequenceAcquisition();
+         return 1;
+      }
+
+      ret = camera_->InsertImage();
+      if (ret != DEVICE_OK)
+      {
+         camera_->StopSequenceAcquisition();
+         return 1;
+      }
+      CDeviceUtils::SleepMs(20);
+      count++;
+   }
+   return 0;
 }
