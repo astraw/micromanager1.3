@@ -118,6 +118,7 @@ import org.micromanager.metadata.WellAcquisitionData;
 import org.micromanager.navigation.CenterAndDragListener;
 import org.micromanager.navigation.PositionList;
 import org.micromanager.navigation.ZWheelListener;
+import org.micromanager.navigation.XYZKeyListener;
 import org.micromanager.utils.CfgFileFilter;
 import org.micromanager.utils.ContrastSettings;
 import org.micromanager.utils.GUIColors;
@@ -142,7 +143,7 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI, Scrip
    public static String LIVE_WINDOW_TITLE = "AcqWindow";
 
    private static final String MICRO_MANAGER_TITLE = "Micro-Manager 1.3";
-   private static final String VERSION = "1.3.12 (beta)";
+   private static final String VERSION = "1.3.14 (beta)";
    private static final long serialVersionUID = 3556500289598574541L;
 
    private static final String MAIN_FRAME_X = "x";
@@ -234,6 +235,7 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI, Scrip
    private SplitView splitView_;
    private CenterAndDragListener centerAndDragListener_;
    private ZWheelListener zWheelListener_;
+   private XYZKeyListener xyzKListener_;
    private AcquisitionManager acqMgr_;
 
 
@@ -1971,7 +1973,12 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI, Scrip
             if (zWheelListener_ == null)
                zWheelListener_ = new ZWheelListener(core_);
             zWheelListener_.start();
-            
+
+            // attch key listener to control the stage and focus:
+            if (xyzKListener_ == null)
+            	xyzKListener_ = new XYZKeyListener(core_);
+            xyzKListener_.start();
+
             core_.startContinuousSequenceAcquisition(0.0);
             timer_.start();
             toggleButtonLive_.setText("Stop");
@@ -1987,8 +1994,10 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI, Scrip
             
             if (zWheelListener_ != null)
                zWheelListener_.stop();
+            if (xyzKListener_ != null)
+            	xyzKListener_.stop();
             toggleButtonLive_.setText("Live");
-
+            
             // restore auto shutter and close the shutter
             if (shutterLabel_.length() > 0)
                core_.setShutterOpen(shutterOrg_);
