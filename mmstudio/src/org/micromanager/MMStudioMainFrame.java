@@ -1564,6 +1564,8 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI, Scrip
              centerAndDragListener_.attach(imp);
          if (zWheelListener_ != null && zWheelListener_.isRunning())
              zWheelListener_.attach(imp.getWindow());
+         if (xyzKListener_ != null && xyzKListener_.isRunning())
+        	 xyzKListener_.attach(imp.getWindow());
 
          // add listener to the IJ window to detect when it closes
          WindowListener wndCloser = new WindowAdapter() {
@@ -2007,7 +2009,7 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI, Scrip
             // attch key listener to control the stage and focus:
             if (xyzKListener_ == null)
             	xyzKListener_ = new XYZKeyListener(core_);
-            xyzKListener_.start();
+            xyzKListener_.start(imageWin_);
 
             core_.startContinuousSequenceAcquisition(0.0);
             timer_.start();

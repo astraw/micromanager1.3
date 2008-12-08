@@ -98,20 +98,25 @@ public final class XYZKeyListener implements KeyListener {
 	public void keyReleased(KeyEvent arg0) {}
 	public void keyTyped(KeyEvent arg0) {}
 	
-	public void start () {
-	      if (isRunning_)
-	         return;
-
-	      isRunning_ = true;
-
-	      // Get a handle to the AcqWindow
-	      if (WindowManager.getFrame("AcqWindow") != null) {
-	         ImagePlus img = WindowManager.getImage("AcqWindow");
-	         attach(img);
-	      }
-	      getOrientation();
+    public void start () {
+	   // Get a handle to the AcqWindow
+	   if (WindowManager.getCurrentWindow() != null) {
+	      start (WindowManager.getCurrentWindow());
 	   }
+	}
+	
+   public void start (ImageWindow img) {
+	  if (isRunning_)
+	     stop(); 
+	  
+      isRunning_ = true;
+	  if (img != null) {
+		  attach(img);
+	  }
+	  getOrientation();
+   }
 
+      
 	   public void stop() {
 	      if (canvas_ != null) {
 	         canvas_.removeKeyListener(this);
@@ -123,10 +128,9 @@ public final class XYZKeyListener implements KeyListener {
 	      return isRunning_;
 	   }
 
-	   public void attach(ImagePlus img) {
+	   public void attach(ImageWindow win) {
 	      if (!isRunning_)
 	         return;
-	      ImageWindow win = img.getWindow();
 	      canvas_ = win.getCanvas();
 	      canvas_.addKeyListener(this);
 	   }
