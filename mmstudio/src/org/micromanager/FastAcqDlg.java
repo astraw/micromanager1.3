@@ -376,7 +376,7 @@ public class FastAcqDlg extends JDialog implements GUIStatus {
             dispTimer_.cancel();
          if (streamThread_ != null)
             streamThread_.interrupt();
-      }            
+      }
    }
    
    private void handleError(String message) {
