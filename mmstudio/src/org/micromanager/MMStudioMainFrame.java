@@ -1486,7 +1486,15 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI, Scrip
          }
 
          Rectangle r = roi.getBoundingRect();
+         // Stop (and restart) live mode if it is running
+         boolean liveRunning = false;
+    	 if (liveRunning_) {
+      	   liveRunning = liveRunning_;
+      	   enableLiveMode(false);
+      	 }
          core_.setROI(r.x, r.y, r.width, r.height);
+         if (liveRunning)
+        	 enableLiveMode(true);
          updateStaticInfo();
 
       } catch (Exception e) {
@@ -1541,6 +1549,7 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI, Scrip
          ImagePlus imp = new ImagePlus(LIVE_WINDOW_TITLE, ip);
 
          if (imageWin_ != null) {
+        	WindowManager.removeWindow(imageWin_);
             imageWin_.dispose();
             imageWin_.savePosition();
             imageWin_ = null;
@@ -1553,6 +1562,8 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI, Scrip
          // notify processes that need to attach to this acquisition window:
          if (centerAndDragListener_ != null && centerAndDragListener_.isRunning())
              centerAndDragListener_.attach(imp);
+         if (zWheelListener_ != null && zWheelListener_.isRunning())
+             zWheelListener_.attach(imp.getWindow());
 
          // add listener to the IJ window to detect when it closes
          WindowListener wndCloser = new WindowAdapter() {
@@ -1560,6 +1571,7 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI, Scrip
                // remember LUT so that a new window can be opened with the same LUT
                if (imageWin_.getImagePlus().getProcessor().isPseudoColorLut())
                   currentColorModel_ = imageWin_.getImagePlus().getProcessor().getColorModel();
+               WindowManager.removeWindow(imageWin_);
                imageWin_ = null;
                contrastPanel_.setImagePlus(null);
             }
@@ -1773,12 +1785,22 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI, Scrip
 
    protected void changeBinning() {
       try {
-         //
+    	 boolean liveRunning = false;
+    	 if (liveRunning_) {
+    	   liveRunning = liveRunning_;
+    	   enableLiveMode(false);
+    	 }
+         
          if (isCameraAvailable()) {
             Object item = comboBinning_.getSelectedItem();
             if (item != null)
                core_.setProperty(cameraLabel_, MMCoreJ.getG_Keyword_Binning(), item.toString());
          }
+         
+         if (liveRunning) {
+        	enableLiveMode(true);
+         }
+    
       } catch (Exception e) {
          handleException(e);
       }
@@ -1862,8 +1884,16 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI, Scrip
          //
          if (isCameraAvailable()) {
             Object item = comboPixelType_.getSelectedItem();
-            if (item != null)
+            if (item != null) {
+               boolean liveRunning = false;
+           	   if (liveRunning_) {
+            	  liveRunning = liveRunning_;
+            	  enableLiveMode(false);
+           	   }
                core_.setProperty(cameraLabel_, MMCoreJ.getG_Keyword_PixelType(), item.toString());
+               if (liveRunning)
+            	   enableLiveMode(true);
+            }
             long bitDepth = core_.getImageBitDepth();
             contrastPanel_.setPixelBitDepth((int)bitDepth, true);
          }         
@@ -1972,7 +2002,7 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI, Scrip
             // attch mouse wheel listener to control focus:
             if (zWheelListener_ == null)
                zWheelListener_ = new ZWheelListener(core_);
-            zWheelListener_.start();
+            zWheelListener_.start(imageWin_);
 
             // attch key listener to control the stage and focus:
             if (xyzKListener_ == null)
