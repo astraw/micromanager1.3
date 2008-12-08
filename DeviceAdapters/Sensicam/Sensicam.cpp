@@ -800,7 +800,7 @@ int CSensicam::InsertImage()
    {
       // do not stop on overflow - just reset the buffer
       GetCoreCallback()->ClearImageBuffer(this);
-      return GetCoreCallback()->InsertImage(this, GetImageBuffer(), GetImageWidth(), GetImageHeight(), GetImageBytesPerPixel());
+      return GetCoreCallback()->InsertImage(this, img, GetImageWidth(), GetImageHeight(), GetImageBytesPerPixel());
    } else
       return ret;
 }
