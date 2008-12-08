@@ -1526,6 +1526,9 @@ long Ixon::GetReadoutTime()
  */
 int Ixon::SetROI(unsigned uX, unsigned uY, unsigned uXSize, unsigned uYSize)
 {
+   if (Busy())
+      return ERR_BUSY_ACQUIRING;
+
 	//added to use RTA
 	SetToIdle();
 
@@ -1600,6 +1603,9 @@ int Ixon::GetROI(unsigned& uX, unsigned& uY, unsigned& uXSize, unsigned& uYSize)
 
 int Ixon::ClearROI()
 {
+   if (Busy())
+      return ERR_BUSY_ACQUIRING;
+
 	//added to use RTA
 	SetToIdle();
 
@@ -1654,8 +1660,11 @@ int Ixon::OnBinning(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
    if (eAct == MM::AfterSet)
    {
-	//added to use RTA
-	SetToIdle();
+      if (Busy())
+         return ERR_BUSY_ACQUIRING;
+
+	   //added to use RTA
+	   SetToIdle();
 
       long bin;
       pProp->Get(bin);
@@ -1714,6 +1723,9 @@ int Ixon::OnExposure(MM::PropertyBase* pProp, MM::ActionType eAct)
    }
    else if (eAct == MM::AfterSet)
    {
+      if (Busy())
+         return ERR_BUSY_ACQUIRING;
+
       double exp;
       pProp->Get(exp);
 
@@ -1738,9 +1750,13 @@ int Ixon::OnExposure(MM::PropertyBase* pProp, MM::ActionType eAct)
  */
 int Ixon::SetExposure_()
 {
-  if(!bSoftwareTriggerSupported)
+   if (Busy())
+      return ERR_BUSY_ACQUIRING;
+
+   if(!bSoftwareTriggerSupported)
 	  return DEVICE_OK;
-  if(fabs(expMs_-currentExpMS_)<0.001)
+
+   if(fabs(expMs_-currentExpMS_)<0.001)
 	  return DEVICE_OK;
 
    CDeviceUtils::SleepMs(KeepCleanTime_);
@@ -1771,8 +1787,11 @@ int Ixon::OnReadoutMode(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
    if (eAct == MM::AfterSet)
    {
-	//added to use RTA
-	SetToIdle();
+      if (Busy())
+         return ERR_BUSY_ACQUIRING;
+
+	   //added to use RTA
+	   SetToIdle();
 
       string mode;
       pProp->Get(mode);
@@ -1819,6 +1838,9 @@ int Ixon::OnEMGain(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
    if (eAct == MM::AfterSet)
    {
+      if (Busy())
+         return ERR_BUSY_ACQUIRING;
+
       long gain;
       pProp->Get(gain);
 	  if(gain == currentGain_)  //Daigang 24-may-2007 added
@@ -1860,15 +1882,18 @@ int Ixon::OnGain(MM::PropertyBase* pProp, MM::ActionType eAct)
       if (DRV_SUCCESS != ret)
          return (int)ret;
 	  */
+      if (Busy())
+         return ERR_BUSY_ACQUIRING;
+
       long gain;
       pProp->Get(gain);
-	  if(gain == currentGain_)
-		 return DEVICE_OK;
-	  if (gain!=0 && gain < (long) EmCCDGainLow_ ) gain = (long)EmCCDGainLow_;
+	   if(gain == currentGain_)
+		   return DEVICE_OK;
+	   if (gain!=0 && gain < (long) EmCCDGainLow_ ) gain = (long)EmCCDGainLow_;
       if (gain > (long) EmCCDGainHigh_ ) gain = (long)EmCCDGainHigh_;
-	  pProp->Set(gain);
+	   pProp->Set(gain);
 
-	  //added to use RTA
+	   //added to use RTA
       if(!bSoftwareTriggerSupported)
     	SetToIdle();
 
@@ -1893,10 +1918,13 @@ int Ixon::OnUseSoftwareTrigger(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
    if (eAct == MM::AfterSet)
    {
-	  std::string useSoftwareTrigger;
+      if (Busy())
+         return ERR_BUSY_ACQUIRING;
+
+      std::string useSoftwareTrigger;
       pProp->Get(useSoftwareTrigger);
-	  if(useSoftwareTrigger == UseSoftwareTrigger_)
-		 return DEVICE_OK;
+	   if(useSoftwareTrigger == UseSoftwareTrigger_)
+		   return DEVICE_OK;
 
 	  UseSoftwareTrigger_ = useSoftwareTrigger;
 
@@ -1941,8 +1969,11 @@ int Ixon::OnPreAmpGain(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
    if (eAct == MM::AfterSet)
    {
-	//added to use RTA
-	SetToIdle();
+      if (Busy())
+         return ERR_BUSY_ACQUIRING;
+   	
+      //added to use RTA
+	   SetToIdle();
 
       string PreAmpGain;
       pProp->Get(PreAmpGain);
@@ -1975,7 +2006,10 @@ int Ixon::OnVCVoltage(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
    if (eAct == MM::AfterSet)
    {
-	  //added to use RTA
+      if (Busy())
+         return ERR_BUSY_ACQUIRING;
+
+   //added to use RTA
 	  SetToIdle();
 
       string VCVoltage;
@@ -2008,8 +2042,11 @@ int Ixon::OnBaselineClamp(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
    if (eAct == MM::AfterSet)
    {
-	//added to use RTA
-	SetToIdle();
+      if (Busy())
+         return ERR_BUSY_ACQUIRING;
+	   
+      //added to use RTA
+	   SetToIdle();
 
       string BaselineClampValue;
       pProp->Get(BaselineClampValue);
@@ -2047,8 +2084,11 @@ int Ixon::OnVSpeed(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
    if (eAct == MM::AfterSet)
    {
-	//added to use RTA
-	SetToIdle();
+      if (Busy())
+         return ERR_BUSY_ACQUIRING;
+
+	   //added to use RTA
+	   SetToIdle();
 
       string VSpeed;
       pProp->Get(VSpeed);
@@ -2123,8 +2163,11 @@ int Ixon::OnTemperatureSetPoint(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
    if (eAct == MM::AfterSet)
    {
-	//added to use RTA
-	SetToIdle();
+      if (Busy())
+         return ERR_BUSY_ACQUIRING;
+   	
+      //added to use RTA
+	   SetToIdle();
 
       long temp;
       pProp->Get(temp);
@@ -2161,8 +2204,11 @@ int Ixon::OnCooler(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
    if (eAct == MM::AfterSet)
    {
-	//added to use RTA
-	SetToIdle();
+      if (Busy())
+         return ERR_BUSY_ACQUIRING;
+
+      //added to use RTA
+	   SetToIdle();
 
 	  //Daigang 24-may-2007
 	  /*
@@ -2218,8 +2264,11 @@ int Ixon::OnFanMode(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
    if (eAct == MM::AfterSet)
    {
-	//added to use RTA
-	SetToIdle();
+      if (Busy())
+         return ERR_BUSY_ACQUIRING;
+
+      //added to use RTA
+   	SetToIdle();
 
 	  //Daigang 24-may-2007
 	  /*
@@ -2264,7 +2313,10 @@ int Ixon::OnInternalShutter(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
    if (eAct == MM::AfterSet)
    {
-	//added to use RTA
+      if (Busy())
+         return ERR_BUSY_ACQUIRING;
+   
+      //added to use RTA
       SetToIdle();
 
       string mode;
@@ -2408,6 +2460,9 @@ int Ixon::OnFrameTransfer(MM::PropertyBase* pProp, MM::ActionType eAct)
 
    if (eAct == MM::AfterSet)
    {
+      if (Busy())
+         return ERR_BUSY_ACQUIRING;
+
       string mode;
       pProp->Get(mode);
       int modeIdx = 0;
@@ -2496,7 +2551,10 @@ int Ixon::OnOutputAmplifier(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
    if (eAct == MM::AfterSet)
    {
-     SetToIdle();
+      if (Busy())
+         return ERR_BUSY_ACQUIRING;
+
+      SetToIdle();
 
       string strAmp;
       pProp->Get(strAmp);
@@ -2534,9 +2592,12 @@ int Ixon::OnADChannel(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
    if (eAct == MM::AfterSet)
    {
-     SetToIdle();
+      if (Busy())
+         return ERR_BUSY_ACQUIRING;
 
-	 string strADChannel;
+      SetToIdle();
+
+	   string strADChannel;
       pProp->Get(strADChannel);
       int ADChannelIdx = 0;
       if (strADChannel.compare(g_ADChannel_14Bit) == 0)

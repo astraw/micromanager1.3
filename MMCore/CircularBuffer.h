@@ -6,6 +6,7 @@
 // DESCRIPTION:   Generic implementation of the circular buffer
 //              
 // COPYRIGHT:     University of California, San Francisco, 2007,
+//                100X Imaging Inc, 2008
 //
 // LICENSE:       This file is distributed under the "Lesser GPL" (LGPL) license.
 //                License text is included with the source distribution.
@@ -31,6 +32,8 @@
 #include "../MMDevice/MMDevice.h"
 #include "ErrorCodes.h"
 #include "Error.h"
+
+#pragma warning( disable : 4290 ) // exception declaration warning
 
 ///////////////////////////////////////////////////////////////////////////////
 //
