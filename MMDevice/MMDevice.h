@@ -518,10 +518,10 @@ namespace MM {
       virtual int CloseFrame(const Device* caller) = 0;
       virtual int AcqFinished(const Device* caller, int statusCode) = 0;
       virtual int PrepareForAcq(const Device* caller) = 0;
-      virtual int InsertImage(const Device* caller, const unsigned char* buf, unsigned width, unsigned height, unsigned byteDepth, ImageMetadata* md = 0) = 0;
+      virtual int InsertImage(const Device* caller, const unsigned char* buf, unsigned width, unsigned height, unsigned byteDepth, Metadata* md = 0) = 0;
       virtual void ClearImageBuffer(const Device* caller) = 0;
       virtual bool InitializeImageBuffer(unsigned channels, unsigned slices, unsigned int w, unsigned int h, unsigned int pixDepth) = 0;
-      virtual int InsertMultiChannel(const Device* caller, const unsigned char* buf, unsigned numChannels, unsigned width, unsigned height, unsigned byteDepth, ImageMetadata* md = 0) = 0;
+      virtual int InsertMultiChannel(const Device* caller, const unsigned char* buf, unsigned numChannels, unsigned width, unsigned height, unsigned byteDepth, Metadata* md = 0) = 0;
       virtual void SetAcqStatus(const Device* caller, int statusCode) = 0;
 
       // autofocus

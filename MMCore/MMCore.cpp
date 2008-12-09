@@ -1565,15 +1565,7 @@ void* CMMCore::getLastImageMD(unsigned channel, unsigned slice, Metadata& md) co
    const ImgBuffer* pBuf = cbuf_->GetTopImageBuffer(channel, slice);
    if (pBuf != 0)
    {
-      md.Clear();
-      const MM::ImageMetadata imd = pBuf->GetMetadata();
-      MetadataSingleTag mt;
-      mt.SetName(MM::g_Keyword_Elapsed_Time_ms);
-      mt.SetValue(CDeviceUtils::ConvertToString(imd.timestamp.getMsec()));
-      md.SetTag(mt);
-      mt.SetName(MM::g_Keyword_Exposure);
-      mt.SetValue(CDeviceUtils::ConvertToString(imd.exposureMs));
-      md.SetTag(mt);
+      md = pBuf->GetMetadata();
       return const_cast<unsigned char*>(pBuf->GetPixels());
    }
    else
@@ -1598,26 +1590,7 @@ void* CMMCore::popNextImageMD(unsigned channel, unsigned slice, Metadata& md) th
    const ImgBuffer* pBuf = cbuf_->GetNextImageBuffer(channel, slice);
    if (pBuf != 0)
    {
-      md.Clear();
-      const MM::ImageMetadata imd = pBuf->GetMetadata();
-      MetadataSingleTag mt;
-      
-      mt.SetName(MM::g_Keyword_Elapsed_Time_ms);
-      mt.SetValue(CDeviceUtils::ConvertToString(imd.timestamp.getMsec()));
-      md.SetTag(mt);
-      
-      mt.SetName(MM::g_Keyword_Meatdata_Exposure);
-      mt.SetValue(CDeviceUtils::ConvertToString(imd.exposureMs));
-      md.SetTag(mt);
-
-      mt.SetName(MM::g_Keyword_Metadata_Z);
-      mt.SetValue(CDeviceUtils::ConvertToString(imd.ZUm));
-      md.SetTag(mt);
-
-      mt.SetName(MM::g_Keyword_Metadata_Score);
-      mt.SetValue(CDeviceUtils::ConvertToString(imd.score));
-      md.SetTag(mt);
-
+      md = pBuf->GetMetadata();
       return const_cast<unsigned char*>(pBuf->GetPixels());
    }
    else

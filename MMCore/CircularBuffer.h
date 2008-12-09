@@ -55,8 +55,8 @@ public:
    unsigned int Height() const {return height_;}
    unsigned int Depth() const {return pixDepth_;}
 
-   bool InsertImage(const unsigned char* pixArray, unsigned int width, unsigned int height, unsigned int byteDepth, MM::ImageMetadata* pMd) throw (CMMError);
-   bool InsertMultiChannel(const unsigned char* pixArray, unsigned int numChannels, unsigned int width, unsigned int height, unsigned int byteDepth, MM::ImageMetadata* pMd) throw (CMMError);
+   bool InsertImage(const unsigned char* pixArray, unsigned int width, unsigned int height, unsigned int byteDepth, Metadata* pMd) throw (CMMError);
+   bool InsertMultiChannel(const unsigned char* pixArray, unsigned int numChannels, unsigned int width, unsigned int height, unsigned int byteDepth, Metadata* pMd) throw (CMMError);
    const unsigned char* GetTopImage() const;
    const unsigned char* GetNextImage();
    const ImgBuffer* GetTopImageBuffer(unsigned channel, unsigned slice) const;

@@ -122,7 +122,7 @@ unsigned long CircularBuffer::GetRemainingImageCount() const
 /**
  * Inserts a single image in the buffer.
  */
-bool CircularBuffer::InsertImage(const unsigned char* pixArray, unsigned int width, unsigned int height, unsigned int byteDepth, MM::ImageMetadata* pMd) throw (CMMError)
+bool CircularBuffer::InsertImage(const unsigned char* pixArray, unsigned int width, unsigned int height, unsigned int byteDepth, Metadata* pMd) throw (CMMError)
 {
    return InsertMultiChannel(pixArray, 1, width, height, byteDepth, pMd);
 }
@@ -130,7 +130,7 @@ bool CircularBuffer::InsertImage(const unsigned char* pixArray, unsigned int wid
 /**
  * Inserts a multi-channel frame in the buffer.
  */
-bool CircularBuffer::InsertMultiChannel(const unsigned char* pixArray, unsigned numChannels, unsigned width, unsigned height, unsigned byteDepth, MM::ImageMetadata* pMd) throw (CMMError)
+bool CircularBuffer::InsertMultiChannel(const unsigned char* pixArray, unsigned numChannels, unsigned width, unsigned height, unsigned byteDepth, Metadata* pMd) throw (CMMError)
 {
    ACE_Guard<ACE_Mutex> guard(g_bufferLock);
 
@@ -163,7 +163,9 @@ bool CircularBuffer::InsertMultiChannel(const unsigned char* pixArray, unsigned 
          {
             // if metadata was not supplied by the camera insert current timestamp
             MM::MMTime timestamp = GetMMTimeNow();
-            MM::ImageMetadata md(timestamp, 0.0);
+            Metadata md;
+            MetadataSingleTag mst(MM::g_Keyword_Elapsed_Time_ms, "Buffer", true);
+            md.SetTag(mst);
             pImg->SetMetadata(md);
          }
          pImg->SetPixels(pixArray + i*singleChannelSize);

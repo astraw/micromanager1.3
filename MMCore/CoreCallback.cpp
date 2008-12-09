@@ -34,7 +34,7 @@
 #include <ace/Mutex.h>
 #include <ace/Guard_T.h>
 
-int CoreCallback::InsertImage(const MM::Device* /*caller*/, const unsigned char* buf, unsigned width, unsigned height, unsigned byteDepth, MM::ImageMetadata* pMd)
+int CoreCallback::InsertImage(const MM::Device* /*caller*/, const unsigned char* buf, unsigned width, unsigned height, unsigned byteDepth, Metadata* pMd)
 {
    try 
    {
@@ -66,7 +66,7 @@ int CoreCallback::InsertMultiChannel(const MM::Device* /*caller*/,
                               unsigned width,
                               unsigned height,
                               unsigned byteDepth,
-                              MM::ImageMetadata* pMd)
+                              Metadata* pMd)
 {
    try
    {
