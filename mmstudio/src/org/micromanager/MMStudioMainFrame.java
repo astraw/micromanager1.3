@@ -1570,7 +1570,7 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI, Scrip
          setIJCal(imageWin_);
          // notify processes that need to attach to this acquisition window:
          if (centerAndDragListener_ != null && centerAndDragListener_.isRunning())
-             centerAndDragListener_.attach(imp);
+             centerAndDragListener_.attach(imageWin_);
          if (zWheelListener_ != null && zWheelListener_.isRunning())
              zWheelListener_.attach(imp.getWindow());
          if (xyzKListener_ != null && xyzKListener_.isRunning())
