@@ -27,7 +27,7 @@
 //
 #include "CircularBuffer.h"
 #include "CoreUtils.h"
-#include "..\MMDevice\DeviceUtils.h"
+#include "../MMDevice/DeviceUtils.h"
 
 #ifdef WIN32
 #pragma warning (disable : 4312 4244)
