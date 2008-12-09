@@ -44,7 +44,7 @@ public final class XYZKeyListener implements KeyListener {
 	private boolean correction_;
 	private static final double zmoveIncrement_ = 0.20;
 	public static int ctrlZStep = 1;
-	public static int normaZlStep = 5;
+	public static int normalZStep = 3;
 	public static int shiftZStep = 10;
 	public static int ctrlXYStep = 1;
 	public static int normalXYStep = 10;
@@ -94,9 +94,9 @@ public final class XYZKeyListener implements KeyListener {
 		case KeyEvent.VK_COMMA:
 		case KeyEvent.VK_GREATER:
 		case KeyEvent.VK_PERIOD:
-			step = ctrlZStep;
+			step = normalZStep;
 			if (e.isControlDown())
-				step = normaZlStep;
+				step = ctrlZStep;
 			else if (e.isShiftDown())
 				step = shiftZStep;
 			switch (e.getKeyCode()) {
@@ -214,7 +214,7 @@ public final class XYZKeyListener implements KeyListener {
 		double moveIncrement = zmoveIncrement_;
 		double pixSizeUm = core_.getPixelSizeUm();
 		if (pixSizeUm > 0.0) {
-			moveIncrement = 2 * pixSizeUm;
+			moveIncrement = pixSizeUm;
 		}
 
 		// Move the stage
