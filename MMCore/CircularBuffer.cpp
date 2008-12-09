@@ -27,6 +27,7 @@
 //
 #include "CircularBuffer.h"
 #include "CoreUtils.h"
+#include "..\MMDevice\DeviceUtils.h"
 
 #ifdef WIN32
 #pragma warning (disable : 4312 4244)
@@ -165,6 +166,7 @@ bool CircularBuffer::InsertMultiChannel(const unsigned char* pixArray, unsigned 
             MM::MMTime timestamp = GetMMTimeNow();
             Metadata md;
             MetadataSingleTag mst(MM::g_Keyword_Elapsed_Time_ms, "Buffer", true);
+            mst.SetValue(CDeviceUtils::ConvertToString(timestamp.getMsec()));
             md.SetTag(mst);
             pImg->SetMetadata(md);
          }
