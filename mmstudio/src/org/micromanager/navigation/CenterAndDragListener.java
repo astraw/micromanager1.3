@@ -47,7 +47,7 @@ public class CenterAndDragListener implements MouseListener,
 	      // Get a handle to the AcqWindow
 	      if (WindowManager.getFrame("AcqWindow") != null) {
 	         ImagePlus img = WindowManager.getImage("AcqWindow");
-	         attach(img);
+	         attach(img.getWindow());
 	      }
 	      getOrientation();
 	   }
@@ -64,10 +64,9 @@ public class CenterAndDragListener implements MouseListener,
 	      return isRunning_;
 	   }
 
-	   public void attach(ImagePlus img) {
+	   public void attach(ImageWindow win) {
 	      if (!isRunning_)
 	         return;
-	      ImageWindow win = img.getWindow();
 	      canvas_ = win.getCanvas();
 	      canvas_.addMouseListener(this);
 	      canvas_.addMouseMotionListener(this);
