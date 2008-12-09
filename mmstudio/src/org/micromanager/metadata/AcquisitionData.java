@@ -573,9 +573,13 @@ public class AcquisitionData {
          return new JSONObject();
 
       String frameKey = ImageKey.generateFrameKey(frame, channel, slice);
+      JSONObject stateData;
       try {
-         JSONObject stateData = metadata_.getJSONObject(SummaryKeys.SYSTEM_STATE);
-         return stateData.getJSONObject(frameKey);
+         stateData = metadata_.getJSONObject(SummaryKeys.SYSTEM_STATE);
+         if (stateData.has(frameKey))
+            return stateData.getJSONObject(frameKey);
+         else
+            return new JSONObject();
       } catch (JSONException e) {
          throw new MMAcqDataException(e);
       }

@@ -183,7 +183,8 @@ public class DiskStreamingThread extends Thread {
          pixelSize_um_ = core_.getPixelSizeUm();
          acqData_.setPixelSizeUm(pixelSize_um_);      
          acqData_.setImageIntervalMs(intervalMs_);
-         acqData_.saveMetadata();
+         if (!acqData_.isInMemory())
+            acqData_.saveMetadata();
          
       } catch (MMAcqDataException e) {
          // TODO Auto-generated catch block
