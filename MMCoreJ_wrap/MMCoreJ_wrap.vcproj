@@ -43,7 +43,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;%JAVA_HOME%\include\win32&quot;;&quot;%JAVA_HOME%\include&quot;"
+				AdditionalIncludeDirectories="$(JAVA_HOME)\include\win32;$(JAVA_HOME)\include"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;MMCOREJ_WRAP_EXPORTS"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -53,6 +53,7 @@
 				WarningLevel="4"
 				Detect64BitPortabilityProblems="false"
 				DebugInformationFormat="4"
+				DisableSpecificWarnings="4290"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -128,7 +129,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="&quot;%JAVA_HOME%\include\win32&quot;;&quot;%JAVA_HOME%\include&quot;"
+				AdditionalIncludeDirectories="$(JAVA_HOME)\include\win32;$(JAVA_HOME)\include"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;MMCOREJ_WRAP_EXPORTS"
 				RuntimeLibrary="0"
 				RuntimeTypeInfo="true"
@@ -136,6 +137,7 @@
 				WarningLevel="4"
 				Detect64BitPortabilityProblems="false"
 				DebugInformationFormat="3"
+				DisableSpecificWarnings="4290"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
