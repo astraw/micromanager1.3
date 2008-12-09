@@ -679,10 +679,10 @@ int CSensicam::SetROI(unsigned uX, unsigned uY, unsigned uXSize, unsigned uYSize
       return nErr;
 
    // Liisa: changed these to round up, else uX or uY < 32 rounds to zero, Sensicam needs min 1.
-   m_nRoiXMin = (int) ceil( ( (double) uX / 32) );
-   m_nRoiYMin = (int) ceil( ( (double) uY / 32) );
-   m_nRoiXMax = (int) ceil( ( ( (double) uX + uXSize) / 32) -1 );
-   m_nRoiYMax = (int) ceil( ( ( (double) uY + uYSize) / 32) -1 );
+   m_nRoiXMin = (int) ceil( ( (double) uX * m_nHBin / 32) );
+   m_nRoiYMin = (int) ceil( ( (double) uY * m_nHBin / 32) );
+   m_nRoiXMax = (int) ceil( ( ( (double) uX + uXSize) * m_nHBin / 32) -1 );
+   m_nRoiYMax = (int) ceil( ( ( (double) uY + uYSize) * m_nHBin / 32) -1 );
 
    nErr = SET_COC(m_nMode, m_nTrig, m_nRoiXMin, m_nRoiXMax, m_nRoiYMin, m_nRoiYMax,
                         m_nHBin, m_nVBin, m_pszTimes);
