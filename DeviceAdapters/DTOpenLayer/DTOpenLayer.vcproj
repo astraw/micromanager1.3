@@ -41,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="C:\projects\3rdparty\DataTranslation\SDK\Include"
+				AdditionalIncludeDirectories="..\..\..\3rdparty\DataTranslation\SDK\Include"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;MODULE_EXPORTS"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -51,6 +51,7 @@
 				WarningLevel="4"
 				Detect64BitPortabilityProblems="false"
 				DebugInformationFormat="3"
+				DisableSpecificWarnings="4290"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -123,7 +124,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="C:\projects\3rdparty\DataTranslation\SDK\Include"
+				AdditionalIncludeDirectories="..\..\..\3rdparty\DataTranslation\SDK\Include"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;MODULE_EXPORTS"
 				RuntimeLibrary="0"
 				RuntimeTypeInfo="true"
@@ -131,6 +132,7 @@
 				WarningLevel="4"
 				Detect64BitPortabilityProblems="false"
 				DebugInformationFormat="3"
+				DisableSpecificWarnings="4290"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -146,7 +148,7 @@
 				AdditionalDependencies="oldaapi32.lib olmem32.lib"
 				OutputFile="$(OutDir)/mmgr_dal_DTOpenLayer.dll"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="C:\projects\3rdparty\DataTranslation\SDK\Lib"
+				AdditionalLibraryDirectories="..\..\..\3rdparty\DataTranslation\SDK\Lib"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				OptimizeReferences="2"
