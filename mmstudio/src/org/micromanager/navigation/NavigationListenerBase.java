@@ -18,11 +18,11 @@ import mmcorej.MMCoreJ;
  */
 public abstract class NavigationListenerBase {
 	private CMMCore core_;
-	protected static boolean isRunning_ = false;
-	protected boolean mirrorX_;
-	protected boolean mirrorY_;
-	protected boolean transposeXY_;
-	protected boolean correction_;
+	private static boolean isRunning_ = false;
+	private boolean mirrorX_;
+	private boolean mirrorY_;
+	private boolean transposeXY_;
+	private boolean correction_;
 
 	public NavigationListenerBase(CMMCore core) {
 		core_ = core;
@@ -31,13 +31,19 @@ public abstract class NavigationListenerBase {
 	public boolean isRunning() {
 		return isRunning_;
 	}
+	public void start() {
+		isRunning_=true;
+	}
+	public void stop() {
+		isRunning_=false;
+	}
+	
 	protected boolean needMirrorX(){return mirrorX_;}
 	protected boolean needMirrorY(){return mirrorY_;}
 	protected boolean needTransposeXY(){return transposeXY_;}
 	protected boolean needCorrection(){return correction_;}
 	
 	public abstract void start(ImageWindow win);
-	public abstract void stop();
 	public abstract void attach(ImageWindow win);
 	
 	public void getOrientation() {
