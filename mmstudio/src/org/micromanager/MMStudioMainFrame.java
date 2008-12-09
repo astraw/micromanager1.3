@@ -1493,9 +1493,10 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI, Scrip
       	   enableLiveMode(false);
       	 }
          core_.setROI(r.x, r.y, r.width, r.height);
+         updateStaticInfo();
          if (liveRunning)
         	 enableLiveMode(true);
-         updateStaticInfo();
+
 
       } catch (Exception e) {
          handleException(e);
@@ -1504,8 +1505,16 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI, Scrip
 
    private void clearROI() {
       try {
+         boolean liveRunning = false;
+     	 if (liveRunning_) {
+       	   liveRunning = liveRunning_;
+       	   enableLiveMode(false);
+       	 } 
          core_.clearROI();
-         updateStaticInfo();         
+         updateStaticInfo(); 
+         if (liveRunning)
+        	 enableLiveMode(true);
+         
       } catch (Exception e) {
          handleException(e);
       }      
@@ -2040,6 +2049,9 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI, Scrip
                toggleButtonShutter_.setEnabled(true);
             liveRunning_ = false;
             autoShutterCheckBox_.setEnabled(true);
+            // This is here to avoid crashes when changing ROI in live mode with Sensicam
+            // Should be removed when underlying problem is dealt with           
+            Thread.sleep(100);
          }
       } catch (Exception err) {
          JOptionPane.showMessageDialog(this, err.getMessage());     
