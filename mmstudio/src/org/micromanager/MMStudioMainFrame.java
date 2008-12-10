@@ -2412,14 +2412,8 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI, Scrip
          imageWin_.dispose();
       }
 
-      //if (histWin_ != null)
-      //   histWin_.dispose();
-
       if (profileWin_ != null)
          profileWin_.dispose();
-
-//    if (scriptFrame_ != null)
-//    scriptFrame_.dispose();
 
       if (scriptPanel_ != null)
          scriptPanel_.closePanel();
@@ -2555,6 +2549,8 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI, Scrip
          if (result == JOptionPane.NO_OPTION)
             return;              
       }
+
+      stopAllActivity();
 
       cleanupOnClose();
       saveSettings();
