@@ -534,14 +534,16 @@ int CHamamatsu::OnSensitivity(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
    if (eAct == MM::AfterSet)
    {
-      double mode;
-      pProp->Get(mode);
+      double sensitivity;
+      pProp->Get(sensitivity);
+      /*
       int ret = ShutdownImageBuffer();
       if (ret != DEVICE_OK)
          return ret;
-      if (!dcam_setpropertyvalue(m_hDCAM, DCAM_IDPROP_SENSITIVITY, mode))
+         */
+      if (!dcam_setpropertyvalue(m_hDCAM, DCAM_IDPROP_SENSITIVITY, sensitivity))
          return ReportError("Error in dcam_setpropertyvalue (Sensitivity): ");
-
+/*
       ret = ResizeImageBuffer();
       if (ret != DEVICE_OK)
          return ret;
@@ -564,13 +566,14 @@ int CHamamatsu::OnSensitivity(MM::PropertyBase* pProp, MM::ActionType eAct)
       ret = OnPropertiesChanged();
       if (ret != DEVICE_OK)
          return ret;
+         */
    }
    else if (eAct == MM::BeforeGet)
    {
-      double mode;
-      if (!dcam_getpropertyvalue(m_hDCAM, DCAM_IDPROP_SENSITIVITY, &mode))
+      double sensitivity;
+      if (!dcam_getpropertyvalue(m_hDCAM, DCAM_IDPROP_SENSITIVITY, &sensitivity))
          return ReportError("Error in dcam_getpropertyvalue (sensitivity): ");
-      pProp->Set(mode);
+      pProp->Set(sensitivity);
    }
    return DEVICE_OK;
 }
@@ -834,7 +837,7 @@ void CHamamatsu::GetName(char* name) const
 }
 
 long CHamamatsu::ReportError(std::string message) {
-    long err = dcam_getlasterror(m_hDCAM, NULL, 0);
+    unsigned long err = dcam_getlasterror(m_hDCAM, NULL, 0);
     ostringstream os;
     os << message << err;
     LogMessage(os.str().c_str());
@@ -1253,6 +1256,12 @@ int CHamamatsu::Shutdown()
 
 bool CHamamatsu::Busy()
 {
+   // When is the camera really busy?
+   // Saying we are Busy when doing SequenceAcquisition leads to trouble,
+   // since no settings can be changed without stopping acuiqition
+   // Moreover, we can only restart acquisition after the UI is satisfied the camera is not Busy.
+   // However, Burst mode depends on this flag!!
+   // For now, do not have the UI check for Busy when changing stuff in ConfiggroupPad
    return (acquiring_ || snapInProgress_);
 }
 
@@ -1282,11 +1291,8 @@ int CHamamatsu::SnapImage()
          return dcam_getlasterror(m_hDCAM, NULL, 0);
 
    snapInProgress_ = true;
-#ifdef WIN32
-   Sleep((DWORD)(dExp*1000.0));
-#else
-   usleep(dExp*1000000.0);
-#endif
+
+   CDeviceUtils::SleepMs(dExp*1000.0);
 
    return DEVICE_OK;
 }
@@ -1311,20 +1317,28 @@ void CHamamatsu::SetExposure(double dExp)
 const unsigned char* CHamamatsu::GetImageBuffer()
 {
     // wait until the frame becomes available
-   double dExp;
+   double dReadoutTime;
+   char rT[MM::MaxStrLength];
+   GetProperty(MM::g_Keyword_ReadoutTime, rT);
+   dReadoutTime = atof(rT);
+   
+   /*
    if (!dcam_getexposuretime(m_hDCAM, &dExp))
       return 0;
       // return dcam_getlasterror(m_hDCAM, NULL, 0);
+   */
    
-   long lnTimeOut = (long) ((dExp + 5.0) * 1000.0);
+   long lnTimeOut = (long) ((dReadoutTime + 20.0) * 1000.0);
    
    DWORD dwEvent = DCAM_EVENT_FRAMEEND;
    if (!dcam_wait(m_hDCAM, &dwEvent, lnTimeOut, NULL))
    {
       long lnLastErr = dcam_getlasterror(m_hDCAM, NULL, 0);
-      if (lnLastErr != ccErr_none)
+      if (lnLastErr != ccErr_none) {
+         ReportError("Problem in GetImageBuffer: ");
+         snapInProgress_ = false;
          return 0;
-         //return lnLastErr;
+      }
    }
 
    // get pixels
@@ -1840,9 +1854,9 @@ int AcqSequenceThread::svc(void)
       int ret = camera_->PushImage();
       if (ret != DEVICE_OK)
       {
-	      ostringstream os;
+	       ostringstream os;
           os << "PushImage() failed with errorcode: " << ret;
-		  camera_->LogMessage(os.str().c_str());
+          camera_->LogMessage(os.str().c_str());
           camera_->StopSequenceAcquisition();
           return 2;
       }
@@ -1856,7 +1870,7 @@ int AcqSequenceThread::svc(void)
       return 0;
    }
 
-   camera_->StopSequenceAcquisition();
+   camera_->RestartSnapMode();
    printf("Acquisition completed.\n");
    return 0;
 }
@@ -1951,28 +1965,29 @@ int CHamamatsu::StartSequenceAcquisition(long numImages, double interval_ms, boo
  */
 int CHamamatsu::StopSequenceAcquisition()
 {
-   LogMessage("Stopped sequence acquisition");
-   if (!dcam_idle(m_hDCAM))
-      return ReportError("Error in dcam_idle: ");
-
-   if (!dcam_freeframe(m_hDCAM))
-      return ReportError("Error in dcam_freeframe ");
-
    seqThread_->Stop();
-   acquiring_ = false;
+   seqThread_->wait();
+ 
+   return RestartSnapMode();
+}
 
-   // Set camera back into snap state
-   int nRet = ResizeImageBuffer();
-   if (nRet != DEVICE_OK)
-      return nRet;
+int CHamamatsu::RestartSnapMode() 
+{
+   int ret;
 
+   // Switch back to software triggering
+   // This also calls Shutdown Image buffer and ResizeImageBuffer
    if (originalTrigMode_.compare(g_TrigMode_Software) == 0)
    {
-	   int ret = SetProperty(g_TrigMode, g_TrigMode_Software);
+	   ret = SetProperty(g_TrigMode, g_TrigMode_Software);
 	   if (ret != DEVICE_OK)
 		   return ret;
 	   originalTrigMode_ = "";
    }
+
+   LogMessage("Stopped sequence acquisition (Camera back in softare trigger mode");
+
+   acquiring_ = false;
 
    MM::Core* cb = GetCoreCallback();
    if (cb)
