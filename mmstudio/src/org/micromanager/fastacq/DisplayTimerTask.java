@@ -37,7 +37,8 @@ public class DisplayTimerTask extends TimerTask {
       try {
          // update image window
          Object img = core_.getLastImage();
-         parentGUI_.displayImage(img);
+         if (img != null)
+            parentGUI_.displayImage(img);
          //
       } catch (Exception e){
          // TODO Auto-generated catch block
