@@ -2183,6 +2183,12 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI, Scrip
          imageWin_.getGraphics().clearRect(0,0,imageWin_.getWidth(),40);
          imageWin_.drawInfo(imageWin_.getGraphics());
 
+         boolean liveRunning = false;
+    	   if (liveRunning_) {
+      	   liveRunning = liveRunning_;
+      	   enableLiveMode(false);
+         }
+
          String expStr = textFieldExp_.getText();
          if (expStr.length() > 0) {
             core_.setExposure(Double.parseDouble(expStr));
@@ -2190,6 +2196,11 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI, Scrip
          }
          else
             handleError("Exposure field is empty!");
+
+    	   if (liveRunning) {
+      	   enableLiveMode(true);
+         }
+
       } catch (Exception e){
          handleException(e);
       }      
