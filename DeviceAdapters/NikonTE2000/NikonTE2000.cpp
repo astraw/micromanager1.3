@@ -43,7 +43,7 @@ const char* g_HubName = "TE2000";
 const char* g_Control = "Control";
 const char* g_ControlMicroscope = "Microscope";
 const char* g_ControlPad = "Control Pad";
-const char* g_ExcitationFilterWheelName = "T-FLEW";
+const char* g_ExcitationFilterWheelName = "Excitation Filter wheel";
 
 using namespace std;
 
@@ -95,7 +95,7 @@ MODULE_API void InitializeModuleData()
    AddAvailableDeviceName(g_UniblitzShutterName, "Uniblitz shutter");
    AddAvailableDeviceName(g_AutoFocusName,  "PFS autofocus device");
    AddAvailableDeviceName(g_PFSOffsetName,  "PFS Offset Lens");
-   AddAvailableDeviceName(g_ExcitationFilterWheelName, "Nikon T-FLEW filter wheel");
+   AddAvailableDeviceName(g_ExcitationFilterWheelName, "Nikon excitation side filter changer");
 }
 
 MODULE_API MM::Device* CreateDevice(const char* deviceName)
@@ -505,7 +505,6 @@ int ExcitationFilterBlock::OnState(MM::PropertyBase* pProp, MM::ActionType eAct)
    {
       int pos;
 	  int ret = g_hub.GetExcitationFilterBlockPosition(*this, *GetCoreCallback(), pos);
-      //int ret = g_hub.GetFilterBlockPosition(*this, *GetCoreCallback(), pos);
       if (ret != DEVICE_OK)
          return ret;
       pos -= 1;
@@ -530,6 +529,9 @@ int ExcitationFilterBlock::OnState(MM::PropertyBase* pProp, MM::ActionType eAct)
       int ret = g_hub.SetExcitationFilterBlockPosition(*this, *GetCoreCallback(), (int)pos);
       if (ret != 0)
          return ret;
+	  pProp->Set((long)pos);
+	  ret = UpdateStatus();
+	  
    }
 
    return DEVICE_OK;
