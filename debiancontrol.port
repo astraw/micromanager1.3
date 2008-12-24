@@ -1,0 +1,11 @@
+Package: micromanager
+Version: 1.3
+Section: contrib/science
+Priority: optional
+Architecture: i386
+Essential: no
+Depends: java2-runtime, bsh, libace-dev, libusb-dev
+Installed-Size: 10
+Maintainer: Johan Henriksson [mahogny@areta.org]
+Description: Micro-Manager provides a programmatic and user interface for research microscopes and related equipment
+Homepage: http://www.micro-manager.org
