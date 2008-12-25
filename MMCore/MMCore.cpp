@@ -3911,7 +3911,18 @@ void CMMCore::fullFocus() throw (CMMError)
 void CMMCore::incrementalFocus() throw (CMMError)
 {
    if (autoFocus_)
-      autoFocus_->FullFocus();
+   {
+      int ret = autoFocus_->IncrementalFocus();
+      if (ret != DEVICE_OK)
+      {
+         logError(getDeviceName(autoFocus_).c_str(), getDeviceErrorText(ret, autoFocus_).c_str());
+         throw CMMError(getDeviceErrorText(ret, autoFocus_).c_str(), MMERR_DEVICE_GENERIC);
+      }
+   }
+   else
+   {
+      throw CMMError(getCoreErrorText(MMERR_AutoFocusNotAvailable).c_str(), MMERR_AutoFocusNotAvailable);
+   }
 }
 
 ///////////////////////////////////////////////////////////////////////////////
