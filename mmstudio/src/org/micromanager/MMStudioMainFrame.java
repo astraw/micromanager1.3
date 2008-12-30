@@ -141,7 +141,7 @@ import com.swtdesigner.SwingResourceManager;
  */
 public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 		ScriptInterface {
-	public static String LIVE_WINDOW_TITLE = "AcqWindow";
+	public static String LIVE_WINDOW_TITLE = "Live";
 
 	private static final String MICRO_MANAGER_TITLE = "Micro-Manager 1.3";
 	private static final String VERSION = "1.3.15 (beta)";
@@ -189,7 +189,7 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 	private ContrastSettings contrastSettings16_;
 
 	private GUIColors guiColors_;
-	private ColorModel currentColorModel_;
+//	private ColorModel currentColorModel_;
 
 	private MMImageWindow imageWin_;
 	private GraphFrame profileWin_;
@@ -1703,6 +1703,7 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 		}
 	}
 
+	
 	private boolean openImageWindow() {
 		try {
 			ImageProcessor ip;
@@ -1800,6 +1801,9 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 			imageWin_.addWindowListener(wndCloser);
 			imageWin_.addWindowListener(wndFocus);
 			imageWin_.addWindowListener(wndActive);
+			imageWin_.setIconImage(SwingResourceManager.getImage(MMStudioMainFrame.class,
+			"/org/micromanager/icons/camera_go.png"));
+			imageWin_.getCanvas().requestFocus();
 
 		} catch (Exception e) {
 			handleException(e);
@@ -2357,7 +2361,6 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 			// move
 			Point pt = imageWin_.getCanvas().getCursorLoc();
 			imageWin_.getImagePlus().mouseMoved(pt.x, pt.y);
-
 		} catch (Exception e) {
 			handleException(e);
 			return false;
