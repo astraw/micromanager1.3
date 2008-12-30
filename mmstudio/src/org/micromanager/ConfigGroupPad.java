@@ -286,12 +286,38 @@ public class ConfigGroupPad extends JScrollPane{
          return null;
       }
 
+      private class LiveModeSync
+      {
+    	  private boolean restartLive=false;  
+    	  public LiveModeSync(String groupName) throws InterruptedException
+    	  {
+              if (parentGUI_ != null)
+              {
+            	  restartLive= parentGUI_.getLiveMode() 
+            	  				&& groupName.contains("Camera");
+            	  if (restartLive)
+            	  {
+            		  parentGUI_.enableLiveMode(false);
+            	  }
+              }
+    	  }
+    	  public void restartIfNecessary() throws InterruptedException
+    	  {
+              if (parentGUI_ != null)
+            	  if (restartLive)
+            	  {
+            		  parentGUI_.enableLiveMode(true);
+            	  }
+    	  }
+      }
+      
       public void setValueAt(Object value, int row, int col) {
          StateItem item = groupList_.get(row);
          if (col == 1) {
             try {
                if (value != null && value.toString().length() > 0)
                {
+//            	   LiveModeSync sync = new LiveModeSync(item.group);
                   // apply selected config
                   if (item.singleProp) {
                      NumberFormat form = NumberFormat.getInstance();
@@ -307,6 +333,7 @@ public class ConfigGroupPad extends JScrollPane{
                      core_.setConfig(item.group, value.toString());
                      core_.waitForConfig(item.group, value.toString());
                   }
+//                  sync.restartIfNecessary();
                   refreshStatus();
                   repaint();
                   if (parentGUI_ != null)
