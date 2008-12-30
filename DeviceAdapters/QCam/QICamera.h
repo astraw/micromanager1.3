@@ -54,25 +54,41 @@
 #define g_Keyword_ITGain_Max				"Intensifier Gain Max"
 
 
+#define ERR_BUFFER_ALLOCATION_FAILED     1001
+#define ERR_INCOMPLETE_SNAP_IMAGE_CYCLE  1002
+#define ERR_BUSY_ACQUIRING               1003
+#define ERR_INTERNAL_BUFFER_FULL         1004
+#define ERR_NO_CAMERA_FOUND              1005
+
+#ifndef QCAM_CHECK_ERROR
 #define CHECK_ERROR(inErr) \
 { \
-	if (inErr != qerrSuccess) \
-	{ \
-		printf("QCam error %d occured\n", inErr); \
-		QCam_ReleaseDriver(); \
-\
-		return DEVICE_ERR; \
-	} \
+   if (CheckForError(inErr) )\
+      return DEVICE_ERR;\
 }
+#else
+#define CHECK_ERROR(inErr) \
+{ \
+   if (inErr != qerrSuccess) \
+   { \
+   printf("QCam error %d occured\n", inErr); \
+   QCam_ReleaseDriver(); \
+   \
+   return DEVICE_ERR; \
+   } \
+}
+#endif //QCAM_CHECK_ERROR
 
 // has to be a C function
 void QCAMAPI PreviewCallback
 (
-	void*				userPtr,			// User defined
-	unsigned long		userData,			// User defined
-	QCam_Err			errcode,			// Error code
-	unsigned long		flags				// Combination of flags (see QCam_qcCallbackFlags)
-);
+ void*				userPtr,			// User defined
+ unsigned long		userData,			// User defined
+ QCam_Err			errcode,			// Error code
+ unsigned long		flags				// Combination of flags (see QCam_qcCallbackFlags)
+ );
+
+class QICamSequenceThread;
 
 //////////////////////////////////////////////////////////////////////////////
 // QICamera class
@@ -82,12 +98,13 @@ class QICamera : public CCameraBase<QICamera>
 public:
    QICamera();
    ~QICamera();
-  
+   friend QICamSequenceThread;
+
    // MMDevice API
    // ------------
    int Initialize();
    int Shutdown();
-  
+
    void GetName(char* name) const;      
    bool Busy();
 
@@ -108,11 +125,6 @@ public:
    int SetupITGain();
    int SetupFrames();
 
-   // streaming
-   int StartStreamingImages();
-   void SetCurrentFrameNumber(unsigned long inFrameNumber);
-   void ExposureDone();
-
    // MMCamera API
    // ------------
    int SnapImage();
@@ -130,28 +142,55 @@ public:
    int GetROI(unsigned& x, unsigned& y, unsigned& xSize, unsigned& ySize); 
    int ClearROI();
 
-	// action interface
-	// ----------------
-	int OnExposure(MM::PropertyBase* pProp, MM::ActionType eAct);
-	int OnBinning(MM::PropertyBase* pProp, MM::ActionType eAct);
-	int OnGain(MM::PropertyBase* pProp, MM::ActionType eAct);
-	int OnOffset(MM::PropertyBase* pProp, MM::ActionType eAct);
-	int OnReadoutSpeed(MM::PropertyBase* pProp, MM::ActionType eAct);
-	int OnPixelType(MM::PropertyBase* pProp, MM::ActionType eAct);
-	int OnBitDepth(MM::PropertyBase* pProp, MM::ActionType eAct);
-	int OnCooler(MM::PropertyBase* pProp, MM::ActionType eAct);
-	int OnRegulatedCooling(MM::PropertyBase* pProp, MM::ActionType eAct);
-	int OnEMGain(MM::PropertyBase* pProp, MM::ActionType eAct);
-	int OnITGain(MM::PropertyBase* pProp, MM::ActionType eAct);
+   // action interface
+   // ----------------
+   int OnExposure(MM::PropertyBase* pProp, MM::ActionType eAct);
+   int OnBinning(MM::PropertyBase* pProp, MM::ActionType eAct);
+   int OnGain(MM::PropertyBase* pProp, MM::ActionType eAct);
+   int OnOffset(MM::PropertyBase* pProp, MM::ActionType eAct);
+   int OnReadoutSpeed(MM::PropertyBase* pProp, MM::ActionType eAct);
+   int OnPixelType(MM::PropertyBase* pProp, MM::ActionType eAct);
+   int OnBitDepth(MM::PropertyBase* pProp, MM::ActionType eAct);
+   int OnCooler(MM::PropertyBase* pProp, MM::ActionType eAct);
+   int OnRegulatedCooling(MM::PropertyBase* pProp, MM::ActionType eAct);
+   int OnEMGain(MM::PropertyBase* pProp, MM::ActionType eAct);
+   int OnITGain(MM::PropertyBase* pProp, MM::ActionType eAct);
+
+   // Sequence acquisition interface
+   // ----------------
+   int StartSequenceAcquisition(long numImages, double interval_ms, bool stopOnOverflow);
+   int StopSequenceAcquisition();
+   void SetCurrentFrameNumber(unsigned long inFrameNumber);
 
 private:
 
+   // streaming
+   int StartStreamingImages();
+   int ResizeImageBuffer();
+   int FinishSequenceMode();
+   void PushSequenceImage();
+   int WaitForFrameCaptured();
+public:
+   void ExposureDone();
+
+private:
+   // error 
+   int ReportError(std::string message, int err);
+   int CheckForError(int err) const;
+
+
+private:
    ImgBuffer			m_snappedImageBuffer;
    bool					m_isInitialized;
    bool					m_isBusy;
    QCam_Handle			m_camera;
    QCam_Settings		m_settings;
-   QCam_Frame			*m_frame1, *m_frame2;
+   QCam_Frame			*m_frame1;
+   QCam_Frame        *m_frame2;
+   QCam_Frame		   *m_currentFrame;
+   long              m_numImages;
+   bool              m_stopOnOverflow;
+   QICamSequenceThread *m_seqThread;
 
 #ifdef WIN32
    HANDLE				m_waitCondition;
@@ -160,7 +199,40 @@ private:
    pthread_cond_t		m_waitCondition;
 #endif
 
-   int ResizeImageBuffer();
+};
+/*
+* Acquisition thread (the BaseSequenceThread inherited from CCameraBase is not used)
+*/
+class QICamSequenceThread : public MMDeviceThreadBase
+{
+   enum { default_numImages=1, default_intervalMS = 100 };
+public:
+   QICamSequenceThread(QICamera* camera) 
+      :intervalMs_(default_intervalMS)
+      ,numImages_(default_numImages)
+      ,stop_(true)
+      ,camera_(camera)
+   {}
+   ~QICamSequenceThread() {}
+   void Stop() 
+   {
+      stop_ = true; 
+      wait();
+   }; 
+   int Start(double intervalMs, long numImages) // intervalMS is never used 
+   {
+      intervalMs_ = intervalMs;
+      numImages_ = numImages;
+      stop_ = false; 
+      return activate();
+   }
+   bool IsRunning(){return !stop_;};
+   int svc();
+private:
+   double intervalMs_;
+   long numImages_;
+   bool stop_;
+   QICamera* camera_;
 };
 
 #endif //_QICAMERA_H_
