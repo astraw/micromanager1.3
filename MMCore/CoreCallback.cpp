@@ -34,7 +34,7 @@
 #include <ace/Mutex.h>
 #include <ace/Guard_T.h>
 
-int CoreCallback::InsertImage(const MM::Device* /*caller*/, const unsigned char* buf, unsigned width, unsigned height, unsigned byteDepth, Metadata* pMd)
+int CoreCallback::InsertImage(const MM::Device* /*caller*/, const unsigned char* buf, unsigned width, unsigned height, unsigned byteDepth, const Metadata* pMd)
 {
    try 
    {
@@ -48,6 +48,11 @@ int CoreCallback::InsertImage(const MM::Device* /*caller*/, const unsigned char*
       return DEVICE_INCOMPATIBLE_IMAGE;
    }
 
+}
+int CoreCallback::InsertImage(const MM::Device* caller, const ImgBuffer & imgBuf)
+{
+   return InsertImage(caller, imgBuf.GetPixels(), imgBuf.Width(), 
+      imgBuf.Height(), imgBuf.Depth(), &imgBuf.GetMetadata());
 }
 
 void CoreCallback::ClearImageBuffer(const MM::Device* /*caller*/)

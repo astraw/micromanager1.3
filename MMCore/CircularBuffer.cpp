@@ -123,7 +123,7 @@ unsigned long CircularBuffer::GetRemainingImageCount() const
 /**
  * Inserts a single image in the buffer.
  */
-bool CircularBuffer::InsertImage(const unsigned char* pixArray, unsigned int width, unsigned int height, unsigned int byteDepth, Metadata* pMd) throw (CMMError)
+bool CircularBuffer::InsertImage(const unsigned char* pixArray, unsigned int width, unsigned int height, unsigned int byteDepth, const Metadata* pMd) throw (CMMError)
 {
    return InsertMultiChannel(pixArray, 1, width, height, byteDepth, pMd);
 }
@@ -131,7 +131,7 @@ bool CircularBuffer::InsertImage(const unsigned char* pixArray, unsigned int wid
 /**
  * Inserts a multi-channel frame in the buffer.
  */
-bool CircularBuffer::InsertMultiChannel(const unsigned char* pixArray, unsigned numChannels, unsigned width, unsigned height, unsigned byteDepth, Metadata* pMd) throw (CMMError)
+bool CircularBuffer::InsertMultiChannel(const unsigned char* pixArray, unsigned numChannels, unsigned width, unsigned height, unsigned byteDepth, const Metadata* pMd) throw (CMMError)
 {
    ACE_Guard<ACE_Mutex> guard(g_bufferLock);
 

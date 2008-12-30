@@ -62,7 +62,7 @@ public:
    /**
     * Writes a message to the Micro-Manager log file.
     */
-   int LogMessage(const MM::Device* caller, const char* msg, bool debugOnly)
+   int LogMessage(const MM::Device* caller, const char* msg, bool debugOnly) const
    {
       char label[MM::MaxStrLength];
       caller->GetLabel(label);
@@ -159,7 +159,8 @@ public:
    }
 
    // continous acquisition support
-   int InsertImage(const MM::Device* caller, const unsigned char* buf, unsigned width, unsigned height, unsigned byteDepth, Metadata* pMd = 0);
+   int InsertImage(const MM::Device* caller, const ImgBuffer& imgBuf);
+   int InsertImage(const MM::Device* caller, const unsigned char* buf, unsigned width, unsigned height, unsigned byteDepth, const Metadata* pMd = 0);
    int InsertMultiChannel(const MM::Device* caller, const unsigned char* buf, unsigned numChannels, unsigned width, unsigned height, unsigned byteDepth, Metadata* pMd = 0);
    void SetAcqStatus(const MM::Device* caller, int statusCode);
    void ClearImageBuffer(const MM::Device* caller);
