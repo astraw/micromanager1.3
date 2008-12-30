@@ -50,6 +50,7 @@ public:
    void SetPixels(const void* pixArray);
    void ResetPixels();
    const unsigned char* GetPixels() const;
+   unsigned char* GetPixelsRW();
 
    void Resize(unsigned xSize, unsigned ySize, unsigned pixDepth);
    void Resize(unsigned xSize, unsigned ySize);
@@ -57,7 +58,7 @@ public:
 
    void SetName(const char* name) {name_ = name;}
    const std::string& GetName() {return name_;}
-   void SetMetadata(Metadata& md) {metadata_ = md;}
+   void SetMetadata(const Metadata& md) {metadata_ = md;}
    const Metadata& GetMetadata() const {return metadata_;}
 
    void Copy(const ImgBuffer& rhs);

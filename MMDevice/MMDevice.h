@@ -56,6 +56,7 @@
 #define HDEVMODULE void*
 
 class Metadata;
+class ImgBuffer;
 
 namespace MM {
 
@@ -496,7 +497,7 @@ namespace MM {
       Core() {}
       virtual ~Core() {}
 
-      virtual int LogMessage(const Device* caller, const char* msg, bool debugOnly) = 0;
+      virtual int LogMessage(const Device* caller, const char* msg, bool debugOnly) const = 0;
       virtual Device* GetDevice(const Device* caller, const char* label) = 0;
       virtual int GetDeviceProperty(const char* deviceName, const char* propName, char* value) = 0;
       virtual int SetDeviceProperty(const char* deviceName, const char* propName, const char* value) = 0;
@@ -518,7 +519,8 @@ namespace MM {
       virtual int CloseFrame(const Device* caller) = 0;
       virtual int AcqFinished(const Device* caller, int statusCode) = 0;
       virtual int PrepareForAcq(const Device* caller) = 0;
-      virtual int InsertImage(const Device* caller, const unsigned char* buf, unsigned width, unsigned height, unsigned byteDepth, Metadata* md = 0) = 0;
+      virtual int InsertImage(const Device* caller, const ImgBuffer& buf) = 0;
+      virtual int InsertImage(const Device* caller, const unsigned char* buf, unsigned width, unsigned height, unsigned byteDepth, const Metadata* md = 0) = 0;
       virtual void ClearImageBuffer(const Device* caller) = 0;
       virtual bool InitializeImageBuffer(unsigned channels, unsigned slices, unsigned int w, unsigned int h, unsigned int pixDepth) = 0;
       virtual int InsertMultiChannel(const Device* caller, const unsigned char* buf, unsigned numChannels, unsigned width, unsigned height, unsigned byteDepth, Metadata* md = 0) = 0;

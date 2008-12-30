@@ -461,7 +461,7 @@ protected:
     * @param msg - message text
     * @param debugOnly - if true the meassage will be sent only in the log-debug mode
     */
-   int LogMessage(const char* msg, bool debugOnly = false)
+   int LogMessage(const char* msg, bool debugOnly = false) const
    {
       if (callback_)
          return callback_->LogMessage(this, msg, debugOnly);

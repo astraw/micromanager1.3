@@ -58,6 +58,11 @@ const unsigned char* ImgBuffer::GetPixels() const
    return pixels_;
 }
 
+unsigned char* ImgBuffer::GetPixelsRW()
+{
+   return pixels_;
+}
+
 void ImgBuffer::SetPixels(const void* pix)
 {
    memcpy((void*)pixels_, pix, width_ * height_ * pixDepth_);
