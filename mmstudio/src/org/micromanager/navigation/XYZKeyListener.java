@@ -56,62 +56,7 @@ public final class XYZKeyListener implements KeyListener {
 		core_ = core;
 	}
 
-	/*
-	 * 	public void keyPressed(KeyEvent e) {
 
-	 MMLogger.getLogger().info(Integer.toString(e.getKeyCode()));
-
-	 switch (e.getKeyCode()) {
-	 case KeyEvent.VK_LEFT:
-	 case KeyEvent.VK_RIGHT:
-	 case KeyEvent.VK_UP:
-	 case KeyEvent.VK_DOWN:
-	 //XY step
-	 stepX = stepY = normalXYStep;
-	 if (e.isControlDown()) {
-	 stepX = stepY = ctrlXYStep;
-	 } else if (e.isShiftDown()) {
-	 stepX = core_.getImageWidth();
-	 stepY = core_.getImageHeight();
-	 } else if (e.isAltDown()) {
-	 stepX = core_.getImageWidth() / 2;
-	 stepY = core_.getImageHeight() / 2;
-	 }
-	 switch (e.getKeyCode()) {
-	 case KeyEvent.VK_LEFT:
-	 IncrementXY(-stepX, 0);
-	 break;
-	 case KeyEvent.VK_RIGHT:
-	 IncrementXY(stepX, 0);
-	 break;
-	 case KeyEvent.VK_UP:
-	 IncrementXY(0, stepY);
-	 break;
-	 case KeyEvent.VK_DOWN:
-	 IncrementXY(0, -stepY);
-	 }
-	 break;
-	 case KeyEvent.VK_LESS:
-	 case KeyEvent.VK_COMMA:
-	 case KeyEvent.VK_GREATER:
-	 case KeyEvent.VK_PERIOD:
-	 step = normalZStep;
-	 if (e.isControlDown())
-	 step = ctrlZStep;
-	 else if (e.isShiftDown())
-	 step = shiftZStep;
-	 switch (e.getKeyCode()) {
-	 case KeyEvent.VK_LESS:
-	 case KeyEvent.VK_COMMA:
-	 IncrementZ(-step);
-	 break;
-	 case KeyEvent.VK_GREATER:
-	 case KeyEvent.VK_PERIOD:
-	 IncrementZ(step);
-	 }
-	 }
-	 }
-	 */
 	public void keyPressed(KeyEvent e) {
 
 		MMLogger.getLogger().info(Integer.toString(e.getKeyCode()));
