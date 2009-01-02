@@ -32,7 +32,7 @@ import java.util.Hashtable;
 /**
  * Represents data structure associated with well acquisition.
  * Well contains any number of imaging sites. Each imaging site
- * is a 
+ * is represented by a separate AcquistionData object
  *
  */
 public class WellAcquisitionData {

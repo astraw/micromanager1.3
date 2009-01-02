@@ -483,7 +483,7 @@ public class AcquisitionData {
    /**
     * Checks if the specified directory contains micro-manager metadata file
     * @param dir - directory path
-    * @return
+    * @return - true if correct metadata file was identified
     */
    public static boolean hasMetadata(String dir) {
       File metaFile = new File(dir + "/" + METADATA_FILE_NAME);
@@ -769,7 +769,7 @@ public class AcquisitionData {
    /**
     * Returns all available keys associated with the position.
     * "Position" in this context usually means XY location
-    * @return
+    * @return - an array of keys
     */
    @SuppressWarnings("unchecked")
    public String[] getPositionPropertyKeys() {
@@ -793,7 +793,6 @@ public class AcquisitionData {
    /**
     * Sets a property value associated with the position
     * @param key
-    * @return - value
     * @throws JSONException
     */
    public void setPositionProperty(String key, String prop) {
@@ -837,7 +836,7 @@ public class AcquisitionData {
    /**
     * Test whether the particular key exists in the summary metadata
     * @param key
-    * @return
+    * @return - true if it exists
     */
    public boolean hasSummaryValue(String key) {
       return summary_.has(key);
@@ -845,7 +844,7 @@ public class AcquisitionData {
    
    /**
     * Test whether the particular image coordinate exists
-    * @return
+    * @return - true if metadata exists
     * @throws MMAcqDataException 
     */
    public boolean hasImageMetadata(int frame, int channel, int slice) {
@@ -1015,7 +1014,7 @@ public class AcquisitionData {
     * @param channel
     * @param slice
     * @param key
-    * @return
+    * @return - value
     * @throws MMAcqDataException
     */
    public String getSystemStateValue(int frame, int channel, int slice, String key) throws MMAcqDataException {
@@ -1329,7 +1328,7 @@ public class AcquisitionData {
 
    /**
     * ImageJ specific command, to provide calibration information.
-    * @return
+    * @return - Calibration object (ImageJ)
     */
    public Calibration ijCal() {
       Calibration cal = new Calibration();
@@ -1394,7 +1393,6 @@ public class AcquisitionData {
    /**
     * Determine contrast display settings based on the specified image
     * @param frame
-    * @param channel
     * @param slice
     * @throws MMAcqDataException 
     */
@@ -1541,11 +1539,9 @@ public class AcquisitionData {
    /**
     * Inserts a single image metadata into the acquisition data set.
     * This method is used to generate metadata without recording pixel data in any way.
-    * @param img - image object pixels
     * @param frame - frame (time sample)index
     * @param channel - channel index
     * @param slice - slice (focus) index
-    * @return - actual file name without the path
     * @throws MMAcqDataException
     */
    public void insertImageMetadata(int frame, int channel, int slice) throws MMAcqDataException {
@@ -1590,7 +1586,7 @@ public class AcquisitionData {
     * @param img - pixels
     * @param width
     * @param height
-    * @return
+    * @return - true if successful
     */
    static public boolean saveImageFile(String fname, Object img, int width, int height) {
       ImageProcessor ip;
