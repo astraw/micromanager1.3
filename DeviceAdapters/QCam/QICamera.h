@@ -98,7 +98,7 @@ class QICamera : public CCameraBase<QICamera>
 public:
    QICamera();
    ~QICamera();
-   friend QICamSequenceThread;
+   friend class QICamSequenceThread;
 
    // MMDevice API
    // ------------
