@@ -21,7 +21,7 @@
 //                CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
 //                INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES.
 //
-//CVS:            $Id: AcquisitionData.java 1837 2008-12-09 10:40:06Z nenad $
+//CVS:            $Id:  $
 
 package org.micromanager.metadata;
 
