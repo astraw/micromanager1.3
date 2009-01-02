@@ -32,7 +32,7 @@ package org.micromanager.metadata;
  */
 public class SummaryKeys {
    public static final String SUMMARY = "Summary";
-   public static final String SYSTEM_STATE = "SystemState";
+   public static final String SYSTEM_STATE_OBJ = "SystemState";
    public static final String GUID = "GUID";
    public static final String NUM_FRAMES="Frames";
    public static final String NUM_CHANNELS="Channels";
@@ -43,10 +43,10 @@ public class SummaryKeys {
    public static final String IMAGE_HEIGHT="Height";
    public static final String IMAGE_DEPTH="Depth";
    public static final String IJ_IMAGE_TYPE="IJType";
-   public static final String CHANNEL_COLORS="ChColors";
-   public static final String CHANNEL_CONTRAST_MIN="ChContrastMin";
-   public static final String CHANNEL_CONTRAST_MAX="ChContrastMax";
-   public static final String CHANNEL_NAMES="ChNames";
+   public static final String CHANNEL_COLORS_ARRAY="ChColors";
+   public static final String CHANNEL_CONTRAST_MIN_ARRAY="ChContrastMin";
+   public static final String CHANNEL_CONTRAST_MAX_ARRAY="ChContrastMax";
+   public static final String CHANNEL_NAMES_ARRAY="ChNames";
    public static final String METADATA_VERSION="MetadataVersion";
    public static final String METADATA_SOURCE="Source";
    public static final String IMAGE_PIXEL_SIZE_UM = "PixelSize_um";
@@ -58,5 +58,5 @@ public class SummaryKeys {
    public static final String COMMENT = "Comment";
    public static final String GRID_ROW = "GridRow";
    public static final String GRID_COLUMN = "GridColumn";
-   public static final String POSITION_PROPERTIES = "PositionProperties";
+   public static final String POSITION_PROPERTIES_OBJ = "PositionProperties";
 }

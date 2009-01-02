@@ -695,7 +695,7 @@ public class AcquisitionData {
          channelNames.put(names[i]);
 
       try {
-         summary_.put(SummaryKeys.CHANNEL_NAMES, channelNames);
+         summary_.put(SummaryKeys.CHANNEL_NAMES_ARRAY, channelNames);
          metadata_.put(SummaryKeys.SUMMARY, summary_);
       } catch (JSONException e) {
          throw new MMAcqDataException(e);
@@ -718,13 +718,13 @@ public class AcquisitionData {
       JSONArray channelNames;
 
       try {
-         if (summary_.has(SummaryKeys.CHANNEL_NAMES))
-            channelNames = summary_.getJSONArray(SummaryKeys.CHANNEL_NAMES);
+         if (summary_.has(SummaryKeys.CHANNEL_NAMES_ARRAY))
+            channelNames = summary_.getJSONArray(SummaryKeys.CHANNEL_NAMES_ARRAY);
          else
             channelNames = new JSONArray();
 
          channelNames.put(channelIdx, name);
-         summary_.put(SummaryKeys.CHANNEL_NAMES, channelNames);
+         summary_.put(SummaryKeys.CHANNEL_NAMES_ARRAY, channelNames);
       } catch (JSONException e) {
          throw new MMAcqDataException(e);
       }
@@ -966,12 +966,12 @@ public class AcquisitionData {
       String frameKey = ImageKey.generateFrameKey(frame, channel, slice);
       JSONObject stateData;
       try {
-         if (metadata_.has(SummaryKeys.SYSTEM_STATE))
-            stateData = metadata_.getJSONObject(SummaryKeys.SYSTEM_STATE);
+         if (metadata_.has(SummaryKeys.SYSTEM_STATE_OBJ))
+            stateData = metadata_.getJSONObject(SummaryKeys.SYSTEM_STATE_OBJ);
          else
             stateData = new JSONObject();
          stateData.put(frameKey, state);
-         metadata_.put(SummaryKeys.SYSTEM_STATE, stateData);
+         metadata_.put(SummaryKeys.SYSTEM_STATE_OBJ, stateData);
       } catch (JSONException e) {
          throw new MMAcqDataException(e);
       }
@@ -992,13 +992,13 @@ public class AcquisitionData {
       if (frame <0 || frame >= frames_ || channel < 0 || channel >= channels_ || slice < 0 || slice >= slices_)
          throw new MMAcqDataException("Invalid image coordinates (frame,channel,slice): " + frame + "," + channel + "," + slice);
       
-      if (!metadata_.has(SummaryKeys.SYSTEM_STATE))
+      if (!metadata_.has(SummaryKeys.SYSTEM_STATE_OBJ))
          return new JSONObject();
 
       String frameKey = ImageKey.generateFrameKey(frame, channel, slice);
       JSONObject stateData;
       try {
-         stateData = metadata_.getJSONObject(SummaryKeys.SYSTEM_STATE);
+         stateData = metadata_.getJSONObject(SummaryKeys.SYSTEM_STATE_OBJ);
          if (stateData.has(frameKey))
             return stateData.getJSONObject(frameKey);
          else
@@ -1024,12 +1024,12 @@ public class AcquisitionData {
       if (frame <0 || frame >= frames_ || channel < 0 || channel >= channels_ || slice < 0 || slice >= slices_)
          throw new MMAcqDataException("Invalid image coordinates (frame,channel,slice): " + frame + "," + channel + "," + slice);
       
-      if (!metadata_.has(SummaryKeys.SYSTEM_STATE))
+      if (!metadata_.has(SummaryKeys.SYSTEM_STATE_OBJ))
          return "";
 
       String frameKey = ImageKey.generateFrameKey(frame, channel, slice);
       try {
-         JSONObject stateData = metadata_.getJSONObject(SummaryKeys.SYSTEM_STATE);
+         JSONObject stateData = metadata_.getJSONObject(SummaryKeys.SYSTEM_STATE_OBJ);
          JSONObject state = stateData.getJSONObject(frameKey);
          return state.getString(key);
       } catch (JSONException e) {
@@ -1074,14 +1074,14 @@ public class AcquisitionData {
     * @throws MMAcqDataException
     */
    public Color[] getChannelColors() throws MMAcqDataException {
-      if (!summary_.has(SummaryKeys.CHANNEL_COLORS))
+      if (!summary_.has(SummaryKeys.CHANNEL_COLORS_ARRAY))
          return null;
 
       JSONArray metaColors;
       Color colors[] = new Color[channels_];
       if (channels_ > 0) {
          try {
-            metaColors = summary_.getJSONArray(SummaryKeys.CHANNEL_COLORS);
+            metaColors = summary_.getJSONArray(SummaryKeys.CHANNEL_COLORS_ARRAY);
             for (int i=0; i<channels_; i++) {
                colors[i] = new Color(metaColors.getInt(i));
             }
@@ -1104,7 +1104,7 @@ public class AcquisitionData {
          jsonColors.put(colors[i].getRGB());
       }
       try {
-         summary_.put(SummaryKeys.CHANNEL_COLORS, jsonColors);
+         summary_.put(SummaryKeys.CHANNEL_COLORS_ARRAY, jsonColors);
          metadata_.put(SummaryKeys.SUMMARY, summary_);
       } catch (JSONException e) {
          throw new MMAcqDataException(e);
@@ -1126,13 +1126,13 @@ public class AcquisitionData {
 
       JSONArray chanColors;
       try {
-         if (summary_.has(SummaryKeys.CHANNEL_COLORS))
-            chanColors = summary_.getJSONArray(SummaryKeys.CHANNEL_COLORS);
+         if (summary_.has(SummaryKeys.CHANNEL_COLORS_ARRAY))
+            chanColors = summary_.getJSONArray(SummaryKeys.CHANNEL_COLORS_ARRAY);
          else {
             chanColors = new JSONArray();
          }
          chanColors.put(channel, rgb);
-         summary_.put(SummaryKeys.CHANNEL_COLORS, chanColors);
+         summary_.put(SummaryKeys.CHANNEL_COLORS_ARRAY, chanColors);
       } catch (JSONException e) {
          throw new MMAcqDataException(e);
       }
@@ -1147,10 +1147,10 @@ public class AcquisitionData {
       JSONArray minContrast = null;
       JSONArray maxContrast = null;
       DisplaySettings settings[] = new DisplaySettings[channels_];
-      if (summary_.has(SummaryKeys.CHANNEL_CONTRAST_MIN) && summary_.has(SummaryKeys.CHANNEL_CONTRAST_MAX)) {
+      if (summary_.has(SummaryKeys.CHANNEL_CONTRAST_MIN_ARRAY) && summary_.has(SummaryKeys.CHANNEL_CONTRAST_MAX_ARRAY)) {
          try {
-            minContrast = summary_.getJSONArray(SummaryKeys.CHANNEL_CONTRAST_MIN);
-            maxContrast = summary_.getJSONArray(SummaryKeys.CHANNEL_CONTRAST_MAX);
+            minContrast = summary_.getJSONArray(SummaryKeys.CHANNEL_CONTRAST_MIN_ARRAY);
+            maxContrast = summary_.getJSONArray(SummaryKeys.CHANNEL_CONTRAST_MAX_ARRAY);
             for (int i=0; i<channels_; i++) {
                settings[i] = new DisplaySettings(minContrast.getDouble(i), maxContrast.getDouble(i));
             }
@@ -1178,8 +1178,8 @@ public class AcquisitionData {
             maxContrast.put(ds[i].max);
          }
 
-         summary_.put(SummaryKeys.CHANNEL_CONTRAST_MIN, minContrast);
-         summary_.put(SummaryKeys.CHANNEL_CONTRAST_MAX, maxContrast);
+         summary_.put(SummaryKeys.CHANNEL_CONTRAST_MIN_ARRAY, minContrast);
+         summary_.put(SummaryKeys.CHANNEL_CONTRAST_MAX_ARRAY, maxContrast);
 
          metadata_.put(SummaryKeys.SUMMARY, summary_);
 
@@ -1201,21 +1201,21 @@ public class AcquisitionData {
       JSONArray minContrast;
       JSONArray maxContrast;
       try {
-         if (summary_.has(SummaryKeys.CHANNEL_CONTRAST_MIN))
-            minContrast = summary_.getJSONArray(SummaryKeys.CHANNEL_CONTRAST_MIN);
+         if (summary_.has(SummaryKeys.CHANNEL_CONTRAST_MIN_ARRAY))
+            minContrast = summary_.getJSONArray(SummaryKeys.CHANNEL_CONTRAST_MIN_ARRAY);
          else
             minContrast = new JSONArray();
 
-         if (summary_.has(SummaryKeys.CHANNEL_CONTRAST_MAX))
-            maxContrast = summary_.getJSONArray(SummaryKeys.CHANNEL_CONTRAST_MAX);
+         if (summary_.has(SummaryKeys.CHANNEL_CONTRAST_MAX_ARRAY))
+            maxContrast = summary_.getJSONArray(SummaryKeys.CHANNEL_CONTRAST_MAX_ARRAY);
          else
             maxContrast = new JSONArray();
 
          minContrast.put(channelIdx, ds.min);
          maxContrast.put(channelIdx, ds.max);
 
-         summary_.put(SummaryKeys.CHANNEL_CONTRAST_MIN, minContrast);
-         summary_.put(SummaryKeys.CHANNEL_CONTRAST_MAX, maxContrast);
+         summary_.put(SummaryKeys.CHANNEL_CONTRAST_MIN_ARRAY, minContrast);
+         summary_.put(SummaryKeys.CHANNEL_CONTRAST_MAX_ARRAY, maxContrast);
 
       } catch (JSONException e) {
          throw new MMAcqDataException(e);
@@ -1424,8 +1424,8 @@ public class AcquisitionData {
             settings[i].min = istat.min;
             settings[i].max = istat.max;
          }
-         summary_.put(SummaryKeys.CHANNEL_CONTRAST_MIN, minArray);
-         summary_.put(SummaryKeys.CHANNEL_CONTRAST_MAX, maxArray);
+         summary_.put(SummaryKeys.CHANNEL_CONTRAST_MIN_ARRAY, minArray);
+         summary_.put(SummaryKeys.CHANNEL_CONTRAST_MAX_ARRAY, maxArray);
          
          metadata_.put(SummaryKeys.SUMMARY, summary_);
       } catch (JSONException e) {
@@ -1677,8 +1677,8 @@ public class AcquisitionData {
          summary_ = metadata_.getJSONObject(SummaryKeys.SUMMARY);
 
          // extract position properties (if any)
-         if (summary_.has(SummaryKeys.POSITION_PROPERTIES)) {
-            positionProperties_ = summary_.getJSONObject(SummaryKeys.POSITION_PROPERTIES);
+         if (summary_.has(SummaryKeys.POSITION_PROPERTIES_OBJ)) {
+            positionProperties_ = summary_.getJSONObject(SummaryKeys.POSITION_PROPERTIES_OBJ);
          } else {
             // initialize to empty
             positionProperties_ = new JSONObject();
@@ -1720,7 +1720,7 @@ public class AcquisitionData {
             imageZStep_um_ = 0.0;
          }
 
-         if (!summary_.has(SummaryKeys.CHANNEL_NAMES)) {
+         if (!summary_.has(SummaryKeys.CHANNEL_NAMES_ARRAY)) {
             defaultChannelNames();
          }
 
@@ -1728,7 +1728,7 @@ public class AcquisitionData {
          channelNames_ = new String[channels_];
          if (channels_ > 0) {
             try {
-               metaNames = summary_.getJSONArray(SummaryKeys.CHANNEL_NAMES);
+               metaNames = summary_.getJSONArray(SummaryKeys.CHANNEL_NAMES_ARRAY);
                for (int i=0; i<channels_; i++) {
                   channelNames_[i] = metaNames.getString(i);
                }
@@ -1749,7 +1749,7 @@ public class AcquisitionData {
          channelNames_[i] = new String("Channel-" + i);
          channelNames.put(channelNames_[i]);
       }
-      summary_.put(SummaryKeys.CHANNEL_NAMES, channelNames);
+      summary_.put(SummaryKeys.CHANNEL_NAMES_ARRAY, channelNames);
    }
    
    private ImageProcessor createCompatibleIJImageProcessor(Object img) throws MMAcqDataException {
