@@ -90,6 +90,11 @@ public class MMImageWindow extends ImageWindow {
                contrastDlg_.dispose();
          }
       });   
+      addWindowListener(new WindowAdapter() {
+         public void windowOpened(WindowEvent e) {
+        	 getCanvas().requestFocus();
+         }
+      });   
    }
    
    public void setContrastSettings(ContrastSettings s8, ContrastSettings s16) {

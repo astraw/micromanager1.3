@@ -189,7 +189,7 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 	private ContrastSettings contrastSettings16_;
 
 	private GUIColors guiColors_;
-//	private ColorModel currentColorModel_;
+	private ColorModel currentColorModel_;
 
 	private MMImageWindow imageWin_;
 	private GraphFrame profileWin_;
