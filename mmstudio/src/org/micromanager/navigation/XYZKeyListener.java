@@ -92,8 +92,10 @@ public final class XYZKeyListener implements KeyListener {
 			}
 			break;
 		case KeyEvent.VK_1:
+		case KeyEvent.VK_U:
 		case KeyEvent.VK_PAGE_UP:
 		case KeyEvent.VK_2:
+		case KeyEvent.VK_J:
 		case KeyEvent.VK_PAGE_DOWN:
 			step = normalZStep;
 			if (e.isControlDown())
@@ -102,10 +104,12 @@ public final class XYZKeyListener implements KeyListener {
 				step = shiftZStep;
 			switch (e.getKeyCode()) {
 			case KeyEvent.VK_1:
+			case KeyEvent.VK_U:
 			case KeyEvent.VK_PAGE_UP:
 				IncrementZ(-step);
 				break;
 			case KeyEvent.VK_2:
+			case KeyEvent.VK_J:
 			case KeyEvent.VK_PAGE_DOWN:
 				IncrementZ(step);
 			}
