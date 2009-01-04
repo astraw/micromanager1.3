@@ -25,14 +25,24 @@
 package org.micromanager.metadata;
 
 /**
- * List of keywords for the "acquisition run" level information. 
+ * List of keywords for the "acquisition run" level information.
+ * Keywords with OBJ suffix refer to JSON objects.
+ * Keywords with ARRAY suffix refer to JSONArray data.
+ * Other keywords refer to simple values.
  *
  * Version History:
  * 6: Added Summary Keys 'frameinterval_ms' and 'z-step_ms'
  */
 public class SummaryKeys {
-   public static final String SUMMARY = "Summary";
+   // top level keys referring to main sections of the metadata
+   public static final String SUMMARY_OBJ = "Summary";
+   public static final String POSITION_PROPERTIES_OBJ = "PositionProperties";
    public static final String SYSTEM_STATE_OBJ = "SystemState";
+   // top level data objects are also all JSON objects corresponding to individual
+   // images. Keys for image metadata are generated on the fly, based on the rules
+   // specified in ImageKey class.
+   
+   // keys contained in the Summary section
    public static final String GUID = "GUID";
    public static final String NUM_FRAMES="Frames";
    public static final String NUM_CHANNELS="Channels";
@@ -43,10 +53,6 @@ public class SummaryKeys {
    public static final String IMAGE_HEIGHT="Height";
    public static final String IMAGE_DEPTH="Depth";
    public static final String IJ_IMAGE_TYPE="IJType";
-   public static final String CHANNEL_COLORS_ARRAY="ChColors";
-   public static final String CHANNEL_CONTRAST_MIN_ARRAY="ChContrastMin";
-   public static final String CHANNEL_CONTRAST_MAX_ARRAY="ChContrastMax";
-   public static final String CHANNEL_NAMES_ARRAY="ChNames";
    public static final String METADATA_VERSION="MetadataVersion";
    public static final String METADATA_SOURCE="Source";
    public static final String IMAGE_PIXEL_SIZE_UM = "PixelSize_um";
@@ -58,5 +64,10 @@ public class SummaryKeys {
    public static final String COMMENT = "Comment";
    public static final String GRID_ROW = "GridRow";
    public static final String GRID_COLUMN = "GridColumn";
-   public static final String POSITION_PROPERTIES_OBJ = "PositionProperties";
+   
+   // keys pointing to array data
+   public static final String CHANNEL_COLORS_ARRAY="ChColors";
+   public static final String CHANNEL_CONTRAST_MIN_ARRAY="ChContrastMin";
+   public static final String CHANNEL_CONTRAST_MAX_ARRAY="ChContrastMax";
+   public static final String CHANNEL_NAMES_ARRAY="ChNames";
 }

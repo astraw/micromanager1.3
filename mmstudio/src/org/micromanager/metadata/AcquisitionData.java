@@ -325,7 +325,7 @@ public class AcquisitionData {
          summary_.put(SummaryKeys.TIME, creationTime_.getTime());
          summary_.put(SummaryKeys.COMMENT, "empty");
 
-         metadata_.put(SummaryKeys.SUMMARY, summary_);
+         metadata_.put(SummaryKeys.SUMMARY_OBJ, summary_);
       } catch (JSONException e) {
          throw new MMAcqDataException(e);
       }
@@ -397,7 +397,7 @@ public class AcquisitionData {
          summary_.put(SummaryKeys.TIME, creationTime_.getTime());
          summary_.put(SummaryKeys.COMMENT, "empty");
 
-         metadata_.put(SummaryKeys.SUMMARY, summary_);
+         metadata_.put(SummaryKeys.SUMMARY_OBJ, summary_);
       } catch (JSONException e) {
          throw new MMAcqDataException(e);
       }
@@ -433,7 +433,7 @@ public class AcquisitionData {
          summary_.put(SummaryKeys.IMAGE_DEPTH, imgDepth_);
          summary_.put(SummaryKeys.IJ_IMAGE_TYPE, ijType_);
 
-         metadata_.put(SummaryKeys.SUMMARY, summary_);
+         metadata_.put(SummaryKeys.SUMMARY_OBJ, summary_);
       } catch (JSONException e) {
          throw new MMAcqDataException(e);
       }
@@ -469,7 +469,7 @@ public class AcquisitionData {
          if (resetNames)
             defaultChannelNames();
 
-         metadata_.put(SummaryKeys.SUMMARY, summary_);
+         metadata_.put(SummaryKeys.SUMMARY_OBJ, summary_);
 
       } catch (JSONException e) {
          // TODO Auto-generated catch block
@@ -696,7 +696,7 @@ public class AcquisitionData {
 
       try {
          summary_.put(SummaryKeys.CHANNEL_NAMES_ARRAY, channelNames);
-         metadata_.put(SummaryKeys.SUMMARY, summary_);
+         metadata_.put(SummaryKeys.SUMMARY_OBJ, summary_);
       } catch (JSONException e) {
          throw new MMAcqDataException(e);
       }
@@ -1105,7 +1105,7 @@ public class AcquisitionData {
       }
       try {
          summary_.put(SummaryKeys.CHANNEL_COLORS_ARRAY, jsonColors);
-         metadata_.put(SummaryKeys.SUMMARY, summary_);
+         metadata_.put(SummaryKeys.SUMMARY_OBJ, summary_);
       } catch (JSONException e) {
          throw new MMAcqDataException(e);
       }
@@ -1181,7 +1181,7 @@ public class AcquisitionData {
          summary_.put(SummaryKeys.CHANNEL_CONTRAST_MIN_ARRAY, minContrast);
          summary_.put(SummaryKeys.CHANNEL_CONTRAST_MAX_ARRAY, maxContrast);
 
-         metadata_.put(SummaryKeys.SUMMARY, summary_);
+         metadata_.put(SummaryKeys.SUMMARY_OBJ, summary_);
 
       } catch (JSONException e) {
          throw new MMAcqDataException(e);
@@ -1427,7 +1427,7 @@ public class AcquisitionData {
          summary_.put(SummaryKeys.CHANNEL_CONTRAST_MIN_ARRAY, minArray);
          summary_.put(SummaryKeys.CHANNEL_CONTRAST_MAX_ARRAY, maxArray);
          
-         metadata_.put(SummaryKeys.SUMMARY, summary_);
+         metadata_.put(SummaryKeys.SUMMARY_OBJ, summary_);
       } catch (JSONException e) {
          throw new MMAcqDataException(e);
       }
@@ -1674,7 +1674,7 @@ public class AcquisitionData {
 
    private void parse() throws MMAcqDataException {
       try {
-         summary_ = metadata_.getJSONObject(SummaryKeys.SUMMARY);
+         summary_ = metadata_.getJSONObject(SummaryKeys.SUMMARY_OBJ);
 
          // extract position properties (if any)
          if (summary_.has(SummaryKeys.POSITION_PROPERTIES_OBJ)) {
