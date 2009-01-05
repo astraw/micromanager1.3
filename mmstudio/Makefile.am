@@ -129,6 +129,8 @@ MMJ_.jar:  \
 	$(srcdir)/src/org/micromanager/utils/ShowFlags.java \
 	$(srcdir)/src/org/micromanager/utils/WaitDialog.java \
 	$(srcdir)/src/org/micromanager/utils/CalibrationList.java \
+	$(srcdir)/src/org/micromanager/utils/MMSnapshotWindow.java \
+	$(srcdir)/src/org/micromanager/utils/ImageController.java \
 	$(srcdir)/src/org/micromanager/utils/Calibration.java \
 	$(srcdir)/bin/plugins_mmstudio.config 
 	test -d build || mkdir build

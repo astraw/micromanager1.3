@@ -317,8 +317,6 @@ public class ConfigGroupPad extends JScrollPane{
             try {
                if (value != null && value.toString().length() > 0)
                {
-//            	   LiveModeSync sync = new LiveModeSync(item.group);
-                  // apply selected config
                   if (item.singleProp) {
                      NumberFormat form = NumberFormat.getInstance();
                      if (item.hasLimits && item.isInt) {
@@ -333,7 +331,6 @@ public class ConfigGroupPad extends JScrollPane{
                      core_.setConfig(item.group, value.toString());
                      core_.waitForConfig(item.group, value.toString());
                   }
-//                  sync.restartIfNecessary();
                   refreshStatus();
                   repaint();
                   if (parentGUI_ != null)

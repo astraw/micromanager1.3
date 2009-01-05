@@ -43,12 +43,13 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import org.micromanager.utils.ContrastSettings;
+import org.micromanager.utils.ImageController;
 
 /**
  * Slider and histogram panel for adjusting contrast and brightness.
  *
  */
-public class ContrastPanel extends JPanel {
+public class ContrastPanel extends JPanel implements ImageController {
    private static final long serialVersionUID = 1L;
    private JComboBox modeComboBox_;
    private HistogramPanel histogramPanel_;
@@ -360,7 +361,7 @@ public class ContrastPanel extends JPanel {
       sliderLow_.setValue(Math.max((int)min, 0));
       sliderHigh_.setValue(Math.min((int)max, maxIntensity_));
    }
-   
+   //override from ImageController 
    public void setImagePlus(ImagePlus ip) {
       image_ = ip;
    }

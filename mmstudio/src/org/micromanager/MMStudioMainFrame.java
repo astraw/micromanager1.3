@@ -127,6 +127,7 @@ import org.micromanager.utils.LargeMessageDlg;
 import org.micromanager.utils.MMImageWindow;
 import org.micromanager.utils.MMLogger;
 import org.micromanager.utils.MMScriptException;
+import org.micromanager.utils.MMSnapshotWindow;
 import org.micromanager.utils.ProgressBar;
 import org.micromanager.utils.TextUtils;
 import org.micromanager.utils.WaitDialog;
@@ -141,7 +142,6 @@ import com.swtdesigner.SwingResourceManager;
  */
 public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 		ScriptInterface {
-	public static String LIVE_WINDOW_TITLE = "Live";
 
 	private static final String MICRO_MANAGER_TITLE = "Micro-Manager 1.3";
 	private static final String VERSION = "1.3.15 (beta)";
@@ -189,9 +189,7 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 	private ContrastSettings contrastSettings16_;
 
 	private GUIColors guiColors_;
-	private ColorModel currentColorModel_;
 
-	private MMImageWindow imageWin_;
 	private GraphFrame profileWin_;
 	private PropertyEditor propertyBrowser_;
 	private CalibrationListDlg calibrationListDlg_;
@@ -236,14 +234,20 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 	private SplitView splitView_;
 	private CenterAndDragListener centerAndDragListener_;
 	private ZWheelListener zWheelListener_;
-	private XYZKeyListener xyzKListener_;
+	private XYZKeyListener xyzKeyListener_;
 	private AcquisitionManager acqMgr_;
 
+	public MMImageWindow getLiveWin()
+	{
+		return MMImageWindow.getImageWindowInstance();
+	}	
+	
 	// Callback
 	private CoreEventCallback cb_;
 
 	private JMenuBar menuBar_;
-
+	
+	
 	/**
 	 * Callback to update GUI when a change happens in the MMCore.
 	 */
@@ -1552,7 +1556,6 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 			errText = "Exception occrred: " + e.toString() + "\n";
 			e.printStackTrace();
 		}
-
 		handleError(errText);
 	}
 
@@ -1570,7 +1573,7 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 	private void updateHistogram() {
 		if (isImageWindowOpen()) {
 			// ImagePlus imp = IJ.getImage();
-			ImagePlus imp = imageWin_.getImagePlus();
+			ImagePlus imp = getLiveWin().getImagePlus();
 			if (imp != null) {
 				contrastPanel_.setImagePlus(imp);
 				contrastPanel_.setContrastSettings(contrastSettings8_,
@@ -1587,14 +1590,14 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 				|| !profileWin_.isShowing())
 			return;
 
-		calculateLineProfileData(imageWin_.getImagePlus());
+		calculateLineProfileData(getLiveWin().getImagePlus());
 		profileWin_.setData(lineProfileData_);
 	}
 
 	private void openLineProfileWindow() {
-		if (imageWin_ == null || imageWin_.isClosed())
+		if (getLiveWin() == null || getLiveWin().isClosed())
 			return;
-		calculateLineProfileData(imageWin_.getImagePlus());
+		calculateLineProfileData(getLiveWin().getImagePlus());
 		if (lineProfileData_ == null)
 			return;
 		profileWin_ = new GraphFrame();
@@ -1639,15 +1642,15 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 	}
 
 	private void setROI() {
-		if (imageWin_ == null || imageWin_.isClosed())
+		if (getLiveWin() == null || getLiveWin().isClosed())
 			return;
 
-		Roi roi = imageWin_.getImagePlus().getRoi();
+		Roi roi = getLiveWin().getImagePlus().getRoi();
 
 		try {
 			if (roi == null) {
 				// if there is no ROI, create one
-				ImagePlus imp = imageWin_.getImagePlus();
+				ImagePlus imp = getLiveWin().getImagePlus();
 				Rectangle r = imp.getProcessor().getRoi();
 				int iWidth = r.width;
 				int iHeight = r.height;
@@ -1704,112 +1707,39 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 	}
 
 	
-	private boolean openImageWindow() {
+	private MMImageWindow createImageWindow(){
+		MMImageWindow win=getLiveWin();
 		try {
-			ImageProcessor ip;
-			long byteDepth = core_.getBytesPerPixel();
-			long channels = core_.getNumberOfChannels();
-			if (byteDepth == 1 && channels == 1) {
-				ip = new ByteProcessor((int) core_.getImageWidth(), (int) core_
-						.getImageHeight());
-				if (contrastSettings8_.getRange() == 0.0)
-					ip.setMinAndMax(0, 255);
-				else
-					ip.setMinAndMax(contrastSettings8_.min,
-							contrastSettings8_.max);
-			} else if (byteDepth == 2 && channels == 1) {
-				ip = new ShortProcessor((int) core_.getImageWidth(),
-						(int) core_.getImageHeight());
-				if (contrastSettings16_.getRange() == 0.0)
-					ip.setMinAndMax(0, 65535);
-				else
-					ip.setMinAndMax(contrastSettings16_.min,
-							contrastSettings16_.max);
-			} else if (byteDepth == 0) {
-				handleError("Imaging device not initialized");
-				return false;
-			} else if (byteDepth == 1 && channels == 4) {
-				// assuming RGB32 format
-				ip = new ColorProcessor((int) core_.getImageWidth(),
-						(int) core_.getImageHeight());
-				if (contrastSettings8_.getRange() == 0.0)
-					ip.setMinAndMax(0, 255);
-				else
-					ip.setMinAndMax(contrastSettings8_.min,
-							contrastSettings8_.max);
-			} else {
-				handleError("Unsupported pixel depth: "
-						+ core_.getBytesPerPixel() + " byte(s) and " + channels
-						+ " channel(s).");
-				return false;
-			}
-			ip.setColor(Color.black);
-			if (currentColorModel_ != null)
-				ip.setColorModel(currentColorModel_);
-			ip.fill();
-			ImagePlus imp = new ImagePlus(LIVE_WINDOW_TITLE, ip);
 
-			if (imageWin_ != null) {
-				WindowManager.removeWindow(imageWin_);
-				imageWin_.dispose();
-				imageWin_.savePosition();
-				imageWin_ = null;
+			if (win != null) {
+				//ToDo: eliminate contrastSettingsX_ attribute in the MainFrame class   
+				contrastSettings8_ = MMImageWindow.getContrastSettings8();
+				contrastSettings16_ = MMImageWindow.getContrastSettings16();
+
+				WindowManager.removeWindow(getLiveWin());
+				win.dispose();
 			}
 
-			imageWin_ = new MMImageWindow(imp);
-			imageWin_.setContrastSettings(contrastSettings8_,
-					contrastSettings16_);
-			imageWin_.setBackground(guiColors_.background
-					.get((options_.displayBackground)));
-			setIJCal(imageWin_);
-			// notify processes that need to attach to this acquisition window:
+			win = new MMImageWindow(core_, contrastPanel_);
+			win.setBackground(guiColors_.background.get((options_.displayBackground)));
+			setIJCal(win);
+
+			//listeners 
 			if (centerAndDragListener_ != null
 					&& centerAndDragListener_.isRunning())
-				centerAndDragListener_.attach(imageWin_);
+				centerAndDragListener_.attach(win.getImagePlus().getWindow());
 			if (zWheelListener_ != null && zWheelListener_.isRunning())
-				zWheelListener_.attach(imp.getWindow());
-			if (xyzKListener_ != null && xyzKListener_.isRunning())
-				xyzKListener_.attach(imp.getWindow());
+				zWheelListener_.attach(win.getImagePlus().getWindow());
+			if (xyzKeyListener_ != null && xyzKeyListener_.isRunning())
+				xyzKeyListener_.attach(win.getImagePlus().getWindow());
 
-			// add listener to the IJ window to detect when it closes
-			WindowListener wndCloser = new WindowAdapter() {
-				public void windowClosing(WindowEvent e) {
-					// remember LUT so that a new window can be opened with the
-					// same LUT
-					if (imageWin_.getImagePlus().getProcessor()
-							.isPseudoColorLut())
-						currentColorModel_ = imageWin_.getImagePlus()
-								.getProcessor().getColorModel();
-					WindowManager.removeWindow(imageWin_);
-					imageWin_ = null;
-					contrastPanel_.setImagePlus(null);
-				}
-			};
-
-			WindowListener wndFocus = new WindowAdapter() {
-				public void windowGainedFocus(WindowEvent e) {
-					updateHistogram();
-				}
-			};
-
-			WindowListener wndActive = new WindowAdapter() {
-				public void windowActivated(WindowEvent e) {
-					updateHistogram();
-				}
-			};
-
-			imageWin_.addWindowListener(wndCloser);
-			imageWin_.addWindowListener(wndFocus);
-			imageWin_.addWindowListener(wndActive);
-			imageWin_.setIconImage(SwingResourceManager.getImage(MMStudioMainFrame.class,
-			"/org/micromanager/icons/camera_go.png"));
-			imageWin_.getCanvas().requestFocus();
-
+			win.getCanvas().requestFocus();
+			
 		} catch (Exception e) {
 			handleException(e);
-			return false;
+			return null;
 		}
-		return true;
+		return win;
 	}
 
 	/**
@@ -1998,17 +1928,13 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 	}
 
 	protected void zoomOut() {
-		if (!isImageWindowOpen())
-			return;
-		Rectangle r = imageWin_.getCanvas().getBounds();
-		imageWin_.getCanvas().zoomOut(r.width / 2, r.height / 2);
+		if (isImageWindowOpen())
+			getLiveWin().zoomOut();
 	}
 
 	protected void zoomIn() {
-		if (!isImageWindowOpen())
-			return;
-		Rectangle r = imageWin_.getCanvas().getBounds();
-		imageWin_.getCanvas().zoomIn(r.width / 2, r.height / 2);
+		if (isImageWindowOpen())
+			getLiveWin().zoomIn();
 	}
 
 	protected void changeBinning() {
@@ -2151,42 +2077,41 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 	}
 
 	public Object getPixels() {
-		if (imageWin_ != null)
-			return imageWin_.getImagePlus().getProcessor().getPixels();
+		if (getLiveWin() != null)
+			return getLiveWin().getImagePlus().getProcessor().getPixels();
 
 		return null;
 	}
 
 	public void setPixels(Object obj) {
-		if (imageWin_ == null) {
+		if (getLiveWin() == null) {
 			return;
 		}
-
-		imageWin_.getImagePlus().getProcessor().setPixels(obj);
+		getLiveWin().getImagePlus().getProcessor().setPixels(obj);
 	}
 
 	public int getImageHeight() {
-		if (imageWin_ != null)
-			return imageWin_.getImagePlus().getHeight();
+		if (getLiveWin() != null)
+			return getLiveWin().getImagePlus().getHeight();
 		return 0;
 	}
 
 	public int getImageWidth() {
-		if (imageWin_ != null)
-			return imageWin_.getImagePlus().getWidth();
+		if (getLiveWin() != null)
+			return getLiveWin().getImagePlus().getWidth();
 		return 0;
 	}
 
 	public int getImageDepth() {
-		if (imageWin_ != null)
-			return imageWin_.getImagePlus().getBitDepth();
+		if (getLiveWin() != null)
+			return getLiveWin().getImagePlus().getBitDepth();
 		return 0;
 	}
 
 	public ImageProcessor getImageProcessor() {
-		if (imageWin_ == null)
+		if (getLiveWin() == null)
 			return null;
-		return imageWin_.getImagePlus().getProcessor();
+		return getLiveWin().getImagePlus().getProcessor();
 	}
 
 	private boolean isCameraAvailable() {
@@ -2194,10 +2119,7 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 	}
 
 	public boolean isImageWindowOpen() {
-		if (imageWin_ == null || imageWin_.isClosed())
-			return false;
-		else
-			return true;
+		return (getLiveWin() != null && !getLiveWin().isClosed());
 	}
 
 	public void updateImageGUI() {
@@ -2214,17 +2136,18 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 				if (IsLiveModeOn())
 					return;
 
-				if (!isImageWindowOpen())
-					openImageWindow();
+				MMImageWindow liveWin;
+				if (isImageWindowOpen())
+					liveWin=getLiveWin();
+				else
+					liveWin = createImageWindow();
 
-				// Set ImageJ pixel calibration
-				setIJCal(imageWin_);
 				// this is needed to clear the subtitle, should be folded into
 				// drawInfo
-				imageWin_.getGraphics().clearRect(0, 0, imageWin_.getWidth(),
+				liveWin.getGraphics().clearRect(0, 0, liveWin.getWidth(),
 						40);
-				imageWin_.drawInfo(imageWin_.getGraphics());
-				imageWin_.toFront();
+				liveWin.drawInfo(liveWin.getGraphics());
+				liveWin.toFront();
 
 				// turn off auto shutter and open the shutter
 				autoShutterOrg_ = core_.getAutoShutter();
@@ -2243,12 +2166,12 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 				// attach mouse wheel listener to control focus:
 				if (zWheelListener_ == null)
 					zWheelListener_ = new ZWheelListener(core_);
-				zWheelListener_.start(imageWin_);
+				zWheelListener_.start(getLiveWin());
 
 				// attach key listener to control the stage and focus:
-				if (xyzKListener_ == null)
-					xyzKListener_ = new XYZKeyListener(core_);
-				xyzKListener_.start(imageWin_);
+				if (xyzKeyListener_ == null)
+					xyzKeyListener_ = new XYZKeyListener(core_);
+				xyzKeyListener_.start(getLiveWin());
 
 				core_.startContinuousSequenceAcquisition(0.0);
 				timer_.start();
@@ -2265,8 +2188,8 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 
 				if (zWheelListener_ != null)
 					zWheelListener_.stop();
-				if (xyzKListener_ != null)
-					xyzKListener_.stop();
+				if (xyzKeyListener_ != null)
+					xyzKeyListener_.stop();
 				toggleButtonLive_.setText("Live");
 
 				// restore auto shutter and close the shutter
@@ -2285,7 +2208,8 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 				Thread.sleep(100);
 			}
 		} catch (Exception err) {
-			JOptionPane.showMessageDialog(this, err.getMessage());
+			JOptionPane.showMessageDialog(this, 
+					"Exception while enabling Live mode "+err.getMessage());
 
 		}
 		toggleButtonLive_.setIcon(IsLiveModeOn() ? SwingResourceManager
@@ -2312,24 +2236,19 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 			long bpp = core_.getBytesPerPixel();
 
 			// warn the user if image dimensions do not match the current window
-			if (imageWin_.getImagePlus().getProcessor().getWidth() != core_
+			if (getLiveWin().getImagePlus().getProcessor().getWidth() != core_
 					.getImageWidth()
-					|| imageWin_.getImagePlus().getProcessor().getHeight() != core_
+					|| getLiveWin().getImagePlus().getProcessor().getHeight() != core_
 							.getImageHeight()
-					|| imageWin_.getImagePlus().getBitDepth() != bpp * 8
+					|| getLiveWin().getImagePlus().getBitDepth() != bpp * 8
 							* channels) {
 				// 32-bit RGB image format is a special case with 24-bit pixel
 				// depth but physically
 				// using 32-bit pixels
-				if (!(channels == 4 && bpp == 1 && imageWin_.getImagePlus()
+				if (!(channels == 4 && bpp == 1 && getLiveWin().getImagePlus()
 						.getBitDepth() == 24)) {
-					// open a new window, remember old colormodel
-					if (imageWin_.getImagePlus().getProcessor()
-							.isPseudoColorLut())
-						currentColorModel_ = imageWin_.getImagePlus()
-								.getProcessor().getColorModel();
-					imageWin_.close();
-					openImageWindow();
+					getLiveWin().close();
+					createImageWindow();
 				}
 			}
 
@@ -2348,19 +2267,9 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 				img = core_.getRGB32Image();
 			}
 
-			imageWin_.getImagePlus().getProcessor().setPixels(img);
-
-			// update related windows
-			updateHistogram();
+			getLiveWin().newImage(img);
 			updateLineProfile();
 
-			imageWin_.getImagePlus().updateAndDraw();
-			imageWin_.getCanvas().paint(imageWin_.getCanvas().getGraphics());
-
-			// update coordinate and pixel info in imageJ by simulating mouse
-			// move
-			Point pt = imageWin_.getCanvas().getCursorLoc();
-			imageWin_.getImagePlus().mouseMoved(pt.x, pt.y);
 		} catch (Exception e) {
 			handleException(e);
 			return false;
@@ -2372,7 +2281,7 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 	public boolean displayImage(Object pixels) {
 		try {
 			if (!isImageWindowOpen()) {
-				openImageWindow();
+				createImageWindow();
 			}
 
 			int byteLength = 0;
@@ -2386,28 +2295,18 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 				return false; // can't handle
 
 			// warn the user if image dimensions do not match the current window
-			if (imageWin_.getImagePlus().getProcessor().getWidth()
-					* imageWin_.getImagePlus().getProcessor().getHeight()
-					* imageWin_.getImagePlus().getBitDepth() / 8 != byteLength) {
-				openImageWindow();
+			if (getLiveWin().getImagePlus().getProcessor().getWidth()
+					* getLiveWin().getImagePlus().getProcessor().getHeight()
+					* getLiveWin().getImagePlus().getBitDepth() / 8 != byteLength) {
+				createImageWindow();
 			}
 
-			// update image window
-			imageWin_.getImagePlus().getProcessor().setPixels(pixels);
-			imageWin_.getImagePlus().updateAndDraw();
-			imageWin_.getCanvas().paint(imageWin_.getCanvas().getGraphics());
-
-			// update related windows
-			updateHistogram();
+			getLiveWin().newImage(pixels);
 			updateLineProfile();
 
-			// update coordinate and pixel info in imageJ by simulating mouse
-			// move
-			Point pt = imageWin_.getCanvas().getCursorLoc();
-			imageWin_.getImagePlus().mouseMoved(pt.x, pt.y);
-
 		} catch (Exception e) {
-			handleException(e);
+//!!!			handleException(e);
+			e.printStackTrace();
 			return false;
 		}
 
@@ -2416,32 +2315,28 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 
 	private void doSnap() {
 		try {
-			if (!isImageWindowOpen())
-				if (!openImageWindow())
-					handleError("Image window open failed");
-			imageWin_.toFront();
+			MMSnapshotWindow win = new MMSnapshotWindow(core_, contrastPanel_);
+			win.toFront();
+			win.getCanvas().requestFocus();
 
-			setIJCal(imageWin_);
-			// this is needed to clear the subtite, should be folded into
-			// drawInfo
-			imageWin_.getGraphics().clearRect(0, 0, imageWin_.getWidth(), 40);
-			imageWin_.drawInfo(imageWin_.getGraphics());
+			long channels = core_.getNumberOfChannels();
+			long bpp = core_.getBytesPerPixel();
 
-			boolean liveRunning = false;
-			if (liveRunning_) {
-				liveRunning = liveRunning_;
-				enableLiveMode(false);
-			}
-
-			String expStr = textFieldExp_.getText();
-			if (expStr.length() > 0) {
-				core_.setExposure(Double.parseDouble(expStr));
-				updateImage();
-			} else
-				handleError("Exposure field is empty!");
-
-			if (liveRunning) {
-				enableLiveMode(true);
+				if (channels > 1 && channels != 4 && bpp != 1) {
+					handleError("Unsupported image format.");
+					return;
+				}
+			try {
+				core_.snapImage();
+				Object img;
+				if (channels == 1)
+					img = core_.getImage();
+				else {
+					img = core_.getRGB32Image();
+				}
+				win.newImage(img);
+			} catch (Exception e) {
+				handleException(e);
 			}
 
 		} catch (Exception e) {
@@ -2656,8 +2551,8 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 	}
 
 	public void refreshImage() {
-		if (imageWin_ != null)
-			imageWin_.getImagePlus().updateAndDraw();
+		if (getLiveWin() != null)
+			getLiveWin().getImagePlus().updateAndDraw();
 	}
 
 	private void cleanupOnClose() {
@@ -2672,9 +2567,9 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 				saveConfigPresets();
 		}
 		timer_.stop();
-		if (imageWin_ != null) {
-			imageWin_.close();
-			imageWin_.dispose();
+		if (getLiveWin() != null) {
+			getLiveWin().close();
+			getLiveWin().dispose();
 		}
 
 		if (profileWin_ != null)
@@ -2848,7 +2743,7 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 
 	public boolean is16bit() {
 		if (isImageWindowOpen()
-				&& imageWin_.getImagePlus().getProcessor() instanceof ShortProcessor)
+				&& getLiveWin().getImagePlus().getProcessor() instanceof ShortProcessor)
 			return true;
 		return false;
 	}
@@ -3009,8 +2904,8 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 		if (posListDlg_ != null)
 			posListDlg_.setBackground(guiColors_.background
 					.get((options_.displayBackground)));
-		if (imageWin_ != null)
-			imageWin_.setBackground(guiColors_.background
+		if (getLiveWin() != null)
+			getLiveWin().setBackground(guiColors_.background
 					.get((options_.displayBackground)));
 		if (fastAcqWin_ != null)
 			fastAcqWin_.setBackground(guiColors_.background
@@ -3030,17 +2925,7 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 	// Set ImageJ pixel calibration
 	private void setIJCal(MMImageWindow imageWin) {
 		if (imageWin != null) {
-			ImagePlus imp = imageWin_.getImagePlus();
-			if (imp != null) {
-				double pixSizeUm = core_.getPixelSizeUm();
-				Calibration cal = new Calibration();
-				if (pixSizeUm > 0) {
-					cal.setUnit("um");
-					cal.pixelWidth = pixSizeUm;
-					cal.pixelHeight = pixSizeUm;
-				}
-				imp.setCalibration(cal);
-			}
+			imageWin.setIJCal();
 		}
 	}
 
