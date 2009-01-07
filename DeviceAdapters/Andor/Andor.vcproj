@@ -42,7 +42,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\..\..\3rdparty\Andor\06-12-2007"
+				AdditionalIncludeDirectories="&quot;..\..\..\3rdparty\Andor\SDK 2.82&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;MODULE_EXPORTS"
 				MinimalRebuild="true"
 				ExceptionHandling="2"
