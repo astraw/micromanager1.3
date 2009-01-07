@@ -469,9 +469,11 @@ private:
    int position;
 };
 
+
+
 /**
  * Acquisition thread
- */
+ *
 class AcqSequenceThread : public MMDeviceThreadBase
 {
 public:
@@ -489,5 +491,5 @@ private:
    bool stop_;
 };
 
-
+*/
 #endif //_DEMOCAMERA_H_

@@ -41,8 +41,6 @@
 #define ERR_UNSUPPORTED_IMAGE_TYPE  106
 #define ERR_DEVICE_NOT_AVAILABLE    107
 
-class AcqSequenceThread;
-
 //////////////////////////////////////////////////////////////////////////////
 // DemoStreamingCamera class
 // Simulation of the fast streaming Camera device
@@ -92,12 +90,14 @@ public:
    int OnReadoutTime(MM::PropertyBase* pProp, MM::ActionType eAct);
    int OnColorMode(MM::PropertyBase* pProp, MM::ActionType eAct);
 
-   // custom interface for thread callbacks
-   long GetCounter() {return imageCounter_;}
-   long GetSequenceLength() {return sequenceLength_;}
    int PushImage();
 
 private:
+   //Do necessary for capturing
+   //Is called from the thread function
+   //Overrides ones defined in the CCameraBase class 
+   int ThreadRun();
+
    static const double nominalPixelSizeUm_;
    static const int imageSize_;
 
@@ -106,10 +106,6 @@ private:
    bool busy_;
    long readoutUs_;
    MM::MMTime readoutStartTime_;
-   AcqSequenceThread* acqThread_;
-   long imageCounter_;
-   long sequenceLength_;
-   bool acquiring_;
    bool color_;
    unsigned char* rawBuffer_;
    bool stopOnOverflow_;
@@ -183,7 +179,7 @@ private:
 
 /**
  * Acquisition thread
- */
+ *
 class AcqSequenceThread : public MMDeviceThreadBase
 {
 public:
@@ -210,6 +206,6 @@ private:
    bool suspend_;
    bool suspended_;
 };
-
+*/
 
 #endif //_DEMO_STREAMINGCAMERA_H_

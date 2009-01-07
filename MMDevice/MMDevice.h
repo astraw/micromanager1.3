@@ -263,6 +263,7 @@ namespace MM {
       virtual int StartSequenceAcquisition(long numImages, double interval_ms, bool stopOnOverflow) = 0;
       virtual int StartSequenceAcquisition(double interval_ms) = 0;
       virtual int StopSequenceAcquisition() = 0;
+      virtual bool IsCapturing() = 0;
 
    };
 
@@ -547,3 +548,7 @@ namespace MM {
    };
 
 } // namespace MM
+
+# define INVOKE_CALLBACK(callback) MM::Core* core__=GetCoreCallback();\
+   if(core__)core__->callback;
+

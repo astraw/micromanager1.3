@@ -29,6 +29,10 @@
 #include <errno.h>
 #endif
 
+#ifdef WIN32
+#pragma warning ( disable: 4068)
+#endif
+
 #include "QICamera.h"
 #include <string>
 #include <math.h>
@@ -188,7 +192,6 @@ MODULE_API void DeleteDevice(MM::Device* pDevice)
 */
 QICamera::QICamera()
 :CCameraBase<QICamera> ()
-,m_seqThread(NULL)
 ,m_isInitialized(false)
 ,m_isBusy(false)
 ,m_frame1(NULL)
@@ -199,8 +202,6 @@ QICamera::QICamera()
 #ifdef PRINT_FUNCTION_NAMES
    printf("QICamera::QICamera\n");
 #endif
-
-   m_seqThread = new QICamSequenceThread(this); 
 
    // create the condition so we can wait for a frame in SnapImage
 #ifdef WIN32
@@ -236,7 +237,6 @@ QICamera::~QICamera()
 #endif
    try
    {
-      delete m_seqThread;
       Shutdown();
    }
    catch(...)
@@ -1648,7 +1648,7 @@ int QICamera::StartSequenceAcquisition(long numImages, double intervalMs, bool s
 
    int ret;
 
-   if (m_seqThread->IsRunning())
+   if (IsCapturing())
       return ERR_BUSY_ACQUIRING;
 
    m_stopOnOverflow = stopOnOverflow;
@@ -1669,7 +1669,7 @@ int QICamera::StartSequenceAcquisition(long numImages, double intervalMs, bool s
 
    // start thread
    // TODO: check for success
-   m_seqThread->Start(intervalMs, numImages); 
+   thd_->Start(numImages, intervalMs); 
 
    ostringstream os;
    os << "Started sequence acquisition: " << numImages << " at " << intervalMs << " ms" << endl;
@@ -1684,7 +1684,7 @@ int QICamera::StartSequenceAcquisition(long numImages, double intervalMs, bool s
 */
 int QICamera::StopSequenceAcquisition()
 {
-   m_seqThread->Stop();
+   thd_->Stop();
    FinishSequenceMode();
    MM::Core* cb = GetCoreCallback();
    if (cb)
@@ -2364,45 +2364,28 @@ int QICamera::CheckForError(int inErr) const
 };
 
 /*
-*Sequence Acquisition thread
-*Sequence acquisition procedure
+*Overrides virtual function fron the CCameraBase class
+*Do actual capture
+*called from the acquisition thread function
 */
-int QICamSequenceThread::svc(void)
+int QICamera::ThreadRun(void)
 {
-   int ret=DEVICE_OK;
-   long imageCounter=0;
-
+   int ret=DEVICE_ERR;
 #ifdef PRINT_FUNCTION_NAMES
    printf("QICamera::SeqAcqThread::svc\n");
 #endif
-
-   do
-   {
-      ret = camera_->WaitForFrameCaptured();
+      ret = WaitForFrameCaptured();
       if (ret != DEVICE_OK)
       {
          ostringstream os;
          os << "QICamera delayed capturing frames. Errorcode: " << ret;
-         camera_->LogMessage(os.str().c_str());
+         LogMessage(os.str().c_str());
       }
       else
       {
-         try
-         {
-            // set the current image number
-            camera_->PushSequenceImage();
-            imageCounter++;
-         }catch(...)
-         {
-            camera_->LogMessage("QICamera: Exception in the acquisition thread");
-            return 2;
-         }
+         // set the current image number
+         PushSequenceImage();
       }
-   } while (DEVICE_OK == ret && !stop_ && imageCounter < numImages_);
-
-   if (stop_)
-      camera_->LogMessage("SeqAcquisition interrupted by the user\n");
-   stop_=true;
-   return DEVICE_OK;
+   return ret;
 }
 

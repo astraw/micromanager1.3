@@ -55,21 +55,21 @@ const char* g_PixelType_16bit = "16bit";
 
 // windows DLL entry code
 #ifdef WIN32
-   BOOL APIENTRY DllMain( HANDLE /*hModule*/, 
-                          DWORD  ul_reason_for_call, 
-                          LPVOID /*lpReserved*/
-		   			 )
+BOOL APIENTRY DllMain( HANDLE /*hModule*/, 
+                      DWORD  ul_reason_for_call, 
+                      LPVOID /*lpReserved*/
+                      )
+{
+   switch (ul_reason_for_call)
    {
-   	switch (ul_reason_for_call)
-   	{
-   	case DLL_PROCESS_ATTACH:
-  	   case DLL_THREAD_ATTACH:
-   	case DLL_THREAD_DETACH:
-   	case DLL_PROCESS_DETACH:
-   		break;
-   	}
-       return TRUE;
+   case DLL_PROCESS_ATTACH:
+   case DLL_THREAD_ATTACH:
+   case DLL_THREAD_DETACH:
+   case DLL_PROCESS_DETACH:
+      break;
    }
+   return TRUE;
+}
 #endif
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -167,20 +167,20 @@ MODULE_API void DeleteDevice(MM::Device* pDevice)
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 /**
- * CDemoCamera constructor.
- * Setup default all variables and create device properties required to exist
- * before intialization. In this case, no such properties were required. All
- * properties will be created in the Initialize() method.
- *
- * As a general guideline Micro-Manager devices do not access hardware in the
- * the constructor. We should do as little as possible in the constructor and
- * perform most of the initialization in the Initialize() method.
- */
+* CDemoCamera constructor.
+* Setup default all variables and create device properties required to exist
+* before intialization. In this case, no such properties were required. All
+* properties will be created in the Initialize() method.
+*
+* As a general guideline Micro-Manager devices do not access hardware in the
+* the constructor. We should do as little as possible in the constructor and
+* perform most of the initialization in the Initialize() method.
+*/
 CDemoCamera::CDemoCamera() :
-   CCameraBase<CDemoCamera> (),
-   initialized_(false),
-   readoutUs_(0.0),
-   scanMode_(1)
+CCameraBase<CDemoCamera> (),
+initialized_(false),
+readoutUs_(0.0),
+scanMode_(1)
 {
    // call the base class method to set-up default error codes/messages
    InitializeDefaultErrorMessages();
@@ -188,21 +188,21 @@ CDemoCamera::CDemoCamera() :
 }
 
 /**
- * CDemoCamera destructor.
- * If this device used as intended within the Micro-Manager system,
- * Shutdown() will be always called before the destructor. But in any case
- * we need to make sure that all resources are properly released even if
- * Shutdown() was not called.
- */
+* CDemoCamera destructor.
+* If this device used as intended within the Micro-Manager system,
+* Shutdown() will be always called before the destructor. But in any case
+* we need to make sure that all resources are properly released even if
+* Shutdown() was not called.
+*/
 CDemoCamera::~CDemoCamera()
 {
    // no clean-up required for this device
 }
 
 /**
- * Obtains device name.
- * Required by the MM::Device API.
- */
+* Obtains device name.
+* Required by the MM::Device API.
+*/
 void CDemoCamera::GetName(char* name) const
 {
    // We just return the name we use for referring to this
@@ -211,14 +211,14 @@ void CDemoCamera::GetName(char* name) const
 }
 
 /**
- * Intializes the hardware.
- * Required by the MM::Device API.
- * Typically we access and initialize hardware at this point.
- * Device properties are typically created here as well, except
- * the ones we need to use for defining initialization parameters.
- * Such pre-initialization properties are created in the constructor.
- * (This device does not have any pre-initialization properties)
- */
+* Intializes the hardware.
+* Required by the MM::Device API.
+* Typically we access and initialize hardware at this point.
+* Device properties are typically created here as well, except
+* the ones we need to use for defining initialization parameters.
+* Such pre-initialization properties are created in the constructor.
+* (This device does not have any pre-initialization properties)
+*/
 int CDemoCamera::Initialize()
 {
    if (initialized_)
@@ -226,7 +226,7 @@ int CDemoCamera::Initialize()
 
    // set property list
    // -----------------
-   
+
    // Name
    int nRet = CreateProperty(MM::g_Keyword_Name, g_CameraDeviceName, MM::String, true);
    if (DEVICE_OK != nRet)
@@ -240,7 +240,7 @@ int CDemoCamera::Initialize()
    // CameraName
    nRet = CreateProperty(MM::g_Keyword_CameraName, "DemoCamera-MultiMode", MM::String, true);
    assert(nRet == DEVICE_OK);
-		      
+
    // CameraID
    nRet = CreateProperty(MM::g_Keyword_CameraID, "V1.0", MM::String, true);
    assert(nRet == DEVICE_OK);
@@ -317,13 +317,13 @@ int CDemoCamera::Initialize()
 }
 
 /**
- * Shuts down (unloads) the device.
- * Required by the MM::Device API.
- * Ideally this method will completely unload the device and release all resources.
- * Shutdown() may be called multiple times in a row.
- * After Shutdown() we should be allowed to call Initialize() again to load the device
- * without causing problems.
- */
+* Shuts down (unloads) the device.
+* Required by the MM::Device API.
+* Ideally this method will completely unload the device and release all resources.
+* Shutdown() may be called multiple times in a row.
+* After Shutdown() we should be allowed to call Initialize() again to load the device
+* without causing problems.
+*/
 int CDemoCamera::Shutdown()
 {
    initialized_ = false;
@@ -331,9 +331,9 @@ int CDemoCamera::Shutdown()
 }
 
 /**
- * Performs exposure and grabs a single image.
- * Required by the MM::Camera API.
- */
+* Performs exposure and grabs a single image.
+* Required by the MM::Camera API.
+*/
 int CDemoCamera::SnapImage()
 {
    MM::MMTime startTime = GetCurrentMMTime();
@@ -348,15 +348,15 @@ int CDemoCamera::SnapImage()
 }
 
 /**
- * Returns pixel data.
- * Required by the MM::Camera API.
- * The calling program will assume the size of the buffer based on the values
- * obtained from GetImageBufferSize(), which in turn should be consistent with
- * values returned by GetImageWidth(), GetImageHight() and GetImageBytesPerPixel().
- * The calling program allso assumes that camera never changes the size of
- * the pixel buffer on its own. In other words, the buffer can change only if
- * appropriate properties are set (such as binning, pixel type, etc.)
- */
+* Returns pixel data.
+* Required by the MM::Camera API.
+* The calling program will assume the size of the buffer based on the values
+* obtained from GetImageBufferSize(), which in turn should be consistent with
+* values returned by GetImageWidth(), GetImageHight() and GetImageBytesPerPixel().
+* The calling program allso assumes that camera never changes the size of
+* the pixel buffer on its own. In other words, the buffer can change only if
+* appropriate properties are set (such as binning, pixel type, etc.)
+*/
 const unsigned char* CDemoCamera::GetImageBuffer()
 {
    MM::MMTime curTime = GetCurrentMMTime();
@@ -366,66 +366,66 @@ const unsigned char* CDemoCamera::GetImageBuffer()
 }
 
 /**
- * Returns image buffer X-size in pixels.
- * Required by the MM::Camera API.
- */
+* Returns image buffer X-size in pixels.
+* Required by the MM::Camera API.
+*/
 unsigned CDemoCamera::GetImageWidth() const
 {
    return img_.Width();
 }
 
 /**
- * Returns image buffer Y-size in pixels.
- * Required by the MM::Camera API.
- */
+* Returns image buffer Y-size in pixels.
+* Required by the MM::Camera API.
+*/
 unsigned CDemoCamera::GetImageHeight() const
 {
    return img_.Height();
 }
 
 /**
- * Returns image buffer pixel depth in bytes.
- * Required by the MM::Camera API.
- */
+* Returns image buffer pixel depth in bytes.
+* Required by the MM::Camera API.
+*/
 unsigned CDemoCamera::GetImageBytesPerPixel() const
 {
    return img_.Depth();
 } 
 
 /**
- * Returns the bit depth (dynamic range) of the pixel.
- * This does not affect the buffer size, it just gives the client application
- * a guideline on how to interpret pixel values.
- * Required by the MM::Camera API.
- */
+* Returns the bit depth (dynamic range) of the pixel.
+* This does not affect the buffer size, it just gives the client application
+* a guideline on how to interpret pixel values.
+* Required by the MM::Camera API.
+*/
 unsigned CDemoCamera::GetBitDepth() const
 {
    return 8 * GetImageBytesPerPixel();
 }
 
 /**
- * Returns the size in bytes of the image buffer.
- * Required by the MM::Camera API.
- */
+* Returns the size in bytes of the image buffer.
+* Required by the MM::Camera API.
+*/
 long CDemoCamera::GetImageBufferSize() const
 {
    return img_.Width() * img_.Height() * GetImageBytesPerPixel();
 }
 
 /**
- * Sets the camera Region Of Interest.
- * Required by the MM::Camera API.
- * This command will change the dimensions of the image.
- * Depending on the hardware capabilities the camera may not be able to configure the
- * exact dimensions requested - but should try do as close as possible.
- * If the hardware does not have this capability the software should simulate the ROI by
- * appropriately cropping each frame.
- * This demo implementation ignores the position coordinates and just crops the buffer.
- * @param x - top-left corner coordinate
- * @param y - top-left corner coordinate
- * @param xSize - width
- * @param ySize - height
- */
+* Sets the camera Region Of Interest.
+* Required by the MM::Camera API.
+* This command will change the dimensions of the image.
+* Depending on the hardware capabilities the camera may not be able to configure the
+* exact dimensions requested - but should try do as close as possible.
+* If the hardware does not have this capability the software should simulate the ROI by
+* appropriately cropping each frame.
+* This demo implementation ignores the position coordinates and just crops the buffer.
+* @param x - top-left corner coordinate
+* @param y - top-left corner coordinate
+* @param xSize - width
+* @param ySize - height
+*/
 int CDemoCamera::SetROI(unsigned /*x*/, unsigned /*y*/, unsigned xSize, unsigned ySize)
 {
    if (xSize == 0 && ySize == 0)
@@ -439,9 +439,9 @@ int CDemoCamera::SetROI(unsigned /*x*/, unsigned /*y*/, unsigned xSize, unsigned
 }
 
 /**
- * Returns the actual dimensions of the current ROI.
- * Required by the MM::Camera API.
- */
+* Returns the actual dimensions of the current ROI.
+* Required by the MM::Camera API.
+*/
 int CDemoCamera::GetROI(unsigned& x, unsigned& y, unsigned& xSize, unsigned& ySize)
 {
    x = 0;
@@ -454,9 +454,9 @@ int CDemoCamera::GetROI(unsigned& x, unsigned& y, unsigned& xSize, unsigned& ySi
 }
 
 /**
- * Resets the Region of Interest to full frame.
- * Required by the MM::Camera API.
- */
+* Resets the Region of Interest to full frame.
+* Required by the MM::Camera API.
+*/
 int CDemoCamera::ClearROI()
 {
    ResizeImageBuffer();
@@ -464,9 +464,9 @@ int CDemoCamera::ClearROI()
 }
 
 /**
- * Returns the current exposure setting in milliseconds.
- * Required by the MM::Camera API.
- */
+* Returns the current exposure setting in milliseconds.
+* Required by the MM::Camera API.
+*/
 double CDemoCamera::GetExposure() const
 {
    char buf[MM::MaxStrLength];
@@ -477,18 +477,18 @@ double CDemoCamera::GetExposure() const
 }
 
 /**
- * Sets exposure in milliseconds.
- * Required by the MM::Camera API.
- */
+* Sets exposure in milliseconds.
+* Required by the MM::Camera API.
+*/
 void CDemoCamera::SetExposure(double exp)
 {
    SetProperty(MM::g_Keyword_Exposure, CDeviceUtils::ConvertToString(exp));
 }
 
 /**
- * Returns the current binning factor.
- * Required by the MM::Camera API.
- */
+* Returns the current binning factor.
+* Required by the MM::Camera API.
+*/
 int CDemoCamera::GetBinning() const
 {
    char buf[MM::MaxStrLength];
@@ -499,9 +499,9 @@ int CDemoCamera::GetBinning() const
 }
 
 /**
- * Sets binning factor.
- * Required by the MM::Camera API.
- */
+* Sets binning factor.
+* Required by the MM::Camera API.
+*/
 int CDemoCamera::SetBinning(int binFactor)
 {
    return SetProperty(MM::g_Keyword_Binning, CDeviceUtils::ConvertToString(binFactor));
@@ -526,73 +526,97 @@ int CDemoCamera::SetAllowedBinning()
 ///////////////////////////////////////////////////////////////////////////////
 
 /**
- * Handles "Binning" property.
- */
+* Handles "Binning" property.
+*/
 int CDemoCamera::OnBinning(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
-   if (eAct == MM::AfterSet)
+   int ret = DEVICE_ERR;
+   switch(eAct)
    {
-      // the user just set the new value for the property, so we have to
-      // apply this value to the 'hardware'.
-      long binFactor;
-      pProp->Get(binFactor);
-      const long imageSize(512);
-
-      if (binFactor > 0 && binFactor < 10)
+   case MM::BeforeSet:
       {
-         img_.Resize(imageSize/binFactor, imageSize/binFactor);
-      }
-      else
+         if(IsCapturing())
+            ret = DEVICE_CAN_NOT_SET_PROPERTY;
+      }break;
+   case MM::AfterSet:
       {
-         // on failure reset default binning of 1
-         img_.Resize(imageSize, imageSize);
-         pProp->Set(1L);
-         return ERR_UNKNOWN_MODE;
-      }
-   }
-   else if (eAct == MM::BeforeGet)
-   {
-      // the user is requesting the current value for the property, so
-      // either ask the 'hardware' or let the system return the value
-      // cached in the property.
-   }
+         // the user just set the new value for the property, so we have to
+         // apply this value to the 'hardware'.
+         long binFactor;
+         pProp->Get(binFactor);
+         const long imageSize(512);
 
-   return DEVICE_OK; 
+         if (binFactor > 0 && binFactor < 10)
+         {
+            img_.Resize(imageSize/binFactor, imageSize/binFactor);
+            ret=DEVICE_OK;
+         }
+         else
+         {
+            // on failure reset default binning of 1
+            img_.Resize(imageSize, imageSize);
+            pProp->Set(1L);
+            ret = ERR_UNKNOWN_MODE;
+         }
+      }break;
+   case MM::BeforeGet:
+      {
+         // the user is requesting the current value for the property, so
+         // either ask the 'hardware' or let the system return the value
+         // cached in the property.
+         ret=DEVICE_OK;
+      }break;
+   }
+   return ret; 
 }
 
 /**
- * Handles "PixelType" property.
- */
+* Handles "PixelType" property.
+*/
 int CDemoCamera::OnPixelType(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
-   if (eAct == MM::AfterSet)
+   int ret = DEVICE_ERR;
+   switch(eAct)
    {
-      string pixelType;
-      pProp->Get(pixelType);
+   case MM::BeforeSet:
+      {
+         if(IsCapturing())
+            ret = DEVICE_CAN_NOT_SET_PROPERTY;
+      }break;
+   case MM::AfterSet:
+      {
+         string pixelType;
+         pProp->Get(pixelType);
 
-      if (pixelType.compare(g_PixelType_8bit) == 0)
+         if (pixelType.compare(g_PixelType_8bit) == 0)
+         {
+            img_.Resize(img_.Width(), img_.Height(), 1);
+            ret=DEVICE_OK;
+         }
+         else if (pixelType.compare(g_PixelType_16bit) == 0)
+         {
+            img_.Resize(img_.Width(), img_.Height(), 2);
+            ret=DEVICE_OK;
+         }
+         else
+         {
+            // on error switch to default pixel type
+            img_.Resize(img_.Width(), img_.Height(), 1);
+            pProp->Set(g_PixelType_8bit);
+            ret = ERR_UNKNOWN_MODE;
+         }
+      }break;
+   case MM::BeforeGet:
       {
-         img_.Resize(img_.Width(), img_.Height(), 1);
-      }
-      else if (pixelType.compare(g_PixelType_16bit) == 0)
-      {
-         img_.Resize(img_.Width(), img_.Height(), 2);
-      }
-      else
-      {
-         // on error switch to default pixel type
-         img_.Resize(img_.Width(), img_.Height(), 1);
-         pProp->Set(g_PixelType_8bit);
-         return ERR_UNKNOWN_MODE;
-      }
+         ret=DEVICE_OK;
+      }break;
    }
-
-   return DEVICE_OK;
+   return ret; 
 }
 
 /**
- * Handles "ReadoutTime" property.
- */
+* Handles "ReadoutTime" property.
+*/
 int CDemoCamera::OnReadoutTime(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
    if (eAct == MM::AfterSet)
@@ -611,9 +635,9 @@ int CDemoCamera::OnReadoutTime(MM::PropertyBase* pProp, MM::ActionType eAct)
 }
 
 /*
- * Handles "ScanMode" property.
- * Changes allowed Binning values to test whether the UI updates properly
- */
+* Handles "ScanMode" property.
+* Changes allowed Binning values to test whether the UI updates properly
+*/
 int CDemoCamera::OnScanMode(MM::PropertyBase* pProp, MM::ActionType eAct)
 { 
    if (eAct == MM::AfterSet) {
@@ -627,15 +651,15 @@ int CDemoCamera::OnScanMode(MM::PropertyBase* pProp, MM::ActionType eAct)
    }
    return DEVICE_OK;
 }
-    
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // Private CDemoCamera methods
 ///////////////////////////////////////////////////////////////////////////////
 
 /**
- * Sync internal image buffer size to the chosen property values.
- */
+* Sync internal image buffer size to the chosen property values.
+*/
 int CDemoCamera::ResizeImageBuffer()
 {
    char buf[MM::MaxStrLength];
@@ -651,14 +675,14 @@ int CDemoCamera::ResizeImageBuffer()
    int byteDepth = 1;
    if (strcmp(buf, g_PixelType_16bit) == 0)
       byteDepth = 2;
-   
+
    img_.Resize(imageSize_/binSize, imageSize_/binSize, byteDepth);
    return DEVICE_OK;
 }
 
 /**
- * Generate a spatial sine wave.
- */
+* Generate a spatial sine wave.
+*/
 void CDemoCamera::GenerateSyntheticImage(ImgBuffer& img, double exp)
 {
    if (img.Height() == 0 || img.Width() == 0 || img.Depth() == 0)
@@ -670,7 +694,7 @@ void CDemoCamera::GenerateSyntheticImage(ImgBuffer& img, double exp)
    double dLinePhase = 0.0;
    const double dAmp = exp;
    const double cLinePhaseInc = 2.0 * cPi / 4.0 / img.Height();
-   
+
    unsigned j, k;
    if (img.Depth() == 1)
    {
@@ -711,11 +735,11 @@ void CDemoCamera::GenerateSyntheticImage(ImgBuffer& img, double exp)
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 CDemoFilterWheel::CDemoFilterWheel() : 
-   numPos_(10), 
-   busy_(false), 
-   initialized_(false), 
-   changedTime_(0.0),
-   position_(0)
+numPos_(10), 
+busy_(false), 
+initialized_(false), 
+changedTime_(0.0),
+position_(0)
 {
    InitializeDefaultErrorMessages();
    EnableDelay(); // signals that the dealy setting will be used
@@ -739,7 +763,7 @@ int CDemoFilterWheel::Initialize()
 
    // set property list
    // -----------------
-   
+
    // Name
    int ret = CreateProperty(MM::g_Keyword_Name, g_WheelDeviceName, MM::String, true);
    if (DEVICE_OK != ret)
@@ -850,11 +874,11 @@ int CDemoFilterWheel::OnState(MM::PropertyBase* pProp, MM::ActionType eAct)
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 CDemoStateDevice::CDemoStateDevice() : 
-   numPos_(10), 
-   busy_(false), 
-   initialized_(false), 
-   changedTime_(0.0),
-   position_(0)
+numPos_(10), 
+busy_(false), 
+initialized_(false), 
+changedTime_(0.0),
+position_(0)
 {
    InitializeDefaultErrorMessages();
    EnableDelay(); // signals that the dealy setting will be used
@@ -883,7 +907,7 @@ int CDemoStateDevice::Initialize()
 
    // set property list
    // -----------------
-   
+
    // Name
    int ret = CreateProperty(MM::g_Keyword_Name, g_StateDeviceName, MM::String, true);
    if (DEVICE_OK != ret)
@@ -1004,9 +1028,9 @@ int CDemoStateDevice::OnNumberOfStates(MM::PropertyBase* pProp, MM::ActionType e
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 CDemoLightPath::CDemoLightPath() : 
-   numPos_(3), 
-   busy_(false), 
-   initialized_(false)
+numPos_(3), 
+busy_(false), 
+initialized_(false)
 {
    InitializeDefaultErrorMessages();
 }
@@ -1029,7 +1053,7 @@ int CDemoLightPath::Initialize()
 
    // set property list
    // -----------------
-   
+
    // Name
    int ret = CreateProperty(MM::g_Keyword_Name, g_LightPathDeviceName, MM::String, true);
    if (DEVICE_OK != ret)
@@ -1111,9 +1135,9 @@ int CDemoLightPath::OnState(MM::PropertyBase* pProp, MM::ActionType eAct)
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 CDemoObjectiveTurret::CDemoObjectiveTurret() : 
-   numPos_(6), 
-   busy_(false), 
-   initialized_(false)
+numPos_(6), 
+busy_(false), 
+initialized_(false)
 {
    InitializeDefaultErrorMessages();
 }
@@ -1136,7 +1160,7 @@ int CDemoObjectiveTurret::Initialize()
 
    // set property list
    // -----------------
-   
+
    // Name
    int ret = CreateProperty(MM::g_Keyword_Name, g_ObjectiveDeviceName, MM::String, true);
    if (DEVICE_OK != ret)
@@ -1218,12 +1242,12 @@ int CDemoObjectiveTurret::OnState(MM::PropertyBase* pProp, MM::ActionType eAct)
 // ~~~~~~~~~~~~~~~~~~~~~~~~~
 
 CDemoStage::CDemoStage() : 
-   stepSize_um_(0.025),
-   pos_um_(0.0),
-   busy_(false),
-   initialized_(false),
-   lowerLimit_(0.0),
-   upperLimit_(20000.0)
+stepSize_um_(0.025),
+pos_um_(0.0),
+busy_(false),
+initialized_(false),
+lowerLimit_(0.0),
+upperLimit_(20000.0)
 {
    InitializeDefaultErrorMessages();
 }
@@ -1245,7 +1269,7 @@ int CDemoStage::Initialize()
 
    // set property list
    // -----------------
-   
+
    // Name
    int ret = CreateProperty(MM::g_Keyword_Name, g_StageDeviceName, MM::String, true);
    if (DEVICE_OK != ret)
@@ -1311,14 +1335,14 @@ int CDemoStage::OnPosition(MM::PropertyBase* pProp, MM::ActionType eAct)
 // ~~~~~~~~~~~~~~~~~~~~~~~~~
 
 CDemoXYStage::CDemoXYStage() : 
-   CXYStageBase<CDemoXYStage>(),
-   stepSize_um_(0.015),
-   posX_um_(0.0),
-   posY_um_(0.0),
-   busy_(false),
-   initialized_(false),
-   lowerLimit_(0.0),
-   upperLimit_(20000.0)
+CXYStageBase<CDemoXYStage>(),
+stepSize_um_(0.015),
+posX_um_(0.0),
+posY_um_(0.0),
+busy_(false),
+initialized_(false),
+lowerLimit_(0.0),
+upperLimit_(20000.0)
 {
    InitializeDefaultErrorMessages();
 }
@@ -1340,7 +1364,7 @@ int CDemoXYStage::Initialize()
 
    // set property list
    // -----------------
-   
+
    // Name
    int ret = CreateProperty(MM::g_Keyword_Name, g_XYStageDeviceName, MM::String, true);
    if (DEVICE_OK != ret)
@@ -1390,7 +1414,7 @@ int DemoShutter::Initialize()
 
    // set property list
    // -----------------
-   
+
    // Name
    int ret = CreateProperty(MM::g_Keyword_Name, g_ShutterDeviceName, MM::String, true);
    if (DEVICE_OK != ret)
@@ -1413,7 +1437,7 @@ int DemoShutter::Initialize()
    AddAllowedValue(MM::g_Keyword_State, "1"); // Open
 
    state_ = false;
-   
+
    ret = UpdateStatus();
    if (ret != DEVICE_OK)
       return ret;
@@ -1478,7 +1502,7 @@ int DemoAutoFocus::Initialize()
 
    // set property list
    // -----------------
-   
+
    // Name
    int ret = CreateProperty(MM::g_Keyword_Name, g_AutoFocusDeviceName, MM::String, true);
    if (DEVICE_OK != ret)
@@ -1488,9 +1512,9 @@ int DemoAutoFocus::Initialize()
    ret = CreateProperty(MM::g_Keyword_Description, "Demo auto-focus adapter", MM::String, true);
    if (DEVICE_OK != ret)
       return ret;
-   
+
    running_ = false;   
-   
+
    ret = UpdateStatus();
    if (ret != DEVICE_OK)
       return ret;
@@ -1515,7 +1539,7 @@ int DemoMagnifier::Initialize()
 
    AddAllowedValue("Position", "1x"); 
    AddAllowedValue("Position", "1.6x"); 
-   
+
    ret = UpdateStatus();
    if (ret != DEVICE_OK)
       return ret;
@@ -1540,7 +1564,7 @@ int DemoMagnifier::OnPosition(MM::PropertyBase* pProp, MM::ActionType eAct)
       std::string pos;
       pProp->Get(pos);
       if (pos == "1x")
-            position = 0;
+         position = 0;
       else
          position = 1;
    }
@@ -1550,13 +1574,13 @@ int DemoMagnifier::OnPosition(MM::PropertyBase* pProp, MM::ActionType eAct)
 
 
 /****
- * Demo DA device
- */
+* Demo DA device
+*/
 
 DemoDA::DemoDA () : 
-   volt_(0), 
-   gatedVolts_(0), 
-   open_(true) 
+volt_(0), 
+gatedVolts_(0), 
+open_(true) 
 {
 }
 
@@ -1570,7 +1594,7 @@ int DemoDA::SetGateOpen(bool open)
       gatedVolts_ = volt_; 
    else 
       gatedVolts_ = 0;
-   
+
    return DEVICE_OK;
 }
 

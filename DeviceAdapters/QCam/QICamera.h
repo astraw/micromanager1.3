@@ -64,7 +64,7 @@
 #define CHECK_ERROR(inErr) \
 { \
    if (CheckForError(inErr) )\
-      return DEVICE_ERR;\
+   return DEVICE_ERR;\
 }
 #else
 #define CHECK_ERROR(inErr) \
@@ -161,6 +161,10 @@ public:
    int StartSequenceAcquisition(long numImages, double interval_ms, bool stopOnOverflow);
    int StopSequenceAcquisition();
    void SetCurrentFrameNumber(unsigned long inFrameNumber);
+protected:
+   //overrides one from the CCameraBase
+   //Camera thread function
+   int ThreadRun (void);
 
 private:
 
@@ -178,7 +182,6 @@ private:
    int ReportError(std::string message, int err);
    int CheckForError(int err) const;
 
-
 private:
    ImgBuffer			m_snappedImageBuffer;
    bool					m_isInitialized;
@@ -190,7 +193,6 @@ private:
    QCam_Frame		   *m_currentFrame;
    long              m_numImages;
    bool              m_stopOnOverflow;
-   QICamSequenceThread *m_seqThread;
 
 #ifdef WIN32
    HANDLE				m_waitCondition;
@@ -199,40 +201,6 @@ private:
    pthread_cond_t		m_waitCondition;
 #endif
 
-};
-/*
-* Acquisition thread (the BaseSequenceThread inherited from CCameraBase is not used)
-*/
-class QICamSequenceThread : public MMDeviceThreadBase
-{
-   enum { default_numImages=1, default_intervalMS = 100 };
-public:
-   QICamSequenceThread(QICamera* camera) 
-      :intervalMs_(default_intervalMS)
-      ,numImages_(default_numImages)
-      ,stop_(true)
-      ,camera_(camera)
-   {}
-   ~QICamSequenceThread() {}
-   void Stop() 
-   {
-      stop_ = true; 
-      wait();
-   }; 
-   int Start(double intervalMs, long numImages) // intervalMS is never used 
-   {
-      intervalMs_ = intervalMs;
-      numImages_ = numImages;
-      stop_ = false; 
-      return activate();
-   }
-   bool IsRunning(){return !stop_;};
-   int svc();
-private:
-   double intervalMs_;
-   long numImages_;
-   bool stop_;
-   QICamera* camera_;
 };
 
 #endif //_QICAMERA_H_

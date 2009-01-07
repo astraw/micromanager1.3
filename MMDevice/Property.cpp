@@ -325,6 +325,9 @@ int MM::PropertyCollection::Set(const char* pszPropName, const char* pszValue)
       if (!pProp->Set(pszValue))
          return DEVICE_INVALID_PROPERTY_VALUE;
 
+      if (!pProp->Prepare())
+         return DEVICE_CAN_NOT_SET_PROPERTY;
+
       return pProp->Apply();
    }
    else

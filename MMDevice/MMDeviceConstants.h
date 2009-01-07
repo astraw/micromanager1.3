@@ -68,6 +68,7 @@
 #define DEVICE_CORE_CONFIG_FAILED      29
 #define DEVICE_CAMERA_BUSY_ACQUIRING   30
 #define DEVICE_INCOMPATIBLE_IMAGE      31
+#define DEVICE_CAN_NOT_SET_PROPERTY    32
 
 
 namespace MM {
@@ -201,7 +202,8 @@ namespace MM {
    enum ActionType {
       NoAction,
       BeforeGet,
-      AfterSet
+      AfterSet,
+      BeforeSet
    };
 
    enum PortType {

@@ -49,24 +49,24 @@ const char* g_ColorMode_RGB = "RGB-32bit";
 
 // windows DLL entry code
 #ifdef WIN32
-   BOOL APIENTRY DllMain( HANDLE /*hModule*/, 
-                          DWORD  ul_reason_for_call, 
-                          LPVOID /*lpReserved*/
-		   			 )
+BOOL APIENTRY DllMain( HANDLE /*hModule*/, 
+                      DWORD  ul_reason_for_call, 
+                      LPVOID /*lpReserved*/
+                      )
+{
+   switch (ul_reason_for_call)
    {
-   	switch (ul_reason_for_call)
-   	{
-   	case DLL_PROCESS_ATTACH:
+   case DLL_PROCESS_ATTACH:
       break;
-  	   case DLL_THREAD_ATTACH:
+   case DLL_THREAD_ATTACH:
       break;
-   	case DLL_THREAD_DETACH:
+   case DLL_THREAD_DETACH:
       break;
-   	case DLL_PROCESS_DETACH:
-   	break;
-   	}
-       return TRUE;
+   case DLL_PROCESS_DETACH:
+      break;
    }
+   return TRUE;
+}
 #endif
 
 // mutex
@@ -119,51 +119,45 @@ MODULE_API void DeleteDevice(MM::Device* pDevice)
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 /**
- * DemoStreamingCamera constructor.
- * Setup default all variables and create device properties required to exist
- * before intialization. In this case, no such properties were required. All
- * properties will be created in the Initialize() method.
- *
- * As a general guideline Micro-Manager devices do not access hardware in the
- * the constructor. We should do as little as possible in the constructor and
- * perform most of the initialization in the Initialize() method.
- */
+* DemoStreamingCamera constructor.
+* Setup default all variables and create device properties required to exist
+* before intialization. In this case, no such properties were required. All
+* properties will be created in the Initialize() method.
+*
+* As a general guideline Micro-Manager devices do not access hardware in the
+* the constructor. We should do as little as possible in the constructor and
+* perform most of the initialization in the Initialize() method.
+*/
 DemoStreamingCamera::DemoStreamingCamera() : 
-   CCameraBase<DemoStreamingCamera> (),
-   initialized_(false),
-   busy_(false),
-   readoutUs_(0),
-   imageCounter_(0),
-   sequenceLength_(0),
-   acquiring_(false),
-   color_(false),
-   rawBuffer_(0),
-   stopOnOverflow_(true)
+CCameraBase<DemoStreamingCamera> (),
+initialized_(false),
+busy_(false),
+readoutUs_(0),
+color_(false),
+rawBuffer_(0),
+stopOnOverflow_(true)
 {
    // call the base class method to set-up default error codes/messages
    InitializeDefaultErrorMessages();
    readoutStartTime_ = GetCurrentMMTime();
-   acqThread_ = new AcqSequenceThread(this);
 }
 
 /**
- * DemoStreamingCamera destructor.
- * If this device used as intended within the Micro-Manager system,
- * Shutdown() will be always called before the destructor. But in any case
- * we need to make sure that all resources are properly released even if
- * Shutdown() was not called.
- */
+* DemoStreamingCamera destructor.
+* If this device used as intended within the Micro-Manager system,
+* Shutdown() will be always called before the destructor. But in any case
+* we need to make sure that all resources are properly released even if
+* Shutdown() was not called.
+*/
 DemoStreamingCamera::~DemoStreamingCamera()
 {
-   //acqThread_->Stop();
-   delete acqThread_;
    delete[] rawBuffer_;
 }
 
 /**
- * Obtains device name.
- * Required by the MM::Device API.
- */
+* Obtains device name.
+* Required by the MM::Device API.
+*/
 void DemoStreamingCamera::GetName(char* name) const
 {
    // We just return the name we use for referring to this
@@ -172,27 +166,27 @@ void DemoStreamingCamera::GetName(char* name) const
 }
 
 /**
- * Tells us if device is still processing asynchronous command.
- * Required by the MM:Device API.
- */
+* Tells us if device is still processing asynchronous command.
+* Required by the MM:Device API.
+*/
 bool DemoStreamingCamera::Busy()
 {
    // TODO: this is controversial!
    // Should camera appear as busy during acquistion ???
    // is mutex neccessary ???
    //ACE_Guard<ACE_Mutex> guard(g_lock);
-   return acquiring_;
+   return IsCapturing();
 }
 
 /**
- * Intializes the hardware.
- * Required by the MM::Device API.
- * Typically we access and initialize hardware at this point.
- * Device properties are typically created here as well, except
- * the ones we need to use for defining initialization parameters.
- * Such pre-initialization properties are created in the constructor.
- * (This device does not have any pre-initialization properties)
- */
+* Intializes the hardware.
+* Required by the MM::Device API.
+* Typically we access and initialize hardware at this point.
+* Device properties are typically created here as well, except
+* the ones we need to use for defining initialization parameters.
+* Such pre-initialization properties are created in the constructor.
+* (This device does not have any pre-initialization properties)
+*/
 int DemoStreamingCamera::Initialize()
 {
    if (initialized_)
@@ -200,7 +194,7 @@ int DemoStreamingCamera::Initialize()
 
    // set property list
    // -----------------
-   
+
    // Name
    int nRet = CreateProperty(MM::g_Keyword_Name, g_CameraDeviceName, MM::String, true);
    if (DEVICE_OK != nRet)
@@ -214,7 +208,7 @@ int DemoStreamingCamera::Initialize()
    // CameraName
    nRet = CreateProperty(MM::g_Keyword_CameraName, "Demo Streaming Camera", MM::String, true);
    assert(nRet == DEVICE_OK);
-		      
+
    // CameraID
    nRet = CreateProperty(MM::g_Keyword_CameraID, "V1.0", MM::String, true);
    assert(nRet == DEVICE_OK);
@@ -306,8 +300,8 @@ int DemoStreamingCamera::Initialize()
 }
 
 /**
- * Returns the number of physical channels in the image.
- */
+* Returns the number of physical channels in the image.
+*/
 unsigned int DemoStreamingCamera::GetNumberOfChannels() const
 {
    if (color_)
@@ -323,20 +317,20 @@ int DemoStreamingCamera::GetChannelName(unsigned int channel, char* name)
 
    switch (channel)
    {
-      case 0:
-         CDeviceUtils::CopyLimitedString(name, "R");
+   case 0:
+      CDeviceUtils::CopyLimitedString(name, "R");
       break;
 
-      case 1:
-         CDeviceUtils::CopyLimitedString(name, "G");
+   case 1:
+      CDeviceUtils::CopyLimitedString(name, "G");
       break;
 
-      case 2:
-         CDeviceUtils::CopyLimitedString(name, "B");
+   case 2:
+      CDeviceUtils::CopyLimitedString(name, "B");
       break;
 
-      default:
-         return DEVICE_NONEXISTENT_CHANNEL;
+   default:
+      return DEVICE_NONEXISTENT_CHANNEL;
       break;
    }
    return DEVICE_OK;
@@ -344,13 +338,13 @@ int DemoStreamingCamera::GetChannelName(unsigned int channel, char* name)
 
 
 /**
- * Shuts down (unloads) the device.
- * Required by the MM::Device API.
- * Ideally this method will completely unload the device and release all resources.
- * Shutdown() may be called multiple times in a row.
- * After Shutdown() we should be allowed to call Initialize() again to load the device
- * without causing problems.
- */
+* Shuts down (unloads) the device.
+* Required by the MM::Device API.
+* Ideally this method will completely unload the device and release all resources.
+* Shutdown() may be called multiple times in a row.
+* After Shutdown() we should be allowed to call Initialize() again to load the device
+* without causing problems.
+*/
 int DemoStreamingCamera::Shutdown()
 {
    initialized_ = false;
@@ -361,9 +355,9 @@ int DemoStreamingCamera::Shutdown()
 }
 
 /**
- * Performs exposure and grabs a single image.
- * Required by the MM::Camera API.
- */
+* Performs exposure and grabs a single image.
+* Required by the MM::Camera API.
+*/
 int DemoStreamingCamera::SnapImage()
 {
    if (Busy())
@@ -398,9 +392,9 @@ int DemoStreamingCamera::SnapImage()
       else
       {
          int ret = ip->Process(const_cast<unsigned char*>(img_[0].GetPixels()), GetImageWidth(), GetImageHeight(), GetImageBytesPerPixel());
-          if (ret != DEVICE_OK)
+         if (ret != DEVICE_OK)
             return ret;
-     }
+      }
    }
 
    readoutStartTime_ = GetCurrentMMTime();
@@ -409,15 +403,15 @@ int DemoStreamingCamera::SnapImage()
 }
 
 /**
- * Returns pixel data.
- * Required by the MM::Camera API.
- * The calling program will assume the size of the buffer based on the values
- * obtained from GetImageBufferSize(), which in turn should be consistent with
- * values returned by GetImageWidth(), GetImageHight() and GetImageBytesPerPixel().
- * The calling program allso assumes that camera never changes the size of
- * the pixel buffer on its own. In other words, the buffer can change only if
- * appropriate properties are set (such as binning, pixel type, etc.)
- */
+* Returns pixel data.
+* Required by the MM::Camera API.
+* The calling program will assume the size of the buffer based on the values
+* obtained from GetImageBufferSize(), which in turn should be consistent with
+* values returned by GetImageWidth(), GetImageHight() and GetImageBytesPerPixel().
+* The calling program allso assumes that camera never changes the size of
+* the pixel buffer on its own. In other words, the buffer can change only if
+* appropriate properties are set (such as binning, pixel type, etc.)
+*/
 const unsigned char* DemoStreamingCamera::GetImageBuffer()
 {
    while (GetCurrentMMTime() - readoutStartTime_ < MM::MMTime(readoutUs_)) {CDeviceUtils::SleepMs(5);}
@@ -436,8 +430,8 @@ const unsigned char* DemoStreamingCamera::GetImageBuffer()
 }
 
 /**
- * Returns pixel data with interleaved RGB pixels in 32 bpp format
- */
+* Returns pixel data with interleaved RGB pixels in 32 bpp format
+*/
 const unsigned int* DemoStreamingCamera::GetImageBufferAsRGB32()
 {
    while (GetCurrentMMTime() - readoutStartTime_ < MM::MMTime(readoutUs_)) {CDeviceUtils::SleepMs(5);}
@@ -467,47 +461,47 @@ const unsigned int* DemoStreamingCamera::GetImageBufferAsRGB32()
 }
 
 /**
- * Returns image buffer X-size in pixels.
- * Required by the MM::Camera API.
- */
+* Returns image buffer X-size in pixels.
+* Required by the MM::Camera API.
+*/
 unsigned DemoStreamingCamera::GetImageWidth() const
 {
    return img_[0].Width();
 }
 
 /**
- * Returns image buffer Y-size in pixels.
- * Required by the MM::Camera API.
- */
+* Returns image buffer Y-size in pixels.
+* Required by the MM::Camera API.
+*/
 unsigned DemoStreamingCamera::GetImageHeight() const
 {
    return img_[0].Height();
 }
 
 /**
- * Returns image buffer pixel depth in bytes.
- * Required by the MM::Camera API.
- */
+* Returns image buffer pixel depth in bytes.
+* Required by the MM::Camera API.
+*/
 unsigned DemoStreamingCamera::GetImageBytesPerPixel() const
 {
    return img_[0].Depth();
 } 
 
 /**
- * Returns the bit depth (dynamic range) of the pixel.
- * This does not affect the buffer size, it just gives the client application
- * a guideline on how to interpret pixel values.
- * Required by the MM::Camera API.
- */
+* Returns the bit depth (dynamic range) of the pixel.
+* This does not affect the buffer size, it just gives the client application
+* a guideline on how to interpret pixel values.
+* Required by the MM::Camera API.
+*/
 unsigned DemoStreamingCamera::GetBitDepth() const
 {
    return 8 * GetImageBytesPerPixel();
 }
 
 /**
- * Returns the size in bytes of the image buffer.
- * Required by the MM::Camera API.
- */
+* Returns the size in bytes of the image buffer.
+* Required by the MM::Camera API.
+*/
 long DemoStreamingCamera::GetImageBufferSize() const
 {
    long singleChannelSize = img_[0].Width() * img_[0].Height() * GetImageBytesPerPixel();
@@ -518,19 +512,19 @@ long DemoStreamingCamera::GetImageBufferSize() const
 }
 
 /**
- * Sets the camera Region Of Interest.
- * Required by the MM::Camera API.
- * This command will change the dimensions of the image.
- * Depending on the hardware capabilities the camera may not be able to configure the
- * exact dimensions requested - but should try do as close as possible.
- * If the hardware does not have this capability the software should simulate the ROI by
- * appropriately cropping each frame.
- * This demo implementation ignores the position coordinates and just crops the buffer.
- * @param x - top-left corner coordinate
- * @param y - top-left corner coordinate
- * @param xSize - width
- * @param ySize - height
- */
+* Sets the camera Region Of Interest.
+* Required by the MM::Camera API.
+* This command will change the dimensions of the image.
+* Depending on the hardware capabilities the camera may not be able to configure the
+* exact dimensions requested - but should try do as close as possible.
+* If the hardware does not have this capability the software should simulate the ROI by
+* appropriately cropping each frame.
+* This demo implementation ignores the position coordinates and just crops the buffer.
+* @param x - top-left corner coordinate
+* @param y - top-left corner coordinate
+* @param xSize - width
+* @param ySize - height
+*/
 int DemoStreamingCamera::SetROI(unsigned /*x*/, unsigned /*y*/, unsigned xSize, unsigned ySize)
 {
    if (Busy())
@@ -552,9 +546,9 @@ int DemoStreamingCamera::SetROI(unsigned /*x*/, unsigned /*y*/, unsigned xSize, 
 }
 
 /**
- * Returns the actual dimensions of the current ROI.
- * Required by the MM::Camera API.
- */
+* Returns the actual dimensions of the current ROI.
+* Required by the MM::Camera API.
+*/
 int DemoStreamingCamera::GetROI(unsigned& x, unsigned& y, unsigned& xSize, unsigned& ySize)
 {
    x = 0;
@@ -567,9 +561,9 @@ int DemoStreamingCamera::GetROI(unsigned& x, unsigned& y, unsigned& xSize, unsig
 }
 
 /**
- * Resets the Region of Interest to full frame.
- * Required by the MM::Camera API.
- */
+* Resets the Region of Interest to full frame.
+* Required by the MM::Camera API.
+*/
 int DemoStreamingCamera::ClearROI()
 {
    if (Busy())
@@ -580,9 +574,9 @@ int DemoStreamingCamera::ClearROI()
 }
 
 /**
- * Returns the current exposure setting in milliseconds.
- * Required by the MM::Camera API.
- */
+* Returns the current exposure setting in milliseconds.
+* Required by the MM::Camera API.
+*/
 double DemoStreamingCamera::GetExposure() const
 {
    char buf[MM::MaxStrLength];
@@ -593,9 +587,9 @@ double DemoStreamingCamera::GetExposure() const
 }
 
 /**
- * Sets exposure in milliseconds.
- * Required by the MM::Camera API.
- */
+* Sets exposure in milliseconds.
+* Required by the MM::Camera API.
+*/
 void DemoStreamingCamera::SetExposure(double exp)
 {
    if (Busy())
@@ -605,9 +599,9 @@ void DemoStreamingCamera::SetExposure(double exp)
 }
 
 /**
- * Returns the current binning factor.
- * Required by the MM::Camera API.
- */
+* Returns the current binning factor.
+* Required by the MM::Camera API.
+*/
 int DemoStreamingCamera::GetBinning() const
 {
    char buf[MM::MaxStrLength];
@@ -618,9 +612,9 @@ int DemoStreamingCamera::GetBinning() const
 }
 
 /**
- * Sets binning factor.
- * Required by the MM::Camera API.
- */
+* Sets binning factor.
+* Required by the MM::Camera API.
+*/
 int DemoStreamingCamera::SetBinning(int binFactor)
 {
    if (Busy())
@@ -635,59 +629,70 @@ int DemoStreamingCamera::SetBinning(int binFactor)
 ///////////////////////////////////////////////////////////////////////////////
 
 /**
- * Handles "Binning" property.
- */
+* Handles "Binning" property.
+*/
 int DemoStreamingCamera::OnBinning(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
-
-   if (eAct == MM::AfterSet)
+   int ret = DEVICE_ERR;
+   switch(eAct)
    {
-      if (Busy())
-         return ERR_BUSY_ACQIRING;
-
-      // the user just set the new value for the property, so we have to
-      // apply this value to the 'hardware'.
-      long binFactor;
-      pProp->Get(binFactor);
-
-      if (binFactor > 0 && binFactor < 10)
+   case MM::BeforeSet:
       {
-         img_[0].Resize(imageSize_/binFactor, imageSize_/binFactor);
-         img_[1].Resize(imageSize_/binFactor, imageSize_/binFactor);
-         img_[2].Resize(imageSize_/binFactor, imageSize_/binFactor);
-         ResizeImageBuffer();
-     }
-      else
+         if(IsCapturing())
+            ret = DEVICE_CAN_NOT_SET_PROPERTY;
+      }break;
+   case MM::AfterSet:
       {
-         // on failure reset default binning of 1
-         img_[0].Resize(imageSize_, imageSize_);
-         img_[1].Resize(imageSize_, imageSize_);
-         img_[2].Resize(imageSize_, imageSize_);
-         ResizeImageBuffer();
-         pProp->Set(1L);
-         return ERR_UNKNOWN_MODE;
-      }
-   }
-   else if (eAct == MM::BeforeGet)
-   {
-      // the user is requesting the current value for the property, so
-      // either ask the 'hardware' or let the system return the value
-      // cached in the property.
-   }
+         // the user just set the new value for the property, so we have to
+         // apply this value to the 'hardware'.
+         long binFactor;
+         pProp->Get(binFactor);
 
-   return DEVICE_OK; 
+         if (binFactor > 0 && binFactor < 10)
+         {
+            img_[0].Resize(imageSize_/binFactor, imageSize_/binFactor);
+            img_[1].Resize(imageSize_/binFactor, imageSize_/binFactor);
+            img_[2].Resize(imageSize_/binFactor, imageSize_/binFactor);
+            ret = ResizeImageBuffer();
+         }
+         else
+         {
+            // on failure reset default binning of 1
+            img_[0].Resize(imageSize_, imageSize_);
+            img_[1].Resize(imageSize_, imageSize_);
+            img_[2].Resize(imageSize_, imageSize_);
+            ResizeImageBuffer();
+            pProp->Set(1L);
+            return ERR_UNKNOWN_MODE;
+         }
+
+      }break;
+   case MM::BeforeGet:
+      {
+         // the user is requesting the current value for the property, so
+         // either ask the 'hardware' or let the system return the value
+         // cached in the property.
+         ret=DEVICE_OK;
+      }break;
+   }
+   return ret; 
 }
 
 /**
- * Handles "PixelType" property.
- */
+* Handles "PixelType" property.
+*/
 int DemoStreamingCamera::OnPixelType(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
-   if (eAct == MM::AfterSet)
+   int ret = DEVICE_ERR;
+   switch(eAct)
    {
-      if (Busy())
-         return ERR_BUSY_ACQIRING;
-
+   case MM::BeforeSet:
+      {
+         if(IsCapturing())
+            ret = DEVICE_CAN_NOT_SET_PROPERTY;
+      }break;
+   case MM::AfterSet:
+      {
       string pixelType;
       pProp->Get(pixelType);
 
@@ -696,14 +701,14 @@ int DemoStreamingCamera::OnPixelType(MM::PropertyBase* pProp, MM::ActionType eAc
          img_[0].Resize(img_[0].Width(), img_[0].Height(), 1);
          img_[1].Resize(img_[1].Width(), img_[1].Height(), 1);
          img_[2].Resize(img_[2].Width(), img_[2].Height(), 1);
-         ResizeImageBuffer();
+         ret = ResizeImageBuffer();
       }
       else if (pixelType.compare(g_PixelType_16bit) == 0)
       {
          img_[0].Resize(img_[0].Width(), img_[0].Height(), 2);
          img_[1].Resize(img_[1].Width(), img_[1].Height(), 2);
          img_[2].Resize(img_[2].Width(), img_[2].Height(), 2);
-         ResizeImageBuffer();
+         ret = ResizeImageBuffer();
       }
       else
       {
@@ -713,16 +718,24 @@ int DemoStreamingCamera::OnPixelType(MM::PropertyBase* pProp, MM::ActionType eAc
          img_[2].Resize(img_[2].Width(), img_[2].Height(), 1);
          pProp->Set(g_PixelType_8bit);
          ResizeImageBuffer();
-         return ERR_UNKNOWN_MODE;
+         ret = ERR_UNKNOWN_MODE;
       }
-   }
 
-   return DEVICE_OK;
+      }break;
+   case MM::BeforeGet:
+      {
+         // the user is requesting the current value for the property, so
+         // either ask the 'hardware' or let the system return the value
+         // cached in the property.
+         ret=DEVICE_OK;
+      }break;
+   }
+   return ret; 
 }
 
 /**
- * Handles "ReadoutTime" property.
- */
+* Handles "ReadoutTime" property.
+*/
 int DemoStreamingCamera::OnReadoutTime(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
 
@@ -730,7 +743,7 @@ int DemoStreamingCamera::OnReadoutTime(MM::PropertyBase* pProp, MM::ActionType e
    {
       if (Busy())
          return ERR_BUSY_ACQIRING;
-      
+
       double readoutMs;
       pProp->Get(readoutMs);
 
@@ -745,15 +758,15 @@ int DemoStreamingCamera::OnReadoutTime(MM::PropertyBase* pProp, MM::ActionType e
 }
 
 /**
- * Handles "ColorMode" property.
- */
+* Handles "ColorMode" property.
+*/
 int DemoStreamingCamera::OnColorMode(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
    if (eAct == MM::AfterSet)
    {
       if (Busy())
          return ERR_BUSY_ACQIRING;
-      
+
       string pixelType;
       pProp->Get(pixelType);
 
@@ -786,8 +799,8 @@ int DemoStreamingCamera::OnColorMode(MM::PropertyBase* pProp, MM::ActionType eAc
 ///////////////////////////////////////////////////////////////////////////////
 
 /**
- * Sync internal image buffer size to the chosen property values.
- */
+* Sync internal image buffer size to the chosen property values.
+*/
 int DemoStreamingCamera::ResizeImageBuffer()
 {
    char buf[MM::MaxStrLength];
@@ -803,7 +816,7 @@ int DemoStreamingCamera::ResizeImageBuffer()
    int byteDepth = 1;
    if (strcmp(buf, g_PixelType_16bit) == 0)
       byteDepth = 2;
-   
+
    img_[0].Resize(imageSize_/binSize, imageSize_/binSize, byteDepth);
    img_[1].Resize(imageSize_/binSize, imageSize_/binSize, byteDepth);
    img_[2].Resize(imageSize_/binSize, imageSize_/binSize, byteDepth);
@@ -821,8 +834,8 @@ int DemoStreamingCamera::ResizeImageBuffer()
 }
 
 /**
- * Generate a spatial sine wave.
- */
+* Generate a spatial sine wave.
+*/
 void DemoStreamingCamera::GenerateSyntheticImage(ImgBuffer& img, double exp)
 {
    if (img.Height() == 0 || img.Width() == 0 || img.Depth() == 0)
@@ -834,7 +847,7 @@ void DemoStreamingCamera::GenerateSyntheticImage(ImgBuffer& img, double exp)
    double dLinePhase = 0.0;
    const double dAmp = exp;
    const double cLinePhaseInc = 2.0 * cPi / 4.0 / img.Height();
-   
+
    unsigned j, k;
    if (img.Depth() == 1)
    {
@@ -871,14 +884,15 @@ void DemoStreamingCamera::GenerateSyntheticImage(ImgBuffer& img, double exp)
 
 
 /**
- * Starts continuous acquisition.
- */
+* Starts continuous acquisition.
+*
+*/
 int DemoStreamingCamera::StartSequenceAcquisition(long numImages, double interval_ms, bool stopOnOverflow)
 {
    ostringstream os;
    os << "Started camera streaming with an interval of " << interval_ms << " ms, for " << numImages << " images.\n";
    printf("%s", os.str().c_str());
-   if (acquiring_)
+   if (IsCapturing())
       return ERR_BUSY_ACQIRING;
 
    stopOnOverflow_ = stopOnOverflow;
@@ -889,33 +903,29 @@ int DemoStreamingCamera::StartSequenceAcquisition(long numImages, double interva
    // make sure the circular buffer is properly sized
    GetCoreCallback()->InitializeImageBuffer(1, 1, GetImageWidth(), GetImageHeight(), GetImageBytesPerPixel());
 
-   imageCounter_ = 0;
-   sequenceLength_ = numImages;
-
    double actualIntervalMs = max(GetExposure(), interval_ms);
-   acqThread_->SetInterval(actualIntervalMs);
    SetProperty(MM::g_Keyword_ActualInterval_ms, CDeviceUtils::ConvertToString(actualIntervalMs)); 
-   acqThread_->SetLength(numImages);
-   acquiring_ = true;
-   acqThread_->Start();
+
+   thd_->Start(numImages,actualIntervalMs);
 
    return DEVICE_OK;
 }
 
+
 /**
- * Stops acquisition
- */
+* Stops acquisition
+*
+*/
 int DemoStreamingCamera::StopSequenceAcquisition()
 {   
-   printf("Stopped camera streaming.\n");
-   acqThread_->Stop();
-   acquiring_ = false;
-
+   thd_->Stop();
+   thd_->wait();
+   LogMessage("Stopped camera streaming.\n");
    // TODO: the correct termination code needs to be passed here instead of "0"
-   MM::Core* cb = GetCoreCallback();
-   if (cb)
-      cb->AcqFinished(this, 0);
-
+   //   MM::Core* cb = GetCoreCallback();
+   //   if (cb)
+   //      cb->AcqFinished(this, 0);
+   INVOKE_CALLBACK(AcqFinished(this, 0));
    return DEVICE_OK;
 }
 
@@ -930,13 +940,6 @@ int DemoStreamingCamera::PushImage()
    }
    else
       GenerateSyntheticImage(img_[0], GetExposure());
-
-   //printf("Pushing image %d\n", imageCounter_);
-   imageCounter_++;
-   // TODO: call core to finish image snap
-
-   if (imageCounter_ >= sequenceLength_)
-      StopSequenceAcquisition();
 
    // process image
    MM::ImageProcessor* ip = GetCoreCallback()->GetImageProcessor(this);
@@ -973,50 +976,15 @@ int DemoStreamingCamera::PushImage()
    } else
       return ret;
 }
-
-int AcqSequenceThread::svc(void)
+int DemoStreamingCamera::ThreadRun()
 {
-//   printf("Acq Thread started with interval %f ms\n", intervalMs_);
-   while (!stop_)
+   int ret = PushImage();
+   if (ret != DEVICE_OK)
    {
-      if (suspend_)
-      {
-         suspended_ = true;
-         continue;
-      }
-      else
-         suspended_ = false;
-
-      int ret = camera_->PushImage();
-      if (ret != DEVICE_OK)
-      {
-         // error occured so the acquisition must be stopped
-         camera_->StopSequenceAcquisition();
-         printf("Overflow or image dimension mismatch!\n");
-         return 1;
-         // TODO: communicate that error has occured
-      }
-      CDeviceUtils::SleepMs((long)intervalMs_);
-      //DWORD start = GetTickCount();
-      //Sleep((long)intervalMs_);
-      //DWORD delta = GetTickCount() - start;
-      //printf("Push image takes %ld ms\n", delta);
+      // error occured so the acquisition must be stopped
+      StopSequenceAcquisition();
+      LogMessage("Overflow or image dimension mismatch!\n");
    }
-   printf("Image generation thread finished\n");
-   return 0;
-}
-
-void AcqSequenceThread::Start()
-{
-   stop_ = false;
-   suspend_ = false;
-   suspended_ = false;
-   activate();
-}
-
-void AcqSequenceThread::Stop()
-{
-   stop_ = true;
-   suspend_ = false;
-   suspended_ = false;
+   CDeviceUtils::SleepMs((long)thd_->GetIntervalMs());
+   return ret;
 }

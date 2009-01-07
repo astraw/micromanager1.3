@@ -156,6 +156,13 @@ public:
       else
          return DEVICE_OK;
    }
+   int Prepare()
+   {
+      if (fpAction_)
+         return fpAction_->Execute(this, BeforeSet);
+      else
+         return DEVICE_OK;
+   }
 
    // discrete set of allowed values
    std::vector<std::string> GetAllowedValues() const;
