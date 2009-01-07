@@ -1292,7 +1292,7 @@ int CHamamatsu::SnapImage()
 
    snapInProgress_ = true;
 
-   CDeviceUtils::SleepMs(dExp*1000.0);
+   CDeviceUtils::SleepMs((long) (dExp*1000.0));
 
    return DEVICE_OK;
 }
