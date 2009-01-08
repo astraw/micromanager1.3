@@ -289,12 +289,11 @@ public class ConfigGroupPad extends JScrollPane{
       private class LiveModeSync
       {
     	  private boolean restartLive=false;  
-    	  public LiveModeSync(String groupName) throws InterruptedException
+    	  public LiveModeSync() throws InterruptedException
     	  {
               if (parentGUI_ != null)
               {
-            	  restartLive= parentGUI_.getLiveMode() 
-            	  				&& groupName.contains("Camera");
+            	  restartLive= parentGUI_.getLiveMode();
             	  if (restartLive)
             	  {
             		  parentGUI_.enableLiveMode(false);
@@ -317,6 +316,10 @@ public class ConfigGroupPad extends JScrollPane{
             try {
                if (value != null && value.toString().length() > 0)
                {
+            	  boolean restartLive= parentGUI_.getLiveMode();
+            	  if (restartLive)
+            		  parentGUI_.enableLiveMode(false);
+            	  
                   if (item.singleProp) {
                      NumberFormat form = NumberFormat.getInstance();
                      if (item.hasLimits && item.isInt) {
@@ -373,6 +376,8 @@ public class ConfigGroupPad extends JScrollPane{
 //                      parentGUI_.applyContrastSettings(csFound.contrast8_, csFound.contrast16_);
                      }
                   }
+                  if (restartLive)
+               		  parentGUI_.enableLiveMode(true);
                }
             } catch (Exception e) {
                handleException(e);
