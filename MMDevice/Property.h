@@ -248,7 +248,7 @@ private:
 class FloatProperty : public Property
 {
 public:
-   FloatProperty(): Property(), value_(0.0), decimalPlaces_(2) {}      
+   FloatProperty(): Property(), value_(0.0), decimalPlaces_(4) {}      
    virtual ~FloatProperty() {};
             
    PropertyType GetType() {return Float;}
