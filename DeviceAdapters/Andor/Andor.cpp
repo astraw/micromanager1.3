@@ -49,13 +49,9 @@
 #include <iomanip>
 #include <math.h>
 
-//#include <ace/Init_ACE.h>
-//#include "ace/OS_NS_sys_time.h"
-//#include "ace/os_ns_unistd.h"
-// jizhen 05.11.2007
+
 #include <iostream>
 using namespace std;
-// eof jizhen
 
 #pragma warning(disable : 4996) // disable warning for deperecated CRT functions on Windows 
 
@@ -73,12 +69,12 @@ const char* g_ShutterMode_Auto = "Auto";
 const char* g_ShutterMode_Open = "Open";
 const char* g_ShutterMode_Closed = "Closed";
 
-const char* g_FanMode_Full = "Full";//Daigang 24-may-2007
-const char* g_FanMode_Low = "Low";//Daigang 24-may-2007
-const char* g_FanMode_Off = "Off";//Daigang 24-may-2007
+const char* g_FanMode_Full = "Full";
+const char* g_FanMode_Low = "Low";
+const char* g_FanMode_Off = "Off";
 
-const char* g_CoolerMode_FanOffAtShutdown = "Fan off at shutdown";//Daigang 24-may-2007
-const char* g_CoolerMode_FanOnAtShutdown = "Fan on at shutdown";//Daigang 24-may-2007
+const char* g_CoolerMode_FanOffAtShutdown = "Fan off at shutdown";
+const char* g_CoolerMode_FanOnAtShutdown = "Fan on at shutdown";
 
 const char* g_FrameTransferProp = "FrameTransfer";
 const char* g_FrameTransferOn = "On";
@@ -178,9 +174,9 @@ Ixon::Ixon() :
    EmCCDGainLow_(0),
    EmCCDGainHigh_(0),
    minTemp_(0),
-   ThermoSteady_(0),//Daigang 24-may-2007
-   lSnapImageCnt_(0),//Daigang 24-may-2007
-   currentGain_(-1),//Daigang 24-may-2007
+   ThermoSteady_(0),
+   lSnapImageCnt_(0),
+   currentGain_(-1),
    ReadoutTime_(50),
    ADChannelIndex_(0),
    acquiring_(false),
@@ -199,27 +195,25 @@ Ixon::Ixon() :
    InitializeDefaultErrorMessages();
 
    // add custom messages
-   SetErrorText(ERR_BUSY_ACQUIRING, "Acquisition already in progress.");
+   SetErrorText(ERR_BUSY_ACQUIRING, "Camera Busy.  Stop camera activity first.");
 
    seqThread_ = new AcqSequenceThread(this);
 
    // Pre-initialization properties
    // -----------------------------
 
-   // Driver location
-   CPropertyAction *pAct = new CPropertyAction (this, &Ixon::OnDriverDir);
-   CreateProperty("DriverDir", "", MM::String, false, pAct, true);
+   // Driver location property removed.  atmcd32d.dll should be in the working directory
 
-  hAndorDll = 0;
-  fpGetKeepCleanTime = 0;
-  fpGetReadOutTime = 0;
-  if(hAndorDll == 0)
-	  hAndorDll = ::GetModuleHandle("atmcd32d.dll");
-  if(hAndorDll!=NULL)
-  {
-    fpGetKeepCleanTime = (FPGetKeepCleanTime)GetProcAddress(hAndorDll, "GetKeepCleanTime");
-    fpGetReadOutTime = (FPGetReadOutTime)GetProcAddress(hAndorDll, "GetReadOutTime");
-  }
+   hAndorDll = 0;
+   fpGetKeepCleanTime = 0;
+   fpGetReadOutTime = 0;
+   if(hAndorDll == 0)
+      hAndorDll = ::GetModuleHandle("atmcd32d.dll");
+   if(hAndorDll!=NULL)
+   {
+      fpGetKeepCleanTime = (FPGetKeepCleanTime)GetProcAddress(hAndorDll, "GetKeepCleanTime");
+      fpGetReadOutTime = (FPGetReadOutTime)GetProcAddress(hAndorDll, "GetReadOutTime");
+   }
 
 }
 
@@ -479,17 +473,16 @@ int Ixon::Initialize()
        ret = ::Initialize(const_cast<char*>(driverDir_.c_str()));
        if (ret != DRV_SUCCESS)
          return ret;
-	 }
+	   }
    }
    else
    {
-
-   ret = SetCurrentCamera(CurrentCameraID_);
-   if (ret != DRV_SUCCESS)
-      return ret;
-   ret = ::Initialize(const_cast<char*>(driverDir_.c_str()));
-   if (ret != DRV_SUCCESS)
-      return ret;
+      ret = SetCurrentCamera(CurrentCameraID_);
+      if (ret != DRV_SUCCESS)
+         return ret;
+      ret = ::Initialize(const_cast<char*>(driverDir_.c_str()));
+      if (ret != DRV_SUCCESS)
+         return ret;
    }
 
    // Name
@@ -518,17 +511,11 @@ int Ixon::Initialize()
    assert(nRet == DEVICE_OK);
 
    // Description
-   if(HasProperty(MM::g_Keyword_Description))
-   {
-	 ;//nRet = SetProperty(MM::g_Keyword_Description,  "Andor iXon camera adapter");   
-   }
-   else
+   if (!HasProperty(MM::g_Keyword_Description))
    {
      nRet = CreateProperty(MM::g_Keyword_Description, "Andor iXon/Luca camera adapter", MM::String, true);
    }
    assert(nRet == DEVICE_OK);
-
-   // driver location
 
    // capabilities
    AndorCapabilities caps;
@@ -573,7 +560,7 @@ int Ixon::Initialize()
    }
    assert(nRet == DEVICE_OK);
 
-//Use iCamFeatures
+   //Use iCamFeatures
    if(bSoftwareTriggerSupported)
    {
      vUseSoftwareTrigger_.clear();
@@ -592,44 +579,43 @@ int Ixon::Initialize()
      assert(nRet == DEVICE_OK);
    }
 
-//Set EM Gain mode
-  if(caps.ulEMGainCapability&AC_EMGAIN_REAL12)
-  {
-    ret = SetEMAdvanced(1);
-    if (ret != DRV_SUCCESS)
-      return ret;
-    ret = SetEMGainMode(3);  //mode 0: 0-255; 1: 0-4095; 2: Linear; 3: real
-    if (ret != DRV_SUCCESS)
-      return ret;
-  }
-  else if(caps.ulEMGainCapability&AC_EMGAIN_LINEAR12)
-  {
-    ret = SetEMAdvanced(1);
-    if (ret != DRV_SUCCESS)
-      return ret;
-    ret = SetEMGainMode(2);  //mode 0: 0-255; 1: 0-4095; 2: Linear; 3: real
-    if (ret != DRV_SUCCESS)
-      return ret;
-  }
-  else if(caps.ulEMGainCapability&AC_EMGAIN_12BIT)
-  {
-    ret = SetEMAdvanced(1);
-    if (ret != DRV_SUCCESS)
-      return ret;
-    ret = SetEMGainMode(1);  //mode 0: 0-255; 1: 0-4095; 2: Linear; 3: real
-    if (ret != DRV_SUCCESS)
-      return ret;
-  }
-  else
-  {
-    ret = SetEMGainMode(0);  //mode 0: 0-255; 1: 0-4095; 2: Linear; 3: real
-    if (ret != DRV_SUCCESS)
-      return ret;
-  }
+   //Set EM Gain mode
+   if(caps.ulEMGainCapability&AC_EMGAIN_REAL12)
+   {
+      ret = SetEMAdvanced(1);
+      if (ret != DRV_SUCCESS)
+         return ret;
+      if (ret != DRV_SUCCESS)
+         return ret;
+   } 
+   else if(caps.ulEMGainCapability&AC_EMGAIN_LINEAR12)
+   { 
+      ret = SetEMAdvanced(1);
+      if (ret != DRV_SUCCESS)
+         return ret;
+      ret = SetEMGainMode(2);  //mode 0: 0-255; 1: 0-4095; 2: Linear; 3: real
+      if (ret != DRV_SUCCESS)
+         return ret;
+   }
+   else if(caps.ulEMGainCapability&AC_EMGAIN_12BIT)
+   {
+      ret = SetEMAdvanced(1);
+      if (ret != DRV_SUCCESS)
+         return ret;
+      ret = SetEMGainMode(1);  //mode 0: 0-255; 1: 0-4095; 2: Linear; 3: real
+      if (ret != DRV_SUCCESS)
+         return ret;
+   }
+   else
+   {
+      ret = SetEMGainMode(0);  //mode 0: 0-255; 1: 0-4095; 2: Linear; 3: real
+      if (ret != DRV_SUCCESS)
+         return ret;
+   }
 
 
 
-//Output amplifier
+   //Output amplifier
    int numAmplifiers;
    ret = GetNumberAmp(&numAmplifiers);
    if (ret != DRV_SUCCESS)
@@ -640,19 +626,19 @@ int Ixon::Initialize()
      {
        CPropertyAction *pAct = new CPropertyAction (this, &Ixon::OnOutputAmplifier);
        nRet = CreateProperty(g_OutputAmplifier, g_OutputAmplifier_EM, MM::String, false, pAct);
-	 }
+	  }
      vector<string> OutputAmplifierValues;
      OutputAmplifierValues.push_back(g_OutputAmplifier_EM);
      OutputAmplifierValues.push_back(g_OutputAmplifier_Conventional);
      nRet = SetAllowedValues(g_OutputAmplifier, OutputAmplifierValues);
      assert(nRet == DEVICE_OK);
-	 nRet = SetProperty(g_OutputAmplifier,  OutputAmplifierValues[0].c_str());   
+	  nRet = SetProperty(g_OutputAmplifier,  OutputAmplifierValues[0].c_str());   
      assert(nRet == DEVICE_OK);
      if (nRet != DEVICE_OK)
         return nRet;
    }
 
-//AD channel (pixel bitdepth)
+   //AD channel (pixel bitdepth)
    int numADChannels;
    ret = GetNumberADChannels(&numADChannels);
    if (ret != DRV_SUCCESS)
@@ -664,7 +650,7 @@ int Ixon::Initialize()
        CPropertyAction *pAct = new CPropertyAction (this, &Ixon::OnADChannel);
        nRet = CreateProperty(g_ADChannel, g_ADChannel_14Bit, MM::String, false, pAct);
        assert(nRet == DEVICE_OK);
-	 }
+	  }
      vector<string> ADChannelValues;
      ADChannelValues.push_back(g_ADChannel_14Bit);
      ADChannelValues.push_back(g_ADChannel_16Bit);
@@ -672,7 +658,7 @@ int Ixon::Initialize()
      assert(nRet == DEVICE_OK);
      if (nRet != DEVICE_OK)
         return nRet;
-	 nRet = SetProperty(g_ADChannel,  ADChannelValues[0].c_str());   
+	  nRet = SetProperty(g_ADChannel,  ADChannelValues[0].c_str());   
      if (nRet != DEVICE_OK)
         return nRet;
    }
@@ -999,39 +985,9 @@ int Ixon::Initialize()
    tMin << minTemp;
    tMax << maxTemp;
 
-   //daigang 24-may-2007 changed
-   //CreateProperty("MinTemp", tMin.str().c_str(), MM::Integer, true);
-   //CreateProperty("MaxTemp", tMax.str().c_str(), MM::Integer, true);
-   /*
-   TemperatureRangeMin_ = tMin.str();
-   TemperatureRangeMax_ = tMax.str();
 
-   if(!HasProperty("TemperatureRangeMin"))
-   {
-     pAct = new CPropertyAction (this, &Ixon::OnTemperatureRangeMin);
-     nRet = CreateProperty("TemperatureRangeMin", tMin.str().c_str(), MM::Integer, true, pAct);
-   }
-   else
-   {
-	 nRet = SetProperty("TemperatureRangeMin", tMin.str().c_str());
-   }
-   assert(nRet == DEVICE_OK);
-   if(!HasProperty("TemperatureRangeMax"))
-   {
-     pAct = new CPropertyAction (this, &Ixon::OnTemperatureRangeMax);
-     nRet = CreateProperty("TemperatureRangeMax", tMax.str().c_str(), MM::Integer, true, pAct);
-   }
-   else
-   {
-	 nRet = SetProperty("TemperatureRangeMax", tMax.str().c_str());
-   }
-   assert(nRet == DEVICE_OK);
-   */
-   //eof Daigang
-
-
-//added to show some tips
-   string strTips = "Wait for temperature stabilized before acquisition.";
+   //added to show some tips
+   string strTips = "Wait for temperature to stabilize before acquisition.";
    if(!HasProperty(" Tip1"))
    {
      nRet = CreateProperty(" Tip1", strTips.c_str(), MM::String, true);
@@ -1042,22 +998,19 @@ int Ixon::Initialize()
    }
    assert(nRet == DEVICE_OK);
 
-  if(bSoftwareTriggerSupported)
-  {
-   strTips = "To maximize frame rate, do not tick camera parameters except Exposure in Configuration Presets.";
-   if(!HasProperty(" Tip2"))
+   if(bSoftwareTriggerSupported)
    {
-     nRet = CreateProperty(" Tip2", strTips.c_str(), MM::String, true);
+      strTips = "To maximize frame rate, do not change camera parameters except Exposure in Configuration Presets.";
+      if(!HasProperty(" Tip2"))
+      {
+         nRet = CreateProperty(" Tip2", strTips.c_str(), MM::String, true);
+      }
+      else
+      {
+	      nRet = SetProperty(" Tip2", strTips.c_str());
+      }
+      assert(nRet == DEVICE_OK);
    }
-   else
-   {
-	 nRet = SetProperty(" Tip2", strTips.c_str());
-   }
-   assert(nRet == DEVICE_OK);
-  }
-
-
-   // eof jizhen
 
    int temp;
    ret = GetTemperature(&temp);
@@ -1065,8 +1018,8 @@ int Ixon::Initialize()
    strTemp<<temp;
    if(!HasProperty(MM::g_Keyword_CCDTemperature))
    {
-     pAct = new CPropertyAction (this, &Ixon::OnTemperature);
-	 nRet = CreateProperty(MM::g_Keyword_CCDTemperature, strTemp.str().c_str(), MM::Integer, true, pAct);//Daigang 23-may-2007 changed back to read temperature only
+      pAct = new CPropertyAction (this, &Ixon::OnTemperature);
+	   nRet = CreateProperty(MM::g_Keyword_CCDTemperature, strTemp.str().c_str(), MM::Integer, true, pAct);//Daigang 23-may-2007 changed back to read temperature only
    }
    else
    {
@@ -1074,10 +1027,8 @@ int Ixon::Initialize()
    }
    assert(nRet == DEVICE_OK);
 
-   //if (ret != DEVICE_OK)
-   //   return ret;
 
-   //Daigang 23-may-2007
+   // Temperature Set Point
    std::string strTempSetPoint;
    if(minTemp<-70)
 	   strTempSetPoint = "-70";
@@ -1096,7 +1047,6 @@ int Ixon::Initialize()
    assert(nRet == DEVICE_OK);
 
 
-   //jizhen 05.11.2007
    // Cooler
    if(!HasProperty("CoolerMode"))
    {
@@ -1230,7 +1180,7 @@ int Ixon::Initialize()
    EmCCDGainLow_ = EmCCDGainLow;
    EmCCDGainHigh_ = EmCCDGainHigh;
 
-   
+  /* 
    ostringstream emgLow; 
    ostringstream emgHigh; 
    emgLow << EmCCDGainLow;
@@ -1262,15 +1212,17 @@ int Ixon::Initialize()
    //eof Daigang
 
    // eof jizhen
-
+*/
 
 
    nRet = SetProperty(MM::g_Keyword_Exposure, "10.0");
    if (nRet != DEVICE_OK)
       return nRet;
+   /*
    nRet = SetProperty(MM::g_Keyword_Gain, emgLow.str().c_str());//use Gain to set EMGain
    if (nRet != DEVICE_OK)
       return nRet;
+   */
    nRet = SetProperty(MM::g_Keyword_ReadoutMode, readoutModes_[0].c_str());
    if (nRet != DEVICE_OK)
       return nRet;
@@ -1640,7 +1592,7 @@ int Ixon::ClearROI()
 /**
  * Set the directory for the Andor native driver dll.
  */
-int Ixon::OnDriverDir(MM::PropertyBase* pProp, MM::ActionType eAct)
+/*int Ixon::OnDriverDir(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
    if (eAct == MM::BeforeGet)
    {
@@ -1652,6 +1604,7 @@ int Ixon::OnDriverDir(MM::PropertyBase* pProp, MM::ActionType eAct)
    }
    return DEVICE_OK;
 }
+*/
 
 /**
  * Set binning.
@@ -1838,9 +1791,10 @@ int Ixon::OnEMGain(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
    if (eAct == MM::AfterSet)
    {
+      /*
       if (Busy())
          return ERR_BUSY_ACQUIRING;
-
+      */
       long gain;
       pProp->Get(gain);
 	  if(gain == currentGain_)  //Daigang 24-may-2007 added
@@ -1882,6 +1836,7 @@ int Ixon::OnGain(MM::PropertyBase* pProp, MM::ActionType eAct)
       if (DRV_SUCCESS != ret)
          return (int)ret;
 	  */
+
       if (Busy())
          return ERR_BUSY_ACQUIRING;
 
@@ -2379,13 +2334,14 @@ void Ixon::UpdateEMGainRange()
    ostringstream emgHigh; 
    emgLow << EmCCDGainLow;
    emgHigh << EmCCDGainHigh;
+   /*
    int nRet = SetProperty("EMGainRangeMin", emgLow.str().c_str());
    if (nRet != DEVICE_OK)
       return;
    nRet = SetProperty("EMGainRangeMax", emgHigh.str().c_str());
    if (nRet != DEVICE_OK)
       return;
-
+   */
    ret = SetPropertyLimits(MM::g_Keyword_Gain, EmCCDGainLow, EmCCDGainHigh);
    if (ret != DEVICE_OK)
       return;
@@ -2917,6 +2873,7 @@ int Ixon::StartSequenceAcquisition(long numImages, double interval_ms, bool stop
    seqThread_->Start();
 
    acquiring_ = true;
+
    if (ret != DRV_SUCCESS)
    {
       SetAcquisitionMode(1);
@@ -2934,6 +2891,7 @@ int Ixon::StopSequenceAcquisition()
    LogMessage("Stopped sequence acquisition");
    AbortAcquisition();
    seqThread_->Stop();
+   seqThread_->wait();
    acquiring_ = false;
    int ret;
    if(bSoftwareTriggerSupported)
@@ -3000,5 +2958,5 @@ int Ixon::PushImage()
                                            GetImageHeight(),
                                            GetImageBytesPerPixel());
    } else
-      return ret;
+      return DEVICE_OK;
 }
