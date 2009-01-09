@@ -530,14 +530,12 @@ int CDemoCamera::SetAllowedBinning()
 */
 int CDemoCamera::OnBinning(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
+   if(IsCapturing())
+      return DEVICE_CAN_NOT_SET_PROPERTY;
+
    int ret = DEVICE_ERR;
    switch(eAct)
    {
-   case MM::BeforeSet:
-      {
-         if(IsCapturing())
-            ret = DEVICE_CAN_NOT_SET_PROPERTY;
-      }break;
    case MM::AfterSet:
       {
          // the user just set the new value for the property, so we have to
@@ -575,14 +573,12 @@ int CDemoCamera::OnBinning(MM::PropertyBase* pProp, MM::ActionType eAct)
 */
 int CDemoCamera::OnPixelType(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
+   if(IsCapturing())
+      return DEVICE_CAN_NOT_SET_PROPERTY;
+
    int ret = DEVICE_ERR;
    switch(eAct)
    {
-   case MM::BeforeSet:
-      {
-         if(IsCapturing())
-            ret = DEVICE_CAN_NOT_SET_PROPERTY;
-      }break;
    case MM::AfterSet:
       {
          string pixelType;

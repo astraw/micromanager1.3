@@ -633,14 +633,12 @@ int DemoStreamingCamera::SetBinning(int binFactor)
 */
 int DemoStreamingCamera::OnBinning(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
+   if(IsCapturing())
+      return DEVICE_CAN_NOT_SET_PROPERTY;
+
    int ret = DEVICE_ERR;
    switch(eAct)
    {
-   case MM::BeforeSet:
-      {
-         if(IsCapturing())
-            ret = DEVICE_CAN_NOT_SET_PROPERTY;
-      }break;
    case MM::AfterSet:
       {
          // the user just set the new value for the property, so we have to
@@ -665,7 +663,6 @@ int DemoStreamingCamera::OnBinning(MM::PropertyBase* pProp, MM::ActionType eAct)
             pProp->Set(1L);
             return ERR_UNKNOWN_MODE;
          }
-
       }break;
    case MM::BeforeGet:
       {
@@ -683,14 +680,12 @@ int DemoStreamingCamera::OnBinning(MM::PropertyBase* pProp, MM::ActionType eAct)
 */
 int DemoStreamingCamera::OnPixelType(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
+   if(IsCapturing())
+      return DEVICE_CAN_NOT_SET_PROPERTY;
+
    int ret = DEVICE_ERR;
    switch(eAct)
    {
-   case MM::BeforeSet:
-      {
-         if(IsCapturing())
-            ret = DEVICE_CAN_NOT_SET_PROPERTY;
-      }break;
    case MM::AfterSet:
       {
       string pixelType;
@@ -908,24 +903,6 @@ int DemoStreamingCamera::StartSequenceAcquisition(long numImages, double interva
 
    thd_->Start(numImages,actualIntervalMs);
 
-   return DEVICE_OK;
-}
-
-
-/**
-* Stops acquisition
-*
-*/
-int DemoStreamingCamera::StopSequenceAcquisition()
-{   
-   thd_->Stop();
-   thd_->wait();
-   LogMessage("Stopped camera streaming.\n");
-   // TODO: the correct termination code needs to be passed here instead of "0"
-   //   MM::Core* cb = GetCoreCallback();
-   //   if (cb)
-   //      cb->AcqFinished(this, 0);
-   INVOKE_CALLBACK(AcqFinished(this, 0));
    return DEVICE_OK;
 }
 
