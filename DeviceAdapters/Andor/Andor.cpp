@@ -1555,7 +1555,7 @@ int Ixon::GetROI(unsigned& uX, unsigned& uY, unsigned& uXSize, unsigned& uYSize)
 
 int Ixon::ClearROI()
 {
-   if (Busy())
+   if (acquiring_)
       return ERR_BUSY_ACQUIRING;
 
 	//added to use RTA
@@ -1613,7 +1613,7 @@ int Ixon::OnBinning(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
    if (eAct == MM::AfterSet)
    {
-      if (Busy())
+      if (acquiring_)
          return ERR_BUSY_ACQUIRING;
 
 	   //added to use RTA
@@ -1676,25 +1676,33 @@ int Ixon::OnExposure(MM::PropertyBase* pProp, MM::ActionType eAct)
    }
    else if (eAct == MM::AfterSet)
    {
-      if (Busy())
+      bool acquiring = acquiring_;
+      if (acquiring)
+         StopSequenceAcquisition();
+
+      if (acquiring_)
          return ERR_BUSY_ACQUIRING;
 
       double exp;
       pProp->Get(exp);
 
-	  if(fabs(exp-currentExpMS_)<0.001)
-		  return DEVICE_OK;
-	  currentExpMS_ = exp;
+      if(fabs(exp-currentExpMS_)<0.001)
+         return DEVICE_OK;
+	   currentExpMS_ = exp;
 
       if(!bSoftwareTriggerSupported)
-	  {
-	    SetToIdle();
-        unsigned ret = SetExposureTime((float)(exp / 1000.0));
-        if (DRV_SUCCESS != ret)
-           return (int)ret;
-        expMs_ = exp;
-	  }
+	   {
+	      SetToIdle();
+         unsigned ret = SetExposureTime((float)(exp / 1000.0));
+         if (DRV_SUCCESS != ret)
+            return (int)ret;
+         expMs_ = exp;
+	   }
+
+      if (acquiring)
+         StartSequenceAcquisition(sequenceLength_ - imageCounter_, intervalMs_, stopOnOverflow_);
    }
+
    return DEVICE_OK;
 }
 
@@ -1703,7 +1711,7 @@ int Ixon::OnExposure(MM::PropertyBase* pProp, MM::ActionType eAct)
  */
 int Ixon::SetExposure_()
 {
-   if (Busy())
+   if (acquiring_)
       return ERR_BUSY_ACQUIRING;
 
    if(!bSoftwareTriggerSupported)
@@ -1740,7 +1748,11 @@ int Ixon::OnReadoutMode(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
    if (eAct == MM::AfterSet)
    {
-      if (Busy())
+      bool acquiring = acquiring_;
+      if (acquiring)
+         StopSequenceAcquisition();
+
+      if (acquiring_)
          return ERR_BUSY_ACQUIRING;
 
 	   //added to use RTA
@@ -1758,6 +1770,8 @@ int Ixon::OnReadoutMode(MM::PropertyBase* pProp, MM::ActionType eAct)
 			{
                HSSpeedIdx_ = i;
                GetReadoutTime();
+               if (acquiring)
+                  StartSequenceAcquisition(sequenceLength_ - imageCounter_, intervalMs_, stopOnOverflow_);
                return DEVICE_OK;
 			}
          }
@@ -1784,42 +1798,6 @@ int Ixon::OnReadoutTime(MM::PropertyBase* pProp, MM::ActionType eAct)
    return DEVICE_OK;
 }
 
-/**
- * Set camera EM gain.
- */
-int Ixon::OnEMGain(MM::PropertyBase* pProp, MM::ActionType eAct)
-{
-   if (eAct == MM::AfterSet)
-   {
-      /*
-      if (Busy())
-         return ERR_BUSY_ACQUIRING;
-      */
-      long gain;
-      pProp->Get(gain);
-	  if(gain == currentGain_)  //Daigang 24-may-2007 added
-		 return DEVICE_OK;  //Daigang 24-may-2007 added
-	  //jizhen 05.10.2007
-	  if (gain < (long) EmCCDGainLow_ ) gain = (long)EmCCDGainLow_;
-      if (gain > (long) EmCCDGainHigh_ ) gain = (long)EmCCDGainHigh_;
-	  pProp->Set(gain);
-	  // eof jizhen
-
-      //added to use RTA
-      if(!bSoftwareTriggerSupported)
-    	SetToIdle();
-
-
-      unsigned ret = SetEMCCDGain((int)gain);
-      if (DRV_SUCCESS != ret)
-         return (int)ret;
-	  currentGain_ = gain; //Daigang 24-may-2007
-   }
-   else if (eAct == MM::BeforeGet)
-   {
-   }
-   return DEVICE_OK;
-}
 
 /**
  * Set camera "regular" gain.
@@ -1828,16 +1806,11 @@ int Ixon::OnGain(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
    if (eAct == MM::AfterSet)
    {
-      //Daigang 24-may-2007 to use Gain to control EMGain due to no EMGain on GUI
-      /*
-	  long gain;
-      pProp->Get(gain);
-      unsigned ret = SetPreAmpGain((int)gain);
-      if (DRV_SUCCESS != ret)
-         return (int)ret;
-	  */
+      bool acquiring = acquiring_;
+      if (acquiring)
+         StopSequenceAcquisition();
 
-      if (Busy())
+      if (acquiring_)
          return ERR_BUSY_ACQUIRING;
 
       long gain;
@@ -1855,8 +1828,11 @@ int Ixon::OnGain(MM::PropertyBase* pProp, MM::ActionType eAct)
       unsigned ret = SetEMCCDGain((int)gain);
       if (DRV_SUCCESS != ret)
          return (int)ret;
-	  currentGain_ = gain;
-	  //eof Daigang
+	   currentGain_ = gain;
+
+      if (acquiring)
+         StartSequenceAcquisition(sequenceLength_ - imageCounter_, intervalMs_, stopOnOverflow_);
+
    }
    else if (eAct == MM::BeforeGet)
    {
@@ -1873,7 +1849,11 @@ int Ixon::OnUseSoftwareTrigger(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
    if (eAct == MM::AfterSet)
    {
-      if (Busy())
+      bool acquiring = acquiring_;
+      if (acquiring)
+         StopSequenceAcquisition();
+
+      if (acquiring_)
          return ERR_BUSY_ACQUIRING;
 
       std::string useSoftwareTrigger;
@@ -1908,6 +1888,9 @@ int Ixon::OnUseSoftwareTrigger(MM::PropertyBase* pProp, MM::ActionType eAct)
           if (ret != DRV_SUCCESS)
             return ret;
 	  }
+     if (acquiring)
+        StartSequenceAcquisition(sequenceLength_ - imageCounter_, intervalMs_, stopOnOverflow_);
+
    }
    else if (eAct == MM::BeforeGet)
    {
@@ -1924,7 +1907,11 @@ int Ixon::OnPreAmpGain(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
    if (eAct == MM::AfterSet)
    {
-      if (Busy())
+      bool acquiring = acquiring_;
+      if (acquiring)
+         StopSequenceAcquisition();
+
+      if (acquiring_)
          return ERR_BUSY_ACQUIRING;
    	
       //added to use RTA
@@ -1933,17 +1920,21 @@ int Ixon::OnPreAmpGain(MM::PropertyBase* pProp, MM::ActionType eAct)
       string PreAmpGain;
       pProp->Get(PreAmpGain);
       for (unsigned i=0; i<PreAmpGains_.size(); ++i)
+      {
          if (PreAmpGains_[i].compare(PreAmpGain) == 0)
          {
             unsigned ret = SetPreAmpGain(i);
             if (DRV_SUCCESS != ret)
                return (int)ret;
             else
-			{
+			   {
+               if (acquiring)
+                  StartSequenceAcquisition(sequenceLength_ - imageCounter_, intervalMs_, stopOnOverflow_);
                PreAmpGain_=PreAmpGain;
                return DEVICE_OK;
-			}
+            }
          }
+      }
       assert(!"Unrecognized Pre-Amp-Gain");
    }
    else if (eAct == MM::BeforeGet)
@@ -1961,26 +1952,34 @@ int Ixon::OnVCVoltage(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
    if (eAct == MM::AfterSet)
    {
-      if (Busy())
+      bool acquiring = acquiring_;
+      if (acquiring)
+         StopSequenceAcquisition();
+
+      if (acquiring_)
          return ERR_BUSY_ACQUIRING;
 
-   //added to use RTA
-	  SetToIdle();
+      //added to use RTA
+	   SetToIdle();
 
       string VCVoltage;
       pProp->Get(VCVoltage);
       for (unsigned i=0; i<VCVoltages_.size(); ++i)
+      {
          if (VCVoltages_[i].compare(VCVoltage) == 0)
          {
             unsigned ret = SetVSAmplitude(i);
             if (DRV_SUCCESS != ret)
                return (int)ret;
             else
-			{
+            {
+               if (acquiring)
+                  StartSequenceAcquisition(sequenceLength_ - imageCounter_, intervalMs_, stopOnOverflow_);
                VCVoltage_=VCVoltage;
                return DEVICE_OK;
-			}
+            }
          }
+      }
       assert(!"Unrecognized Vertical Clock Voltage");
    }
    else if (eAct == MM::BeforeGet)
@@ -1997,7 +1996,11 @@ int Ixon::OnBaselineClamp(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
    if (eAct == MM::AfterSet)
    {
-      if (Busy())
+      bool acquiring = acquiring_;
+      if (acquiring)
+         StopSequenceAcquisition();
+
+      if (acquiring_)
          return ERR_BUSY_ACQUIRING;
 	   
       //added to use RTA
@@ -2006,22 +2009,26 @@ int Ixon::OnBaselineClamp(MM::PropertyBase* pProp, MM::ActionType eAct)
       string BaselineClampValue;
       pProp->Get(BaselineClampValue);
       for (unsigned i=0; i<BaselineClampValues_.size(); ++i)
+      {
          if (BaselineClampValues_[i].compare(BaselineClampValue) == 0)
          {
             int iState = 1; 
-		    if(i==0)
-				iState = 1;  //Enabled
-			if(i==1)
-				iState = 0;  //Disabled
+		      if(i==0)
+				   iState = 1;  //Enabled
+			   if(i==1)
+			   	iState = 0;  //Disabled
             unsigned ret = SetBaselineClamp(iState);
             if (DRV_SUCCESS != ret)
                return (int)ret;
             else
-			{
+            {
+               if (acquiring)
+                  StartSequenceAcquisition(sequenceLength_ - imageCounter_, intervalMs_, stopOnOverflow_);
                BaselineClampValue_=BaselineClampValue;
                return DEVICE_OK;
-			}
+            }
          }
+      }
       assert(!"Unrecognized BaselineClamp");
    }
    else if (eAct == MM::BeforeGet)
@@ -2039,7 +2046,11 @@ int Ixon::OnVSpeed(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
    if (eAct == MM::AfterSet)
    {
-      if (Busy())
+      bool acquiring = acquiring_;
+      if (acquiring)
+         StopSequenceAcquisition();
+
+      if (acquiring_)
          return ERR_BUSY_ACQUIRING;
 
 	   //added to use RTA
@@ -2048,18 +2059,22 @@ int Ixon::OnVSpeed(MM::PropertyBase* pProp, MM::ActionType eAct)
       string VSpeed;
       pProp->Get(VSpeed);
       for (unsigned i=0; i<VSpeeds_.size(); ++i)
+      {
          if (VSpeeds_[i].compare(VSpeed) == 0)
          {
             unsigned ret = SetVSSpeed(i);
             if (DRV_SUCCESS != ret)
                return (int)ret;
             else
-			{
+            {
                GetReadoutTime();
-			   VSpeed_ = VSpeed;
+               if (acquiring)
+                  StartSequenceAcquisition(sequenceLength_ - imageCounter_, intervalMs_, stopOnOverflow_);
+               VSpeed_ = VSpeed;
                return DEVICE_OK;
-			}
+			   }
          }
+      }
       assert(!"Unrecognized Vertical Speed");
    }
    else if (eAct == MM::BeforeGet)
@@ -2118,7 +2133,11 @@ int Ixon::OnTemperatureSetPoint(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
    if (eAct == MM::AfterSet)
    {
-      if (Busy())
+      bool acquiring = acquiring_;
+      if (acquiring)
+         StopSequenceAcquisition();
+
+      if (acquiring_)
          return ERR_BUSY_ACQUIRING;
    	
       //added to use RTA
@@ -2126,28 +2145,30 @@ int Ixon::OnTemperatureSetPoint(MM::PropertyBase* pProp, MM::ActionType eAct)
 
       long temp;
       pProp->Get(temp);
-	  if (temp < (long) minTemp_ ) temp = (long)minTemp_;
-      if (temp > (long) maxTemp_ ) temp = (long)maxTemp_;
+      if (temp < (long) minTemp_ )
+         temp = (long)minTemp_;
+      if (temp > (long) maxTemp_ ) 
+         temp = (long)maxTemp_;
       unsigned ret = SetTemperature((int)temp);
       if (DRV_SUCCESS != ret)
          return (int)ret;
-	  ostringstream strTempSetPoint;
-	  strTempSetPoint<<temp;
-	  TemperatureSetPoint_ = strTempSetPoint.str();
+      ostringstream strTempSetPoint;
+      strTempSetPoint<<temp;
+      TemperatureSetPoint_ = strTempSetPoint.str();
 
-      UpdateEMGainRange();  //Daigang 24-may-2007
+      UpdateEMGainRange(); 
+
+      if (acquiring)
+          StartSequenceAcquisition(sequenceLength_ - imageCounter_, intervalMs_, stopOnOverflow_);
+
 
    }
    else if (eAct == MM::BeforeGet)
    {
-      //int temp;
-      //int ret = GetTemperature(&temp);
-      //pProp->Set((long)temp);
 	   pProp->Set(TemperatureSetPoint_.c_str());
    }
    return DEVICE_OK;
 }
-//eof Daigang
 
 
 
@@ -2159,22 +2180,16 @@ int Ixon::OnCooler(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
    if (eAct == MM::AfterSet)
    {
-      if (Busy())
+      bool acquiring = acquiring_;
+      if (acquiring)
+         StopSequenceAcquisition();
+
+      if (acquiring_)
          return ERR_BUSY_ACQUIRING;
 
       //added to use RTA
 	   SetToIdle();
 
-	  //Daigang 24-may-2007
-	  /*
-      long OnOff;
-      pProp->Get(OnOff);
-	  unsigned ret;
-	  if ( OnOff == 1 ) ret = CoolerON();
-	  else ret = CoolerOFF();
-      if (DRV_SUCCESS != ret)
-         return (int)ret;
-	  */
       string mode;
       pProp->Get(mode);
       int modeIdx = 0;
@@ -2194,18 +2209,13 @@ int Ixon::OnCooler(MM::PropertyBase* pProp, MM::ActionType eAct)
       ret = SetCoolerMode(modeIdx);
       if (ret != DRV_SUCCESS)
          return (int)ret;
-	  //eof Daigang
+
+      if (acquiring)
+          StartSequenceAcquisition(sequenceLength_ - imageCounter_, intervalMs_, stopOnOverflow_);
    }
    else if (eAct == MM::BeforeGet)
    {
-	  //Daigang 24-may-2007
-	  /*
-      int temp;
-      unsigned int ret = GetTemperature(&temp);
-	  if ( ret == DRV_TEMP_OFF) pProp->Set( (long)0);
-	  else pProp->Set( (long)1);
-	  */
-	  //eof Daigang
+
    }
    return DEVICE_OK;
 }
@@ -2219,21 +2229,16 @@ int Ixon::OnFanMode(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
    if (eAct == MM::AfterSet)
    {
-      if (Busy())
+      bool acquiring = acquiring_;
+      if (acquiring)
+         StopSequenceAcquisition();
+
+      if (acquiring_)
          return ERR_BUSY_ACQUIRING;
 
       //added to use RTA
    	SetToIdle();
 
-	  //Daigang 24-may-2007
-	  /*
-      long mode;
-      pProp->Get(mode);
-	  unsigned int ret;
-	  ret = SetFanMode((int)mode);
-      if (DRV_SUCCESS != ret)
-         return (int)ret;
-	  */
       string mode;
       pProp->Get(mode);
       int modeIdx = 0;
@@ -2256,6 +2261,8 @@ int Ixon::OnFanMode(MM::PropertyBase* pProp, MM::ActionType eAct)
       if (ret != DRV_SUCCESS)
          return (int)ret;
 
+      if (acquiring)
+          StartSequenceAcquisition(sequenceLength_ - imageCounter_, intervalMs_, stopOnOverflow_);
    }
    else if (eAct == MM::BeforeGet)
    {
@@ -2268,7 +2275,11 @@ int Ixon::OnInternalShutter(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
    if (eAct == MM::AfterSet)
    {
-      if (Busy())
+      bool acquiring = acquiring_;
+      if (acquiring)
+         StopSequenceAcquisition();
+
+      if (acquiring_)
          return ERR_BUSY_ACQUIRING;
    
       //added to use RTA
@@ -2297,6 +2308,10 @@ int Ixon::OnInternalShutter(MM::PropertyBase* pProp, MM::ActionType eAct)
       ret = SetShutter(1, modeIdx, 20,20);//0, 0);
       if (ret != DRV_SUCCESS)
          return (int)ret;
+
+      if (acquiring)
+          StartSequenceAcquisition(sequenceLength_ - imageCounter_, intervalMs_, stopOnOverflow_);
+
    }
    else if (eAct == MM::BeforeGet)
    {
@@ -2375,10 +2390,10 @@ int Ixon::OnActualIntervalMS(MM::PropertyBase* pProp, MM::ActionType eAct)
    {
       double ActualInvertal_ms;
       pProp->Get(ActualInvertal_ms);
-	  if(ActualInvertal_ms == ActualInterval_ms_)
-		 return DEVICE_OK;
-	  pProp->Set(ActualInvertal_ms);
-	  ActualInterval_ms_ = (float)ActualInvertal_ms;
+      if(ActualInvertal_ms == ActualInterval_ms_)
+         return DEVICE_OK;
+	   pProp->Set(ActualInvertal_ms);
+	   ActualInterval_ms_ = (float)ActualInvertal_ms;
    }
    else if (eAct == MM::BeforeGet)
    {
@@ -2412,12 +2427,16 @@ int Ixon::OnEMGainRangeMin(MM::PropertyBase* pProp, MM::ActionType eAct)
  */
 int Ixon::OnFrameTransfer(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
-     SetToIdle();
-
    if (eAct == MM::AfterSet)
    {
-      if (Busy())
+      bool acquiring = acquiring_;
+      if (acquiring)
+         StopSequenceAcquisition();
+
+      if (acquiring_)
          return ERR_BUSY_ACQUIRING;
+
+      SetToIdle();
 
       string mode;
       pProp->Get(mode);
@@ -2433,7 +2452,6 @@ int Ixon::OnFrameTransfer(MM::PropertyBase* pProp, MM::ActionType eAct)
 		 bFrameTransfer_ = false;
 	  }
 
-
       else
          return DEVICE_INVALID_PROPERTY_VALUE;
 
@@ -2446,6 +2464,10 @@ int Ixon::OnFrameTransfer(MM::PropertyBase* pProp, MM::ActionType eAct)
       ret = SetFrameTransferMode(modeIdx);
       if (ret != DRV_SUCCESS)
          return ret;
+
+      if (acquiring)
+          StartSequenceAcquisition(sequenceLength_ - imageCounter_, intervalMs_, stopOnOverflow_);
+
    }
    else if (eAct == MM::BeforeGet)
    {
@@ -2507,7 +2529,11 @@ int Ixon::OnOutputAmplifier(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
    if (eAct == MM::AfterSet)
    {
-      if (Busy())
+      bool acquiring = acquiring_;
+      if (acquiring)
+         StopSequenceAcquisition();
+
+      if (acquiring_)
          return ERR_BUSY_ACQUIRING;
 
       SetToIdle();
@@ -2529,9 +2555,12 @@ int Ixon::OnOutputAmplifier(MM::PropertyBase* pProp, MM::ActionType eAct)
       unsigned ret = SetOutputAmplifier(AmpIdx);
       if (ret != DRV_SUCCESS)
          return (int)ret;
+
+      if (acquiring)
+          StartSequenceAcquisition(sequenceLength_ - imageCounter_, intervalMs_, stopOnOverflow_);
+
       if (initialized_)
          return OnPropertiesChanged();
-
    }
    else if (eAct == MM::BeforeGet)
    {
@@ -2548,7 +2577,11 @@ int Ixon::OnADChannel(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
    if (eAct == MM::AfterSet)
    {
-      if (Busy())
+      bool acquiring = acquiring_;
+      if (acquiring)
+         StopSequenceAcquisition();
+
+      if (acquiring_)
          return ERR_BUSY_ACQUIRING;
 
       SetToIdle();
@@ -2563,13 +2596,18 @@ int Ixon::OnADChannel(MM::PropertyBase* pProp, MM::ActionType eAct)
       else
          return DEVICE_INVALID_PROPERTY_VALUE;
 
-	  ADChannelIndex_ = ADChannelIdx;
+      ADChannelIndex_ = ADChannelIdx;
 
       unsigned int ret = SetADChannel(ADChannelIdx);
       if (ret != DRV_SUCCESS)
          return (int)ret;
 
-	  UpdateHSSpeeds();
+	   UpdateHSSpeeds();
+
+      if (acquiring)
+          StartSequenceAcquisition(sequenceLength_ - imageCounter_, intervalMs_, stopOnOverflow_);
+
+
      if (initialized_)
         return OnPropertiesChanged();
    }
@@ -2615,8 +2653,6 @@ void Ixon::UpdateHSSpeeds()
 
 
 }
-//eof Daigang
-
 
 
 
@@ -2758,6 +2794,9 @@ int Ixon::StartSequenceAcquisition(long numImages, double interval_ms, bool stop
       return ERR_BUSY_ACQUIRING;
 
    stopOnOverflow_ = stopOnOverflow;
+   sequenceLength_ = numImages;
+   intervalMs_ = interval_ms;
+
    if(IsAcquiring())
    {
      SetToIdle();
@@ -2843,7 +2882,6 @@ int Ixon::StartSequenceAcquisition(long numImages, double interval_ms, bool stop
 
    // start thread
    imageCounter_ = 0;
-   sequenceLength_ = numImages;
 
    os.str("");
    os << "Setting thread length to " << numImages << " Images";

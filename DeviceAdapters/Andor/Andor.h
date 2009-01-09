@@ -79,7 +79,7 @@ public:
    int Shutdown();
    
    void GetName(char* pszName) const;
-   bool Busy() {return acquiring_;}
+   bool Busy() {return false;}
    
    // MMCamera API
    int SnapImage();
@@ -106,7 +106,6 @@ public:
    int OnExposure(MM::PropertyBase* pProp, MM::ActionType eAct);
    int OnPixelType(MM::PropertyBase* pProp, MM::ActionType eAct);
    int OnGain(MM::PropertyBase* pProp, MM::ActionType eAct);
-   int OnEMGain(MM::PropertyBase* pProp, MM::ActionType eAct);
    int OnReadoutMode(MM::PropertyBase* pProp, MM::ActionType eAct);
    int OnReadoutTime(MM::PropertyBase* pProp, MM::ActionType eAct);
    int OnOffset(MM::PropertyBase* pProp, MM::ActionType eAct);
@@ -159,6 +158,8 @@ private:
    bool acquiring_;
    long imageCounter_;
    long sequenceLength_;
+   bool stopOnOverflow_;
+   double intervalMs_;
 
    long lSnapImageCnt_;
    std::vector<std::string> PreAmpGains_;
@@ -215,7 +216,6 @@ private:
    int HSSpeedIdx_;
 
    bool bSoftwareTriggerSupported;
-   bool stopOnOverflow_;
 
    long CurrentCameraID_;
    long NumberOfAvailableCameras_;
