@@ -1545,6 +1545,15 @@ void CMMCore::stopSequenceAcquisition() throw (CMMError)
 }
 
 /**
+ * Check if the current camera is acquiring the sequence
+ * Returns false when the sequence is done
+ */
+bool CMMCore::isSequenceRunning() throw ()
+{
+   return camera_ && camera_->IsCapturing();
+};
+
+/**
  * Gets the last image from the circular buffer.
  * Returns 0 if the buffer is empty.
  */

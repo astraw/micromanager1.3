@@ -820,7 +820,7 @@ public:
       int ret = GetCoreCallback()->PrepareForAcq(this);
       if (ret != DEVICE_OK)
          return ret;
-      SetBusyFlag(true);
+//      SetBusyFlag(true);
       thd_->Start(numImages,interval_ms);
       stopOnOverflow_ = stopOnOverflow;
       return DEVICE_OK;
@@ -838,14 +838,13 @@ public:
          return ret;
    }
 
-   virtual void SetBusyFlag(bool state) 
-   {busy_ = state;}
+//!!!   virtual void SetBusyFlag(bool state) 
+//   {busy_ = state;}
 
    //Do actual capturing
    //Called from inside the thread cicle 
    virtual int ThreadRun (void)
    {
-
       int ret=DEVICE_ERR;
       ret = SnapImage();
       if (ret != DEVICE_OK)
@@ -936,7 +935,7 @@ protected:
                      lastFrameTime_=currentTime;
                   }
                }
-            } while (DEVICE_OK == ret && !stop_ && imageCounter_++ < numImages_);
+            } while (DEVICE_OK == ret && !stop_ && imageCounter_++ < numImages_-1);
             if (stop_)
                camera_->LogMessage("SeqAcquisition interrupted by the user\n");
          }catch(...)

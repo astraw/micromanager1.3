@@ -249,6 +249,7 @@ public:
    void startSequenceAcquisition(long numImages, double intervalMs, bool stopOnOverflow) throw (CMMError);
    void startContinuousSequenceAcquisition(double intervalMs) throw (CMMError);
    void stopSequenceAcquisition() throw (CMMError);
+   bool isSequenceRunning() throw ();
    void* getLastImage() const throw (CMMError);
    void* popNextImage() throw (CMMError);
 

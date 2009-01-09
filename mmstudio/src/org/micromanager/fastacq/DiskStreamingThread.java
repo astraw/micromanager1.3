@@ -128,7 +128,7 @@ public class DiskStreamingThread extends Thread {
          // the speed is important here so we will not save the entire state
          // TODO: resolve
          Configuration state = core_.getSystemStateCache();
-         while ((core_.getRemainingImageCount() > 0 || core_.deviceBusy(camera)) && !error && !stop_)
+         while ((core_.getRemainingImageCount() > 0 || core_.isSequenceRunning()) && !error && !stop_)
          {
             if (core_.getRemainingImageCount() > 0)
             {
