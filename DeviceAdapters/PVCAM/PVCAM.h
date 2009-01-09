@@ -230,7 +230,9 @@ public:
    int OnTemperatureSetPoint(MM::PropertyBase* pProp, MM::ActionType eAct);
    int OnUniversalProperty(MM::PropertyBase* pProp, MM::ActionType eAct, long index);
 
-   // custom interface for the burst thread
+
+protected:
+   int ThreadRun(void);
    int PushImage();
 
 private:
@@ -250,7 +252,6 @@ private:
 
    bool initialized_;
    bool busy_;
-   bool acquiring_;
    short hPVCAM_; // handle to the driver
    static Universal* instance_;
    static unsigned refCount_;
@@ -267,40 +268,10 @@ private:
    std::string name_;
    std::string chipName_;
    uns32 nrPorts_;
-   AcqSequenceThread* seqThread_; // burst mode thread
    unsigned short* circBuffer_;
    unsigned long bufferSize_; // circular buffer size
-   unsigned long sequenceLength_;
-   unsigned long imageCounter_;
    bool init_seqStarted_;
-   MM::MMTime sequenceStartTime_;
    bool stopOnOverflow_;
 };
-
-/**
- * Acquisition thread
- */
-class AcqSequenceThread : public MMDeviceThreadBase
-{
-public:
-   AcqSequenceThread(Universal* camera) : 
-      intervalMs_(100.0), numImages_(1), busy_(false), stop_(false), camera_(camera) {}
-   ~AcqSequenceThread() {}
-   int svc(void);
-
-   void SetInterval(double intervalMs) {intervalMs_ = intervalMs;}
-   void SetLength(long images) {numImages_ = images;}
-   void Stop() {stop_ = true;}
-   void Start() {stop_ = false; activate();}
-   long GetNumImages() { return numImages_;}
-
-private:
-   double intervalMs_;
-   long numImages_;
-   bool busy_;
-   bool stop_;
-   Universal* camera_;
-};
-
 
 #endif //_PVCAM_H_

@@ -104,7 +104,6 @@ Universal::Universal(short cameraId) :
    CCameraBase<Universal> (),
    initialized_(false),
    busy_(false),
-   acquiring_(false),
    hPVCAM_(0),
    exposure_(0),
    binSize_(1),
@@ -113,8 +112,6 @@ Universal::Universal(short cameraId) :
    name_("Undefined"),
    nrPorts_ (1),
    circBuffer_(0),
-   sequenceLength_(0),
-   imageCounter_(0),
    init_seqStarted_(false),
    stopOnOverflow_(true)
 {
@@ -124,9 +121,6 @@ Universal::Universal(short cameraId) :
    // add custom messages
    SetErrorText(ERR_CAMERA_NOT_FOUND, "No Camera Found. Is it connected and switched on?");
    SetErrorText(ERR_BUSY_ACQUIRING, "Acquisition already in progress.");
-
-   // create burst thread
-   seqThread_ = new AcqSequenceThread(this);
 }
 
 
@@ -142,7 +136,6 @@ Universal::~Universal()
       // clear the instance pointer
       instance_ = 0;      
       // ACE::fini();
-      delete seqThread_;
       delete[] circBuffer_;
    }
 }
@@ -169,7 +162,7 @@ int Universal::OnBinning(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
    if (eAct == MM::AfterSet)
    {
-      if (acquiring_)
+      if (IsCapturing())
          return ERR_BUSY_ACQUIRING;
 
       long bin;
@@ -214,7 +207,7 @@ int Universal::OnExposure(MM::PropertyBase* pProp, MM::ActionType eAct)
    }
    else if (eAct == MM::AfterSet)
    {
-      if (acquiring_)
+      if (IsCapturing())
          return ERR_BUSY_ACQUIRING;
 
       double exp;
@@ -760,7 +753,7 @@ int Universal::Shutdown()
 
 bool Universal::Busy()
 {
-   return acquiring_;
+   return false;//acquiring_;
 }
 
 
@@ -863,7 +856,7 @@ unsigned Universal::GetBitDepth() const
 
 int Universal::SetROI(unsigned x, unsigned y, unsigned xSize, unsigned ySize)
 {
-      if (acquiring_)
+      if (IsCapturing())
          return ERR_BUSY_ACQUIRING;
 
    // ROI internal dimensions are in no-binning mode, so we need to convert
@@ -890,7 +883,7 @@ int Universal::GetROI(unsigned& x, unsigned& y, unsigned& xSize, unsigned& ySize
 
 int Universal::ClearROI()
 {
-   if (acquiring_)
+   if (IsCapturing())
       return ERR_BUSY_ACQUIRING;
 
    roi_.x = 0;
@@ -1299,6 +1292,7 @@ int Universal::ResizeImageBufferContinuous()
    rgn_type region = { roi_.x, roi_.x + roi_.xSize-1, (uns16) binSize_, roi_.y, roi_.y + roi_.ySize-1, (uns16) binSize_};
 
    uns32 frameSize;
+
    if (!pl_exp_setup_cont(hPVCAM_, 1, &region, TIMED_MODE, (uns32)exposure_, &frameSize, CIRC_OVERWRITE))
       return pl_error_code();
    
@@ -1318,68 +1312,43 @@ int Universal::ResizeImageBufferContinuous()
 }
 
 
+
 ///////////////////////////////////////////////////////////////////////////////
 // Continuous acquisition
 //
-
-/**
- * Continuous acquisition thread service routine.
- * Starts acquisition on the PVCAM and repeatedly calls PushImage()
- * to transfer any new images to the MMCore circular buffer.
- */
-int AcqSequenceThread::svc(void)
+/*
+ *Overrides virtual function fron the CCameraBase class
+ *Do actual capture
+ *called from the acquisition thread function
+*/
+int Universal::ThreadRun(void)
 {
    int16 status;
    uns32 byteCnt;
    uns32 bufferCnt;
-   long imageCounter(0);
 
-   printf("Entering streaming thread...\n");
-   do
-   {
+   int ret=DEVICE_ERR;
       // wait until image is ready
-      while (pl_exp_check_cont_status(camera_->hPVCAM_, &status, &byteCnt, &bufferCnt) && (status != READOUT_COMPLETE && status != READOUT_FAILED))
+      while (pl_exp_check_cont_status(hPVCAM_, &status, &byteCnt, &bufferCnt) 
+                           && (status != READOUT_COMPLETE) 
+                           && (status != READOUT_FAILED))
       {
          CDeviceUtils::SleepMs(5);
       }
-
-      if (status == READOUT_FAILED)
-      {
-         camera_->StopSequenceAcquisition();
-         printf("Readout failed!\n");
-         return 1;
-      }
-
-      // new frame arrived
-      int retCode = camera_->PushImage();
-      if (retCode != DEVICE_OK)
-      {
-         printf("PushImage() failed, code %d\n", retCode);
-         camera_->StopSequenceAcquisition();
-         return 2;
-      }
-      //printf("Acquired frame %ld.\n", imageCounter);
-      imageCounter++;
-   } while (!stop_ && imageCounter < numImages_);
-
-   if (stop_)
-   {
-      printf("Acquisition interrupted by the user!\n");
-      return 0;
-   }
-
-
-   camera_->StopSequenceAcquisition();
-   printf("Acquisition completed.\n");
-   return 0; // finished
+      if (status != READOUT_FAILED)
+         ret = PushImage();
+      else
+         LogMessage("PVCamera readout failed");
+   return ret;
 }
+
 
 /**
  * Starts continuous acquisition.
  */
 int Universal::StartSequenceAcquisition(long numImages, double interval_ms, bool stopOnOverflow)
 {
-   if (acquiring_)
+   if (IsCapturing())
       return ERR_BUSY_ACQUIRING;
 
    stopOnOverflow_ = stopOnOverflow;
@@ -1401,26 +1370,21 @@ int Universal::StartSequenceAcquisition(long numImages, double interval_ms, bool
       return ret;
    }
 
-   // start thread
-   imageCounter_ = 0;
-   sequenceLength_ = numImages;
-
-   seqThread_->SetLength(numImages);
-   sequenceStartTime_ = GetCurrentMMTime();
-
    if (!pl_exp_start_cont(hPVCAM_, circBuffer_, bufferSize_))
    {
       ResizeImageBufferSingle();
       return pl_error_code();
    }
 
-   seqThread_->Start();
-   acquiring_ = true;
+   thd_->Start(numImages, interval_ms);
 
    // set actual interval the same as exposure
    // with PVCAM there is no straightforward way to get actual interval
    // TODO: create a better estimate
    //SetProperty(MM::g_Keyword_ActualInterval_ms, CDeviceUtils::ConvertToString(exposure_)); 
+
+   os << "Started sequence acquisition: " << numImages << " at " << interval_ms << " ms" << endl;
+   LogMessage(os.str().c_str());
 
    return DEVICE_OK;
 }
@@ -1430,22 +1394,14 @@ int Universal::StartSequenceAcquisition(long numImages, double interval_ms, bool
  */
 int Universal::StopSequenceAcquisition()
 {
-   MM::MMTime sequenceStopTime = GetCurrentMMTime();
-   MM::MMTime duration = sequenceStopTime - sequenceStartTime_;
-   SetProperty(MM::g_Keyword_ActualInterval_ms, CDeviceUtils::ConvertToString((double) (duration.getMsec()/seqThread_->GetNumImages())));
+   int ret = DEVICE_ERR;
+   //call function of the base class, which does a useful work
+   ret = static_cast<CCameraBase*> (this)->StopSequenceAcquisition();
 
-   LogMessage("Stopped sequence acquisition");
    pl_exp_finish_seq(hPVCAM_, circBuffer_, 0);
    pl_exp_stop_cont(hPVCAM_, CCS_HALT);
 
-   seqThread_->Stop();
-   acquiring_ = false;
-
-   MM::Core* cb = GetCoreCallback();
-   if (cb)
-      return cb->AcqFinished(this, 0);
-   else
-      return DEVICE_OK;
+   return ret;
 }
 
 /**
@@ -1458,41 +1414,43 @@ int Universal::StopSequenceAcquisition()
  */
 int Universal::PushImage()
 {
+   int ret=DEVICE_ERR;
    // get the image from the circular buffer
    void_ptr imgPtr;
-   if (!pl_exp_get_oldest_frame(hPVCAM_, &imgPtr))
+//!!!   if (!pl_exp_get_oldest_frame(hPVCAM_, &imgPtr))
+   if (!pl_exp_get_latest_frame(hPVCAM_, &imgPtr))
    {
       int16 errorCode = pl_error_code();
       char msg[ERROR_MSG_LEN];
       pl_error_message(errorCode, msg);
-      printf("get_oldest_frame() error: %s\n", msg);
-      return errorCode;
+      ostringstream os;
+      os << "get_ _frame() error: " << msg << endl;
+      LogMessage(os.str().c_str());
+      return ret;
    }
-   pl_exp_unlock_oldest_frame(hPVCAM_);
+///!!!   pl_exp_unlock_oldest_frame(hPVCAM_);
 
    // process image
    MM::ImageProcessor* ip = GetCoreCallback()->GetImageProcessor(this);
    if (ip)
    {
-      int ret = ip->Process((unsigned char*) imgPtr, GetImageWidth(), GetImageHeight(), GetImageBytesPerPixel());
+      ret = ip->Process((unsigned char*) imgPtr, GetImageWidth(), GetImageHeight(), GetImageBytesPerPixel());
       if (ret != DEVICE_OK)
          return ret;
    }
-
    // This method inserts new image in the circular buffer (residing in MMCore)
-   int ret = GetCoreCallback()->InsertImage(this, (unsigned char*) imgPtr,
+   ret = GetCoreCallback()->InsertImage(this, (unsigned char*) imgPtr,
                                            GetImageWidth(),
                                            GetImageHeight(),
                                            GetImageBytesPerPixel());
-
    if (!stopOnOverflow_ && ret == DEVICE_BUFFER_OVERFLOW)
    {
       // do not stop on overflow - just reset the buffer
       GetCoreCallback()->ClearImageBuffer(this);
-      return GetCoreCallback()->InsertImage(this, (unsigned char*) imgPtr,
+      ret = GetCoreCallback()->InsertImage(this, (unsigned char*) imgPtr,
                                            GetImageWidth(),
                                            GetImageHeight(),
                                            GetImageBytesPerPixel());;
-   } else
-      return ret;
+   }
+   return ret;
 }
