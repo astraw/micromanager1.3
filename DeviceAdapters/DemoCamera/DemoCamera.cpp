@@ -347,6 +347,7 @@ int CDemoCamera::SnapImage()
    return DEVICE_OK;
 }
 
+
 /**
 * Returns pixel data.
 * Required by the MM::Camera API.
@@ -530,14 +531,14 @@ int CDemoCamera::SetAllowedBinning()
 */
 int CDemoCamera::OnBinning(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
-   if(IsCapturing())
-      return DEVICE_CAN_NOT_SET_PROPERTY;
-
    int ret = DEVICE_ERR;
    switch(eAct)
    {
    case MM::AfterSet:
       {
+         if(IsCapturing())
+            return DEVICE_CAN_NOT_SET_PROPERTY;
+
          // the user just set the new value for the property, so we have to
          // apply this value to the 'hardware'.
          long binFactor;
@@ -573,14 +574,13 @@ int CDemoCamera::OnBinning(MM::PropertyBase* pProp, MM::ActionType eAct)
 */
 int CDemoCamera::OnPixelType(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
-   if(IsCapturing())
-      return DEVICE_CAN_NOT_SET_PROPERTY;
-
    int ret = DEVICE_ERR;
    switch(eAct)
    {
    case MM::AfterSet:
       {
+         if(IsCapturing())
+            return DEVICE_CAN_NOT_SET_PROPERTY;
          string pixelType;
          pProp->Get(pixelType);
 
