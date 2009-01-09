@@ -549,6 +549,7 @@ namespace MM {
 
 } // namespace MM
 
-# define INVOKE_CALLBACK(callback) MM::Core* core__=GetCoreCallback();\
-   if(core__)core__->callback;
+//usage: int ret = INVOKE_CALLBACK(AcqFinished(...))
+# define INVOKE_CALLBACK(callback) \
+   GetCoreCallback()?GetCoreCallback()->callback:DEVICE_OK;
 

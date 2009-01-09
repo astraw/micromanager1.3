@@ -203,7 +203,6 @@ namespace MM {
       NoAction,
       BeforeGet,
       AfterSet,
-      BeforeSet
    };
 
    enum PortType {

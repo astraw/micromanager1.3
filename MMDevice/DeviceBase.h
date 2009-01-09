@@ -750,7 +750,8 @@ public:
    virtual bool Busy() {return busy_;}
 
    /**
-   * Continuous sequence acquisition.  Default to sequence acquisition with a high number of images
+   * Continuous sequence acquisition.  
+   * Default to sequence acquisition with a high number of images
    */
    virtual int StartSequenceAcquisition(double interval)
    {
@@ -758,14 +759,28 @@ public:
    }
 
    /**
-   * Since we don't support streaming mode this command has no effect.
+   * Stop and wait for the thread finished
    */
    virtual int StopSequenceAcquisition()
    {
+      int ret=DEVICE_ERR;
+
       thd_->Stop();
       thd_->wait();
-      //      SetBusyFlag(false);
-      return DEVICE_OK;
+
+      double actualDuration_ms
+         =(double)thd_->GetActualDuration().getMsec()/thd_->GetImageCounter();
+      SetProperty(MM::g_Keyword_ActualInterval_ms, 
+         CDeviceUtils::ConvertToString(actualDuration_ms));
+      LogMessage("Stopped sequence acquisition");
+
+      ret = INVOKE_CALLBACK(AcqFinished(this, 0));
+
+      MM::Core* cb = GetCoreCallback();
+      if (cb)
+         ret = cb->AcqFinished(this, 0);
+
+      return ret;
    }
 
    /**
@@ -794,7 +809,7 @@ public:
    */
    virtual int StartSequenceAcquisition(long numImages, double interval_ms, bool stopOnOverflow)
    {
-      if (busy_)
+      if (IsCapturing())
          return DEVICE_CAMERA_BUSY_ACQUIRING;
 
       int ret = GetCoreCallback()->PrepareForAcq(this);
@@ -865,6 +880,8 @@ protected:
          ,stop_(true)
          ,suspend_(false)
          ,camera_(pCam)
+         ,startTime_(0)
+         ,actualDuration_(0)
       {};
 
       ~BaseSequenceThread() {}
@@ -879,6 +896,8 @@ protected:
          stop_ = false;
          suspend_=false;
          activate();
+         actualDuration_ = 0;
+         startTime_= camera_->GetCurrentMMTime();
       }
       bool IsStopped(){return stop_;}
       void Suspend() {suspend_ = true;}
@@ -886,6 +905,10 @@ protected:
       void Resume() {suspend_ = false;}
       double GetIntervalMs(){return intervalMs_;}
       void SetLength(long images) {numImages_ = images;}
+      long GetImageCounter(){return imageCounter_;}
+      MM::MMTime GetStartTime(){return startTime_;}
+      MM::MMTime GetActualDuration(){return actualDuration_;}
+
    private:
       int svc(void) throw()
       {
@@ -907,6 +930,7 @@ protected:
             camera_->LogMessage(g_Msg_EXCEPTION_IN_THREAD, false);
          }
          stop_=true;
+         actualDuration_ = camera_->GetCurrentMMTime() - startTime_;
          return ret;
       }
    protected:
@@ -916,6 +940,8 @@ protected:
       long numImages_;
       long imageCounter_;
       double intervalMs_;
+      MM::MMTime startTime_;
+      MM::MMTime actualDuration_;
    };
 };
 
