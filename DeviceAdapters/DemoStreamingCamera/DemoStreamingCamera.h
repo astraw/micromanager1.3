@@ -77,7 +77,6 @@ public:
    int GetROI(unsigned& x, unsigned& y, unsigned& xSize, unsigned& ySize); 
    int ClearROI();
    int StartSequenceAcquisition(long numImages, double interval_ms, bool stopOnOverflow);
-   int StopSequenceAcquisition();
    double GetNominalPixelSizeUm() const {return nominalPixelSizeUm_;}
    double GetPixelSizeUm() const {return nominalPixelSizeUm_ * GetBinning();}
    int GetBinning() const;
