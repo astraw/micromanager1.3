@@ -3,7 +3,7 @@
 	ProjectType="Visual C++"
 	Version="9.00"
 	Name="PiperMmAdapter"
-	ProjectGUID="{806A629B-7EAA-4265-A4C0-8A0EC03B104F}"
+	ProjectGUID="{8FDA6D04-7C5D-4061-8467-AE0C104A2C83}"
 	RootNamespace="PiperMmAdapter"
 	Keyword="Win32Proj"
 	TargetFrameworkVersion="131072"
@@ -43,9 +43,10 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="../../3rdParty/PiperApi;../../MMCore;../../MMDevice"
+				AdditionalIncludeDirectories="../../../3rdParty/PiperApi;../../MMCore;../../MMDevice"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_AFXEXT;_USE_MATH_DEFINES;MODULE_EXPORTS"
 				MinimalRebuild="true"
+				ExceptionHandling="2"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
 				RuntimeTypeInfo="true"
@@ -64,7 +65,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="../../3rdParty/PiperApi/PiperAPI.lib"
+				AdditionalDependencies="../../../3rdParty/PiperApi/PiperAPI.lib"
 				OutputFile="$(OutDir)/mmgr_dal_Piper.dll"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories=""
@@ -128,8 +129,9 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="2"
-				AdditionalIncludeDirectories="../../3rdParty/PiperApi;../../MMCore;../../MMDevice"
+				AdditionalIncludeDirectories="../../../3rdParty/PiperApi;../../MMCore;../../MMDevice"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_AFXEXT;MODULE_EXPORTS"
+				ExceptionHandling="2"
 				RuntimeLibrary="2"
 				EnableEnhancedInstructionSet="2"
 				FloatingPointModel="2"
@@ -149,7 +151,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="../../3rdParty/PiperApi/PiperAPI.lib"
+				AdditionalDependencies="../../../3rdParty/PiperApi/PiperAPI.lib"
 				OutputFile="$(OutDir)/mmgr_dal_Piper.dll"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories=""
