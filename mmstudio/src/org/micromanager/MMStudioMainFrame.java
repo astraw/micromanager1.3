@@ -2235,8 +2235,11 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 				return true; // nothing to do
 			}
 
+			
 			long channels = core_.getNumberOfChannels();
 			long bpp = core_.getBytesPerPixel();
+
+/*			
 
 			// warn the user if image dimensions do not match the current window
 			if (getLiveWin().getImagePlus().getProcessor().getWidth() != core_
@@ -2254,7 +2257,13 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 					createImageWindow();
 				}
 			}
-
+*/
+			
+			if(getLiveWin().windowNeedsResizing()) {
+				getLiveWin().close();
+				createImageWindow();
+			}
+			
 			// update image window
 			if (channels > 1) {
 				if (channels != 4 && bpp != 1) {
@@ -2282,24 +2291,9 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 
 	public boolean displayImage(Object pixels) {
 		try {
-			if (!isImageWindowOpen()) {
-				createImageWindow();
-			}
-
-			int byteLength = 0;
-			if (pixels instanceof byte[]) {
-				byte bytePixels[] = (byte[]) pixels;
-				byteLength = bytePixels.length;
-			} else if (pixels instanceof short[]) {
-				short bytePixels[] = (short[]) pixels;
-				byteLength = bytePixels.length * 2;
-			} else
-				return false; // can't handle
-
-			// warn the user if image dimensions do not match the current window
-			if (getLiveWin().getImagePlus().getProcessor().getWidth()
-					* getLiveWin().getImagePlus().getProcessor().getHeight()
-					* getLiveWin().getImagePlus().getBitDepth() / 8 != byteLength) {
+			if (!isImageWindowOpen()
+					|| getLiveWin().getImageWindowByteLength() 
+					!= getLiveWin().imageByteLenth(pixels)) {
 				createImageWindow();
 			}
 

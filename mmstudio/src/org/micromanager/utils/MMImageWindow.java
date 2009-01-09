@@ -86,6 +86,7 @@ public class MMImageWindow extends ImageWindow {
 		super(imp);
 		core_ = core;
 		Initialize();
+		imageWin_ = this;
 	}
 
 	public MMImageWindow(CMMCore core, ImageController contrastPanel)
@@ -94,6 +95,7 @@ public class MMImageWindow extends ImageWindow {
 		contrastPanel_ = contrastPanel;
 		core_ = core;
 		Initialize();
+		imageWin_ = this;
 	}
 
 	public MMImageWindow(CMMCore core, ImageController contrastPanel,
@@ -145,16 +147,17 @@ public class MMImageWindow extends ImageWindow {
 		ImageProcessor ip;
 		long byteDepth = core_.getBytesPerPixel();
 		long channels = core_.getNumberOfChannels();
-		if (byteDepth == 1 && channels == 1) {
-			ip = new ByteProcessor((int) core_.getImageWidth(), (int) core_
-					.getImageHeight());
+		int width=(int)core_.getImageWidth();
+		int height=(int)core_.getImageHeight();
+		if (byteDepth == 1 && channels == 1) 
+		{
+			ip = new ByteProcessor(width, height);
 			if (contrastSettings8_.getRange() == 0.0)
 				ip.setMinAndMax(0, 255);
 			else
 				ip.setMinAndMax(contrastSettings8_.min, contrastSettings8_.max);
 		} else if (byteDepth == 2 && channels == 1) {
-			ip = new ShortProcessor((int) core_.getImageWidth(), (int) core_
-					.getImageHeight());
+			ip = new ShortProcessor(width, height);
 			if (contrastSettings16_.getRange() == 0.0)
 				ip.setMinAndMax(0, 65535);
 			else
@@ -164,8 +167,7 @@ public class MMImageWindow extends ImageWindow {
 			throw (new Exception(logError("Imaging device not initialized")));
 		} else if (byteDepth == 1 && channels == 4) {
 			// assuming RGB32 format
-			ip = new ColorProcessor((int) core_.getImageWidth(), (int) core_
-					.getImageHeight());
+			ip = new ColorProcessor(width, height);
 			if (contrastSettings8_.getRange() == 0.0)
 				ip.setMinAndMax(0, 255);
 			else
@@ -287,7 +289,6 @@ public class MMImageWindow extends ImageWindow {
 	}
 
 	private void finalizeOpening() {
-		imageWin_ = this;
 	}
 
 	private void finalizeClosing() {
@@ -303,8 +304,58 @@ public class MMImageWindow extends ImageWindow {
 		}
 	}
 
+	public long getImageWindowByteLength(){
+		long imgWinByteLength;
+		ImageProcessor ip=getImagePlus().getProcessor();
+		int w=ip.getWidth();
+		int h=ip.getHeight();
+		int bitDepth=getImagePlus().getBitDepth();
+		return imgWinByteLength=w*h*bitDepth / 8;
+	}
+	
+	public long imageByteLenth(Object pixels)
+			throws IllegalArgumentException {
+		int byteLength = 0;
+		if (pixels instanceof byte[]) {
+			byte bytePixels[] = (byte[]) pixels;
+			byteLength = bytePixels.length;
+		} else if (pixels instanceof short[]) {
+			short bytePixels[] = (short[]) pixels;
+			byteLength = bytePixels.length * 2;
+		} else
+			throw (new IllegalArgumentException("Image bytelenth does not much"));
+		return byteLength;
+	}
+
+	public boolean windowNeedsResizing() {
+		long channels = core_.getNumberOfChannels();
+		long bpp = core_.getBytesPerPixel();
+		ImageProcessor ip = getImagePlus().getProcessor();
+		int w = ip.getWidth();
+		int h = ip.getHeight();
+		int bitDepth = getImagePlus().getBitDepth();
+		long imgWinByteLength = w * h * bitDepth / 8;
+
+		// warn the user if image dimensions do not match the current window
+		boolean ret = w != core_.getImageWidth()
+				|| h != core_.getImageHeight()
+				|| bitDepth != core_.getBytesPerPixel() * 8 * channels;
+		if (!ret) {
+			// 32-bit RGB image format is a special case with 24-bit pixel
+			// depth but physically
+			// using 32-bit pixels
+			ret = !(channels == 4 && bpp == 1 && bitDepth == 24);
+		}
+		return ret;
+
+	}
+	
 	// public
 	public void newImage(Object img) {
+		
+		if ( getImageWindowByteLength() != imageByteLenth(img)) {
+			throw (new RuntimeException("Image bytelenth does not much"));
+		}
 		getImagePlus().getProcessor().setPixels(img);
 		getImagePlus().updateAndDraw();
 		getCanvas().paint(getCanvas().getGraphics());
