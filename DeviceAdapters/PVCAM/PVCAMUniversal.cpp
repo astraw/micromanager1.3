@@ -1396,7 +1396,8 @@ int Universal::StopSequenceAcquisition()
 {
    int ret = DEVICE_ERR;
    //call function of the base class, which does a useful work
-   ret = static_cast<CCameraBase*> (this)->StopSequenceAcquisition();
+   //ret = static_cast<CCameraBase*> (this)->StopSequenceAcquisition();
+   ret = this->CCameraBase<Universal>::StopSequenceAcquisition();
 
    pl_exp_finish_seq(hPVCAM_, circBuffer_, 0);
    pl_exp_stop_cont(hPVCAM_, CCS_HALT);

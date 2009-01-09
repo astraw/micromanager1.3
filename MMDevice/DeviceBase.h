@@ -411,10 +411,12 @@ public:
    * Return DEVICE_CAN_NOT_SET_PROPERTY 
    * if the property can not be set at the moment
    */
+   /*
    int PrepareToSetProperty(const char* name)
    {
       return properties_.Prepare(name);
    }
+   */
 
    /**
    * Apply the current property value to the hardware.
@@ -722,6 +724,8 @@ public:
    using CDeviceBase<MM::Camera, U>::GetImageHeight;
    using CDeviceBase<MM::Camera, U>::GetImageBytesPerPixel;
    using CDeviceBase<MM::Camera, U>::SnapImage;
+   using CDeviceBase<MM::Camera, U>::SetProperty;
+   using CDeviceBase<MM::Camera, U>::LogMessage;
 
    CCameraBase() : busy_(false), thd_(0), stopOnOverflow_(false)
    {

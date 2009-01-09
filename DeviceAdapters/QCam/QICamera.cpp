@@ -1686,7 +1686,8 @@ int QICamera::StopSequenceAcquisition()
 {
    int ret = DEVICE_ERR;
    //call function of the base class, which does a useful work
-   ret = static_cast<CCameraBase*> (this)->StopSequenceAcquisition();
+   //ret = static_cast<CCameraBase*> (this)->StopSequenceAcquisition();
+   ret = this->CCameraBase<QICamera>::StopSequenceAcquisition();
    
    ret = FinishSequenceMode();
 
