@@ -328,6 +328,7 @@ public:
    int ApplyAll();
    int Update(const char* Name);
    int Apply(const char* Name);
+   int Prepare(const char* Name);
 
 private:
    /*

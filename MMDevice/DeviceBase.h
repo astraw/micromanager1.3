@@ -721,6 +721,7 @@ public:
    using CDeviceBase<MM::Camera, U>::GetImageWidth;
    using CDeviceBase<MM::Camera, U>::GetImageHeight;
    using CDeviceBase<MM::Camera, U>::GetImageBytesPerPixel;
+   using CDeviceBase<MM::Camera, U>::SnapImage;
 
    CCameraBase() : busy_(false), thd_(0), stopOnOverflow_(false)
    {
@@ -824,6 +825,7 @@ public:
    //Called from inside the thread cicle 
    virtual int ThreadRun (void)
    {
+
       int ret=DEVICE_ERR;
       ret = SnapImage();
       if (ret != DEVICE_OK)
@@ -846,15 +848,14 @@ public:
 
 protected:
    bool busy_;
-   class BaseSequenceThread;
-   BaseSequenceThread * thd_;
    bool stopOnOverflow_;
 
-private:
+   class BaseSequenceThread;
+   BaseSequenceThread * thd_;
    friend class BaseSequenceThread;
    class BaseSequenceThread : public MMDeviceThreadBase
    {
-      friend CCameraBase;
+      friend class CCameraBase;
       enum { default_numImages=1, default_intervalMS = 100 };
    public:
       BaseSequenceThread(CCameraBase* pCam)
