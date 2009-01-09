@@ -360,9 +360,6 @@ int DemoStreamingCamera::Shutdown()
 */
 int DemoStreamingCamera::SnapImage()
 {
-   if (Busy())
-      return ERR_BUSY_ACQIRING;
-
    MM::MMTime startTime = GetCurrentMMTime();
    double exp = GetExposure();
    double expUs = exp * 1000.0;
@@ -527,8 +524,8 @@ long DemoStreamingCamera::GetImageBufferSize() const
 */
 int DemoStreamingCamera::SetROI(unsigned /*x*/, unsigned /*y*/, unsigned xSize, unsigned ySize)
 {
-   if (Busy())
-      return ERR_BUSY_ACQIRING;
+    if(IsCapturing())
+            return ERR_BUSY_ACQIRING;
 
    if (xSize == 0 && ySize == 0)
       // effectively clear ROI
@@ -592,8 +589,6 @@ double DemoStreamingCamera::GetExposure() const
 */
 void DemoStreamingCamera::SetExposure(double exp)
 {
-   if (Busy())
-      return; // ignore
 
    SetProperty(MM::g_Keyword_Exposure, CDeviceUtils::ConvertToString(exp));
 }
@@ -617,8 +612,8 @@ int DemoStreamingCamera::GetBinning() const
 */
 int DemoStreamingCamera::SetBinning(int binFactor)
 {
-   if (Busy())
-      return ERR_BUSY_ACQIRING;
+    if(IsCapturing())
+            return ERR_BUSY_ACQIRING;
 
    return SetProperty(MM::g_Keyword_Binning, CDeviceUtils::ConvertToString(binFactor));
 }
@@ -633,14 +628,13 @@ int DemoStreamingCamera::SetBinning(int binFactor)
 */
 int DemoStreamingCamera::OnBinning(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
-   if(IsCapturing())
-      return DEVICE_CAN_NOT_SET_PROPERTY;
-
    int ret = DEVICE_ERR;
    switch(eAct)
    {
    case MM::AfterSet:
       {
+         if(IsCapturing())
+            return DEVICE_CAN_NOT_SET_PROPERTY;
          // the user just set the new value for the property, so we have to
          // apply this value to the 'hardware'.
          long binFactor;
@@ -680,14 +674,14 @@ int DemoStreamingCamera::OnBinning(MM::PropertyBase* pProp, MM::ActionType eAct)
 */
 int DemoStreamingCamera::OnPixelType(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
-   if(IsCapturing())
-      return DEVICE_CAN_NOT_SET_PROPERTY;
-
    int ret = DEVICE_ERR;
    switch(eAct)
    {
    case MM::AfterSet:
       {
+         if(IsCapturing())
+            return DEVICE_CAN_NOT_SET_PROPERTY;
+
       string pixelType;
       pProp->Get(pixelType);
 
@@ -759,8 +753,8 @@ int DemoStreamingCamera::OnColorMode(MM::PropertyBase* pProp, MM::ActionType eAc
 {
    if (eAct == MM::AfterSet)
    {
-      if (Busy())
-         return ERR_BUSY_ACQIRING;
+      if(IsCapturing())
+            return DEVICE_CAN_NOT_SET_PROPERTY;
 
       string pixelType;
       pProp->Get(pixelType);
