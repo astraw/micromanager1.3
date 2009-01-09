@@ -67,6 +67,7 @@ class AcqSequenceThread;
 class Ixon : public CCameraBase<Ixon>
 {
 public:
+   friend class AcqSequenceThread;
    static Ixon* GetInstance();
    unsigned DeReference(); // jizhen 05.16.2007
    static void ReleaseInstance(Ixon*); // jizhen 05.16.2007
@@ -142,6 +143,14 @@ public:
 private:
    Ixon();
    int ResizeImageBuffer();
+   int StopCameraAcquisition();
+   void UpdateEMGainRange();
+   void CheckError(unsigned int errorVal);
+   bool IsThermoSteady();
+   void SetToIdle();
+   bool IsAcquiring();
+   int SetExposure_();
+
    static Ixon* instance_;
    static unsigned refCount_;
    ImgBuffer img_;
@@ -151,17 +160,12 @@ private:
    long imageCounter_;
    long sequenceLength_;
 
-   //daigang 24-may-2007
-   void UpdateEMGainRange();
    long lSnapImageCnt_;
    std::vector<std::string> PreAmpGains_;
    long currentGain_;
 
    std::vector<std::string> VSpeeds_;
-   void SetToIdle();
-   bool IsAcquiring();
-   bool IsThermoSteady();
-   void CheckError(unsigned int errorVal);
+
    double currentExpMS_;
 
    long ReadoutTime_, KeepCleanTime_;
@@ -240,8 +244,6 @@ private:
 
    unsigned char* GetImageBuffer_();
    unsigned char* pImgBuffer_;
-   int SetExposure_();
-
 
 
 };

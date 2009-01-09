@@ -2646,7 +2646,7 @@ int AcqSequenceThread::svc(void)
 
    if (ret != DRV_SUCCESS)
    {
-      camera_->StopSequenceAcquisition();
+      camera_->StopCameraAcquisition();
       os << "Error in GetAcquisitionProgress: " << ret;
       printf("%s\n", os.str().c_str());
       //core_->LogMessage(camera_, os.str().c_str(), true);
@@ -2677,7 +2677,7 @@ int AcqSequenceThread::svc(void)
       ret = GetAcquisitionProgress(&acc, &series);
       if (ret != DRV_SUCCESS)
       {
-         camera_->StopSequenceAcquisition();
+         camera_->StopCameraAcquisition();
          os << "Error in GetAcquisitionProgress: " << ret;
          printf("%s\n", os.str().c_str());
          os.str("");
@@ -2723,7 +2723,7 @@ int AcqSequenceThread::svc(void)
 
    if (ret != DRV_SUCCESS && series != 0)
    {
-      camera_->StopSequenceAcquisition();
+      camera_->StopCameraAcquisition();
       os << "Error: " << ret;
       printf("%s\n", os.str().c_str());
       os.str("");
@@ -2739,13 +2739,13 @@ int AcqSequenceThread::svc(void)
    if ((series-seriesInit) == numImages_)
    {
       printf("Did not get the intended number of images\n");
-      camera_->StopSequenceAcquisition();
+      camera_->StopCameraAcquisition();
       return 0;
    }
    
    os << "series: " << series << " seriesInit: " << seriesInit << " numImages: "<< numImages_;
    printf("%s\n", os.str().c_str());
-   camera_->StopSequenceAcquisition();
+   camera_->StopCameraAcquisition();
    return 3; // we can get here if we are not fast enough.  Report?  
 }
 
@@ -2884,15 +2884,18 @@ int Ixon::StartSequenceAcquisition(long numImages, double interval_ms, bool stop
 }
 
 /**
- * Stops acquisition
+ * Stop Seq sequence acquisition
+ * This is the function for internal use and can/should be called from the thread
  */
-int Ixon::StopSequenceAcquisition()
+int Ixon::StopCameraAcquisition()
 {
+   if (!acquiring_)
+      return DEVICE_OK;
+
    LogMessage("Stopped sequence acquisition");
    AbortAcquisition();
-   seqThread_->Stop();
-   seqThread_->wait();
    acquiring_ = false;
+
    int ret;
    if(bSoftwareTriggerSupported)
    {
@@ -2917,6 +2920,19 @@ int Ixon::StopSequenceAcquisition()
       return cb->AcqFinished(this, 0);
    else
       return DEVICE_OK;
+}
+
+/**
+ * Stops Squence acquisition
+ * This is for external use only (if called from the sequence acquisition thread, deadlock will ensue!
+ */
+int Ixon::StopSequenceAcquisition()
+{
+   StopCameraAcquisition();
+   seqThread_->Stop();
+   seqThread_->wait();
+   
+   return DEVICE_OK;
 }
 
 /**
