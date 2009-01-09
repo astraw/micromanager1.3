@@ -1857,7 +1857,8 @@ int AcqSequenceThread::svc(void)
 	       ostringstream os;
           os << "PushImage() failed with errorcode: " << ret;
           camera_->LogMessage(os.str().c_str());
-          camera_->StopSequenceAcquisition();
+          // camera_->StopSequenceAcquisition();
+          Stop();
           return 2;
       }
       //printf("Acquired frame %ld.\n", imageCounter);                         
