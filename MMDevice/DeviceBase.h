@@ -748,6 +748,7 @@ public:
    virtual ~CCameraBase()
    {
       thd_->Stop();
+      thd_->wait();
       delete thd_;
    }
 
@@ -863,7 +864,7 @@ public:
       CDeviceUtils::SleepMs(20);
       return ret;
    };
-   bool IsCapturing(){return !thd_->IsStopped();}
+   virtual bool IsCapturing(){return !thd_->IsStopped();}
 
 protected:
    bool busy_;
@@ -886,6 +887,7 @@ protected:
          ,camera_(pCam)
          ,startTime_(0)
          ,actualDuration_(0)
+         ,lastFrameTime_(0)
       {};
 
       ~BaseSequenceThread() {}
@@ -902,6 +904,7 @@ protected:
          activate();
          actualDuration_ = 0;
          startTime_= camera_->GetCurrentMMTime();
+         lastFrameTime_ = 0;
       }
       bool IsStopped(){return stop_;}
       void Suspend() {suspend_ = true;}
@@ -920,13 +923,20 @@ protected:
          try 
          {
             do
-            {
-               if(suspend_ // ToDo: or if intervalMs_...
-                  )
-                  continue;
-               //call virtual function overriden in the derived class
-               ret=camera_->ThreadRun();
-            } while (DEVICE_OK == ret && !stop_ && imageCounter_ < numImages_);
+            {  
+               MM::MMTime currentTime=camera_->GetCurrentMMTime();
+               double currentIntervalMs 
+                  = (currentTime - lastFrameTime_).getMsec();
+               if(!suspend_ && currentIntervalMs >= intervalMs_)
+               {
+                  //call virtual function overriden in the derived class
+                  ret=camera_->ThreadRun();
+                  if(DEVICE_OK == ret)
+                  {
+                     lastFrameTime_=currentTime;
+                  }
+               }
+            } while (DEVICE_OK == ret && !stop_ && imageCounter_++ < numImages_);
             if (stop_)
                camera_->LogMessage("SeqAcquisition interrupted by the user\n");
          }catch(...)
@@ -946,6 +956,7 @@ protected:
       double intervalMs_;
       MM::MMTime startTime_;
       MM::MMTime actualDuration_;
+      MM::MMTime lastFrameTime_;
    };
 };
 
