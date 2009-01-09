@@ -237,17 +237,15 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 	private XYZKeyListener xyzKeyListener_;
 	private AcquisitionManager acqMgr_;
 
-	public MMImageWindow getLiveWin()
-	{
+	public MMImageWindow getLiveWin() {
 		return MMImageWindow.getImageWindowInstance();
-	}	
-	
+	}
+
 	// Callback
 	private CoreEventCallback cb_;
 
 	private JMenuBar menuBar_;
-	
-	
+
 	/**
 	 * Callback to update GUI when a change happens in the MMCore.
 	 */
@@ -1706,13 +1704,13 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 		}
 	}
 
-	
-	private MMImageWindow createImageWindow(){
-		MMImageWindow win=getLiveWin();
+	private MMImageWindow createImageWindow() {
+		MMImageWindow win = getLiveWin();
 		try {
 
 			if (win != null) {
-				//ToDo: eliminate contrastSettingsX_ attribute in the MainFrame class   
+				// ToDo: eliminate contrastSettingsX_ attribute in the MainFrame
+				// class
 				contrastSettings8_ = MMImageWindow.getContrastSettings8();
 				contrastSettings16_ = MMImageWindow.getContrastSettings16();
 
@@ -1721,10 +1719,11 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 			}
 
 			win = new MMImageWindow(core_, contrastPanel_);
-			win.setBackground(guiColors_.background.get((options_.displayBackground)));
+			win.setBackground(guiColors_.background
+					.get((options_.displayBackground)));
 			setIJCal(win);
 
-			//listeners 
+			// listeners
 			if (centerAndDragListener_ != null
 					&& centerAndDragListener_.isRunning())
 				centerAndDragListener_.attach(win.getImagePlus().getWindow());
@@ -1734,7 +1733,7 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 				xyzKeyListener_.attach(win.getImagePlus().getWindow());
 
 			win.getCanvas().requestFocus();
-			
+
 		} catch (Exception e) {
 			handleException(e);
 			return null;
@@ -1875,8 +1874,8 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 										// on the first slice of the first frame
 										ImageStatistics stats = img5d
 												.getStatistics(); // get
-																	// uncalibrated
-																	// stats
+										// uncalibrated
+										// stats
 										double min = stats.min;
 										double max = stats.max;
 										img5d.setChannelMinMax(j + 1, min, max);
@@ -2131,21 +2130,19 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 	}
 
 	public void enableLiveMode(boolean enable) {
-		try {
-			if (enable) {
-				if (IsLiveModeOn())
-					return;
-
+		if (enable) {
+			if (IsLiveModeOn())
+				return;
+			try {
 				MMImageWindow liveWin;
 				if (isImageWindowOpen())
-					liveWin=getLiveWin();
+					liveWin = getLiveWin();
 				else
 					liveWin = createImageWindow();
 
 				// this is needed to clear the subtitle, should be folded into
 				// drawInfo
-				liveWin.getGraphics().clearRect(0, 0, liveWin.getWidth(),
-						40);
+				liveWin.getGraphics().clearRect(0, 0, liveWin.getWidth(), 40);
 				liveWin.drawInfo(liveWin.getGraphics());
 				liveWin.toFront();
 
@@ -2180,9 +2177,15 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 				if (autoShutterOrg_)
 					toggleButtonShutter_.setEnabled(false);
 				liveRunning_ = true;
-			} else {
-				if (!IsLiveModeOn())
-					return;
+			} catch (Exception err) {
+				JOptionPane.showMessageDialog(this,
+						"Exception while enabling Live mode "
+								+ err.getMessage());
+			}
+		} else {
+			if (!IsLiveModeOn())
+				return;
+			try {
 				timer_.stop();
 				core_.stopSequenceAcquisition();
 
@@ -2206,11 +2209,11 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 				// with Sensicam
 				// Should be removed when underlying problem is dealt with
 				Thread.sleep(100);
+			} catch (Exception err) {
+				JOptionPane.showMessageDialog(this,
+						"Exception while disabling Live mode "
+								+ err.getMessage());
 			}
-		} catch (Exception err) {
-			JOptionPane.showMessageDialog(this, 
-					"Exception while enabling Live mode "+err.getMessage());
-
 		}
 		toggleButtonLive_.setIcon(IsLiveModeOn() ? SwingResourceManager
 				.getIcon(MMStudioMainFrame.class,
@@ -2269,7 +2272,6 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 
 			getLiveWin().newImage(img);
 			updateLineProfile();
-
 		} catch (Exception e) {
 			handleException(e);
 			return false;
@@ -2303,9 +2305,8 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 
 			getLiveWin().newImage(pixels);
 			updateLineProfile();
-
 		} catch (Exception e) {
-//!!!			handleException(e);
+			// !!! handleException(e);
 			e.printStackTrace();
 			return false;
 		}
@@ -2322,10 +2323,10 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 			long channels = core_.getNumberOfChannels();
 			long bpp = core_.getBytesPerPixel();
 
-				if (channels > 1 && channels != 4 && bpp != 1) {
-					handleError("Unsupported image format.");
-					return;
-				}
+			if (channels > 1 && channels != 4 && bpp != 1) {
+				handleError("Unsupported image format.");
+				return;
+			}
 			try {
 				core_.snapImage();
 				Object img;
@@ -2905,8 +2906,8 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 			posListDlg_.setBackground(guiColors_.background
 					.get((options_.displayBackground)));
 		if (getLiveWin() != null)
-			getLiveWin().setBackground(guiColors_.background
-					.get((options_.displayBackground)));
+			getLiveWin().setBackground(
+					guiColors_.background.get((options_.displayBackground)));
 		if (fastAcqWin_ != null)
 			fastAcqWin_.setBackground(guiColors_.background
 					.get((options_.displayBackground)));
