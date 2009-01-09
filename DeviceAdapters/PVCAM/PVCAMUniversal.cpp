@@ -767,6 +767,12 @@ bool Universal::Busy()
 
 int Universal::SnapImage()
 {
+   if(IsCapturing()) 
+      //ToDo: implement taking snapshot with different exposure and binning
+      //for now the snapped immage is be the currently captured one
+      return DEVICE_OK;
+
+
    int16 status;
    uns32 not_needed;
    rs_bool ret;
@@ -802,24 +808,24 @@ int Universal::SnapImage()
 
 const unsigned char* Universal::GetImageBuffer()
 {  
-   int16 status;
-   uns32 not_needed;
-
-   // wait for data or error
    void* pixBuffer = const_cast<unsigned char*> (img_.GetPixels());
 
-   while(pl_exp_check_status(hPVCAM_, &status, &not_needed) && 
-      (status != READOUT_COMPLETE && status != READOUT_FAILED) );
+   if(!IsCapturing())
+   { 
+      int16 status;
+      uns32 not_needed;
+      while(pl_exp_check_status(hPVCAM_, &status, &not_needed) && 
+         (status != READOUT_COMPLETE && status != READOUT_FAILED) );
 
-   // Check Error Codes
-   if(status == READOUT_FAILED)
-      // return pl_error_code();
-      return 0;
+      // Check Error Codes
+      if(status == READOUT_FAILED)
+         // return pl_error_code();
+         return 0;
 
-   if (!pl_exp_finish_seq(hPVCAM_, pixBuffer, 0))
-      // return pl_error_code();
-      return 0;
-
+      if (!pl_exp_finish_seq(hPVCAM_, pixBuffer, 0))
+         // return pl_error_code();
+         return 0;
+   }
    return (unsigned char*) pixBuffer;
 }
 
@@ -1431,16 +1437,19 @@ int Universal::PushImage()
    }
 ///!!!   pl_exp_unlock_oldest_frame(hPVCAM_);
 
+   void* pixBuffer = const_cast<unsigned char*> (img_.GetPixels());
+   memcpy(pixBuffer, imgPtr, GetImageBufferSize());
+
    // process image
    MM::ImageProcessor* ip = GetCoreCallback()->GetImageProcessor(this);
    if (ip)
    {
-      ret = ip->Process((unsigned char*) imgPtr, GetImageWidth(), GetImageHeight(), GetImageBytesPerPixel());
+      ret = ip->Process((unsigned char*) pixBuffer, GetImageWidth(), GetImageHeight(), GetImageBytesPerPixel());
       if (ret != DEVICE_OK)
          return ret;
    }
    // This method inserts new image in the circular buffer (residing in MMCore)
-   ret = GetCoreCallback()->InsertImage(this, (unsigned char*) imgPtr,
+   ret = GetCoreCallback()->InsertImage(this, (unsigned char*) pixBuffer,
                                            GetImageWidth(),
                                            GetImageHeight(),
                                            GetImageBytesPerPixel());
@@ -1448,10 +1457,11 @@ int Universal::PushImage()
    {
       // do not stop on overflow - just reset the buffer
       GetCoreCallback()->ClearImageBuffer(this);
-      ret = GetCoreCallback()->InsertImage(this, (unsigned char*) imgPtr,
+      ret = GetCoreCallback()->InsertImage(this, (unsigned char*) pixBuffer,
                                            GetImageWidth(),
                                            GetImageHeight(),
                                            GetImageBytesPerPixel());;
    }
+
    return ret;
 }

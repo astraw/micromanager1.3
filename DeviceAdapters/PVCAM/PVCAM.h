@@ -272,6 +272,7 @@ private:
    unsigned long bufferSize_; // circular buffer size
    bool init_seqStarted_;
    bool stopOnOverflow_;
+   MMThreadLock imgLock_;
 };
 
 #endif //_PVCAM_H_
