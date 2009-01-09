@@ -106,8 +106,14 @@ public class MMImageWindow extends ImageWindow {
 		Initialize();
 	}
 
-	public void setContrastSettings(ContrastSettings s8, ContrastSettings s16) {
+	public static void setContrastSettings(ContrastSettings s8, ContrastSettings s16) {
 		contrastSettings8_ = s8;
+		contrastSettings16_ = s16;
+	}
+	public static void setContrastSettings8(ContrastSettings s8) {
+		contrastSettings16_ = s8;
+	}
+	public static void setContrastSetting16(ContrastSettings s16) {
 		contrastSettings16_ = s16;
 	}
 

@@ -185,8 +185,8 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 	private JComboBox comboPixelType_;
 
 	// display settings
-	private ContrastSettings contrastSettings8_;
-	private ContrastSettings contrastSettings16_;
+//!!!	private ContrastSettings contrastSettings8_;
+//	private ContrastSettings contrastSettings16_;
 
 	private GUIColors guiColors_;
 
@@ -298,8 +298,8 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 		setIconImage(SwingResourceManager.getImage(MMStudioMainFrame.class,
 				"icons/microscope.gif"));
 		running_ = true;
-		contrastSettings8_ = new ContrastSettings();
-		contrastSettings16_ = new ContrastSettings();
+//!!!		contrastSettings8_ = new ContrastSettings();
+//		contrastSettings16_ = new ContrastSettings();
 
 		acqMgr_ = new AcquisitionManager();
 
@@ -359,15 +359,15 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 		int x = mainPrefs_.getInt(MAIN_FRAME_X, 100);
 		int y = mainPrefs_.getInt(MAIN_FRAME_Y, 100);
 		boolean stretch = mainPrefs_.getBoolean(MAIN_STRETCH_CONTRAST, true);
-		contrastSettings8_.min = mainPrefs_.getDouble(CONTRAST_SETTINGS_8_MIN,
-				0.0);
-		contrastSettings8_.max = mainPrefs_.getDouble(CONTRAST_SETTINGS_8_MAX,
-				0.0);
-		contrastSettings16_.min = mainPrefs_.getDouble(
-				CONTRAST_SETTINGS_16_MIN, 0.0);
-		contrastSettings16_.max = mainPrefs_.getDouble(
-				CONTRAST_SETTINGS_16_MAX, 0.0);
-
+		
+		ContrastSettings s8 = new ContrastSettings(
+			mainPrefs_.getDouble(CONTRAST_SETTINGS_8_MIN,0.0),
+			mainPrefs_.getDouble(CONTRAST_SETTINGS_8_MAX,0.0));
+		ContrastSettings s16 = new ContrastSettings(
+				mainPrefs_.getDouble(CONTRAST_SETTINGS_16_MIN, 0.0),
+				mainPrefs_.getDouble(CONTRAST_SETTINGS_16_MAX, 0.0));
+		MMImageWindow.setContrastSettings(s8,s16);
+		
 		openAcqDirectory_ = mainPrefs_.get(OPEN_ACQ_DIR, "");
 
 		setBounds(x, y, 580, 451);
@@ -1574,8 +1574,9 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 			ImagePlus imp = getLiveWin().getImagePlus();
 			if (imp != null) {
 				contrastPanel_.setImagePlus(imp);
-				contrastPanel_.setContrastSettings(contrastSettings8_,
-						contrastSettings16_);
+				contrastPanel_.setContrastSettings(
+						MMImageWindow.getContrastSettings8(),
+						MMImageWindow.getContrastSettings16());
 				contrastPanel_.update();
 			}
 			// contrastPanel_.setImagePlus(imageWin_.getImagePlus());
@@ -1711,8 +1712,8 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 			if (win != null) {
 				// ToDo: eliminate contrastSettingsX_ attribute in the MainFrame
 				// class
-				contrastSettings8_ = MMImageWindow.getContrastSettings8();
-				contrastSettings16_ = MMImageWindow.getContrastSettings16();
+//!!!				contrastSettings8_ = MMImageWindow.getContrastSettings8();
+//				contrastSettings16_ = MMImageWindow.getContrastSettings16();
 
 				WindowManager.removeWindow(getLiveWin());
 				win.dispose();
@@ -2239,32 +2240,11 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 			long channels = core_.getNumberOfChannels();
 			long bpp = core_.getBytesPerPixel();
 
-/*			
-
-			// warn the user if image dimensions do not match the current window
-			if (getLiveWin().getImagePlus().getProcessor().getWidth() != core_
-					.getImageWidth()
-					|| getLiveWin().getImagePlus().getProcessor().getHeight() != core_
-							.getImageHeight()
-					|| getLiveWin().getImagePlus().getBitDepth() != bpp * 8
-							* channels) {
-				// 32-bit RGB image format is a special case with 24-bit pixel
-				// depth but physically
-				// using 32-bit pixels
-				if (!(channels == 4 && bpp == 1 && getLiveWin().getImagePlus()
-						.getBitDepth() == 24)) {
-					getLiveWin().close();
-					createImageWindow();
-				}
-			}
-*/
-			
 			if(getLiveWin().windowNeedsResizing()) {
 				getLiveWin().close();
 				createImageWindow();
 			}
 			
-			// update image window
 			if (channels > 1) {
 				if (channels != 4 && bpp != 1) {
 					handleError("Unsupported image format.");
@@ -2601,10 +2581,10 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 		mainPrefs_.putInt(MAIN_FRAME_WIDTH, r.width);
 		mainPrefs_.putInt(MAIN_FRAME_HEIGHT, r.height);
 
-		mainPrefs_.putDouble(CONTRAST_SETTINGS_8_MIN, contrastSettings8_.min);
-		mainPrefs_.putDouble(CONTRAST_SETTINGS_8_MAX, contrastSettings8_.max);
-		mainPrefs_.putDouble(CONTRAST_SETTINGS_16_MIN, contrastSettings16_.min);
-		mainPrefs_.putDouble(CONTRAST_SETTINGS_16_MAX, contrastSettings16_.max);
+		mainPrefs_.putDouble(CONTRAST_SETTINGS_8_MIN, MMImageWindow.getContrastSettings8().min);
+		mainPrefs_.putDouble(CONTRAST_SETTINGS_8_MAX, MMImageWindow.getContrastSettings8().max);
+		mainPrefs_.putDouble(CONTRAST_SETTINGS_16_MIN, MMImageWindow.getContrastSettings16().min);
+		mainPrefs_.putDouble(CONTRAST_SETTINGS_16_MAX, MMImageWindow.getContrastSettings16().max);
 		mainPrefs_.putBoolean(MAIN_STRETCH_CONTRAST, contrastPanel_
 				.isContrastStretch());
 
