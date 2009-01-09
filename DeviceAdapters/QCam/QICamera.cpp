@@ -1684,13 +1684,13 @@ int QICamera::StartSequenceAcquisition(long numImages, double intervalMs, bool s
 */
 int QICamera::StopSequenceAcquisition()
 {
-   thd_->Stop();
-   FinishSequenceMode();
-   MM::Core* cb = GetCoreCallback();
-   if (cb)
-      return cb->AcqFinished(this, 0);
-   LogMessage("SeqAcquisition completed.\n");
-   return DEVICE_OK;
+   int ret = DEVICE_ERR;
+   //call function of the base class, which does a useful work
+   ret = static_cast<CCameraBase*> (this)->StopSequenceAcquisition();
+   
+   ret = FinishSequenceMode();
+
+   return ret;
 }
 
 
