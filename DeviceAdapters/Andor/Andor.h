@@ -100,6 +100,7 @@ public:
    // high-speed interface
    int StartSequenceAcquisition(long numImages, double interval_ms, bool stopOnOverflow);
    int StopSequenceAcquisition();
+   bool IsCapturing(){return acquiring_;};
 
    // action interface for the camera
    int OnBinning(MM::PropertyBase* pProp, MM::ActionType eAct);

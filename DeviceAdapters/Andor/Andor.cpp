@@ -461,18 +461,18 @@ int Ixon::Initialize()
 
    if(CurrentCameraID_ == -1)
    {
-     ret = GetListOfAvailableCameras();
-     if (ret != DRV_SUCCESS)
-       return ret;
-	 if(NumberOfAvailableCameras_>1 && NumberOfWorkableCameras_>=1)
-	 {
-	   CurrentCameraID_=cameraID_[0];
-       ret = SetCurrentCamera(CurrentCameraID_);
-       if (ret != DRV_SUCCESS)
+      ret = GetListOfAvailableCameras();
+      if (ret != DRV_SUCCESS)
          return ret;
-       ret = ::Initialize(const_cast<char*>(driverDir_.c_str()));
-       if (ret != DRV_SUCCESS)
-         return ret;
+	   if(NumberOfAvailableCameras_>1 && NumberOfWorkableCameras_>=1)
+	   {
+        CurrentCameraID_=cameraID_[0];
+        ret = SetCurrentCamera(CurrentCameraID_);
+        if (ret != DRV_SUCCESS)
+           return ret;
+        ret = ::Initialize(const_cast<char*>(driverDir_.c_str()));
+        if (ret != DRV_SUCCESS)
+           return ret;
 	   }
    }
    else
@@ -489,31 +489,31 @@ int Ixon::Initialize()
    int currentCameraIdx = 0;
    if(cameraID_.size()>1)
    {
-     for(unsigned int i=0;i<cameraID_.size();i++)
-     {
-	     if(cameraID_[i] == CurrentCameraID_)
-	     {
-		     currentCameraIdx = i;
-		     break;
-	     }
-     }
+      for(unsigned int i=0;i<cameraID_.size();i++)
+      {
+	      if(cameraID_[i] == CurrentCameraID_)
+	      {
+		      currentCameraIdx = i;
+		      break;
+	      }
+      }
    }
    CameraName_ = cameraName_[currentCameraIdx];
    if(HasProperty(MM::g_Keyword_Name))
    {
-	 nRet = SetProperty(MM::g_Keyword_Name,cameraName_[currentCameraIdx].c_str());   
+      nRet = SetProperty(MM::g_Keyword_Name,cameraName_[currentCameraIdx].c_str());   
    }
    else
    {
-     CPropertyAction *pAct = new CPropertyAction (this, &Ixon::OnCameraName);
-     nRet = CreateProperty(MM::g_Keyword_Name, cameraName_[currentCameraIdx].c_str(), MM::String, true, pAct);
+      CPropertyAction *pAct = new CPropertyAction (this, &Ixon::OnCameraName);
+      nRet = CreateProperty(MM::g_Keyword_Name, cameraName_[currentCameraIdx].c_str(), MM::String, true, pAct);
    }
    assert(nRet == DEVICE_OK);
 
    // Description
    if (!HasProperty(MM::g_Keyword_Description))
    {
-     nRet = CreateProperty(MM::g_Keyword_Description, "Andor iXon/Luca camera adapter", MM::String, true);
+      nRet = CreateProperty(MM::g_Keyword_Description, "Andor iXon/Luca camera adapter", MM::String, true);
    }
    assert(nRet == DEVICE_OK);
 
@@ -530,53 +530,52 @@ int Ixon::Initialize()
    {
       ret = SetTriggerMode(10);  //set software trigger. mode 0:internal, 1: ext, 6:ext start, 7:bulb, 10:software
       if (ret != DRV_SUCCESS)
-	  {
+	   {
          ShutDown();
          return ret;
-	  }
-	  bSoftwareTriggerSupported = true;
+	   }
+	   bSoftwareTriggerSupported = true;
       striCam = "Supported";
    }
    else
    {
-   	  ret = SetTriggerMode(0);  //set internal trigger. mode 0:internal, 1: ext, 6:ext start, 7:bulb, 10:software
+      ret = SetTriggerMode(0);  //set internal trigger. mode 0:internal, 1: ext, 6:ext start, 7:bulb, 10:software
       if (ret != DRV_SUCCESS)
-	  {
+	   {
          ShutDown();
          return ret;
-	  }
+	   }
       bSoftwareTriggerSupported = false;
-
    }
    iCamFeatures_ = striCam;
    if(HasProperty("iCamFeatures"))
    {
-	 nRet = SetProperty("iCamFeatures",  striCam.c_str());   
+      nRet = SetProperty("iCamFeatures",  striCam.c_str());   
    }
    else
    {
-     CPropertyAction *pAct = new CPropertyAction (this, &Ixon::OniCamFeatures);
-     nRet = CreateProperty("iCamFeatures", striCam.c_str(), MM::String, true, pAct);
+      CPropertyAction *pAct = new CPropertyAction (this, &Ixon::OniCamFeatures);
+      nRet = CreateProperty("iCamFeatures", striCam.c_str(), MM::String, true, pAct);
    }
    assert(nRet == DEVICE_OK);
 
    //Use iCamFeatures
    if(bSoftwareTriggerSupported)
    {
-     vUseSoftwareTrigger_.clear();
-     vUseSoftwareTrigger_.push_back("Yes");
-     vUseSoftwareTrigger_.push_back("No");
-     if(!HasProperty("UseSoftwareTrigger"))
-     {
-       CPropertyAction *pAct = new CPropertyAction (this, &Ixon::OnUseSoftwareTrigger);
-       nRet = CreateProperty("UseSoftwareTrigger", striCam.c_str(), MM::String, false, pAct);
-       assert(nRet == DEVICE_OK);
-     }
-     nRet = SetAllowedValues("UseSoftwareTrigger", vUseSoftwareTrigger_);
-     assert(nRet == DEVICE_OK);
-     nRet = SetProperty("UseSoftwareTrigger", vUseSoftwareTrigger_[0].c_str());
-     UseSoftwareTrigger_ = vUseSoftwareTrigger_[0];
-     assert(nRet == DEVICE_OK);
+      vUseSoftwareTrigger_.clear();
+      vUseSoftwareTrigger_.push_back("Yes");
+      vUseSoftwareTrigger_.push_back("No");
+      if(!HasProperty("UseSoftwareTrigger"))
+      {
+         CPropertyAction *pAct = new CPropertyAction (this, &Ixon::OnUseSoftwareTrigger);
+         nRet = CreateProperty("UseSoftwareTrigger", striCam.c_str(), MM::String, false, pAct);
+         assert(nRet == DEVICE_OK);
+      }
+      nRet = SetAllowedValues("UseSoftwareTrigger", vUseSoftwareTrigger_);
+      assert(nRet == DEVICE_OK);
+      nRet = SetProperty("UseSoftwareTrigger", vUseSoftwareTrigger_[0].c_str());
+      UseSoftwareTrigger_ = vUseSoftwareTrigger_[0];
+      assert(nRet == DEVICE_OK);
    }
 
    //Set EM Gain mode
@@ -613,8 +612,6 @@ int Ixon::Initialize()
          return ret;
    }
 
-
-
    //Output amplifier
    int numAmplifiers;
    ret = GetNumberAmp(&numAmplifiers);
@@ -622,20 +619,20 @@ int Ixon::Initialize()
       return ret;
    if(numAmplifiers > 1)
    {
-     if(!HasProperty(g_OutputAmplifier))
-     {
-       CPropertyAction *pAct = new CPropertyAction (this, &Ixon::OnOutputAmplifier);
-       nRet = CreateProperty(g_OutputAmplifier, g_OutputAmplifier_EM, MM::String, false, pAct);
-	  }
-     vector<string> OutputAmplifierValues;
-     OutputAmplifierValues.push_back(g_OutputAmplifier_EM);
-     OutputAmplifierValues.push_back(g_OutputAmplifier_Conventional);
-     nRet = SetAllowedValues(g_OutputAmplifier, OutputAmplifierValues);
-     assert(nRet == DEVICE_OK);
-	  nRet = SetProperty(g_OutputAmplifier,  OutputAmplifierValues[0].c_str());   
-     assert(nRet == DEVICE_OK);
-     if (nRet != DEVICE_OK)
-        return nRet;
+      if(!HasProperty(g_OutputAmplifier))
+      {
+         CPropertyAction *pAct = new CPropertyAction (this, &Ixon::OnOutputAmplifier);
+         nRet = CreateProperty(g_OutputAmplifier, g_OutputAmplifier_EM, MM::String, false, pAct);
+	   }
+      vector<string> OutputAmplifierValues;
+      OutputAmplifierValues.push_back(g_OutputAmplifier_EM);
+      OutputAmplifierValues.push_back(g_OutputAmplifier_Conventional);
+      nRet = SetAllowedValues(g_OutputAmplifier, OutputAmplifierValues);
+      assert(nRet == DEVICE_OK);
+	   nRet = SetProperty(g_OutputAmplifier,  OutputAmplifierValues[0].c_str());   
+      assert(nRet == DEVICE_OK);
+      if (nRet != DEVICE_OK)
+         return nRet;
    }
 
    //AD channel (pixel bitdepth)
@@ -645,24 +642,23 @@ int Ixon::Initialize()
       return ret;
    if(numADChannels > 1)
    {
-     if(!HasProperty(g_ADChannel))
-     {
-       CPropertyAction *pAct = new CPropertyAction (this, &Ixon::OnADChannel);
-       nRet = CreateProperty(g_ADChannel, g_ADChannel_14Bit, MM::String, false, pAct);
-       assert(nRet == DEVICE_OK);
-	  }
-     vector<string> ADChannelValues;
-     ADChannelValues.push_back(g_ADChannel_14Bit);
-     ADChannelValues.push_back(g_ADChannel_16Bit);
-     nRet = SetAllowedValues(g_ADChannel, ADChannelValues);
-     assert(nRet == DEVICE_OK);
-     if (nRet != DEVICE_OK)
-        return nRet;
-	  nRet = SetProperty(g_ADChannel,  ADChannelValues[0].c_str());   
-     if (nRet != DEVICE_OK)
-        return nRet;
+      if(!HasProperty(g_ADChannel))
+      {
+         CPropertyAction *pAct = new CPropertyAction (this, &Ixon::OnADChannel);
+         nRet = CreateProperty(g_ADChannel, g_ADChannel_14Bit, MM::String, false, pAct);
+         assert(nRet == DEVICE_OK);
+	   }
+      vector<string> ADChannelValues;
+      ADChannelValues.push_back(g_ADChannel_14Bit);
+      ADChannelValues.push_back(g_ADChannel_16Bit);
+      nRet = SetAllowedValues(g_ADChannel, ADChannelValues);
+      assert(nRet == DEVICE_OK);
+      if (nRet != DEVICE_OK)
+         return nRet;
+	   nRet = SetProperty(g_ADChannel,  ADChannelValues[0].c_str());   
+      if (nRet != DEVICE_OK)
+         return nRet;
    }
-
 
    ret = SetADChannel(0);  //0:14bit, 1:16bit(if supported)
    if (ret != DRV_SUCCESS)
@@ -706,15 +702,15 @@ int Ixon::Initialize()
    // binning
    if(!HasProperty(MM::g_Keyword_Binning))
    {
-     CPropertyAction *pAct = new CPropertyAction (this, &Ixon::OnBinning);
-     nRet = CreateProperty(MM::g_Keyword_Binning, "1", MM::Integer, false, pAct);
-     assert(nRet == DEVICE_OK);
+      CPropertyAction *pAct = new CPropertyAction (this, &Ixon::OnBinning);
+      nRet = CreateProperty(MM::g_Keyword_Binning, "1", MM::Integer, false, pAct);
+      assert(nRet == DEVICE_OK);
    }
    else
    {
-     nRet = SetProperty(MM::g_Keyword_Binning,  "1");   
-     if (nRet != DEVICE_OK)
-        return nRet;
+      nRet = SetProperty(MM::g_Keyword_Binning,  "1");   
+      if (nRet != DEVICE_OK)
+         return nRet;
    }
 
    vector<string> binValues;
@@ -729,9 +725,9 @@ int Ixon::Initialize()
    // pixel type
    if(!HasProperty(MM::g_Keyword_PixelType))
    {
-     pAct = new CPropertyAction (this, &Ixon::OnPixelType);
-     nRet = CreateProperty(MM::g_Keyword_PixelType, g_PixelType_16bit, MM::String, false, pAct);
-     assert(nRet == DEVICE_OK);
+      pAct = new CPropertyAction (this, &Ixon::OnPixelType);
+      nRet = CreateProperty(MM::g_Keyword_PixelType, g_PixelType_16bit, MM::String, false, pAct);
+      assert(nRet == DEVICE_OK);
    }
 
    vector<string> pixelTypeValues;
@@ -746,14 +742,14 @@ int Ixon::Initialize()
    // exposure
    if(!HasProperty(MM::g_Keyword_Exposure))
    {
-     pAct = new CPropertyAction (this, &Ixon::OnExposure);
-     nRet = CreateProperty(MM::g_Keyword_Exposure, "10.0", MM::Float, false, pAct);
-     assert(nRet == DEVICE_OK);
+      pAct = new CPropertyAction (this, &Ixon::OnExposure);
+      nRet = CreateProperty(MM::g_Keyword_Exposure, "10.0", MM::Float, false, pAct);
+      assert(nRet == DEVICE_OK);
    }
    else
    {
-	 nRet = SetProperty(MM::g_Keyword_Exposure,"10.0");
-     assert(nRet == DEVICE_OK);
+	   nRet = SetProperty(MM::g_Keyword_Exposure,"10.0");
+      assert(nRet == DEVICE_OK);
    }
 
    int InternalShutter;
@@ -770,32 +766,31 @@ int Ixon::Initialize()
          assert(nRet == DEVICE_OK);
 	   }
 
-       vector<string> shutterValues;
-       shutterValues.push_back(g_ShutterMode_Open);
-       shutterValues.push_back(g_ShutterMode_Closed);
-       nRet = SetAllowedValues("InternalShutter", shutterValues);
-       if (nRet != DEVICE_OK)
-          return nRet;
+      vector<string> shutterValues;
+      shutterValues.push_back(g_ShutterMode_Open);
+      shutterValues.push_back(g_ShutterMode_Closed);
+      nRet = SetAllowedValues("InternalShutter", shutterValues);
+      if (nRet != DEVICE_OK)
+         return nRet;
 	   nRet = SetProperty("InternalShutter", shutterValues[0].c_str());
-       if (nRet != DEVICE_OK)
-          return nRet;
+      if (nRet != DEVICE_OK)
+         return nRet;
    }
    int ShutterMode = 1;  //0: auto, 1: open, 2: close
    ret = SetShutter(1, ShutterMode, 20,20);//Opened any way because some old iXon has no flag for IsInternalMechanicalShutter
 
 
-
    // camera gain
    if(!HasProperty(MM::g_Keyword_Gain))
    {
-     pAct = new CPropertyAction (this, &Ixon::OnGain);
-     nRet = CreateProperty(MM::g_Keyword_Gain, "0", MM::Integer, false, pAct);
-     assert(nRet == DEVICE_OK);
+      pAct = new CPropertyAction (this, &Ixon::OnGain);
+      nRet = CreateProperty(MM::g_Keyword_Gain, "0", MM::Integer, false, pAct);
+      assert(nRet == DEVICE_OK);
    }
    else
    {
 	   nRet = SetProperty(MM::g_Keyword_Gain, "0");
-       assert(nRet == DEVICE_OK);
+      assert(nRet == DEVICE_OK);
    }
 
 
@@ -821,12 +816,12 @@ int Ixon::Initialize()
 
    if(!HasProperty(MM::g_Keyword_ReadoutMode))
    {
-     pAct = new CPropertyAction (this, &Ixon::OnReadoutMode);
-	 if(numSpeeds>1)
-       nRet = CreateProperty(MM::g_Keyword_ReadoutMode, readoutModes_[0].c_str(), MM::String, false, pAct);
-	 else
-       nRet = CreateProperty(MM::g_Keyword_ReadoutMode, readoutModes_[0].c_str(), MM::String, true, pAct);
-     assert(nRet == DEVICE_OK);
+      pAct = new CPropertyAction (this, &Ixon::OnReadoutMode);
+	   if(numSpeeds>1)
+         nRet = CreateProperty(MM::g_Keyword_ReadoutMode, readoutModes_[0].c_str(), MM::String, false, pAct);
+	   else
+         nRet = CreateProperty(MM::g_Keyword_ReadoutMode, readoutModes_[0].c_str(), MM::String, true, pAct);
+      assert(nRet == DEVICE_OK);
    }
    nRet = SetAllowedValues(MM::g_Keyword_ReadoutMode, readoutModes_);
    nRet = SetProperty(MM::g_Keyword_ReadoutMode,readoutModes_[0].c_str());
@@ -855,21 +850,21 @@ int Ixon::Initialize()
 
    if(!HasProperty("Pre-Amp-Gain"))
    {
-     pAct = new CPropertyAction (this, &Ixon::OnPreAmpGain);
-	 if(numPreAmpGain>1)
-       nRet = CreateProperty("Pre-Amp-Gain", PreAmpGains_[numPreAmpGain-1].c_str(), MM::String, false, pAct);
-	 else
-       nRet = CreateProperty("Pre-Amp-Gain", PreAmpGains_[numPreAmpGain-1].c_str(), MM::String, true, pAct);
-     assert(nRet == DEVICE_OK);
+      pAct = new CPropertyAction (this, &Ixon::OnPreAmpGain);
+	   if(numPreAmpGain>1)
+         nRet = CreateProperty("Pre-Amp-Gain", PreAmpGains_[numPreAmpGain-1].c_str(), MM::String, false, pAct);
+	   else
+         nRet = CreateProperty("Pre-Amp-Gain", PreAmpGains_[numPreAmpGain-1].c_str(), MM::String, true, pAct);
+      assert(nRet == DEVICE_OK);
    }
    nRet = SetAllowedValues("Pre-Amp-Gain", PreAmpGains_);
    nRet = SetProperty("Pre-Amp-Gain", PreAmpGains_[PreAmpGains_.size()-1].c_str());
    PreAmpGain_ = PreAmpGains_[numPreAmpGain-1];
    if(numPreAmpGain > 1)
    {
-     ret = SetPreAmpGain(numPreAmpGain-1);
-     if (ret != DRV_SUCCESS)
-        return ret;
+      ret = SetPreAmpGain(numPreAmpGain-1);
+      if (ret != DRV_SUCCESS)
+         return ret;
    }
    //eof Daigang
 
@@ -896,12 +891,12 @@ int Ixon::Initialize()
 
    if(!HasProperty("VerticalSpeed"))
    {
-     pAct = new CPropertyAction (this, &Ixon::OnVSpeed);
-	 if(numVSpeed>1)
-       nRet = CreateProperty("VerticalSpeed", VSpeeds_[numVSpeed-1].c_str(), MM::String, false, pAct);
-	 else
-       nRet = CreateProperty("VerticalSpeed", VSpeeds_[numVSpeed-1].c_str(), MM::String, true, pAct);
-     assert(nRet == DEVICE_OK);
+      pAct = new CPropertyAction (this, &Ixon::OnVSpeed);
+	   if(numVSpeed>1)
+         nRet = CreateProperty("VerticalSpeed", VSpeeds_[numVSpeed-1].c_str(), MM::String, false, pAct);
+      else
+         nRet = CreateProperty("VerticalSpeed", VSpeeds_[numVSpeed-1].c_str(), MM::String, true, pAct);
+      assert(nRet == DEVICE_OK);
    }
    nRet = SetAllowedValues("VerticalSpeed", VSpeeds_);
    assert(nRet == DEVICE_OK);
@@ -954,20 +949,20 @@ int Ixon::Initialize()
    }
    if (numVCVoltages>=1)
    {
-     if(!HasProperty("VerticalClockVoltage"))
-     {
-       pAct = new CPropertyAction (this, &Ixon::OnVCVoltage);
-       if(numVCVoltages>1)
-         nRet = CreateProperty("VerticalClockVoltage", VCVoltages_[0].c_str(), MM::String, false, pAct);
-	   else
-         nRet = CreateProperty("VerticalClockVoltage", VCVoltages_[0].c_str(), MM::String, true, pAct);
-       assert(nRet == DEVICE_OK);
-     }
-     nRet = SetAllowedValues("VerticalClockVoltage", VCVoltages_);
-     assert(nRet == DEVICE_OK);
-     nRet = SetProperty("VerticalClockVoltage", VCVoltages_[0].c_str());
-     VCVoltage_ = VCVoltages_[0];
-     assert(nRet == DEVICE_OK);
+      if(!HasProperty("VerticalClockVoltage"))
+      {
+         pAct = new CPropertyAction (this, &Ixon::OnVCVoltage);
+         if(numVCVoltages>1)
+            nRet = CreateProperty("VerticalClockVoltage", VCVoltages_[0].c_str(), MM::String, false, pAct);
+	      else
+            nRet = CreateProperty("VerticalClockVoltage", VCVoltages_[0].c_str(), MM::String, true, pAct);
+         assert(nRet == DEVICE_OK);
+      }
+      nRet = SetAllowedValues("VerticalClockVoltage", VCVoltages_);
+      assert(nRet == DEVICE_OK);
+      nRet = SetProperty("VerticalClockVoltage", VCVoltages_[0].c_str());
+      VCVoltage_ = VCVoltages_[0];
+      assert(nRet == DEVICE_OK);
    }
 
 
@@ -990,11 +985,11 @@ int Ixon::Initialize()
    string strTips = "Wait for temperature to stabilize before acquisition.";
    if(!HasProperty(" Tip1"))
    {
-     nRet = CreateProperty(" Tip1", strTips.c_str(), MM::String, true);
+      nRet = CreateProperty(" Tip1", strTips.c_str(), MM::String, true);
    }
    else
    {
-	 nRet = SetProperty(" Tip1", strTips.c_str());
+	   nRet = SetProperty(" Tip1", strTips.c_str());
    }
    assert(nRet == DEVICE_OK);
 
@@ -1036,8 +1031,8 @@ int Ixon::Initialize()
 	   strTempSetPoint = TemperatureRangeMin_; 
    if(!HasProperty(MM::g_Keyword_CCDTemperatureSetPoint))
    {
-     pAct = new CPropertyAction (this, &Ixon::OnTemperatureSetPoint);
-	 nRet = CreateProperty(MM::g_Keyword_CCDTemperatureSetPoint, strTempSetPoint.c_str(), MM::Integer, false, pAct);
+      pAct = new CPropertyAction (this, &Ixon::OnTemperatureSetPoint);
+      nRet = CreateProperty(MM::g_Keyword_CCDTemperatureSetPoint, strTempSetPoint.c_str(), MM::Integer, false, pAct);
       ret = SetPropertyLimits(MM::g_Keyword_CCDTemperatureSetPoint, minTemp_, maxTemp_);
    }
    else
@@ -1050,8 +1045,8 @@ int Ixon::Initialize()
    // Cooler
    if(!HasProperty("CoolerMode"))
    {
-     pAct = new CPropertyAction (this, &Ixon::OnCooler);
-     nRet = CreateProperty(/*Daigang 24-may-2007 "Cooler" */"CoolerMode", /*Daigang 24-may-2007 "0" */g_CoolerMode_FanOffAtShutdown, /*Daigang 24-may-2007 MM::Integer */MM::String, false, pAct); 
+      pAct = new CPropertyAction (this, &Ixon::OnCooler);
+      nRet = CreateProperty(/*Daigang 24-may-2007 "Cooler" */"CoolerMode", /*Daigang 24-may-2007 "0" */g_CoolerMode_FanOffAtShutdown, /*Daigang 24-may-2007 MM::Integer */MM::String, false, pAct); 
    }
    assert(nRet == DEVICE_OK);
    AddAllowedValue(/*Daigang 24-may-2007 "Cooler" */"CoolerMode", g_CoolerMode_FanOffAtShutdown);//"0");  //Daigang 24-may-2007
@@ -1064,8 +1059,8 @@ int Ixon::Initialize()
    // Fan
    if(!HasProperty("FanMode"))
    {
-     pAct = new CPropertyAction (this, &Ixon::OnFanMode);
-     nRet = CreateProperty("FanMode", /*Daigang 24-may-2007 "0" */g_FanMode_Full, /*Daigang 24-may-2007 MM::Integer */MM::String, false, pAct); 
+      pAct = new CPropertyAction (this, &Ixon::OnFanMode);
+      nRet = CreateProperty("FanMode", /*Daigang 24-may-2007 "0" */g_FanMode_Full, /*Daigang 24-may-2007 MM::Integer */MM::String, false, pAct); 
    }
    assert(nRet == DEVICE_OK);
    AddAllowedValue("FanMode", g_FanMode_Full);// "0"); // high  //Daigang 24-may-2007
@@ -1078,8 +1073,8 @@ int Ixon::Initialize()
    // frame transfer mode
    if(!HasProperty(g_FrameTransferProp))
    {
-     pAct = new CPropertyAction (this, &Ixon::OnFrameTransfer);
-     nRet = CreateProperty(g_FrameTransferProp, g_FrameTransferOff, MM::String, false, pAct); 
+      pAct = new CPropertyAction (this, &Ixon::OnFrameTransfer);
+      nRet = CreateProperty(g_FrameTransferProp, g_FrameTransferOff, MM::String, false, pAct); 
    }
    assert(nRet == DEVICE_OK);
    AddAllowedValue(g_FrameTransferProp, g_FrameTransferOff);
@@ -1091,45 +1086,44 @@ int Ixon::Initialize()
    // used by the application to get information on the actual camera interval
    if(!HasProperty(MM::g_Keyword_ActualInterval_ms))
    {
-     pAct = new CPropertyAction (this, &Ixon::OnActualIntervalMS);
-     nRet = CreateProperty(MM::g_Keyword_ActualInterval_ms, "0.0", MM::Float, false, pAct);
+      pAct = new CPropertyAction (this, &Ixon::OnActualIntervalMS);
+      nRet = CreateProperty(MM::g_Keyword_ActualInterval_ms, "0.0", MM::Float, false, pAct);
    }
    else
    {
-     nRet = SetProperty(MM::g_Keyword_ActualInterval_ms, "0.0");
+      nRet = SetProperty(MM::g_Keyword_ActualInterval_ms, "0.0");
    }
    assert(nRet == DEVICE_OK);
 
 
    if(!HasProperty(MM::g_Keyword_ReadoutTime))
    {
-     pAct = new CPropertyAction (this, &Ixon::OnReadoutTime);
-     nRet = CreateProperty(MM::g_Keyword_ReadoutTime, "1", MM::Integer, true, pAct);
+      pAct = new CPropertyAction (this, &Ixon::OnReadoutTime);
+      nRet = CreateProperty(MM::g_Keyword_ReadoutTime, "1", MM::Integer, true, pAct);
    }
    else
    {
-     nRet = SetProperty(MM::g_Keyword_ReadoutTime, "1");
+      nRet = SetProperty(MM::g_Keyword_ReadoutTime, "1");
    }
    assert(nRet == DEVICE_OK);
 
    //baseline clmap
-  if(caps.ulSetFunctions&AC_SETFUNCTION_BASELINEOFFSET) //some camera such as Luca might not support this
-  {
-
-   if(!HasProperty("BaselineClamp"))
+   if(caps.ulSetFunctions&AC_SETFUNCTION_BASELINEOFFSET) //some camera such as Luca might not support this
    {
-     pAct = new CPropertyAction (this, &Ixon::OnBaselineClamp);
-     nRet = CreateProperty("BaselineClamp", "Enabled", MM::String, false, pAct);
-     assert(nRet == DEVICE_OK);
-   }
-   BaselineClampValues_.clear();
-   BaselineClampValues_.push_back("Enabled");
-   BaselineClampValues_.push_back("Disabled");
-   nRet = SetAllowedValues("BaselineClamp", BaselineClampValues_);
-   assert(nRet == DEVICE_OK);
-   nRet = SetProperty("BaselineClamp", BaselineClampValues_[0].c_str());
-   BaselineClampValue_ = BaselineClampValues_[0];
-   assert(nRet == DEVICE_OK);
+      if(!HasProperty("BaselineClamp"))
+      {
+         pAct = new CPropertyAction (this, &Ixon::OnBaselineClamp);
+         nRet = CreateProperty("BaselineClamp", "Enabled", MM::String, false, pAct);
+         assert(nRet == DEVICE_OK);
+      }
+      BaselineClampValues_.clear();
+      BaselineClampValues_.push_back("Enabled");
+      BaselineClampValues_.push_back("Disabled");
+      nRet = SetAllowedValues("BaselineClamp", BaselineClampValues_);
+      assert(nRet == DEVICE_OK);
+      nRet = SetProperty("BaselineClamp", BaselineClampValues_[0].c_str());
+      BaselineClampValue_ = BaselineClampValues_[0];
+      assert(nRet == DEVICE_OK);
   }
 
   //DMA parameters
@@ -1161,9 +1155,9 @@ int Ixon::Initialize()
       return nRet;
    if(bShuterIntegrated)
    {
-   nRet = SetProperty("InternalShutter", g_ShutterMode_Open);
-   if (nRet != DEVICE_OK)
-      return nRet;
+      nRet = SetProperty("InternalShutter", g_ShutterMode_Open);
+      if (nRet != DEVICE_OK)
+         return nRet;
    }
 
    nRet = SetProperty(MM::g_Keyword_CCDTemperatureSetPoint, strTempSetPoint.c_str());
@@ -1241,9 +1235,9 @@ int Ixon::Initialize()
       return (int)ret;
    if(EmCCDGainHigh_>=300)
    {
-   ret = SetEMAdvanced(1);  //Enable extended range of EMGain
-   if (DRV_SUCCESS != ret)
-      return (int)ret;
+      ret = SetEMAdvanced(1);  //Enable extended range of EMGain
+      if (DRV_SUCCESS != ret)
+         return (int)ret;
    }
    UpdateEMGainRange();
    GetReadoutTime();
@@ -1269,11 +1263,11 @@ int Ixon::Shutdown()
 {
    if (initialized_)
    {
-    	SetToIdle();
-        int ShutterMode = 2;  //0: auto, 1: open, 2: close
-        SetShutter(1, ShutterMode, 20,20);//0, 0);
-        CoolerOFF();  //Daigang 24-may-2007 turn off the cooler at shutdown
-		ShutDown();
+      SetToIdle();
+      int ShutterMode = 2;  //0: auto, 1: open, 2: close
+      SetShutter(1, ShutterMode, 20,20);//0, 0);
+      CoolerOFF();  //Daigang 24-may-2007 turn off the cooler at shutdown
+      ShutDown();
    }
 
    initialized_ = false;
@@ -1311,24 +1305,24 @@ int Ixon::SnapImage()
 	   if(bFrameTransfer_ && bSoftwareTriggerSupported)
 		   ret = SetFrameTransferMode(0);  //Software trigger mode can not be used in FT mode
 
-       GetReadoutTime();
+      GetReadoutTime();
 
 	   ret = ::StartAcquisition();
-     if (ret != DRV_SUCCESS)
-        return ret;
+      if (ret != DRV_SUCCESS)
+         return ret;
    }
    if(bSoftwareTriggerSupported)
    {
-     SetExposure_();
-     ret = SendSoftwareTrigger();
-     if (ret != DRV_SUCCESS)
-       return ret;
+      SetExposure_();
+      ret = SendSoftwareTrigger();
+      if (ret != DRV_SUCCESS)
+         return ret;
    }
 
    pImgBuffer_ = GetImageBuffer_();
 
    if(bSoftwareTriggerSupported)
-     CDeviceUtils::SleepMs(KeepCleanTime_);
+      CDeviceUtils::SleepMs(KeepCleanTime_);
 
    return DEVICE_OK;
 }
@@ -1342,9 +1336,9 @@ unsigned char* Ixon::GetImageBuffer_()
 {
    if(!IsAcquiring())
    {
-     unsigned ret = ::StartAcquisition();
-     if (ret != DRV_SUCCESS)
-        return 0;
+      unsigned ret = ::StartAcquisition();
+      if (ret != DRV_SUCCESS)
+         return 0;
    }
 
    long startT = GetTickCount();
@@ -1359,35 +1353,34 @@ unsigned char* Ixon::GetImageBuffer_()
    {
       if(!IsAcquiring())
       {
-        unsigned ret = ::StartAcquisition();
-        if (ret != DRV_SUCCESS)
-           return 0;
+         unsigned ret = ::StartAcquisition();
+         if (ret != DRV_SUCCESS)
+            return 0;
       }
 
       delta = GetTickCount() - startT;
       if(delta > Timeout)
-	  {
-		 TimeoutCnt++;
-		 if(TimeoutCnt>10)
-		 {
-		    unsigned char* rawBuffer = const_cast<unsigned char*> (img_.GetPixels());
-			memset(rawBuffer,0,img_.Width() * img_.Height() * img_.Depth());
-			return rawBuffer;
-
-		 }
-		 else
-		 {
-		   startT = GetTickCount();
-		 }
-         if(bSoftwareTriggerSupported)
-		 {
-           //unsigned ret1 = SendSoftwareTrigger();
-           //if (ret1 != DRV_SUCCESS)
+	   {
+		   TimeoutCnt++;
+		   if(TimeoutCnt>10)
 		   {
-			 ;//for debug
+		      unsigned char* rawBuffer = const_cast<unsigned char*> (img_.GetPixels());
+			   memset(rawBuffer,0,img_.Width() * img_.Height() * img_.Depth());
+			   return rawBuffer;
 		   }
-		 }
-	  }
+		   else
+		   {
+		      startT = GetTickCount();
+		   }
+         if(bSoftwareTriggerSupported)
+		   {
+            //unsigned ret1 = SendSoftwareTrigger();
+            //if (ret1 != DRV_SUCCESS)
+		      {
+			      ;//for debug
+		      }
+		   }
+	   }
       ret = GetNewData16((WORD*)fullFrameBuffer_, roi_.xSize/binSize_ * roi_.ySize/binSize_);
    }
    assert(img_.Depth() == 2);
@@ -1401,7 +1394,6 @@ unsigned char* Ixon::GetImageBuffer_()
 
 const unsigned char* Ixon::GetImageBuffer()
 {
-
    assert(img_.Depth() == 2);
    assert(pImgBuffer_!=0);
    unsigned char* rawBuffer = pImgBuffer_;
@@ -1428,7 +1420,7 @@ long Ixon::GetReadoutTime()
    if(fpGetReadOutTime!=0 && bSoftwareTriggerSupported)
    {
 	   fpGetReadOutTime(&fReadoutTime);
-       ReadoutTime = long(fReadoutTime * 1000);
+      ReadoutTime = long(fReadoutTime * 1000);
    }
    else
    {
@@ -1437,11 +1429,10 @@ long Ixon::GetReadoutTime()
          return (int)ret;
       float fExposure, fAccumTime, fKineticTime;
       GetAcquisitionTimings(&fExposure,&fAccumTime,&fKineticTime);
-	  ReadoutTime = long(fKineticTime * 1000.0);
+	   ReadoutTime = long(fKineticTime * 1000.0);
       ret = SetExposureTime((float)(expMs_ / 1000.0));
       if (DRV_SUCCESS != ret)
          return (int)ret;
-
    }
    if(ReadoutTime<=0)
 	   ReadoutTime=35;
@@ -1458,7 +1449,7 @@ long Ixon::GetReadoutTime()
    if(fpGetKeepCleanTime!=0 && bSoftwareTriggerSupported)
    {
 	   fpGetKeepCleanTime(&fKeepCleanTime);
-       KeepCleanTime = long(fKeepCleanTime * 1000);
+      KeepCleanTime = long(fKeepCleanTime * 1000);
    }
    else
 	   KeepCleanTime=10;
@@ -1858,34 +1849,34 @@ int Ixon::OnUseSoftwareTrigger(MM::PropertyBase* pProp, MM::ActionType eAct)
 
       std::string useSoftwareTrigger;
       pProp->Get(useSoftwareTrigger);
-	   if(useSoftwareTrigger == UseSoftwareTrigger_)
-		   return DEVICE_OK;
+      if(useSoftwareTrigger == UseSoftwareTrigger_)
+         return DEVICE_OK;
 
-	  UseSoftwareTrigger_ = useSoftwareTrigger;
+      UseSoftwareTrigger_ = useSoftwareTrigger;
 
-	  SetToIdle();
+      SetToIdle();
 
-	  int ret;
+      int ret;
 
 
-	  if(useSoftwareTrigger == "Yes")
-	  {
-		  bSoftwareTriggerSupported = true;
-		  ret = SetTriggerMode(10);//software trigger mode
-          if (ret != DRV_SUCCESS)
+      if(useSoftwareTrigger == "Yes")
+      {
+         bSoftwareTriggerSupported = true;
+         ret = SetTriggerMode(10);//software trigger mode
+         if (ret != DRV_SUCCESS)
             return ret;
-		  ret = SetAcquisitionMode(5);//RTA
-          if (ret != DRV_SUCCESS)
+         ret = SetAcquisitionMode(5);//RTA
+         if (ret != DRV_SUCCESS)
             return ret;
 	  }
 	  else
 	  {
 		  bSoftwareTriggerSupported = false;
 		  ret = SetAcquisitionMode(1);//SingleScan
-          if (ret != DRV_SUCCESS)
-            return ret;
+        if (ret != DRV_SUCCESS)
+           return ret;
 		  ret = SetTriggerMode(0);//internal trigger mode
-          if (ret != DRV_SUCCESS)
+        if (ret != DRV_SUCCESS)
             return ret;
 	  }
      if (acquiring)
