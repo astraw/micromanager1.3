@@ -1296,6 +1296,10 @@ void Ixon::SetExposure(double dExp)
  */
 int Ixon::SnapImage()
 {
+   bool acquiring = acquiring_;
+   if (acquiring)
+      StopSequenceAcquisition();
+
    if (acquiring_)
       return ERR_BUSY_ACQUIRING;
 
@@ -1323,6 +1327,10 @@ int Ixon::SnapImage()
 
    if(bSoftwareTriggerSupported)
       CDeviceUtils::SleepMs(KeepCleanTime_);
+
+   if (acquiring)
+      StartSequenceAcquisition(sequenceLength_ - imageCounter_, intervalMs_, stopOnOverflow_);
+
 
    return DEVICE_OK;
 }
