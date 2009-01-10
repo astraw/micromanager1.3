@@ -107,8 +107,19 @@ public class FastAcqDlg extends JDialog implements GUIStatus {
       guiColors_ = new GUIColors();
       
       addWindowListener(new WindowAdapter() {
+         public void windowClosing(WindowEvent arg0) {
+             if (canExit()) {
+                 dispose();
+                 saveSettings();
+               } else {
+                 displayMessageDialog("Saving to disk not finished.\n" +
+                       "Please wait until all acquired images are procesessed.");
+                 return;
+              }
+         }
+
          public void windowClosed(WindowEvent arg0) {
-            saveSettings();
+            //saveSettings();
             if (statusTimer_ != null)
                statusTimer_.cancel();
             if (dispTimer_ != null)
