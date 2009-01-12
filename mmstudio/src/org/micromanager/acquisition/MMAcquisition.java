@@ -24,6 +24,7 @@ public class MMAcquisition {
    private int height_;
    private int depth_;
    private boolean initialized_ = false;
+   private boolean show_ = true;
    private Image5DWindow imgWin_;
    private String rootDirectory_;
    private AcquisitionData acqData_;
@@ -42,6 +43,11 @@ public class MMAcquisition {
          e.printStackTrace();
       }
       rootDirectory_ = new String();
+   }
+
+   public MMAcquisition(String name, String dir, boolean show) {
+      this(name, dir);
+      show_ = show;
    }
 
    public void setImagePhysicalDimensions(int width, int height, int depth) throws MMScriptException {
@@ -78,6 +84,11 @@ public class MMAcquisition {
    }
    
    public void initialize() throws MMScriptException {
+      if (!show_) {
+         initialized_ = true;
+         return;
+      }
+
       int type;
       if (depth_ == 1)
          type = ImagePlus.GRAY8;
@@ -88,8 +99,6 @@ public class MMAcquisition {
          throw new MMScriptException("Unsupported pixel depth");
       }
 
-      Image5D img5d = new Image5D(name_, type, width_, height_, numChannels_, numSlices_, numFrames_, false);
-      imgWin_ = new Image5DWindow(img5d);
       Color colors[];
       String names[];
       try {
@@ -104,6 +113,8 @@ public class MMAcquisition {
          throw new MMScriptException(e);
       }
       
+      Image5D img5d = new Image5D(name_, type, width_, height_, numChannels_, numSlices_, numFrames_, false);
+      imgWin_ = new Image5DWindow(img5d);
       // set-up colors, contrast and channel names
       for (int i=0; i<numChannels_; i++) {
          img5d.setChannelColorModel(i+1, ChannelDisplayProperties.createModelFromColor(colors[i]));
@@ -132,7 +143,7 @@ public class MMAcquisition {
       }
       
       // update display
-      if (imgWin_ != null) {
+      if (imgWin_ != null && show_) {
          Image5D i5d = imgWin_.getImage5D();
          i5d.setPixels(pixels, channel+1, slice+1, frame+1);
          i5d.setCurrentPosition(0, 0, channel, slice, frame);
@@ -157,7 +168,7 @@ public class MMAcquisition {
    }
    
    public void closeImage5D() {
-      if (initialized_) {
+      if ((imgWin_ != null) && initialized_) {
          imgWin_.dispose();
       }
    }

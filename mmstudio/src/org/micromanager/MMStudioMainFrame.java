@@ -189,6 +189,7 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 //	private ContrastSettings contrastSettings16_;
 
 	private GUIColors guiColors_;
+   private ColorModel currentColorModel_;
 
 	private GraphFrame profileWin_;
 	private PropertyEditor propertyBrowser_;
@@ -1988,6 +1989,7 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 		if (scriptPanel_ == null) {
 			scriptPanel_ = new ScriptPanel(core_, options_);
 			scriptPanel_.insertScriptingObject(SCRIPT_CORE_OBJECT, core_);
+			scriptPanel_.insertScriptingObject(SCRIPT_ACQENG_OBJECT, engine_);
 			scriptPanel_.setParentGUI(this);
 			scriptPanel_.setBackground(guiColors_.background
 					.get((options_.displayBackground)));
@@ -3056,6 +3058,13 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 		acq.setDimensions(nrFrames, nrChannels, nrSlices);
 	}
 
+	public void openAcquisition(String name, String rootDir, int nrFrames,
+			int nrChannels, int nrSlices, boolean show) throws MMScriptException {
+		acqMgr_.openAcquisition(name, rootDir, show);
+		MMAcquisition acq = acqMgr_.getAcquisition(name);
+		acq.setDimensions(nrFrames, nrChannels, nrSlices);
+	}
+
 	public void initializeAcquisition(String name, int width, int height,
 			int depth) throws MMScriptException {
 		MMAcquisition acq = acqMgr_.getAcquisition(name);
@@ -3264,7 +3273,7 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 		}
 	}
 
-	public String installPlugin(String className, String menuName) {
+   public String installPlugin(String className, String menuName) {
 		// instantiate auto-focusing module
 		String msg = new String(className + " module loaded.");
 		try {

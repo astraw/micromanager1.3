@@ -26,6 +26,8 @@ MMJ_.jar:  \
 	$(srcdir)/src/org/micromanager/CalibrationListDlg.java \
 	$(srcdir)/src/org/micromanager/CalibrationEditor.java \
 	$(srcdir)/src/org/micromanager/license.txt \
+	$(srcdir)/src/org/micromanager/acquisition/MMAcquisition.java \
+	$(srcdir)/src/org/micromanager/acquisition/AcquisitionManager.java \
 	$(srcdir)/src/org/micromanager/api/Autofocus.java \
 	$(srcdir)/src/org/micromanager/api/AcquisitionEngine.java \
 	$(srcdir)/src/org/micromanager/api/DeviceControlGUI.java \

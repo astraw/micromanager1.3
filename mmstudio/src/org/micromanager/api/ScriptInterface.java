@@ -74,6 +74,8 @@ public interface ScriptInterface {
     */
    public void openAcquisition(String name, String rootDir, int nrFrames, int nrChannels, int nrSlices) throws MMScriptException;
    
+   public void openAcquisition(String name, String rootDir, int nrFrames, int nrChannels, int nrSlices, boolean show) throws MMScriptException;
+
    public void initializeAcquisition(String name, int width, int height, int depth) throws MMScriptException;
    
    /**

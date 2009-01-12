@@ -17,7 +17,13 @@ public class AcquisitionManager {
          throw new MMScriptException("The name is in use");
       else
          acqs_.put(name, new MMAcquisition(name, rootDir));
-      
+   }
+   
+   public void openAcquisition(String name, String rootDir, boolean show) throws MMScriptException {
+      if (acqs_.containsKey(name))
+         throw new MMScriptException("The name is in use");
+      else
+         acqs_.put(name, new MMAcquisition(name, rootDir, show));
    }
    
    public void closeAcquisition(String name) throws MMScriptException {
