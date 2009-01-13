@@ -78,6 +78,15 @@ Source: micro-manager-1.3\drivers\K8061_libusb.inf; DestDir: {app}\drivers; Flag
 Source: micro-manager-1.3\drivers\libusb0.dll; DestDir: {app}\drivers; Flags: ignoreversion
 Source: micro-manager-1.3\drivers\libusb0.sys; DestDir: {app}\drivers; Flags: ignoreversion
 
+; beanshell scripts
+Source: micro-manager-1.3\scripts\sdemo1.bsh; DestDir: {app}\scripts; Flags: onlyifdoesntexist
+Source: micro-manager-1.3\scripts\sdemo2.bsh; DestDir: {app}\scripts; Flags: onlyifdoesntexist
+Source: micro-manager-1.3\scripts\setZoom.bsh; DestDir: {app}\scripts; Flags: onlyifdoesntexist
+Source: micro-manager-1.3\scripts\camera_test.bsh; DestDir: {app}\scripts; Flags: onlyifdoesntexist
+Source: micro-manager-1.3\scripts\image_snap_example.bsh; DestDir: {app}\scripts; Flags: onlyifdoesntexist
+Source: micro-manager-1.3\scripts\AutoExpose.bsh; DestDir: {app}\scripts; Flags: onlyifdoesntexist
+Source: micro-manager-1.3\scripts\ManualAcq.bsh; DestDir: {app}\scripts; Flags: onlyifdoesntexist
+
 ; configuration files
 Source: micro-manager-1.3\MMConfig_demo.cfg; DestDir: {app}; Flags: ignoreversion
 Source: micro-manager-1.3\MMDeviceList.txt; DestDir: {app}; Flags: ignoreversion
@@ -102,11 +111,6 @@ Source: micro-manager-1.3\ij.jar; DestDir: {app}; Flags: ignoreversion
 Source: micro-manager-1.3\IJ_Prefs.txt; DestDir: {app}; Flags: onlyifdoesntexist
 Source: micro-manager-1.3\macros\*; DestDir: {app}\macros; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: micro-manager-1.3\plugins\*; DestDir: {app}\plugins; Flags: ignoreversion recursesubdirs createallsubdirs
-;Source: micro-manager-1.3\plugins\Micro-Manager\bsh-2.0b4.jar; DestDir: {app}\plugins\MicroManager; Flags: ignoreversion
-;Source: micro-manager-1.3\plugins\Micro-Manager\MMCoreJ.jar; DestDir: {app}\plugins\MicroManager; Flags: ignoreversion
-;Source: micro-manager-1.3\plugins\Micro-Manager\MMJ_.jar; DestDir: {app}\plugins\MicroManager; Flags: ignoreversion
-;Source: micro-manager-1.3\plugins\Micro-Manager\MMAutofocus_.jar; DestDir: {app}\plugins\MicroManager; Flags: ignoreversion
-;Source: micro-manager-1.3\plugins\Micro-Manager\MMAutofocusTB_.jar; DestDir: {app}\plugins\MicroManager; Flags: ignoreversion
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]
