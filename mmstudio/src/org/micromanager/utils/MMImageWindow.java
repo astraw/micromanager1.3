@@ -77,16 +77,10 @@ public class MMImageWindow extends ImageWindow {
 	private LUTDialog contrastDlg_;
 	private ImageController contrastPanel_ = null;
 
-	
-	public static MMImageWindow getImageWindowInstance() {
-		return imageWin_;
-	}
-
 	public MMImageWindow(ImagePlus imp, CMMCore core) throws Exception {
 		super(imp);
 		core_ = core;
 		Initialize();
-		imageWin_ = this;
 	}
 
 	public MMImageWindow(CMMCore core, ImageController contrastPanel)
@@ -95,7 +89,6 @@ public class MMImageWindow extends ImageWindow {
 		contrastPanel_ = contrastPanel;
 		core_ = core;
 		Initialize();
-		imageWin_ = this;
 	}
 
 	public MMImageWindow(CMMCore core, ImageController contrastPanel,
@@ -298,7 +291,6 @@ public class MMImageWindow extends ImageWindow {
 	}
 
 	private void finalizeClosing() {
-		imageWin_ = null;
 	}
 
 	protected void updateHistogram() {

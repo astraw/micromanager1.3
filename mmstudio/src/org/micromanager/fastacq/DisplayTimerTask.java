@@ -21,12 +21,10 @@ public class DisplayTimerTask extends TimerTask {
    public void run() {
 
       try {
-         if (core_.deviceBusy(cameraName_)) {
+         if (core_.isSequenceRunning()) 
+         {
             updateImage();
          }
-      } catch (InterruptedException e) {
-         // TODO Auto-generated catch block
-         e.printStackTrace();
       } catch (Exception e) {
          //e.printStackTrace();
          cancel();
