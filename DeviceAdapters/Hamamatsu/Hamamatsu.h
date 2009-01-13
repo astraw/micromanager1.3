@@ -105,6 +105,8 @@ public:
    // high-speed interface
    int StartSequenceAcquisition(long numImages, double interval_ms, bool stopOnOverflow);
    int StopSequenceAcquisition();
+   int RestartSequenceAcquisition();
+   bool IsAcquiring();
    int RestartSnapMode();
 
    // action interface
@@ -135,6 +137,7 @@ private:
    int ResizeImageBuffer();
    int ResizeImageBuffer(long frameBufSize);
    int ShutdownImageBuffer();
+   int SetTrigMode(std::string triggerMode);
    bool IsFeatureSupported(int featureId);
    bool IsScanModeSupported(int32_t& maxSpeed);
    bool IsPropertySupported(DCAM_PROPERTYATTR& propAttr, long propertyId);
@@ -176,6 +179,7 @@ private:
    std::string triggerMode_;
    std::string originalTrigMode_;
    bool stopOnOverflow_;
+   double interval_ms_;
 };
 
 /*

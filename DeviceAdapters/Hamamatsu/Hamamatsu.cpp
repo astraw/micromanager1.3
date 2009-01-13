@@ -33,7 +33,7 @@
    #include <memory.h>
    void ZeroMemory(void* mem, int size) 
    {
-      memset(mem,size,0);
+      memset(mem,0,size);
    }
 #endif
 #include "../../MMDevice/ModuleInterface.h"
@@ -143,7 +143,8 @@ CHamamatsu::CHamamatsu() :
    lnBin_(1),
    slot_(0),
    originalTrigMode_(""),
-   stopOnOverflow_(true)
+   stopOnOverflow_(true),
+   interval_ms_ (0)
 {
    InitializeDefaultErrorMessages();
    // slot
@@ -188,6 +189,9 @@ int CHamamatsu::OnBinning(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
    if (eAct == MM::AfterSet)
    {
+      if (IsAcquiring())
+         return ERR_BUSY_ACQUIRING;
+
       pProp->Get(lnBin_);
       int nRet = ShutdownImageBuffer();
       if (nRet != DEVICE_OK)
@@ -212,6 +216,10 @@ int CHamamatsu::OnTrigPolarity(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
    if (eAct == MM::AfterSet)
    {
+      bool acquiring = IsAcquiring();
+      if (acquiring)
+         StopSequenceAcquisition();
+
       std::string triggerPolarity;
       pProp->Get(triggerPolarity);
       int nRet = ShutdownImageBuffer();
@@ -225,6 +233,9 @@ int CHamamatsu::OnTrigPolarity(MM::PropertyBase* pProp, MM::ActionType eAct)
       nRet = ResizeImageBuffer();
       if (nRet != DEVICE_OK)
          return nRet;
+
+      if (acquiring)
+         RestartSequenceAcquisition();
    }
    else if (eAct == MM::BeforeGet)
    {
@@ -239,49 +250,62 @@ int CHamamatsu::OnTrigPolarity(MM::PropertyBase* pProp, MM::ActionType eAct)
    return DEVICE_OK;
 }
 
+int CHamamatsu::SetTrigMode(std::string triggerMode)
+{
+   int nRet = ShutdownImageBuffer();
+   if (nRet != DEVICE_OK)
+      return nRet;
+   long mode = DCAM_TRIGMODE_SOFTWARE;
+   if (triggerMode == g_TrigMode_Software)
+      mode = DCAM_TRIGMODE_SOFTWARE;
+   else if (triggerMode == g_TrigMode_Internal)
+      mode = DCAM_TRIGMODE_INTERNAL;
+   else if (triggerMode == g_TrigMode_Edge)
+      mode = DCAM_TRIGMODE_EDGE;
+   else if (triggerMode == g_TrigMode_Level)
+      mode = DCAM_TRIGMODE_LEVEL;
+   else if (triggerMode == g_TrigMode_MultiShot_Sensitive)
+      mode = DCAM_TRIGMODE_MULTISHOT_SENSITIVE;
+   else if (triggerMode == g_TrigMode_Cycle_Delay)
+      mode = DCAM_TRIGMODE_CYCLE_DELAY;
+   else if (triggerMode == g_TrigMode_FastRepetition)
+      mode = DCAM_TRIGMODE_FASTREPETITION;
+   else if (triggerMode == g_TrigMode_TDI)
+      mode = DCAM_TRIGMODE_TDI;
+   else if (triggerMode == g_TrigMode_TDIInternal)
+      mode = DCAM_TRIGMODE_TDIINTERNAL;
+   else if (triggerMode == g_TrigMode_Start)
+      mode = DCAM_TRIGMODE_START;
+
+   ostringstream os;
+   os << "Setting triggermode to: " << mode;
+   LogMessage(os.str().c_str(), true); 
+
+   if (!dcam_settriggermode(m_hDCAM, mode))
+      return ReportError("Error in dcam_settriggermode: ");
+   triggerMode_ = triggerMode;
+
+   nRet = ResizeImageBuffer();
+   if (nRet != DEVICE_OK)
+      return nRet;
+
+   return DEVICE_OK;
+}
+
+
 // Trigger Mode
 int CHamamatsu::OnTrigMode(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
    if (eAct == MM::AfterSet)
    {
+      if (IsAcquiring())
+         return ERR_BUSY_ACQUIRING;;
+
       std::string triggerMode;
       pProp->Get(triggerMode);
-      int nRet = ShutdownImageBuffer();
-      if (nRet != DEVICE_OK)
-         return nRet;
-      long mode = DCAM_TRIGMODE_SOFTWARE;
-      if (triggerMode == g_TrigMode_Software)
-         mode = DCAM_TRIGMODE_SOFTWARE;
-      else if (triggerMode == g_TrigMode_Internal)
-         mode = DCAM_TRIGMODE_INTERNAL;
-      else if (triggerMode == g_TrigMode_Edge)
-         mode = DCAM_TRIGMODE_EDGE;
-      else if (triggerMode == g_TrigMode_Level)
-         mode = DCAM_TRIGMODE_LEVEL;
-      else if (triggerMode == g_TrigMode_MultiShot_Sensitive)
-         mode = DCAM_TRIGMODE_MULTISHOT_SENSITIVE;
-      else if (triggerMode == g_TrigMode_Cycle_Delay)
-         mode = DCAM_TRIGMODE_CYCLE_DELAY;
-      else if (triggerMode == g_TrigMode_FastRepetition)
-         mode = DCAM_TRIGMODE_FASTREPETITION;
-      else if (triggerMode == g_TrigMode_TDI)
-         mode = DCAM_TRIGMODE_TDI;
-      else if (triggerMode == g_TrigMode_TDIInternal)
-         mode = DCAM_TRIGMODE_TDIINTERNAL;
-      else if (triggerMode == g_TrigMode_Start)
-         mode = DCAM_TRIGMODE_START;
-
-      ostringstream os;
-      os << "Setting triggermode to: " << mode;
-      LogMessage(os.str().c_str(), true); 
-
-      if (!dcam_settriggermode(m_hDCAM, mode))
-         return ReportError("Error in dcam_settriggermode: ");
-      triggerMode_ = triggerMode;
-
-      nRet = ResizeImageBuffer();
-      if (nRet != DEVICE_OK)
-         return nRet;
+      int ret = SetTrigMode(triggerMode);
+      if (ret != DEVICE_OK)
+            return ret;
    }
    else if (eAct == MM::BeforeGet)
    {
@@ -354,6 +378,10 @@ int CHamamatsu::OnPixelType(MM::PropertyBase* pProp, MM::ActionType eAct)
    }
    else if (eAct == MM::AfterSet)
    {
+      bool acquiring = IsAcquiring();
+      if (acquiring)
+         StopSequenceAcquisition();
+
       ccDatatype ccDataType;
       string strType;
       pProp->Get(strType);
@@ -375,6 +403,9 @@ int CHamamatsu::OnPixelType(MM::PropertyBase* pProp, MM::ActionType eAct)
       nRet = ResizeImageBuffer();
       if (nRet != DEVICE_OK)
          return nRet;
+
+      if (acquiring)
+         RestartSequenceAcquisition();
    }
    return DEVICE_OK;
 }
@@ -389,6 +420,10 @@ int CHamamatsu::OnScanMode(MM::PropertyBase* pProp, MM::ActionType eAct)
 
    if (eAct == MM::AfterSet)
    {
+      bool acquiring = IsAcquiring();
+      if (acquiring)
+         StopSequenceAcquisition();
+
       long lnScanMode;
       pProp->Get(lnScanMode);
       ScanMode.speed = lnScanMode;
@@ -420,6 +455,9 @@ int CHamamatsu::OnScanMode(MM::PropertyBase* pProp, MM::ActionType eAct)
       ret = OnPropertiesChanged();
       if (ret != DEVICE_OK)
          return ret;
+
+      if (acquiring)
+         RestartSequenceAcquisition();
    }
    else if (eAct == MM::BeforeGet)
    {
@@ -439,6 +477,10 @@ int CHamamatsu::OnCCDMode(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
    if (eAct == MM::AfterSet)
    {
+      bool acquiring = IsAcquiring();
+      if (acquiring)
+         StopSequenceAcquisition();
+
       double ccdMode;
       pProp->Get(ccdMode);
       int ret = ShutdownImageBuffer();
@@ -469,6 +511,9 @@ int CHamamatsu::OnCCDMode(MM::PropertyBase* pProp, MM::ActionType eAct)
       ret = OnPropertiesChanged();
       if (ret != DEVICE_OK)
          return ret;
+
+      if (acquiring)
+         RestartSequenceAcquisition();
    }
    else if (eAct == MM::BeforeGet)
    {
@@ -488,6 +533,10 @@ int CHamamatsu::OnPhotonImagingMode(MM::PropertyBase* pProp, MM::ActionType eAct
 {
    if (eAct == MM::AfterSet)
    {
+      bool acquiring = IsAcquiring();
+      if (acquiring)
+         StopSequenceAcquisition();
+
       double mode;
       pProp->Get(mode);
       int ret = ShutdownImageBuffer();
@@ -518,6 +567,9 @@ int CHamamatsu::OnPhotonImagingMode(MM::PropertyBase* pProp, MM::ActionType eAct
       ret = OnPropertiesChanged();
       if (ret != DEVICE_OK)
          return ret;
+
+      if (acquiring)
+         RestartSequenceAcquisition();
    }
    else if (eAct == MM::BeforeGet)
    {
@@ -536,37 +588,9 @@ int CHamamatsu::OnSensitivity(MM::PropertyBase* pProp, MM::ActionType eAct)
    {
       double sensitivity;
       pProp->Get(sensitivity);
-      /*
-      int ret = ShutdownImageBuffer();
-      if (ret != DEVICE_OK)
-         return ret;
-         */
+
       if (!dcam_setpropertyvalue(m_hDCAM, DCAM_IDPROP_SENSITIVITY, sensitivity))
          return ReportError("Error in dcam_setpropertyvalue (Sensitivity): ");
-/*
-      ret = ResizeImageBuffer();
-      if (ret != DEVICE_OK)
-         return ret;
-
-      // Reset allowedValues for binning and gain
-      DWORD	cap;
-      if(!dcam_getcapability(m_hDCAM, &cap, DCAM_QUERYCAPABILITY_FUNCTIONS))
-         return ReportError("Error in dcam_getcapability: ");
-      ret = SetAllowedBinValues(cap);
-      if (ret != DEVICE_OK)
-         return ret;
-      if (IsFeatureSupported(DCAM_IDFEATURE_GAIN)) 
-      {
-         DCAM_PARAM_FEATURE_INQ featureInq = GetFeatureInquiry(DCAM_IDFEATURE_GAIN);
-         ret = SetAllowedGainValues(featureInq);
-         if (ret != DEVICE_OK)
-            return ret;
-      }
-      // propagate changes to GUI
-      ret = OnPropertiesChanged();
-      if (ret != DEVICE_OK)
-         return ret;
-         */
    }
    else if (eAct == MM::BeforeGet)
    {
@@ -628,11 +652,17 @@ int CHamamatsu::OnGain(MM::PropertyBase* pProp, MM::ActionType eAct)
 
    if (eAct == MM::AfterSet)
    {
+      bool acquiring = IsAcquiring();
+      if (acquiring)
+         StopSequenceAcquisition();
+
       long lnGain;
       pProp->Get(lnGain);
       FeatureValue.featurevalue = (float)lnGain;
       if (!dcam_extended(m_hDCAM, DCAM_IDMSG_SETPARAM, (LPVOID)&FeatureValue, sizeof(DCAM_PARAM_FEATURE)))
          return ReportError("Error in dcam_extended (set gain): ");
+      if (acquiring)
+         RestartSequenceAcquisition();
    }
    else if (eAct == MM::BeforeGet)
    {
@@ -701,6 +731,10 @@ int CHamamatsu::OnExtendedProperty(MM::PropertyBase* pProp, MM::ActionType eAct,
 {
    if (eAct == MM::AfterSet)
    {
+      bool acquiring = IsAcquiring();
+      if (acquiring)
+         StopSequenceAcquisition();
+
       int ret = ShutdownImageBuffer();
       if (ret != DEVICE_OK)
          return ret;
@@ -738,6 +772,10 @@ int CHamamatsu::OnExtendedProperty(MM::PropertyBase* pProp, MM::ActionType eAct,
       ret = OnPropertiesChanged();
       if (ret != DEVICE_OK)
          return ret;
+
+      if (acquiring)
+         RestartSequenceAcquisition();
+
    }
    else if (eAct == MM::BeforeGet)
    {
@@ -1256,13 +1294,12 @@ int CHamamatsu::Shutdown()
 
 bool CHamamatsu::Busy()
 {
-   // When is the camera really busy?
-   // Saying we are Busy when doing SequenceAcquisition leads to trouble,
-   // since no settings can be changed without stopping acuiqition
-   // Moreover, we can only restart acquisition after the UI is satisfied the camera is not Busy.
-   // However, Burst mode depends on this flag!!
-   // For now, do not have the UI check for Busy when changing stuff in ConfiggroupPad
-   return (acquiring_ || snapInProgress_);
+   return (snapInProgress_);
+}
+
+bool CHamamatsu::IsAcquiring()
+{
+   return acquiring_;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1357,6 +1394,9 @@ const unsigned char* CHamamatsu::GetImageBuffer()
 
 int CHamamatsu::SetROI(unsigned uX, unsigned uY, unsigned uXSize, unsigned uYSize)
 {
+   if (IsAcquiring())
+      return ERR_BUSY_ACQUIRING;
+
    int ret = ShutdownImageBuffer();
    if (ret != DEVICE_OK)
       return ret;
@@ -1445,6 +1485,9 @@ int CHamamatsu::GetROI(unsigned& uX, unsigned& uY, unsigned& uXSize, unsigned& u
 
 int CHamamatsu::ClearROI()
 {
+   if (IsAcquiring())
+      return ERR_BUSY_ACQUIRING;
+
   // inquire about capabilities
    DCAM_PARAM_SUBARRAY_INQ SubArrayInquiry;
    ZeroMemory((LPVOID)&SubArrayInquiry,sizeof(DCAM_PARAM_SUBARRAY_INQ));
@@ -1886,6 +1929,7 @@ int CHamamatsu::StartSequenceAcquisition(long numImages, double interval_ms, boo
       return ERR_BUSY_ACQUIRING;
 
    stopOnOverflow_ = stopOnOverflow;
+   interval_ms_ = interval_ms;
    // Switch from software to internal trigger, leave other trigger modes alone (needs to be done before shutting down image buffer)
    char trigMode[MM::MaxStrLength];
    int ret = GetProperty(g_TrigMode, trigMode);
@@ -1894,7 +1938,7 @@ int CHamamatsu::StartSequenceAcquisition(long numImages, double interval_ms, boo
    if (strcmp(trigMode, g_TrigMode_Software) == 0)
    {
 	   originalTrigMode_ = g_TrigMode_Software;
-	   ret = SetProperty(g_TrigMode, g_TrigMode_Internal);
+	   ret = SetTrigMode(g_TrigMode_Internal);
 	   if (ret != DEVICE_OK)
 		   return ret;
    }
@@ -1961,6 +2005,10 @@ int CHamamatsu::StartSequenceAcquisition(long numImages, double interval_ms, boo
    return DEVICE_OK;
 }
 
+int CHamamatsu::RestartSequenceAcquisition() {
+   return StartSequenceAcquisition(sequenceLength_ - imageCounter_, interval_ms_, stopOnOverflow_);
+}
+
 /**
  * Stops Burst acquisition
  */
@@ -1980,7 +2028,7 @@ int CHamamatsu::RestartSnapMode()
    // This also calls Shutdown Image buffer and ResizeImageBuffer
    if (originalTrigMode_.compare(g_TrigMode_Software) == 0)
    {
-	   ret = SetProperty(g_TrigMode, g_TrigMode_Software);
+	   ret = SetTrigMode(g_TrigMode_Software);
 	   if (ret != DEVICE_OK)
 		   return ret;
 	   originalTrigMode_ = "";
