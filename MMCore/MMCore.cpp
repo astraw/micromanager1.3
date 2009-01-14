@@ -155,6 +155,7 @@ CMMCore::CMMCore() :
    errorText_[MMERR_CircularBufferEmpty] = "Circular buffer is empty.";
    errorText_[MMERR_ContFocusNotAvailable] = "Auto-focus focus device not defined.";
    errorText_[MMERR_BadConfigName] = "Configuration name contains illegale characters (/\\*!')";
+   errorText_[MMERR_NotAllowedDuringSequenceAcquisition] = "This operation is not allowed while sequence acquisition is run.";
 
    // open the log output stream
    logStream_= new std::ofstream();
@@ -1257,12 +1258,20 @@ void CMMCore::setAdapterOriginXY(const char* deviceName, double x, double y) thr
 }
 
 /**
- * Acquires a single image. 
+ * Acquires a single image with current settings.
+ * Snap is not allowed while the acquisition thread is run
  */
 void CMMCore::snapImage() throw (CMMError)
 {
    if (camera_)
    {
+      if(camera_->IsCapturing())
+      {
+         throw CMMError(getCoreErrorText(
+            MMERR_NotAllowedDuringSequenceAcquisition).c_str()
+            ,MMERR_NotAllowedDuringSequenceAcquisition);
+      }
+
       int ret = DEVICE_OK;
       try {
 

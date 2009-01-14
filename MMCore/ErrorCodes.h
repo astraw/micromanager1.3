@@ -71,5 +71,6 @@
 #define MMERR_AutoFocusNotAvailable    43
 #define MMERR_BadConfigName            44
 #define MMERR_CircularBufferIncompatibleImage  45
+#define MMERR_NotAllowedDuringSequenceAcquisition  46
 
 #endif //_ERRORCODES_H_
