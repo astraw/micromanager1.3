@@ -72,6 +72,7 @@ public:
    int ClearROI();
    int StartSequenceAcquisition(long numImages, double /*interval_ms*/, bool stopOnOverflow);
    int StopSequenceAcquisition();
+   bool IsCapturing();
 
    // action interface
    int OnBoard(MM::PropertyBase* pProp, MM::ActionType eAct);

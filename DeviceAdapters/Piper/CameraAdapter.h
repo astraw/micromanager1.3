@@ -103,6 +103,7 @@ public:
    double GetPixelSizeUm() const {return nominalPixelSizeUm_ * GetBinning();}
    int GetBinning() const;
    int SetBinning(int binSize);
+   bool IsCapturing();
 
    // action interface
    // ----------------

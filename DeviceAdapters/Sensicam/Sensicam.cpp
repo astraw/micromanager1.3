@@ -789,6 +789,11 @@ int CSensicam::StopSequenceAcquisition()
    return DEVICE_OK;
 }
 
+bool CSensicam::IsCapturing()
+{
+   return sequenceRunning_;
+}
+
 int CSensicam::InsertImage()
 {
    const unsigned char* img = GetImageBuffer();

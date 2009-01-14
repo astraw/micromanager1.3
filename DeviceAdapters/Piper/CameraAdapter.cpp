@@ -360,9 +360,20 @@ void CCameraAdapter::GetName(char* name) const
  */
 bool CCameraAdapter::Busy()
 {
+//OD   CSingleLock oCS( m_pCS, __CS_ENABLE );
+//   return m_bStream ? true : false;
+   return false;
+}
+/**
+ * Tells us if camera runs a sequence of capturing.
+ * Required by the MM:Device API.
+ */
+bool CCameraAdapter::IsCapturing()
+{
    CSingleLock oCS( m_pCS, __CS_ENABLE );
    return m_bStream ? true : false;
 }
+
 
 /**
  * Intializes the hardware.
