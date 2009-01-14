@@ -1120,6 +1120,8 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 				118 - 22, SpringLayout.NORTH, getContentPane());
 
 		final JButton refreshButton = new JButton();
+		refreshButton.setMargin(new Insets(2, 2, 2, 2));
+		refreshButton.setIconTextGap(1);
 		refreshButton.setIcon(SwingResourceManager.getIcon(
 				MMStudioMainFrame.class,
 				"/org/micromanager/icons/arrow_refresh.png"));
@@ -2511,8 +2513,8 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 				String binSize = core_.getProperty(cameraLabel_, MMCoreJ
 						.getG_Keyword_Binning());
 				GUIUtils.setComboSelection(comboBinning_, binSize);
-				String pixType = core_.getProperty(cameraLabel_, MMCoreJ
-						.getG_Keyword_PixelType());
+				//String pixType = core_.getProperty(cameraLabel_, MMCoreJ
+				//		.getG_Keyword_PixelType());
 				// GUIUtils.setComboSelection(comboPixelType_, pixType);
 				long bitDepth = core_.getImageBitDepth();
 				contrastPanel_.setPixelBitDepth((int) bitDepth, false);
