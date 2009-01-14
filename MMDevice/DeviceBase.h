@@ -480,6 +480,17 @@ protected:
          return callback_->LogMessage(this, msg, debugOnly);
       return DEVICE_NO_CALLBACK_REGISTERED;
    }
+   /**
+   * Output the specified text message to the log stream.
+   * @param msg - message text
+   * @param debugOnly - if true the meassage will be sent only in the log-debug mode
+   */
+   int LogMessage(std::string msg, bool debugOnly = false) const
+   {
+      if (callback_)
+         return callback_->LogMessage(this, msg.c_str(), debugOnly);
+      return DEVICE_NO_CALLBACK_REGISTERED;
+   }
 
    /**
    * Sets-up the standard set of error codes and error messages.
