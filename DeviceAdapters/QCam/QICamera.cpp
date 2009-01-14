@@ -787,38 +787,34 @@ int QICamera::StartStreamingImages()
    printf("QICamera::StartSnappingImages\n");
 #endif
 
-	#ifdef PRINT_FUNCTION_NAMES
-		printf("QICamera::StartStreamingImages\n");
-	#endif
-	
-	// abort all frames
-	err = QCam_Abort(m_camera);
-	CHECK_ERROR(err);
-	
-	// turn on streaming
-	err = QCam_SetStreaming(m_camera, true);
-    CHECK_ERROR(err);
-    
-	// start streaming images
-	// queue up two images so we always have an image
-	// in the queue
-    err = QCam_QueueFrame(m_camera,
-                           m_frame1,
-                           PreviewCallback,
-                           qcCallbackDone | qcCallbackExposeDone,
-                           this,
-                           1);
-	CHECK_ERROR(err);
-	
-	err = QCam_QueueFrame(m_camera,
-                           m_frame2,
-                           PreviewCallback,
-                           qcCallbackDone | qcCallbackExposeDone,
-                           this,
-                           2);
-	CHECK_ERROR(err);
+   // abort all frames
+   err = QCam_Abort(m_camera);
+   CHECK_ERROR(err);
 
-	return DEVICE_OK;
+   // turn on streaming
+   err = QCam_SetStreaming(m_camera, true);
+   CHECK_ERROR(err);
+
+   // start streaming images
+   // queue up two images so we always have an image
+   // in the queue
+   err = QCam_QueueFrame(m_camera,
+      m_frame1,
+      PreviewCallback,
+      qcCallbackDone | qcCallbackExposeDone,
+      this,
+      1);
+   CHECK_ERROR(err);
+
+   err = QCam_QueueFrame(m_camera,
+      m_frame2,
+      PreviewCallback,
+      qcCallbackDone | qcCallbackExposeDone,
+      this,
+      2);
+   CHECK_ERROR(err);
+
+   return DEVICE_OK;
 }
 /**
 * Copies the captured frame to the image buffer 
@@ -826,48 +822,48 @@ int QICamera::StartStreamingImages()
 */
 void QICamera::SetCurrentFrameNumber(unsigned long inFrameNumber)
 {
-	QCam_Frame				*currentFrame;
-	unsigned short			bytesPerPixel;
+   QCam_Frame				*currentFrame;
+   unsigned short			bytesPerPixel;
 
 
-	// which frame was received?
-	switch(inFrameNumber)
-	{
-		case 1:
-			currentFrame = m_frame1;
-			break;
+   // which frame was received?
+   switch(inFrameNumber)
+   {
+   case 1:
+      currentFrame = m_frame1;
+      break;
 
-		case 2:
-			currentFrame = m_frame2;
-			break;
+   case 2:
+      currentFrame = m_frame2;
+      break;
 
-		default:
-			assert(false);
-			currentFrame = NULL;
-			break;
-	}
+   default:
+      assert(false);
+      currentFrame = NULL;
+      break;
+   }
 
-	if (currentFrame != NULL)
-	{
-		// get the bytes per pixel
-		bytesPerPixel = currentFrame->bits / 8;
-		if (currentFrame->bits % 8)
-		{
-			bytesPerPixel ++;
-		}
+   if (currentFrame != NULL)
+   {
+      // get the bytes per pixel
+      bytesPerPixel = currentFrame->bits / 8;
+      if (currentFrame->bits % 8)
+      {
+         bytesPerPixel ++;
+      }
 
-		// convert to an ImgBuffer
-		m_snappedImageBuffer.Resize(currentFrame->width, currentFrame->height, bytesPerPixel);
-		m_snappedImageBuffer.SetPixels(currentFrame->pBuffer);
+      // convert to an ImgBuffer
+      m_snappedImageBuffer.Resize(currentFrame->width, currentFrame->height, bytesPerPixel);
+      m_snappedImageBuffer.SetPixels(currentFrame->pBuffer);
 
-		// requeue the frame
-		QCam_QueueFrame(m_camera,
-						currentFrame,
-						PreviewCallback,
-						qcCallbackDone | qcCallbackExposeDone,
-						this,
-						inFrameNumber);
-	}
+      // requeue the frame
+      QCam_QueueFrame(m_camera,
+         currentFrame,
+         PreviewCallback,
+         qcCallbackDone | qcCallbackExposeDone,
+         this,
+         inFrameNumber);
+   }
 }
 
 
@@ -1327,16 +1323,19 @@ int QICamera::SnapImage()
 {
    QCam_Err				err;
 
+#ifdef PRINT_FUNCTION_NAMES
+   printf("QICamera::SnapImage\n");
+#endif
 
-	#ifdef PRINT_FUNCTION_NAMES
-		printf("QICamera::SnapImage\n");
-	#endif
-
-	// trigger a frame
-	err = QCam_Trigger(m_camera);
-	CHECK_ERROR(err);
-
-   return WaitForFrameCaptured();
+   if(!IsCapturing())
+   {
+      StartStreamingImages();
+      // trigger a frame to continue sequence capturing
+      err = QCam_Trigger(m_camera);
+      CHECK_ERROR(err);
+      return WaitForFrameCaptured();
+   }
+   return DEVICE_OK;
 }
 
 /**
@@ -1651,6 +1650,7 @@ int QICamera::StartSequenceAcquisition(long numImages, double intervalMs, bool s
    if (IsCapturing())
       return ERR_BUSY_ACQUIRING;
 
+
    m_stopOnOverflow = stopOnOverflow;
 
    // prepare the core
@@ -1663,9 +1663,11 @@ int QICamera::StartSequenceAcquisition(long numImages, double intervalMs, bool s
    // make sure the circular buffer is properly sized
    GetCoreCallback()->InitializeImageBuffer(1, 1, GetImageWidth(), GetImageHeight(), GetImageBytesPerPixel());
 
+   StartStreamingImages();
+
    // trigger a frame
-	ret = QCam_Trigger(m_camera);
-	CHECK_ERROR(ret);
+   ret = QCam_Trigger(m_camera);
+   CHECK_ERROR(ret);
 
    // start thread
    // TODO: check for success
@@ -1686,9 +1688,11 @@ int QICamera::StopSequenceAcquisition()
 {
    int ret = DEVICE_ERR;
    //call function of the base class, which does a useful work
-   //ret = static_cast<CCameraBase*> (this)->StopSequenceAcquisition();
    ret = this->CCameraBase<QICamera>::StopSequenceAcquisition();
-   
+
+   // turn off streaming
+   CheckForError(QCam_SetStreaming(m_camera, false));
+
    ret = FinishSequenceMode();
 
    return ret;
@@ -1716,6 +1720,15 @@ int QICamera::OnExposure(MM::PropertyBase* pProp, MM::ActionType eAct)
    // see if the user wants to get or set the property
    if (eAct == MM::AfterSet)
    {	
+      //if camera is capturing in sequence mode
+      // stop it and re-start after the value is set
+      CaptureRestartHelper restart(this);
+      if(restart)
+      {
+         // turn off streaming
+         err = QCam_SetStreaming(m_camera, false);
+         CHECK_ERROR(err);
+      }
       pProp->Get(exposure);
 
       // convert the exposure to nanoseconds 64-bit long
@@ -1728,6 +1741,14 @@ int QICamera::OnExposure(MM::PropertyBase* pProp, MM::ActionType eAct)
       // commit it
       err = QCam_SendSettingsToCam(m_camera, &m_settings);
       CHECK_ERROR(err);
+
+      if(restart)
+      {
+         StartStreamingImages();
+         // trigger a frame
+         err = QCam_Trigger(m_camera);
+         CHECK_ERROR(err);
+      }
    }
    else if (eAct == MM::BeforeGet)
    {
@@ -1771,6 +1792,9 @@ int QICamera::OnBinning(MM::PropertyBase* pProp, MM::ActionType eAct)
    // see if the user wants to get or set the property
    if (eAct == MM::AfterSet)
    {	
+      if (IsCapturing())
+         return ERR_BUSY_ACQUIRING;
+
       pProp->Get(binningMode);
 
       // set it (try symmetrical binning first)
@@ -1812,8 +1836,8 @@ int QICamera::OnBinning(MM::PropertyBase* pProp, MM::ActionType eAct)
 
 int QICamera::OnGain(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
-   double					gain;
-   unsigned long			gainAsLong;
+   double				gain;
+   unsigned long		gainAsLong;
    QCam_Err				err;
 
 
@@ -1824,6 +1848,16 @@ int QICamera::OnGain(MM::PropertyBase* pProp, MM::ActionType eAct)
    // see if the user wants to get or set the property
    if (eAct == MM::AfterSet)
    {	
+      //if camera is capturing in sequence mode
+      // stop it and re-start after the value is set
+      CaptureRestartHelper restart(this);
+      if(restart)
+      {
+         // turn off streaming
+         err = QCam_SetStreaming(m_camera, false);
+         CHECK_ERROR(err);
+      }
+
       pProp->Get(gain);
 
       // convert the exposure to the real normalized gain value
@@ -1836,6 +1870,14 @@ int QICamera::OnGain(MM::PropertyBase* pProp, MM::ActionType eAct)
       // commit it
       err = QCam_SendSettingsToCam(m_camera, &m_settings);
       CHECK_ERROR(err);
+
+      if(restart)
+      {
+         StartStreamingImages();
+         // trigger a frame
+         err = QCam_Trigger(m_camera);
+         CHECK_ERROR(err);
+      }
    }
    else if (eAct == MM::BeforeGet)
    {
@@ -1947,6 +1989,9 @@ int QICamera::OnBitDepth(MM::PropertyBase* pProp, MM::ActionType eAct)
    // see if the user wants to get or set the property
    if (eAct == MM::AfterSet)
    {	
+      if (IsCapturing())
+         return ERR_BUSY_ACQUIRING;
+
       pProp->Get(bitDepthString);
 
       // conver the string to a number
@@ -2347,9 +2392,9 @@ void QICamera::PushSequenceImage()
       ret = GetCoreCallback()->InsertImage(this, m_snappedImageBuffer);
    }
 
-   	// trigger a frame
+   // trigger a frame
    //To Do: do not trigger if HW triggering is set
-	QCam_Trigger(m_camera);
+   QCam_Trigger(m_camera);
 }
 
 int QICamera::CheckForError(int inErr) const
@@ -2375,18 +2420,18 @@ int QICamera::ThreadRun(void)
 #ifdef PRINT_FUNCTION_NAMES
    printf("QICamera::SeqAcqThread::svc\n");
 #endif
-      ret = WaitForFrameCaptured();
-      if (ret != DEVICE_OK)
-      {
-         ostringstream os;
-         os << "QICamera delayed capturing frames. Errorcode: " << ret;
-         LogMessage(os.str().c_str());
-      }
-      else
-      {
-         // set the current image number
-         PushSequenceImage();
-      }
+   ret = WaitForFrameCaptured();
+   if (ret != DEVICE_OK)
+   {
+      ostringstream os;
+      os << "QICamera delayed capturing frames. Errorcode: " << ret;
+      LogMessage(os.str().c_str());
+   }
+   else
+   {
+      // set the current image number
+      PushSequenceImage();
+   }
    return ret;
 }
 
