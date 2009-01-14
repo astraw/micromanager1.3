@@ -792,68 +792,62 @@ bool Universal::Busy()
 
 int Universal::SnapImage()
 {
+   if (IsCapturing())
+      return ERR_BUSY_ACQUIRING;
 
-   if(IsCapturing()) 
-      //ToDo: implement taking snapshot with different exposure and binning
-      //for now the snapped immage is be the currently captured one
-      return DEVICE_OK;
+   LogMessage("Started snapImage ");
 
    int16 status;
-   uns32 not_needed;
-   rs_bool ret;
+   uns32 byteCnt;
+   uns32 bufferCnt;
+   int ret = DEVICE_ERR;
 
-   //ToDo: use semaphore
-   if (!bufferOK_)
-      return ERR_INVALID_BUFFER;
+   // prepare the camera
+   ret = ResizeImageBufferContinuous();
+   if (ret != DEVICE_OK)
+      return ret;
 
-   void* pixBuffer = const_cast<unsigned char*> (img_.GetPixels());
-   if (!pl_exp_start_seq(hPVCAM_, pixBuffer))
-      return pl_error_code();   
-
-   // For MicroMax cameras, wait untill exposure is finished, for others, use the pvcam check status function
-   // Check for MicroMax camera in the chipname, this might not be the best method
-   if (chipName_.substr(0,3).compare("PID") == 0)
+   if (!pl_exp_start_cont(hPVCAM_, circBuffer_, bufferSize_))
    {
-      MM::MMTime startTime = GetCurrentMMTime();
-      do {
-         CDeviceUtils::SleepMs(2);
-      } while ( (GetCurrentMMTime() - startTime) < ( (exposure_ + 50) * 1000.0) );
-	  ostringstream db;
-	  db << chipName_.substr(0,3) << " exposure: " << exposure_;
-	  LogMessage (db.str().c_str());
-   } else { // All modern cameras
-      // block until exposure is finished
-      do {
-         ret = pl_exp_check_status(hPVCAM_, &status, &not_needed);
-      } while (ret && (status == EXPOSURE_IN_PROGRESS));
-      if (!ret)
-         return pl_error_code();   
+      ResizeImageBufferContinuous();
+      return pl_error_code();
    }
+   // wait until image is ready
+   while (pl_exp_check_cont_status(hPVCAM_, &status, &byteCnt, &bufferCnt) 
+      && (status != READOUT_COMPLETE) 
+      && (status != READOUT_FAILED))
+   {
+      CDeviceUtils::SleepMs(5);
+   }
+   if (status != READOUT_FAILED)
+   {
+      // get the image from the circular buffer
+      void_ptr imgPtr;
+      if (!pl_exp_get_latest_frame(hPVCAM_, &imgPtr))
+      {
+         char msg[ERROR_MSG_LEN];
+         pl_error_message(pl_error_code(), msg);
+         ostringstream os;
+         os << "get_ _frame() error: " << msg << endl;
+         LogMessage(os.str().c_str());
+         return ret;
+      }
+      memcpy(img_.GetPixelsRW(), imgPtr, GetImageBufferSize());
+   }
+   else
+      LogMessage("PVCamera readout failed");
 
-   return DEVICE_OK;
+   pl_exp_stop_cont(hPVCAM_, CCS_HALT);
+   pl_exp_finish_seq(hPVCAM_, circBuffer_, 0);
+
+   return ret;
 }
 
 const unsigned char* Universal::GetImageBuffer()
 {  
-   void* pixBuffer = const_cast<unsigned char*> (img_.GetPixels());
-
-   if(!IsCapturing())
-   { 
-      int16 status;
-      uns32 not_needed;
-      while(pl_exp_check_status(hPVCAM_, &status, &not_needed) && 
-         (status != READOUT_COMPLETE && status != READOUT_FAILED) );
-
-      // Check Error Codes
-      if(status == READOUT_FAILED)
-         // return pl_error_code();
-         return 0;
-
-      if (!pl_exp_finish_seq(hPVCAM_, pixBuffer, 0))
-         // return pl_error_code();
-         return 0;
-   }
-   return (unsigned char*) pixBuffer;
+   //ToDo:multithreading support
+   const unsigned char* pixBuffer = img_.GetPixels();
+   return pixBuffer;
 }
 
 double Universal::GetExposure() const
@@ -1225,65 +1219,6 @@ bool Universal::GetEnumParam_PvCam(uns32 pvcam_cmd, uns32 index, std::string& en
    return true;
 }
 
- 
-/*
-int Universal::ResizeImageBufferSingle()
-{
-   bufferOK_ = false;
-
-   unsigned short xdim, ydim;
-	if (FALSE == pl_ccd_get_par_size(hPVCAM_, &ydim))
-      return pl_error_code();
-	if (FALSE == pl_ccd_get_ser_size(hPVCAM_, &xdim))
-      return pl_error_code();
-
-   if (roi_.isEmpty())
-   {
-      // set to full frame
-      roi_.xSize = xdim;
-      roi_.ySize = ydim;
-   }
-
-   // NOTE: roi dimensions are expressed in no-binning mode
-
-   // format the image buffer
-   // >>> assuming 16-bit pixels!!!
-   //unsigned short newXSize = (unsigned short) ((double)roi_.xSize/binSize_ + 0.5);
-   //unsigned short newYSize = (unsigned short) ((double)roi_.ySize/binSize_ + 0.5);
-   unsigned short newXSize = (unsigned short) (roi_.xSize/binSize_);
-   unsigned short newYSize = (unsigned short) (roi_.ySize/binSize_);
-
-   // make an attempt to adjust the image dimensions
-   while ((newXSize * newYSize * 2) % 4 != 0 && newXSize > 4 && newYSize > 4)
-   {
-      roi_.xSize--;
-      newXSize = (unsigned short) (roi_.xSize/binSize_);
-      if ((newXSize * newYSize * 2) % 4 != 0)
-      {
-         roi_.ySize--;
-         newYSize = (unsigned short) (roi_.ySize/binSize_);
-      }
-   }
-
-   img_.Resize(newXSize, newYSize, 2);
-
-   rgn_type region = { roi_.x, roi_.x + roi_.xSize-1, (uns16) binSize_, roi_.y, roi_.y + roi_.ySize-1, (uns16) binSize_};
-   uns32 size;
-
-   if (!pl_exp_setup_seq(hPVCAM_, 1, 1, &region, TIMED_MODE, (uns32)exposure_, &size ))
-      return pl_error_code();
-
-   if (img_.Height() * img_.Width() * img_.Depth() != size)
-   {
-      return DEVICE_INTERNAL_INCONSISTENCY; // buffer sizes don't match ???
-   }
-
-   bufferOK_ = true;
-
-   return DEVICE_OK;
-}
-*/
-
 int Universal::ResizeImageBufferContinuous()
 {
 
@@ -1433,8 +1368,8 @@ int Universal::StopSequenceAcquisition()
    //call function of the base class, which does a useful work
    ret = this->CCameraBase<Universal>::StopSequenceAcquisition();
 
-   pl_exp_finish_seq(hPVCAM_, circBuffer_, 0);
    pl_exp_stop_cont(hPVCAM_, CCS_HALT);
+   pl_exp_finish_seq(hPVCAM_, circBuffer_, 0);
 
    return ret;
 }
