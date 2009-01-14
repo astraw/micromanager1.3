@@ -113,7 +113,8 @@ Universal::Universal(short cameraId) :
    nrPorts_ (1),
    circBuffer_(0),
    init_seqStarted_(false),
-   stopOnOverflow_(true)
+   stopOnOverflow_(true),
+   noSupportForStreaming_(true)
 {
    // ACE::init();
    InitializeDefaultErrorMessages();
@@ -169,7 +170,7 @@ int Universal::OnBinning(MM::PropertyBase* pProp, MM::ActionType eAct)
       pProp->Get(bin);
       binSize_ = bin;
       ClearROI(); // reset region of interest
-      int nRet = ResizeImageBufferSingle();
+      int nRet = ResizeImageBufferContinuous();
       if (nRet != DEVICE_OK)
          return nRet;
    }
@@ -207,21 +208,40 @@ int Universal::OnExposure(MM::PropertyBase* pProp, MM::ActionType eAct)
    }
    else if (eAct == MM::AfterSet)
    {
-      if (IsCapturing())
-         return ERR_BUSY_ACQUIRING;
+      CaptureRestartHelper restart(this);
+      if(restart)
+      {
+         pl_exp_finish_seq(hPVCAM_, circBuffer_, 0);
+         pl_exp_stop_cont(hPVCAM_, CCS_HALT);
+         if (!pl_exp_start_cont(hPVCAM_, circBuffer_, bufferSize_))
+         {
+            return pl_error_code();
+         }
+      }
 
       double exp;
       pProp->Get(exp);
       exposure_ = exp;
-      int ret = ResizeImageBufferSingle();
+      int ret = ResizeImageBufferContinuous();
       if (ret != DEVICE_OK)
          return ret;
+
+      if(restart)
+      {
+         if (!pl_exp_start_cont(hPVCAM_, circBuffer_, bufferSize_))
+         {
+            return pl_error_code();
+         }
+      }
    }
    return DEVICE_OK;
 }
 
 int Universal::OnPixelType(MM::PropertyBase* pProp, MM::ActionType /*eAct*/)
 {  
+   if (IsCapturing())
+      return ERR_BUSY_ACQUIRING;
+
    int16 bitDepth;
    pl_get_param( hPVCAM_, PARAM_BIT_DEPTH, ATTR_CURRENT, &bitDepth);
    switch (bitDepth) {
@@ -722,9 +742,14 @@ int Universal::Initialize()
    if (!pl_exp_init_seq())
        return pl_error_code();
 
+   // check for circular buffer support
+   rs_bool availFlag;
+   noSupportForStreaming_ = 
+      (!pl_get_param(hPVCAM_, PARAM_CIRC_BUFFER, ATTR_AVAIL, &availFlag) || !availFlag);
+
    // setup the buffer
    // ----------------
-   nRet = ResizeImageBufferSingle();
+   nRet = ResizeImageBufferContinuous();
  
    if (nRet != DEVICE_OK)
       return nRet;
@@ -767,21 +792,23 @@ bool Universal::Busy()
 
 int Universal::SnapImage()
 {
+
    if(IsCapturing()) 
       //ToDo: implement taking snapshot with different exposure and binning
       //for now the snapped immage is be the currently captured one
       return DEVICE_OK;
 
-
    int16 status;
    uns32 not_needed;
    rs_bool ret;
 
+   //ToDo: use semaphore
    if (!bufferOK_)
       return ERR_INVALID_BUFFER;
 
    void* pixBuffer = const_cast<unsigned char*> (img_.GetPixels());
-   pl_exp_start_seq(hPVCAM_, pixBuffer);
+   if (!pl_exp_start_seq(hPVCAM_, pixBuffer))
+      return pl_error_code();   
 
    // For MicroMax cameras, wait untill exposure is finished, for others, use the pvcam check status function
    // Check for MicroMax camera in the chipname, this might not be the best method
@@ -872,7 +899,7 @@ int Universal::SetROI(unsigned x, unsigned y, unsigned xSize, unsigned ySize)
    roi_.xSize = (uns16) (xSize * binSize_);
    roi_.ySize = (uns16) (ySize * binSize_);
 
-   return ResizeImageBufferSingle();
+   return ResizeImageBufferContinuous();
 }
 
 int Universal::GetROI(unsigned& x, unsigned& y, unsigned& xSize, unsigned& ySize)
@@ -897,7 +924,7 @@ int Universal::ClearROI()
    roi_.xSize = 0;
    roi_.ySize = 0;
 
-   return ResizeImageBufferSingle();
+   return ResizeImageBufferContinuous();
 }
 
 bool Universal::GetErrorText(int errorCode, char* text) const
@@ -1199,7 +1226,7 @@ bool Universal::GetEnumParam_PvCam(uns32 pvcam_cmd, uns32 index, std::string& en
 }
 
  
-
+/*
 int Universal::ResizeImageBufferSingle()
 {
    bufferOK_ = false;
@@ -1255,13 +1282,13 @@ int Universal::ResizeImageBufferSingle()
 
    return DEVICE_OK;
 }
+*/
 
 int Universal::ResizeImageBufferContinuous()
 {
-   // check for circular buffer support
-   rs_bool availFlag;
-   if (!pl_get_param(hPVCAM_, PARAM_CIRC_BUFFER, ATTR_AVAIL, &availFlag) || !availFlag)
-      return ERR_STREAM_MODE_NOT_SUPPORTED;
+
+   //ToDo: use semaphore
+   bufferOK_ = false;
 
    unsigned short xdim, ydim;
 	if (FALSE == pl_ccd_get_par_size(hPVCAM_, &ydim))
@@ -1314,6 +1341,8 @@ int Universal::ResizeImageBufferContinuous()
    delete[] circBuffer_;
    circBuffer_ = new unsigned short[bufferSize_];
 
+   //ToDo: use semaphore
+   bufferOK_ = true;
    return DEVICE_OK;
 }
 
@@ -1372,13 +1401,13 @@ int Universal::StartSequenceAcquisition(long numImages, double interval_ms, bool
    ret = GetCoreCallback()->PrepareForAcq(this);
    if (ret != DEVICE_OK)
    {
-      ResizeImageBufferSingle();
+      ResizeImageBufferContinuous();
       return ret;
    }
 
    if (!pl_exp_start_cont(hPVCAM_, circBuffer_, bufferSize_))
    {
-      ResizeImageBufferSingle();
+      ResizeImageBufferContinuous();
       return pl_error_code();
    }
 
@@ -1402,7 +1431,6 @@ int Universal::StopSequenceAcquisition()
 {
    int ret = DEVICE_ERR;
    //call function of the base class, which does a useful work
-   //ret = static_cast<CCameraBase*> (this)->StopSequenceAcquisition();
    ret = this->CCameraBase<Universal>::StopSequenceAcquisition();
 
    pl_exp_finish_seq(hPVCAM_, circBuffer_, 0);
@@ -1424,8 +1452,11 @@ int Universal::PushImage()
    int ret=DEVICE_ERR;
    // get the image from the circular buffer
    void_ptr imgPtr;
-//!!!   if (!pl_exp_get_oldest_frame(hPVCAM_, &imgPtr))
-   if (!pl_exp_get_latest_frame(hPVCAM_, &imgPtr))
+   bool oldest_frames_get_mode=false;/*=!noSupportForStreaming_*/
+   rs_bool result = oldest_frames_get_mode
+      ?pl_exp_get_oldest_frame(hPVCAM_, &imgPtr)
+      :pl_exp_get_latest_frame(hPVCAM_, &imgPtr);
+   if (!result)
    {
       int16 errorCode = pl_error_code();
       char msg[ERROR_MSG_LEN];
@@ -1435,7 +1466,8 @@ int Universal::PushImage()
       LogMessage(os.str().c_str());
       return ret;
    }
-///!!!   pl_exp_unlock_oldest_frame(hPVCAM_);
+   if(oldest_frames_get_mode)
+      pl_exp_unlock_oldest_frame(hPVCAM_);
 
    void* pixBuffer = const_cast<unsigned char*> (img_.GetPixels());
    memcpy(pixBuffer, imgPtr, GetImageBufferSize());

@@ -273,6 +273,7 @@ private:
    bool init_seqStarted_;
    bool stopOnOverflow_;
    MMThreadLock imgLock_;
+   bool noSupportForStreaming_;
 };
 
 #endif //_PVCAM_H_
