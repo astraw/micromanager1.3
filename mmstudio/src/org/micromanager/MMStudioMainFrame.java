@@ -81,6 +81,7 @@ import mmcorej.CMMCore;
 import mmcorej.DeviceType;
 import mmcorej.MMCoreJ;
 import mmcorej.MMEventCallback;
+import mmcorej.Metadata;
 import mmcorej.StrVector;
 
 import org.micromanager.acquisition.AcquisitionManager;
@@ -2283,12 +2284,17 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 				createImageWindow();
 			}
 			
-			if (channels > 1) {
+			if(!isCurrentImageFormatSupported())
+				return false;
+			
+/*//!!!		if (channels > 1) {
 				if (channels != 4 && bpp != 1) {
 					handleError("Unsupported image format.");
 					return false;
 				}
 			}
+*/
+			
 			core_.snapImage();
 			Object img;
 			if (channels == 1)
@@ -2326,22 +2332,43 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 		return true;
 	}
 
+	private boolean isCurrentImageFormatSupported()
+	{
+		boolean ret=false;
+		long channels = core_.getNumberOfChannels();
+		long bpp = core_.getBytesPerPixel();
+
+		if (channels > 1 && channels != 4 && bpp != 1) {
+			handleError("Unsupported image format.");
+		}
+		else
+			ret = true;
+		return ret;
+	}
 	private void doSnap() {
+		if(!isCurrentImageFormatSupported())
+			return;
+
+
 		MMSnapshotWindow win = null;
 		try {
-			long channels = core_.getNumberOfChannels();
-			long bpp = core_.getBytesPerPixel();
 
-			if (channels > 1 && channels != 4 && bpp != 1) {
-				handleError("Unsupported image format.");
-				return;
-			}
-			core_.snapImage();
+			
 			Object img;
-			if (channels == 1)
-				img = core_.getImage();
-			else {
-				img = core_.getRGB32Image();
+			Metadata md =new Metadata();
+			if(core_.isSequenceRunning())
+			{
+				img=core_.getLastImage();
+				core_.getLastImageMD(0,0,md);
+			}else
+			{
+				core_.snapImage();
+				//ToDo: get metadata of the snapped image
+				long channels = core_.getNumberOfChannels();
+				if (channels == 1)
+					img = core_.getImage();
+				else
+					img = core_.getRGB32Image();
 			}
 
 			win = new MMSnapshotWindow(core_, contrastPanel_);

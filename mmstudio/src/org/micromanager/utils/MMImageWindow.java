@@ -228,9 +228,9 @@ public class MMImageWindow extends ImageWindow {
  				if(contrastPanel_ != null)
  					contrastPanel_.setImagePlus(null);
 				// remember old color model
-				if (getImagePlus().getProcessor().isPseudoColorLut())
-					currentColorModel_ = getImagePlus().getProcessor()
-							.getColorModel();
+//!!!				if (getImagePlus().getProcessor().isPseudoColorLut())
+//					currentColorModel_ = getImagePlus().getProcessor()
+//							.getColorModel();
 				WindowManager.removeWindow(getImagePlus().getWindow());
 			}
 		});
