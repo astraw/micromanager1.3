@@ -182,7 +182,7 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 	private boolean runsAsPlugin_;
 
 	private JToggleButton toggleButtonShutter_;
-	private JComboBox comboPixelType_;
+	//private JComboBox comboPixelType_;
 
 	// display settings
 //!!!	private ContrastSettings contrastSettings8_;
@@ -515,9 +515,9 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 		springLayout_.putConstraint(SpringLayout.WEST, toggleButtonShutter_,
 				203, SpringLayout.WEST, getContentPane());
 		springLayout_.putConstraint(SpringLayout.SOUTH, toggleButtonShutter_,
-				138, SpringLayout.NORTH, getContentPane());
+				138 - 21, SpringLayout.NORTH, getContentPane());
 		springLayout_.putConstraint(SpringLayout.NORTH, toggleButtonShutter_,
-				117, SpringLayout.NORTH, getContentPane());
+				117 - 21, SpringLayout.NORTH, getContentPane());
 
 		// Active shutter label
 		final JLabel activeShutterLabel = new JLabel();
@@ -525,12 +525,12 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 		activeShutterLabel.setText("Shutter");
 		getContentPane().add(activeShutterLabel);
 		springLayout_.putConstraint(SpringLayout.SOUTH, activeShutterLabel,
-				108, SpringLayout.NORTH, getContentPane());
-		springLayout_.putConstraint(SpringLayout.NORTH, activeShutterLabel, 95,
+				108 - 22, SpringLayout.NORTH, getContentPane());
+		springLayout_.putConstraint(SpringLayout.NORTH, activeShutterLabel, 95 - 22,
 				SpringLayout.NORTH, getContentPane());
-		springLayout_.putConstraint(SpringLayout.EAST, activeShutterLabel, 160,
+		springLayout_.putConstraint(SpringLayout.EAST, activeShutterLabel, 160 - 2,
 				SpringLayout.WEST, getContentPane());
-		springLayout_.putConstraint(SpringLayout.WEST, activeShutterLabel, 113,
+		springLayout_.putConstraint(SpringLayout.WEST, activeShutterLabel, 113 - 2,
 				SpringLayout.WEST, getContentPane());
 
 		// Active shutter Combo Box
@@ -548,9 +548,9 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 			}
 		});
 		getContentPane().add(shutterComboBox_);
-		springLayout_.putConstraint(SpringLayout.SOUTH, shutterComboBox_, 114,
+		springLayout_.putConstraint(SpringLayout.SOUTH, shutterComboBox_, 114-22,
 				SpringLayout.NORTH, getContentPane());
-		springLayout_.putConstraint(SpringLayout.NORTH, shutterComboBox_, 92,
+		springLayout_.putConstraint(SpringLayout.NORTH, shutterComboBox_, 92-22,
 				SpringLayout.NORTH, getContentPane());
 		springLayout_.putConstraint(SpringLayout.EAST, shutterComboBox_, 275,
 				SpringLayout.WEST, getContentPane());
@@ -960,13 +960,13 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 		binningLabel.setFont(new Font("Arial", Font.PLAIN, 10));
 		binningLabel.setText("Binning");
 		getContentPane().add(binningLabel);
-		springLayout_.putConstraint(SpringLayout.SOUTH, binningLabel, 88,
+		springLayout_.putConstraint(SpringLayout.SOUTH, binningLabel, 64,
 				SpringLayout.NORTH, getContentPane());
-		springLayout_.putConstraint(SpringLayout.NORTH, binningLabel, 69,
+		springLayout_.putConstraint(SpringLayout.NORTH, binningLabel, 43,
 				SpringLayout.NORTH, getContentPane());
-		springLayout_.putConstraint(SpringLayout.EAST, binningLabel, 200,
+		springLayout_.putConstraint(SpringLayout.EAST, binningLabel, 200 - 1,
 				SpringLayout.WEST, getContentPane());
-		springLayout_.putConstraint(SpringLayout.WEST, binningLabel, 112,
+		springLayout_.putConstraint(SpringLayout.WEST, binningLabel, 112 - 1,
 				SpringLayout.WEST, getContentPane());
 
 		labelImageDimensions_ = new JLabel();
@@ -981,6 +981,7 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 		springLayout_.putConstraint(SpringLayout.WEST, labelImageDimensions_,
 				5, SpringLayout.WEST, getContentPane());
 
+		/*
 		final JLabel pixelTypeLabel = new JLabel();
 		pixelTypeLabel.setFont(new Font("Arial", Font.PLAIN, 10));
 		pixelTypeLabel.setText("Pixel type");
@@ -993,7 +994,8 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 				SpringLayout.WEST, getContentPane());
 		springLayout_.putConstraint(SpringLayout.WEST, pixelTypeLabel, 111,
 				SpringLayout.WEST, getContentPane());
-
+		
+		
 		comboPixelType_ = new JComboBox();
 		comboPixelType_.setFont(new Font("Arial", Font.PLAIN, 10));
 		comboPixelType_.addActionListener(new ActionListener() {
@@ -1010,7 +1012,8 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 				SpringLayout.WEST, getContentPane());
 		springLayout_.putConstraint(SpringLayout.WEST, comboPixelType_, 200,
 				SpringLayout.WEST, getContentPane());
-
+		*/
+		
 		comboBinning_ = new JComboBox();
 		comboBinning_.setFont(new Font("Arial", Font.PLAIN, 10));
 		comboBinning_.setMaximumRowCount(4);
@@ -1024,9 +1027,9 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 				SpringLayout.WEST, getContentPane());
 		springLayout_.putConstraint(SpringLayout.WEST, comboBinning_, 200,
 				SpringLayout.WEST, getContentPane());
-		springLayout_.putConstraint(SpringLayout.SOUTH, comboBinning_, 91,
+		springLayout_.putConstraint(SpringLayout.SOUTH, comboBinning_, 66,
 				SpringLayout.NORTH, getContentPane());
-		springLayout_.putConstraint(SpringLayout.NORTH, comboBinning_, 68,
+		springLayout_.putConstraint(SpringLayout.NORTH, comboBinning_, 43,
 				SpringLayout.NORTH, getContentPane());
 
 		configPad_ = new ConfigGroupPad();
@@ -1108,13 +1111,13 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 		autoShutterCheckBox_.setText("Auto shutter");
 		getContentPane().add(autoShutterCheckBox_);
 		springLayout_.putConstraint(SpringLayout.EAST, autoShutterCheckBox_,
-				202, SpringLayout.WEST, getContentPane());
+				202 - 3, SpringLayout.WEST, getContentPane());
 		springLayout_.putConstraint(SpringLayout.WEST, autoShutterCheckBox_,
-				110, SpringLayout.WEST, getContentPane());
+				110 - 3, SpringLayout.WEST, getContentPane());
 		springLayout_.putConstraint(SpringLayout.SOUTH, autoShutterCheckBox_,
-				141, SpringLayout.NORTH, getContentPane());
+				141 - 22, SpringLayout.NORTH, getContentPane());
 		springLayout_.putConstraint(SpringLayout.NORTH, autoShutterCheckBox_,
-				118, SpringLayout.NORTH, getContentPane());
+				118 - 22, SpringLayout.NORTH, getContentPane());
 
 		final JButton refreshButton = new JButton();
 		refreshButton.setIcon(SwingResourceManager.getIcon(
@@ -2044,7 +2047,7 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 			toggleButtonShutter_.setText("Open");
 		}
 	}
-
+/*
 	private void changePixelType() {
 		try {
 			//
@@ -2069,7 +2072,8 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 		}
 		updateStaticInfo();
 	}
-
+*/
+	
 	// //////////////////////////////////////////////////////////////////////////
 	// public interface available for scripting access
 	// //////////////////////////////////////////////////////////////////////////
@@ -2363,13 +2367,13 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 			engine_.setZStageDevice(zStageLabel_);
 
 			if (cameraLabel_.length() > 0) {
-
+				ActionListener[] listeners;
 				// pixel type combo
-				if (comboPixelType_.getItemCount() > 0)
+				/*if (comboPixelType_.getItemCount() > 0)
 					comboPixelType_.removeAllItems();
 				StrVector pixTypes = core_.getAllowedPropertyValues(
 						cameraLabel_, MMCoreJ.getG_Keyword_PixelType());
-				ActionListener[] listeners = comboPixelType_
+				listeners = comboPixelType_
 						.getActionListeners();
 				for (int i = 0; i < listeners.length; i++)
 					comboPixelType_.removeActionListener(listeners[i]);
@@ -2378,7 +2382,8 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 				}
 				for (int i = 0; i < listeners.length; i++)
 					comboPixelType_.addActionListener(listeners[i]);
-
+				*/
+				
 				// binning combo
 				if (comboBinning_.getItemCount() > 0)
 					comboBinning_.removeAllItems();
@@ -2508,7 +2513,7 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 				GUIUtils.setComboSelection(comboBinning_, binSize);
 				String pixType = core_.getProperty(cameraLabel_, MMCoreJ
 						.getG_Keyword_PixelType());
-				GUIUtils.setComboSelection(comboPixelType_, pixType);
+				// GUIUtils.setComboSelection(comboPixelType_, pixType);
 				long bitDepth = core_.getImageBitDepth();
 				contrastPanel_.setPixelBitDepth((int) bitDepth, false);
 			}
@@ -2628,9 +2633,9 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 		// NOTE: automatically restoring these values on startup may cause
 		// problems
 		mainPrefs_.put(MAIN_EXPOSURE, textFieldExp_.getText());
-		if (comboPixelType_.getSelectedItem() != null)
-			mainPrefs_.put(MAIN_PIXEL_TYPE, comboPixelType_.getSelectedItem()
-					.toString());
+		//if (comboPixelType_.getSelectedItem() != null)
+		//	mainPrefs_.put(MAIN_PIXEL_TYPE, comboPixelType_.getSelectedItem()
+		//			.toString());
 		// NOTE: do not save auto shutter state
 		// mainPrefs_.putBoolean(MAIN_AUTO_SHUTTER,
 		// autoShutterCheckBox_.isSelected());
