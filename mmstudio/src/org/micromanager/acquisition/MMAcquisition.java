@@ -113,6 +113,7 @@ public class MMAcquisition {
          throw new MMScriptException(e);
       }
       
+      // new function createImage5D(...) will be called here instead of following line; override with Image5DSnap?
       Image5D img5d = new Image5D(name_, type, width_, height_, numChannels_, numSlices_, numFrames_, false);
       imgWin_ = createImage5DWindow(img5d);
 

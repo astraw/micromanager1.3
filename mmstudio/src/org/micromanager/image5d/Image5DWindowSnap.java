@@ -24,6 +24,7 @@ package org.micromanager.image5d;
 
 import ij.ImagePlus;
 
+import java.awt.Scrollbar;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
@@ -43,37 +44,68 @@ public class Image5DWindowSnap extends Image5DWindow {
 	public Image5DWindowSnap(Image5D imp, MMAcquisitionSnap acq) {
 		super(imp);
 		acq_ = acq;
-		addSnapButton();
+		addSnapAppendButton();
+		addSnapReplaceButton();
+		channelControl.scrollbarWL.setVisible(false);
 		System.out.println(imp);
 	}
 	
-	public void addSnapButton() {
+	
+	public void addSnapAppendButton() {
 		JButton snapButton = new JButton();
-		snapButton.setToolTipText("Snap new image in this window");
-		snapButton.setIcon(SwingResourceManager.getIcon(PlaybackPanel.class, "/org/micromanager/icons/camera.png"));
-		snapButton.setBounds(530,5,37,24);
+		snapButton.setToolTipText("Snap and append a new image to this sequence");
+		snapButton.setIcon(SwingResourceManager.getIcon(PlaybackPanel.class, "/org/micromanager/icons/snapAppend.png"));
+		snapButton.setBounds(44, 5, 37, 24);
+		this.pb_.add(snapButton);
+		snapButton.addActionListener(new ActionListener() {
+			public void actionPerformed(final ActionEvent e) {
+				doSnapAppend();
+			}
+		});
+	}
+	
+	
+	public void addSnapReplaceButton() {
+		JButton snapButton = new JButton();
+		snapButton.setToolTipText("Snap a new image and overwrite current image in this sequence");
+		snapButton.setIcon(SwingResourceManager.getIcon(PlaybackPanel.class, "/org/micromanager/icons/snapReplace.png"));
+		snapButton.setBounds(83, 5, 37, 24);
 		this.pb_.add(snapButton);
 		snapButton.addActionListener(new ActionListener() {
 			public void actionPerformed(final ActionEvent e) {
 				doSnapReplace();
-				//doSnapAppend();
 			}
 		});
 	}
+	
 	
 	private void doSnapReplace() {
 		acq_.doSnapReplace();
 	}
 	
-	private void addFrame() {
-		//newCount = i5d.getNFrames() + 1;
-		
-	}
 	
-/*	**Incomplete
- * private void doSnapAppend() {
-		acq_.increaseFrameCount();
+	private void doSnapAppend() {
+		acq_.doSnapAppend();
 	}
-	*/
+
+	// Override createPlaybackPanel to prevent drawing Pause and Abort buttons:
+	public PlaybackPanel createPlaybackPanel() {
+		return new PlaybackPanel(this, true);
+	}
+
+	// Override addHorizontalScrollbars to use "n" label instead of "t" and hide z scrollbar:
+	   protected void addHorizontalScrollbars(Image5D imp) {      
+		  int size;
+	       
+	      // Add slice selector
+	      ScrollbarWithLabel bar;   
+	      
+	      // Add frame selector
+	      size = imp.getNFrames();	
+	      bar = new ScrollbarWithLabel(Scrollbar.HORIZONTAL, 1, 1, 1, size+1, "n");
+	      Scrollbars[4] = bar.getScrollbar();		
+	      add(bar, Image5DLayout.FRAME_SELECTOR);
+	      if (ij!=null) bar.getScrollbar().addKeyListener(ij);
+	   }
 }
 

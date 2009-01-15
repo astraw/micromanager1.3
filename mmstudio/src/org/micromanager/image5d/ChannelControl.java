@@ -32,7 +32,7 @@ public class ChannelControl extends Panel implements ItemListener,
 	int displayMode;
 	
 	Panel selectorPanel;
-	ScrollbarWithLabel scrollbarWL;
+	public ScrollbarWithLabel scrollbarWL;
 	Scrollbar scrollbar;
 	ChannelSelectorOverlay channelSelectorOverlay;
 	

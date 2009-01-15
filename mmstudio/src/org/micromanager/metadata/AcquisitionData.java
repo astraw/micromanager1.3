@@ -285,9 +285,7 @@ public class AcquisitionData {
       metadata_ = new JSONObject();
       summary_ = new JSONObject();
       positionProperties_ = new JSONObject();
-      inmemory_ = false;
-      images_ = null;
-
+      
       frames_=0;
       slices_=0;
       channels_=0;
@@ -330,21 +328,34 @@ public class AcquisitionData {
          throw new MMAcqDataException(e);
       }
 
+      if (path != null) {
       // create directory
-      String actualName = name; 
-      if (autoName)
-         actualName = generateRootName(name, path);
+	      String actualName = name; 
+	      if (autoName)
+	         actualName = generateRootName(name, path);
+	
+          basePath_ = path + "/" + actualName;
+	      
+	      File outDir = new File(basePath_);
+	      if (!outDir.mkdirs())
+	         throw new MMAcqDataException("Unable to create directory: " + basePath_ + ". It already exists.");
+	      
+	      name_ = actualName;
 
-      basePath_ = path + "/" + actualName;
-      
-      File outDir = new File(basePath_);
-      if (!outDir.mkdirs())
-         throw new MMAcqDataException("Unable to create directory: " + basePath_ + ". It already exists.");
-      
-      name_ = actualName;
+    	  inmemory_ = false;
+          images_ = null;
 
-      // write initial metadata
-      writeMetadata();
+          // write initial metadata
+          writeMetadata();
+      } else {
+    	  inmemory_ = true;
+          images_ = new Hashtable<String, ImageProcessor>();
+          basePath_ = null;
+          name_ = "in-memory";
+
+      }
+      
+
    }
    /**
     * Creates a new in-memory acquisition data set.
@@ -354,57 +365,7 @@ public class AcquisitionData {
     */
    
    public void createNew() throws MMAcqDataException {
-
-      metadata_ = new JSONObject();
-      summary_ = new JSONObject();
-      positionProperties_ = new JSONObject();
-      inmemory_ = true;
-
-      frames_=0;
-      slices_=0;
-      channels_=0;
-
-      imgWidth_= 0;
-      imgHeight_= 0;
-      imgDepth_= 0;
-
-      pixelSize_um_ = 0.0;
-      pixelAspect_ = 1.0;
-      ijType_ = 0;
-
-      channelNames_ = new String[channels_];
-
-      // set initial summary data
-      try {
-         summary_.put(SummaryKeys.GUID, guidgen_.genNewGuid());
-         version_ = SummaryKeys.VERSION;
-         summary_.put(SummaryKeys.METADATA_VERSION, version_);
-         summary_.put(SummaryKeys.METADATA_SOURCE, SummaryKeys.SOURCE);
-
-         summary_.put(SummaryKeys.NUM_FRAMES, frames_);
-         summary_.put(SummaryKeys.NUM_CHANNELS, channels_);
-         summary_.put(SummaryKeys.NUM_SLICES, slices_);
-         summary_.put(SummaryKeys.IMAGE_WIDTH, imgWidth_);
-         summary_.put(SummaryKeys.IMAGE_HEIGHT, imgHeight_);
-         summary_.put(SummaryKeys.IMAGE_DEPTH, imgDepth_);
-         summary_.put(SummaryKeys.IJ_IMAGE_TYPE, ijType_);
-         summary_.put(SummaryKeys.IMAGE_PIXEL_SIZE_UM, pixelSize_um_);
-         summary_.put(SummaryKeys.IMAGE_PIXEL_ASPECT, pixelAspect_);
-         summary_.put(SummaryKeys.IMAGE_INTERVAL_MS, 0.0);
-         summary_.put(SummaryKeys.IMAGE_Z_STEP_UM, 0.0);
-
-         creationTime_ = new GregorianCalendar();
-         summary_.put(SummaryKeys.TIME, creationTime_.getTime());
-         summary_.put(SummaryKeys.COMMENT, "empty");
-
-         metadata_.put(SummaryKeys.SUMMARY_OBJ, summary_);
-      } catch (JSONException e) {
-         throw new MMAcqDataException(e);
-      }
-
-      basePath_ = null;
-      name_ = "in-memory";
-      images_ = new Hashtable<String, ImageProcessor>();
+	   createNew("in-memory",null,false);
    }
 
    /**

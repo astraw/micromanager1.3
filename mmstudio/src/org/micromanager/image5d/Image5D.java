@@ -63,7 +63,7 @@ public class Image5D extends ImagePlus {
    static final int nDefaultDimensions = 5;
 	protected int nDimensions = nDefaultDimensions;
     
-   private String[] dimensionLabels = {"x", "y", "ch", "z", "t"};
+	protected String[] dimensionLabels = {"x", "y", "ch", "z", "t"};
 	
 	protected boolean isInitialized;
 	
@@ -1014,7 +1014,7 @@ public class Image5D extends ImagePlus {
 	 * @param fill: if true, create black image for each position, 
 	 * 		if false, link a common dummy image to each position
 	 */	
-	synchronized protected void expandDimension(int dimension, int newSize, boolean fill) {
+	synchronized public void expandDimension(int dimension, int newSize, boolean fill) {
 		if (dimension<2 || dimension>nDimensions)
 			throw new IllegalArgumentException("Invalid dimension: "+dimension);
 		

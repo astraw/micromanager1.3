@@ -56,22 +56,26 @@ public class MMAcquisitionSnap extends MMAcquisition {
 	
 	public void doSnapReplace() {
 		try {
-			gui_.snapAndAddImage(name_ ,0,0,0);
+			Image5D i5d = imgWin_.getImage5D();
+			int n = i5d.getCurrentFrame();
+			gui_.snapAndAddImage(name_ ,n-1,0,0);
 		} catch (MMScriptException e) {
 			System.err.println(e);
 		}
-		//System.err.print("MMAcquisitionSnap.doSnap();");
+
 	}
 	
-/*  Incomplete
+
 	public void doSnapAppend() {
 		try {
-			ImageProcessor ip = gui_.snapSingleImageHidden().getProcessor();
-	//		imgWin_.getImage5D().;
-			numFrames_++;
-		} catch (Exception e) {
+			Image5D i5d = imgWin_.getImage5D();
+			int n = i5d.getDimensionSize(4);
+			i5d.expandDimension(4,n+1,false);
+			gui_.snapAndAddImage(name_ ,n,0,0);
+		} catch (MMScriptException e) {
 			System.err.println(e);
 		}
+
 	}
-	*/
+
 }

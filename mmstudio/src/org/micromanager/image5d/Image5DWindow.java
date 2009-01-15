@@ -64,7 +64,7 @@ public class Image5DWindow extends StackWindow {
    protected ChannelControl channelControl;
    protected Scrollbar[] Scrollbars;
    protected Image5D i5d;
-   
+
    // >>>>>>> Micro-Manager >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
    ChannelSpec channelsMM_[]; // Micro-Manager channel info
    private MetadataDlg metaDlg_;
@@ -132,27 +132,14 @@ public class Image5DWindow extends StackWindow {
       channelControl = new ChannelControl(this);
       add(channelControl, Image5DLayout.CHANNEL_SELECTOR);
       
-      int size;
-      ScrollbarWithLabel bar;
+
       
-      // Add slice selector
-      size = imp.getNSlices();	
-      bar = new ScrollbarWithLabel(Scrollbar.HORIZONTAL, 1, 1, 1, size+1, imp.getDimensionLabel(3));
-      Scrollbars[3] = bar.getScrollbar();		
-      add(bar, Image5DLayout.SLICE_SELECTOR);
-      if (ij!=null) bar.getScrollbar().addKeyListener(ij);
+      addHorizontalScrollbars(imp);
       
-      // Add frame selector
-      size = imp.getNFrames();	
-      bar = new ScrollbarWithLabel(Scrollbar.HORIZONTAL, 1, 1, 1, size+1, imp.getDimensionLabel(4));
-      Scrollbars[4] = bar.getScrollbar();		
-      add(bar, Image5DLayout.FRAME_SELECTOR);
-      if (ij!=null) bar.getScrollbar().addKeyListener(ij);
-      
-      
+
       // >>>>>>>>>>>>>>>>>>>>>>>>>>> Micro-Manager >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
       // add button panel
-      pb_ = new PlaybackPanel(this);
+      pb_ = createPlaybackPanel();
       prefs_ = Preferences.userNodeForPackage(this.getClass());
       playInterval_ = prefs_.getLong(PLAY_INTERVAL, 500);
       
@@ -221,12 +208,18 @@ public class Image5DWindow extends StackWindow {
             
       // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
       
+      int size = imp.getNFrames();
+      
       for(int i=3; i<nDimensions; ++i) {
-         Scrollbars[i].addAdjustmentListener(this);
-         int blockIncrement = size/10;
-         if (blockIncrement<1) blockIncrement = 1;
-         Scrollbars[i].setUnitIncrement(1);
-         Scrollbars[i].setBlockIncrement(blockIncrement); 
+    	 if (Scrollbars[i] != null) { 
+	         Scrollbars[i].addAdjustmentListener(this);
+	         Scrollbars[i].setUnitIncrement(1);
+	         if (i==3) {
+		         int blockIncrement = size/10;
+		         if (blockIncrement<1) blockIncrement = 1;
+		         Scrollbars[i].setBlockIncrement(blockIncrement); 
+	         }
+    	 }
       }			
       
       sliceSelector = Scrollbars[3];
@@ -573,11 +566,13 @@ public class Image5DWindow extends StackWindow {
          // update z- and time control
          int size, max;
          for(int i=3; i<nDimensions; ++i) {
-            size = dimensions[i];
-            max = Scrollbars[i].getMaximum();
-            if (max!=(size+1))
-               Scrollbars[i].setMaximum(size+1);
-            Scrollbars[i].setValue(((Image5D)imp).getCurrentPosition(i)+1);
+        	if (Scrollbars[i]!= null) {
+	            size = dimensions[i];
+	            max = Scrollbars[i].getMaximum();
+	            if (max!=(size+1))
+	               Scrollbars[i].setMaximum(size+1);
+	            Scrollbars[i].setValue(((Image5D)imp).getCurrentPosition(i)+1);
+        	}
 //            if (i == 4 && pb_ != null && acqEng_ != null) {
 //               pb_.setElapsedTime(((Image5D)imp).getCurrentPosition(i) * acqEng_.getFrameIntervalMs());
 //            }
@@ -698,4 +693,32 @@ public class Image5DWindow extends StackWindow {
       Color c = new Color(red, green, blue);
       return c;   
    }
+   
+   public PlaybackPanel createPlaybackPanel () {
+	   return new PlaybackPanel(this);
+   }
+   
+   
+   protected void addHorizontalScrollbars(Image5D imp) {
+	      
+	  int size;
+       
+      // Add slice selector
+      ScrollbarWithLabel bar;
+      size = imp.getNSlices();	
+      bar = new ScrollbarWithLabel(Scrollbar.HORIZONTAL, 1, 1, 1, size+1, imp.getDimensionLabel(3));
+      Scrollbars[3] = bar.getScrollbar();		
+      add(bar, Image5DLayout.SLICE_SELECTOR);
+      if (ij!=null) bar.getScrollbar().addKeyListener(ij);
+      
+      
+      // Add frame selector
+      size = imp.getNFrames();	
+      bar = new ScrollbarWithLabel(Scrollbar.HORIZONTAL, 1, 1, 1, size+1, imp.getDimensionLabel(4));
+      Scrollbars[4] = bar.getScrollbar();		
+      add(bar, Image5DLayout.FRAME_SELECTOR);
+      if (ij!=null) bar.getScrollbar().addKeyListener(ij);
+   }
+   
+   
 }

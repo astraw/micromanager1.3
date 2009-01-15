@@ -37,18 +37,11 @@ public class AcquisitionManager {
    }
    
    public MMAcquisition openAcquisitionSnap(String name, String rootDir, MMStudioMainFrame gui_, boolean show) throws MMScriptException {
-      while (acqs_.containsKey(name)) {
-         name = incrementAcquisitionSnapName(name);
-      }
-      System.err.println("New Name="+name);
       MMAcquisition acq = new MMAcquisitionSnap(name, rootDir, gui_, show);
       acqs_.put(name, acq);
       return acq;
    }
   
-   private String incrementAcquisitionSnapName(String name) {
-	   return name + "_";
-   }
   
    
    public void closeAcquisition(String name) throws MMScriptException {
