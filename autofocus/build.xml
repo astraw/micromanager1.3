@@ -5,7 +5,7 @@
 
 	<!-- Specify the system path to the ImageJ root directory -->
 	<property name="ImageJPath" value="C:/Program Files/ImageJ"/>
-	<property name="InstallRoot" value="C:/projects/micromanager1.3/Install/micro-manager-1.3"/>
+	<property name="InstallRoot" value="../Install/micro-manager"/>
 
 	<!-- Do not modify from this point on -->
 	<property name="MMPluginDir" value="${ImageJPath}/plugins/Micro-Manager"/>
@@ -13,7 +13,7 @@
 	<property name="beanshell" value="../classext/bsh-2.0b4.jar"/>
 	<property name="MMCoreJ" value="../bin/MMCoreJ.jar"/>
 	<property name="MMPluginDir-inst" value="${InstallRoot}/plugins/Micro-Manager"/>
-	<property name="Runtime" value="../../micromanager1.3/bin"/>
+	<property name="Runtime" value="../bin"/>
 
 	<path id="project.MMPlugins.path">
 		<pathelement location="${MMPluginDir}"/>

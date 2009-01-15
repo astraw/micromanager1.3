@@ -8,13 +8,13 @@
 
 	<!-- Specify the system path to the ImageJ root directory -->
 	<property name="ImageJPath" value="C:/Program Files/ImageJ"/>
-	<property name="InstallRoot" value="C:/projects/micromanager1.3/Install/micro-manager-1.3"/>
-	<property name="InstallScripts" value="C:/projects/micromanager1.3/Install"/>
-	<property name="NativeRoot" value="C:/projects\micromanager1.3\MMCoreJ_wrap"/>
-        <property name="ScriptsRoot" value="C:/projects/micromanager1.3/scripts"/>
-        <property name="ScriptsInstall" value="C:/projects/micromanager1.3/Install/micro-manager-1.3/scripts"/>
-        <property name="DriversRoot" value="C:/projects/micromanager1.3/drivers"/>
-        <property name="DriversInstall" value="C:/projects/micromanager1.3/Install/micro-manager-1.3/drivers"/>
+	<property name="InstallRoot" value="../Install/micro-manager"/>
+	<property name="InstallScripts" value="../Install"/>
+	<property name="NativeRoot" value="../MMCoreJ_wrap"/>
+        <property name="ScriptsRoot" value="../scripts"/>
+        <property name="ScriptsInstall" value="../Install/micro-manager/scripts"/>
+        <property name="DriversRoot" value="../drivers"/>
+        <property name="DriversInstall" value="../Install/micro-manager/drivers"/>
 
 	<!-- Do not modify from this point on -->
 	<property name="MMPluginDir" value="${ImageJPath}/plugins/Micro-Manager"/>

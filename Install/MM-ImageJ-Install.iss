@@ -29,88 +29,88 @@ Name: desktopicon; Description: {cm:CreateDesktopIcon}; GroupDescription: {cm:Ad
 
 [Files]
 ; device libraries
-Source: micro-manager-1.3\mmgr_dal_Arduino.dll; DestDir: {app}; Flags: ignoreversion
-Source: micro-manager-1.3\mmgr_dal_DemoCamera.dll; DestDir: {app}; Flags: ignoreversion
-Source: micro-manager-1.3\mmgr_dal_DemoStreamingCamera.dll; DestDir: {app}; Flags: ignoreversion
-Source: micro-manager-1.3\mmgr_dal_Hamamatsu.dll; DestDir: {app}; Flags: ignoreversion
-Source: micro-manager-1.3\inpout32.dll; DestDir: {app}; Flags: ignoreversion
-Source: micro-manager-1.3\libusb0.dll; DestDir: {app}; Flags: ignoreversion
-Source: micro-manager-1.3\mmgr_dal_Ludl.dll; DestDir: {app}; Flags: ignoreversion
-Source: micro-manager-1.3\MMCoreJ_wrap.dll; DestDir: {app}; Flags: ignoreversion
-Source: micro-manager-1.3\mmgr_dal_ParallelPort.dll; DestDir: {app}; Flags: ignoreversion
-Source: micro-manager-1.3\mmgr_dal_PVCAM.dll; DestDir: {app}; Flags: ignoreversion
-Source: micro-manager-1.3\mmgr_dal_SerialManager.dll; DestDir: {app}; Flags: ignoreversion
-Source: micro-manager-1.3\mmgr_dal_SutterLambda.dll; DestDir: {app}; Flags: ignoreversion
-Source: micro-manager-1.3\mmgr_dal_ZeissCAN.dll; DestDir: {app}; Flags: ignoreversion
-Source: micro-manager-1.3\mmgr_dal_ZeissCAN29.dll; DestDir: {app}; Flags: ignoreversion
-Source: micro-manager-1.3\mmgr_dal_AOTF.dll; DestDir: {app}; Flags: ignoreversion
-Source: micro-manager-1.3\mmgr_dal_Sensicam.dll; DestDir: {app}; Flags: ignoreversion
-Source: micro-manager-1.3\mmgr_dal_Vincent.dll; DestDir: {app}; Flags: ignoreversion
-Source: micro-manager-1.3\mmgr_dal_NikonTE2000.dll; DestDir: {app}; Flags: ignoreversion
-Source: micro-manager-1.3\mmgr_dal_Prior.dll; DestDir: {app}; Flags: ignoreversion
-Source: micro-manager-1.3\mmgr_dal_Andor.dll; DestDir: {app}; Flags: ignoreversion
-Source: micro-manager-1.3\ATMCD32D.dll; DestDir: {app}; Flags: ignoreversion
-Source: micro-manager-1.3\mmgr_dal_DTOpenLayer.dll; DestDir: {app}; Flags: ignoreversion
-Source: micro-manager-1.3\mmgr_dal_Nikon.dll; DestDir: {app}; Flags: ignoreversion
-Source: micro-manager-1.3\mmgr_dal_NikonTI.dll; DestDir: {app}; Flags: ignoreversion
-Source: micro-manager-1.3\mmgr_dal_NikonAZ100.dll; DestDir: {app}; Flags: ignoreversion
-Source: micro-manager-1.3\mmgr_dal_ASIFW1000.dll; DestDir: {app}; Flags: ignoreversion
-Source: micro-manager-1.3\mmgr_dal_ASIStage.dll; DestDir: {app}; Flags: ignoreversion
-Source: micro-manager-1.3\mmgr_dal_Yokogawa.dll; DestDir: {app}; Flags: ignoreversion
-Source: micro-manager-1.3\mmgr_dal_CSUX.dll; DestDir: {app}; Flags: ignoreversion
-Source: micro-manager-1.3\mmgr_dal_QCam.dll; DestDir: {app}; Flags: ignoreversion
-Source: micro-manager-1.3\mmgr_dal_USBManager.dll; DestDir: {app}; Flags: ignoreversion
-Source: micro-manager-1.3\mmgr_dal_K8055.dll; DestDir: {app}; Flags: ignoreversion
-Source: micro-manager-1.3\mmgr_dal_K8061.dll; DestDir: {app}; Flags: ignoreversion
-Source: micro-manager-1.3\mmgr_dal_Conix.dll; DestDir: {app}; Flags: ignoreversion
-Source: micro-manager-1.3\mmgr_dal_SpectralLMM5.dll; DestDir: {app}; Flags: ignoreversion
-Source: micro-manager-1.3\mmgr_dal_PI_GCS.dll; DestDir: {app}; Flags: ignoreversion
-Source: micro-manager-1.3\mmgr_dal_PI.dll; DestDir: {app}; Flags: ignoreversion
-Source: micro-manager-1.3\mmgr_dal_Pecon.dll; DestDir: {app}; Flags: ignoreversion
-Source: micro-manager-1.3\mmgr_dal_Utilities.dll; DestDir: {app}; Flags: ignoreversion
-Source: micro-manager-1.3\ace.dll; DestDir: {app}; Flags: ignoreversion
+Source: micro-manager\mmgr_dal_Arduino.dll; DestDir: {app}; Flags: ignoreversion
+Source: micro-manager\mmgr_dal_DemoCamera.dll; DestDir: {app}; Flags: ignoreversion
+Source: micro-manager\mmgr_dal_DemoStreamingCamera.dll; DestDir: {app}; Flags: ignoreversion
+Source: micro-manager\mmgr_dal_Hamamatsu.dll; DestDir: {app}; Flags: ignoreversion
+Source: micro-manager\inpout32.dll; DestDir: {app}; Flags: ignoreversion
+Source: micro-manager\libusb0.dll; DestDir: {app}; Flags: ignoreversion
+Source: micro-manager\mmgr_dal_Ludl.dll; DestDir: {app}; Flags: ignoreversion
+Source: micro-manager\MMCoreJ_wrap.dll; DestDir: {app}; Flags: ignoreversion
+Source: micro-manager\mmgr_dal_ParallelPort.dll; DestDir: {app}; Flags: ignoreversion
+Source: micro-manager\mmgr_dal_PVCAM.dll; DestDir: {app}; Flags: ignoreversion
+Source: micro-manager\mmgr_dal_SerialManager.dll; DestDir: {app}; Flags: ignoreversion
+Source: micro-manager\mmgr_dal_SutterLambda.dll; DestDir: {app}; Flags: ignoreversion
+Source: micro-manager\mmgr_dal_ZeissCAN.dll; DestDir: {app}; Flags: ignoreversion
+Source: micro-manager\mmgr_dal_ZeissCAN29.dll; DestDir: {app}; Flags: ignoreversion
+Source: micro-manager\mmgr_dal_AOTF.dll; DestDir: {app}; Flags: ignoreversion
+Source: micro-manager\mmgr_dal_Sensicam.dll; DestDir: {app}; Flags: ignoreversion
+Source: micro-manager\mmgr_dal_Vincent.dll; DestDir: {app}; Flags: ignoreversion
+Source: micro-manager\mmgr_dal_NikonTE2000.dll; DestDir: {app}; Flags: ignoreversion
+Source: micro-manager\mmgr_dal_Prior.dll; DestDir: {app}; Flags: ignoreversion
+Source: micro-manager\mmgr_dal_Andor.dll; DestDir: {app}; Flags: ignoreversion
+Source: micro-manager\ATMCD32D.dll; DestDir: {app}; Flags: ignoreversion
+Source: micro-manager\mmgr_dal_DTOpenLayer.dll; DestDir: {app}; Flags: ignoreversion
+Source: micro-manager\mmgr_dal_Nikon.dll; DestDir: {app}; Flags: ignoreversion
+Source: micro-manager\mmgr_dal_NikonTI.dll; DestDir: {app}; Flags: ignoreversion
+Source: micro-manager\mmgr_dal_NikonAZ100.dll; DestDir: {app}; Flags: ignoreversion
+Source: micro-manager\mmgr_dal_ASIFW1000.dll; DestDir: {app}; Flags: ignoreversion
+Source: micro-manager\mmgr_dal_ASIStage.dll; DestDir: {app}; Flags: ignoreversion
+Source: micro-manager\mmgr_dal_Yokogawa.dll; DestDir: {app}; Flags: ignoreversion
+Source: micro-manager\mmgr_dal_CSUX.dll; DestDir: {app}; Flags: ignoreversion
+Source: micro-manager\mmgr_dal_QCam.dll; DestDir: {app}; Flags: ignoreversion
+Source: micro-manager\mmgr_dal_USBManager.dll; DestDir: {app}; Flags: ignoreversion
+Source: micro-manager\mmgr_dal_K8055.dll; DestDir: {app}; Flags: ignoreversion
+Source: micro-manager\mmgr_dal_K8061.dll; DestDir: {app}; Flags: ignoreversion
+Source: micro-manager\mmgr_dal_Conix.dll; DestDir: {app}; Flags: ignoreversion
+Source: micro-manager\mmgr_dal_SpectralLMM5.dll; DestDir: {app}; Flags: ignoreversion
+Source: micro-manager\mmgr_dal_PI_GCS.dll; DestDir: {app}; Flags: ignoreversion
+Source: micro-manager\mmgr_dal_PI.dll; DestDir: {app}; Flags: ignoreversion
+Source: micro-manager\mmgr_dal_Pecon.dll; DestDir: {app}; Flags: ignoreversion
+Source: micro-manager\mmgr_dal_Utilities.dll; DestDir: {app}; Flags: ignoreversion
+Source: micro-manager\ace.dll; DestDir: {app}; Flags: ignoreversion
 
 ; drivers
-Source: micro-manager-1.3\drivers\K8055_libusb.inf; DestDir: {app}\drivers; Flags: ignoreversion
-Source: micro-manager-1.3\drivers\K8055_libusb.cat; DestDir: {app}\drivers; Flags: ignoreversion
-Source: micro-manager-1.3\drivers\K8061_libusb.cat; DestDir: {app}\drivers; Flags: ignoreversion
-Source: micro-manager-1.3\drivers\K8061_libusb.inf; DestDir: {app}\drivers; Flags: ignoreversion
-Source: micro-manager-1.3\drivers\libusb0.dll; DestDir: {app}\drivers; Flags: ignoreversion
-Source: micro-manager-1.3\drivers\libusb0.sys; DestDir: {app}\drivers; Flags: ignoreversion
+Source: micro-manager\drivers\K8055_libusb.inf; DestDir: {app}\drivers; Flags: ignoreversion
+Source: micro-manager\drivers\K8055_libusb.cat; DestDir: {app}\drivers; Flags: ignoreversion
+Source: micro-manager\drivers\K8061_libusb.cat; DestDir: {app}\drivers; Flags: ignoreversion
+Source: micro-manager\drivers\K8061_libusb.inf; DestDir: {app}\drivers; Flags: ignoreversion
+Source: micro-manager\drivers\libusb0.dll; DestDir: {app}\drivers; Flags: ignoreversion
+Source: micro-manager\drivers\libusb0.sys; DestDir: {app}\drivers; Flags: ignoreversion
 
 ; beanshell scripts
-Source: micro-manager-1.3\scripts\sdemo1.bsh; DestDir: {app}\scripts; Flags: onlyifdoesntexist
-Source: micro-manager-1.3\scripts\sdemo2.bsh; DestDir: {app}\scripts; Flags: onlyifdoesntexist
-Source: micro-manager-1.3\scripts\setZoom.bsh; DestDir: {app}\scripts; Flags: onlyifdoesntexist
-Source: micro-manager-1.3\scripts\camera_test.bsh; DestDir: {app}\scripts; Flags: onlyifdoesntexist
-Source: micro-manager-1.3\scripts\image_snap_example.bsh; DestDir: {app}\scripts; Flags: onlyifdoesntexist
-Source: micro-manager-1.3\scripts\AutoExpose.bsh; DestDir: {app}\scripts; Flags: onlyifdoesntexist
-Source: micro-manager-1.3\scripts\ManualAcq.bsh; DestDir: {app}\scripts; Flags: onlyifdoesntexist
+Source: micro-manager\scripts\sdemo1.bsh; DestDir: {app}\scripts; Flags: onlyifdoesntexist
+Source: micro-manager\scripts\sdemo2.bsh; DestDir: {app}\scripts; Flags: onlyifdoesntexist
+Source: micro-manager\scripts\setZoom.bsh; DestDir: {app}\scripts; Flags: onlyifdoesntexist
+Source: micro-manager\scripts\camera_test.bsh; DestDir: {app}\scripts; Flags: onlyifdoesntexist
+Source: micro-manager\scripts\image_snap_example.bsh; DestDir: {app}\scripts; Flags: onlyifdoesntexist
+Source: micro-manager\scripts\AutoExpose.bsh; DestDir: {app}\scripts; Flags: onlyifdoesntexist
+Source: micro-manager\scripts\ManualAcq.bsh; DestDir: {app}\scripts; Flags: onlyifdoesntexist
 
 ; configuration files
-Source: micro-manager-1.3\MMConfig_demo.cfg; DestDir: {app}; Flags: ignoreversion
-Source: micro-manager-1.3\MMDeviceList.txt; DestDir: {app}; Flags: ignoreversion
-Source: micro-manager-1.3\MMStartup.bsh; DestDir: {app}; Flags: onlyifdoesntexist
+Source: micro-manager\MMConfig_demo.cfg; DestDir: {app}; Flags: ignoreversion
+Source: micro-manager\MMDeviceList.txt; DestDir: {app}; Flags: ignoreversion
+Source: micro-manager\MMStartup.bsh; DestDir: {app}; Flags: onlyifdoesntexist
 
 ; configurator help files
-Source: micro-manager-1.3\conf_intro_page.html; DestDir: {app}; Flags: ignoreversion
-Source: micro-manager-1.3\conf_comport_page.html; DestDir: {app}; Flags: ignoreversion
-Source: micro-manager-1.3\conf_devices_page.html; DestDir: {app}; Flags: ignoreversion
-Source: micro-manager-1.3\conf_delays_page.html; DestDir: {app}; Flags: ignoreversion
-Source: micro-manager-1.3\conf_finish_page.html; DestDir: {app}; Flags: ignoreversion
-Source: micro-manager-1.3\conf_labels_page.html; DestDir: {app}; Flags: ignoreversion
-Source: micro-manager-1.3\conf_presets_page.html; DestDir: {app}; Flags: ignoreversion
-Source: micro-manager-1.3\conf_roles_page.html; DestDir: {app}; Flags: ignoreversion
-Source: micro-manager-1.3\conf_synchro_page.html; DestDir: {app}; Flags: ignoreversion
-Source: micro-manager-1.3\conf_preinit_page.html; DestDir: {app}; Flags: ignoreversion
+Source: micro-manager\conf_intro_page.html; DestDir: {app}; Flags: ignoreversion
+Source: micro-manager\conf_comport_page.html; DestDir: {app}; Flags: ignoreversion
+Source: micro-manager\conf_devices_page.html; DestDir: {app}; Flags: ignoreversion
+Source: micro-manager\conf_delays_page.html; DestDir: {app}; Flags: ignoreversion
+Source: micro-manager\conf_finish_page.html; DestDir: {app}; Flags: ignoreversion
+Source: micro-manager\conf_labels_page.html; DestDir: {app}; Flags: ignoreversion
+Source: micro-manager\conf_presets_page.html; DestDir: {app}; Flags: ignoreversion
+Source: micro-manager\conf_roles_page.html; DestDir: {app}; Flags: ignoreversion
+Source: micro-manager\conf_synchro_page.html; DestDir: {app}; Flags: ignoreversion
+Source: micro-manager\conf_preinit_page.html; DestDir: {app}; Flags: ignoreversion
 
 ; ImageJ files
-Source: micro-manager-1.3\ImageJ.exe; DestDir: {app}; Flags: ignoreversion
-;Source: micro-manager-1.3\ImageJ.cfg; DestDir: {app}; Flags: onlyifdoesntexist
-Source: micro-manager-1.3\ij.jar; DestDir: {app}; Flags: ignoreversion
-Source: micro-manager-1.3\IJ_Prefs.txt; DestDir: {app}; Flags: onlyifdoesntexist
-Source: micro-manager-1.3\macros\*; DestDir: {app}\macros; Flags: ignoreversion recursesubdirs createallsubdirs
-Source: micro-manager-1.3\plugins\*; DestDir: {app}\plugins; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: micro-manager\ImageJ.exe; DestDir: {app}; Flags: ignoreversion
+;Source: micro-manager\ImageJ.cfg; DestDir: {app}; Flags: onlyifdoesntexist
+Source: micro-manager\ij.jar; DestDir: {app}; Flags: ignoreversion
+Source: micro-manager\IJ_Prefs.txt; DestDir: {app}; Flags: onlyifdoesntexist
+Source: micro-manager\macros\*; DestDir: {app}\macros; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: micro-manager\plugins\*; DestDir: {app}\plugins; Flags: ignoreversion recursesubdirs createallsubdirs
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]
