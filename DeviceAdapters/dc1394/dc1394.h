@@ -75,7 +75,8 @@ public:
    int Initialize();
    int Shutdown();
    void GetName(char* pszName) const;
-   bool Busy() {return m_bBusy || acquiring_;}
+   bool Busy() {return m_bBusy;}
+   bool IsCapturing() {return acquiring_;}
    
    // MMCamera API
    int SnapImage();
