@@ -50,6 +50,10 @@ public class MMAcquisition {
       show_ = show;
    }
 
+   public Image5DWindow getWindow() {
+	   return imgWin_;
+   }
+   
    public void setImagePhysicalDimensions(int width, int height, int depth) throws MMScriptException {   
       if (initialized_)
          throw new MMScriptException("Can't image change dimensions - the acquisition is already initialized");

@@ -47,7 +47,6 @@ public class Image5DWindowSnap extends Image5DWindow {
 		addSnapAppendButton();
 		addSnapReplaceButton();
 		channelControl.scrollbarWL.setVisible(false);
-		System.out.println(imp);
 	}
 	
 	
