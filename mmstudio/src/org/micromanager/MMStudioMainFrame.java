@@ -133,6 +133,8 @@ import org.micromanager.utils.ProgressBar;
 import org.micromanager.utils.TextUtils;
 import org.micromanager.utils.WaitDialog;
 
+import sun.security.x509.IPAddressName;
+
 import bsh.EvalError;
 import bsh.Interpreter;
 
@@ -240,6 +242,8 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 	private AcquisitionManager acqMgr_;
 	private MMImageWindow imageWin_;
 
+	private int snapCount = 0;
+	
 	public MMImageWindow getLiveWin() {
 		return imageWin_;
 	}
@@ -2077,17 +2081,22 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 	}
 */
 	
+
+	
 	// //////////////////////////////////////////////////////////////////////////
 	// public interface available for scripting access
 	// //////////////////////////////////////////////////////////////////////////
 
 	public void snapSingleImage() {
+		/*
 		try {
 			core_.setExposure(Double.parseDouble(textFieldExp_.getText()));
 			updateImage();
 		} catch (Exception e) {
 			handleException(e);
 		}
+		*/
+		doSnap();
 	}
 
 	public Object getPixels() {
@@ -2346,43 +2355,25 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 		return ret;
 	}
 	private void doSnap() {
-		if(!isCurrentImageFormatSupported())
-			return;
-
-
-		MMSnapshotWindow win = null;
 		try {
-
-			
-			Object img;
-			Metadata md =new Metadata();
-			if(core_.isSequenceRunning())
-			{
-				img=core_.getLastImage();
-				core_.getLastImageMD(0,0,md);
-			}else
-			{
-				core_.snapImage();
-				//ToDo: get metadata of the snapped image
-				long channels = core_.getNumberOfChannels();
-				if (channels == 1)
-					img = core_.getImage();
-				else
-					img = core_.getRGB32Image();
-			}
-
-			win = new MMSnapshotWindow(core_, contrastPanel_);
-			win.toFront();
-			win.getCanvas().requestFocus();
-
-			win.newImage(img);
+			String acqName = "Snap" + snapCount;
+			snapCount++;
+			//gui.closeAllAcquisitions();
+			core_.setExposure(Double.parseDouble(textFieldExp_.getText()));
+			openAcquisitionSnap(acqName,"",true);
+			setChannelColor(acqName, 0, Color.WHITE);
+			setChannelName(acqName, 0, "Snap");
+			long width = core_.getImageWidth();
+			long height = core_.getImageHeight();
+			long depth = core_.getBytesPerPixel();
+			initializeAcquisition(acqName, (int) width, (int) height, (int) depth);
+			snapAndAddImage(acqName,0,0,0);
+			//closeAcquisition(acqName);
 		} catch (Exception e) {
-			if (win != null) {
-				WindowManager.removeWindow(win);
-				win.dispose();
-			}
 			handleException(e);
 		}
+		
+	
 	}
 
 	public void initializeGUI() {
@@ -3131,6 +3122,12 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 		acq.setDimensions(nrFrames, nrChannels, nrSlices);
 	}
 
+	private void openAcquisitionSnap(String name, String rootDir, boolean show) throws MMScriptException {
+		MMAcquisition acq = acqMgr_.openAcquisitionSnap(name, rootDir, this, show);
+		acq.setDimensions(1, 1, 1);
+	}
+	
+	
 	public void initializeAcquisition(String name, int width, int height,
 			int depth) throws MMScriptException {
 		MMAcquisition acq = acqMgr_.getAcquisition(name);
@@ -3172,23 +3169,39 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 			throws MMScriptException {
 		MMAcquisition acq = acqMgr_.getAcquisition(name);
 		Object img;
+
+		Metadata md =new Metadata();
 		try {
-			core_.snapImage();
-			img = core_.getImage();
+			if(core_.isSequenceRunning())
+			{
+				img=core_.getLastImage();
+				core_.getLastImageMD(0,0,md);
+			} else {
+				core_.snapImage();
+				//ToDo: get metadata of the snapped image
+				long channels = core_.getNumberOfChannels();
+				if (channels == 1)
+					img = core_.getImage();
+				else
+					img = core_.getRGB32Image();
+			}
+
+
+			if (!acq.isInitialized()) {
+				long width = core_.getImageWidth();
+				long height = core_.getImageHeight();
+				long depth = core_.getBytesPerPixel();
+				acq.setImagePhysicalDimensions((int) width, (int) height,
+						(int) depth);
+				acq.initialize();
+			}
+	
+			acq.insertImage(img, frame, channel, slice);
+		
 		} catch (Exception e) {
-			throw new MMScriptException(e);
+			handleException(e);
 		}
-
-		if (!acq.isInitialized()) {
-			long width = core_.getImageWidth();
-			long height = core_.getImageHeight();
-			long depth = core_.getBytesPerPixel();
-			acq.setImagePhysicalDimensions((int) width, (int) height,
-					(int) depth);
-			acq.initialize();
-		}
-
-		acq.insertImage(img, frame, channel, slice);
+		
 	}
 
 	public void addImage(String name, Object img, int frame, int channel,

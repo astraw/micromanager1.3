@@ -3,6 +3,9 @@ package org.micromanager.acquisition;
 import java.util.Enumeration;
 import java.util.Hashtable;
 
+import mmcorej.CMMCore;
+
+import org.micromanager.MMStudioMainFrame;
 import org.micromanager.utils.MMScriptException;
 
 public class AcquisitionManager {
@@ -18,6 +21,13 @@ public class AcquisitionManager {
       else
          acqs_.put(name, new MMAcquisition(name, rootDir));
    }
+
+   public void openAcquisitionSnap(String name, String rootDir) throws MMScriptException {
+	      if (acqs_.containsKey(name))
+	         throw new MMScriptException("The name is in use");
+	      else
+	         acqs_.put(name, new MMAcquisitionSnap(name, rootDir));
+	   }
    
    public void openAcquisition(String name, String rootDir, boolean show) throws MMScriptException {
       if (acqs_.containsKey(name))
@@ -25,6 +35,21 @@ public class AcquisitionManager {
       else
          acqs_.put(name, new MMAcquisition(name, rootDir, show));
    }
+   
+   public MMAcquisition openAcquisitionSnap(String name, String rootDir, MMStudioMainFrame gui_, boolean show) throws MMScriptException {
+      while (acqs_.containsKey(name)) {
+         name = incrementAcquisitionSnapName(name);
+      }
+      System.err.println("New Name="+name);
+      MMAcquisition acq = new MMAcquisitionSnap(name, rootDir, gui_, show);
+      acqs_.put(name, acq);
+      return acq;
+   }
+  
+   private String incrementAcquisitionSnapName(String name) {
+	   return name + "_";
+   }
+  
    
    public void closeAcquisition(String name) throws MMScriptException {
       if (!acqs_.containsKey(name))

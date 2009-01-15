@@ -44,10 +44,13 @@ import javax.swing.JButton;
 import javax.swing.JOptionPane;
 
 import org.micromanager.MMStudioMainFrame;
+import org.micromanager.image5d.Image5D;
+import org.micromanager.image5d.Image5DWindow;
 
 import com.swtdesigner.SwingResourceManager;
 
 import ij.ImagePlus;
+import ij.ImageStack;
 import ij.WindowManager;
 import ij.gui.ImageWindow;
 import ij.io.FileSaver;
@@ -61,7 +64,7 @@ import mmcorej.CMMCore;
 /**
  * ImageJ compatible image window. Derived from the original ImageJ class.
  */
-public class MMSnapshotWindow extends ImageWindow {
+public class MMSnapshotWindow extends Image5DWindow {
 
 	private static final long serialVersionUID = 1L;
 	private static final String WINDOW_X = "mmsimg_y";
@@ -83,15 +86,12 @@ public class MMSnapshotWindow extends ImageWindow {
 	
 	public MMSnapshotWindow(CMMCore core, ImageController contrastPanel)
 			throws Exception {
-		super(createImagePlus(core_ = core, createTitle(title_)));
-		contrastPanel_ = contrastPanel;
-		core_ = core;
-		Initialize();
+		this(core,contrastPanel,createTitle(title_));
 	}
 
 	public MMSnapshotWindow(CMMCore core, ImageController contrastPanel,
 			String wndTitle) throws Exception {
-		super(createImagePlus(core_ = core, title_ = wndTitle));
+		super(createImage5D(core_ = core, title_ = wndTitle));
 		contrastPanel_ = contrastPanel;
 		core_ = core;
 		Initialize();
@@ -133,21 +133,24 @@ public class MMSnapshotWindow extends ImageWindow {
 		prefs_.putInt(WINDOW_HEIGHT, r.height);
 	}
 
-	private static ImagePlus createImagePlus(CMMCore core, String wndTitle)
+	private static Image5D createImage5D(CMMCore core, String wndTitle)
 			throws Exception {
 		ImageProcessor ip;
+		int type = 0;
+		int width_ = (int) core_.getImageWidth();
+		int height_ = (int) core_.getImageHeight();
 		long byteDepth = core_.getBytesPerPixel();
 		long channels = core_.getNumberOfChannels();
 		if (byteDepth == 1 && channels == 1) {
-			ip = new ByteProcessor((int) core_.getImageWidth(), (int) core_
-					.getImageHeight());
+			type = ImagePlus.GRAY8;
+			ip = new ByteProcessor(width_, height_);
 			if (contrastSettings8_.getRange() == 0.0)
 				ip.setMinAndMax(0, 255);
 			else
 				ip.setMinAndMax(contrastSettings8_.min, contrastSettings8_.max);
 		} else if (byteDepth == 2 && channels == 1) {
-			ip = new ShortProcessor((int) core_.getImageWidth(), (int) core_
-					.getImageHeight());
+			type = ImagePlus.GRAY16;
+			ip = new ShortProcessor(width_, height_);
 			if (contrastSettings16_.getRange() == 0.0)
 				ip.setMinAndMax(0, 65535);
 			else
@@ -157,8 +160,7 @@ public class MMSnapshotWindow extends ImageWindow {
 			throw (new Exception(logError("Imaging device not initialized")));
 		} else if (byteDepth == 1 && channels == 4) {
 			// assuming RGB32 format
-			ip = new ColorProcessor((int) core_.getImageWidth(), (int) core_
-					.getImageHeight());
+			ip = new ColorProcessor(width_, height_);
 			if (contrastSettings8_.getRange() == 0.0)
 				ip.setMinAndMax(0, 255);
 			else
@@ -173,7 +175,10 @@ public class MMSnapshotWindow extends ImageWindow {
 		if (currentColorModel_ != null)
 			ip.setColorModel(currentColorModel_);
 		ip.fill();
-		return new ImagePlus(wndTitle, ip);
+		Image5D img5d = new Image5D(wndTitle, type, width_, height_, 1, 1, 1, false);
+		Image5DWindow i5dw = new Image5DWindow(img5d);
+		return img5d;
+
 		
 	}
 
@@ -264,6 +269,7 @@ public class MMSnapshotWindow extends ImageWindow {
 	public void setFirstInstanceLocation() {
 		setLocationRelativeTo(getParent());
 	}
+	
 	public void setPreferredLocation()
 	{
 		loadPreferences();
@@ -275,6 +281,7 @@ public class MMSnapshotWindow extends ImageWindow {
 		MMLogger.getLogger().info("MMImageWindow:" + message);
 		return message;
 	}
+	
 	private static String createTitle(String wndTitle) {
 		return (wndTitle) + (new Long(instanceCounter_).toString());
 	}

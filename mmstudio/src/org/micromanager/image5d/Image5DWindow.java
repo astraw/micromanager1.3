@@ -89,7 +89,7 @@ public class Image5DWindow extends StackWindow {
    protected int nDimensions = 5;
    
    protected boolean isInitialized = false;
-   private PlaybackPanel pb_;
+   protected PlaybackPanel pb_;
    private int framesToGo_=0;
    private int playbackFrames_ = 0;
 
@@ -120,7 +120,7 @@ public class Image5DWindow extends StackWindow {
       positions = new int[nDimensions];
       
       // Remove all components and then add them with the Image5DLayout layoutmanager.
-      remove(sliceSelector);
+  	  remove(sliceSelector);
       remove(ic);
       
       setLayout(new Image5DLayout(ic));

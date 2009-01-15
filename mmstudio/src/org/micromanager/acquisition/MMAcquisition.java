@@ -16,16 +16,16 @@ import org.micromanager.metadata.SummaryKeys;
 import org.micromanager.utils.MMScriptException;
 
 public class MMAcquisition {
-   private int numFrames_;
+   protected int numFrames_;
    private int numChannels_;
    private int numSlices_;
-   private String name_;
+   protected String name_;
    private int width_;
    private int height_;
    private int depth_;
    private boolean initialized_ = false;
    private boolean show_ = true;
-   private Image5DWindow imgWin_;
+   protected Image5DWindow imgWin_;
    private String rootDirectory_;
    private AcquisitionData acqData_;
    
@@ -50,7 +50,7 @@ public class MMAcquisition {
       show_ = show;
    }
 
-   public void setImagePhysicalDimensions(int width, int height, int depth) throws MMScriptException {
+   public void setImagePhysicalDimensions(int width, int height, int depth) throws MMScriptException {   
       if (initialized_)
          throw new MMScriptException("Can't image change dimensions - the acquisition is already initialized");
       width_ = width;
@@ -114,7 +114,8 @@ public class MMAcquisition {
       }
       
       Image5D img5d = new Image5D(name_, type, width_, height_, numChannels_, numSlices_, numFrames_, false);
-      imgWin_ = new Image5DWindow(img5d);
+      imgWin_ = createImage5DWindow(img5d);
+
       // set-up colors, contrast and channel names
       for (int i=0; i<numChannels_; i++) {
          img5d.setChannelColorModel(i+1, ChannelDisplayProperties.createModelFromColor(colors[i]));
@@ -244,4 +245,8 @@ public class MMAcquisition {
       }
    }
 
+   protected Image5DWindow createImage5DWindow(Image5D img5d) {
+	   return new Image5DWindow(img5d);
+	   
+   }
 }
