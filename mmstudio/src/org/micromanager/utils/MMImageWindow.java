@@ -178,8 +178,10 @@ public class MMImageWindow extends ImageWindow {
 			throw (new Exception(logError(message)));
 		}
 		ip.setColor(Color.black);
-		if (currentColorModel_ != null)
+		if (currentColorModel_ != null){
 			ip.setColorModel(currentColorModel_);
+			logError("Restoring color model:"+currentColorModel_.toString());
+		}
 		ip.fill();
 		return new ImagePlus(title_ = wndTitle, ip);
 	}
@@ -222,8 +224,12 @@ public class MMImageWindow extends ImageWindow {
 				// remember LUT so that a new window can be opened with the
 				// same LUT
 				if (getImagePlus().getProcessor().isPseudoColorLut())
+				{
 					currentColorModel_ = getImagePlus().getProcessor()
 							.getColorModel();
+					logError("Storing color model:"+currentColorModel_.toString());
+					
+				}
 
  				if(contrastPanel_ != null)
  					contrastPanel_.setImagePlus(null);
