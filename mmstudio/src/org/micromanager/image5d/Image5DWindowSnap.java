@@ -49,12 +49,25 @@ public class Image5DWindowSnap extends Image5DWindow {
 		channelControl.scrollbarWL.setVisible(false);
 	}
 	
+	public void addSnapReplaceButton() {
+		JButton snapButton = new JButton();
+		snapButton.setToolTipText("Snap a new image and overwrite current image in this sequence");
+		snapButton.setIcon(SwingResourceManager.getIcon(PlaybackPanel.class, "/org/micromanager/icons/camera.png"));
+		snapButton.setBounds(44, 5, 37, 24);
+		this.pb_.add(snapButton);
+		snapButton.addActionListener(new ActionListener() {
+			public void actionPerformed(final ActionEvent e) {
+				doSnapReplace();
+			}
+		});
+	}
+	
 	
 	public void addSnapAppendButton() {
 		JButton snapButton = new JButton();
 		snapButton.setToolTipText("Snap and append a new image to this sequence");
 		snapButton.setIcon(SwingResourceManager.getIcon(PlaybackPanel.class, "/org/micromanager/icons/snapAppend.png"));
-		snapButton.setBounds(44, 5, 37, 24);
+		snapButton.setBounds(83, 5, 37, 24);
 		this.pb_.add(snapButton);
 		snapButton.addActionListener(new ActionListener() {
 			public void actionPerformed(final ActionEvent e) {
@@ -64,18 +77,7 @@ public class Image5DWindowSnap extends Image5DWindow {
 	}
 	
 	
-	public void addSnapReplaceButton() {
-		JButton snapButton = new JButton();
-		snapButton.setToolTipText("Snap a new image and overwrite current image in this sequence");
-		snapButton.setIcon(SwingResourceManager.getIcon(PlaybackPanel.class, "/org/micromanager/icons/snapReplace.png"));
-		snapButton.setBounds(83, 5, 37, 24);
-		this.pb_.add(snapButton);
-		snapButton.addActionListener(new ActionListener() {
-			public void actionPerformed(final ActionEvent e) {
-				doSnapReplace();
-			}
-		});
-	}
+
 	
 	
 	private void doSnapReplace() {
