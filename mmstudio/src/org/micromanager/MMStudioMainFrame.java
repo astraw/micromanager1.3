@@ -28,6 +28,8 @@ import ij.IJ;
 import ij.ImageJ;
 import ij.ImagePlus;
 import ij.WindowManager;
+import ij.gui.ImageCanvas;
+import ij.gui.ImageWindow;
 import ij.gui.Line;
 import ij.gui.Roi;
 import ij.measure.Calibration;
@@ -115,6 +117,7 @@ import org.micromanager.image5d.Z_Project;
 import org.micromanager.metadata.AcquisitionData;
 import org.micromanager.metadata.DisplaySettings;
 import org.micromanager.metadata.MMAcqDataException;
+import org.micromanager.metadata.SummaryKeys;
 import org.micromanager.metadata.WellAcquisitionData;
 import org.micromanager.navigation.CenterAndDragListener;
 import org.micromanager.navigation.PositionList;
@@ -1529,7 +1532,7 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 		if (options_.debugLogEnabled)
 			errText = "Exception occurred: " + e.getMessage();
 		else {
-			errText = "Exception occrred: " + e.toString() + "\n";
+			errText = "Exception occurred: " + e.toString() + "\n";
 			e.printStackTrace();
 		}
 		handleError(errText);
@@ -1546,19 +1549,15 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 		this.setTitle("System: " + sysConfigFile_);
 	}
 
-	private void updateHistogram() {
-		if (isImageWindowOpen()) {
-			// ImagePlus imp = IJ.getImage();
-			ImagePlus imp = imageWin_.getImagePlus();
-			if (imp != null) {
-				contrastPanel_.setImagePlus(imp);
-				contrastPanel_.setContrastSettings(
-						MMImageWindow.getContrastSettings8(),
-						MMImageWindow.getContrastSettings16());
-				contrastPanel_.update();
-			}
-			// contrastPanel_.setImagePlus(imageWin_.getImagePlus());
-			// ContrastSettings cs = imageWin_.getCurrentContrastSettings();
+	public void updateHistogram() {
+		ImagePlus imp = WindowManager.getCurrentImage();
+		
+		if (imp != null) {
+			contrastPanel_.setImagePlus(imp);
+			contrastPanel_.setContrastSettings(
+					MMImageWindow.getContrastSettings8(),
+					MMImageWindow.getContrastSettings16());
+			contrastPanel_.update();
 		}
 	}
 
@@ -1618,17 +1617,18 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 		lineProfileData_.setData(line.getPixels());
 	}
 
+		
 	private void setROI() {
-		if (imageWin_ == null || imageWin_.isClosed())
+		ImagePlus curImage = WindowManager.getCurrentImage();
+		if (curImage == null)
 			return;
 
-		Roi roi = imageWin_.getImagePlus().getRoi();
+		Roi roi = curImage.getRoi();
 
 		try {
 			if (roi == null) {
 				// if there is no ROI, create one
-				ImagePlus imp = imageWin_.getImagePlus();
-				Rectangle r = imp.getProcessor().getRoi();
+				Rectangle r = curImage.getProcessor().getRoi();
 				int iWidth = r.width;
 				int iHeight = r.height;
 				int iXROI = r.x;
@@ -1640,8 +1640,8 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 					iYROI += iHeight / 2;
 				}
 
-				imp.setRoi(iXROI, iYROI, iWidth, iHeight);
-				roi = imp.getRoi();
+				curImage.setRoi(iXROI, iYROI, iWidth, iHeight);
+				roi = curImage.getRoi();
 			}
 
 			if (roi.getType() != Roi.RECTANGLE) {
@@ -1897,6 +1897,23 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 				i5dWin.setAcquitionEngine(engine_);
 				i5dWin.setAcquisitionData(ad);
 				i5dWin.setAcqSavePath(openAcqDirectory_);
+				i5dWin.addWindowListener(new WindowAdapter() {
+					public void windowGainedFocus(WindowEvent e) {
+						updateHistogram();
+					}
+				});
+				
+				i5dWin.addWindowListener(new WindowAdapter() {
+					public void windowGainedFocus(WindowEvent e) {
+						updateHistogram();
+					}
+				});
+				i5dWin.addWindowListener(new WindowAdapter() {
+					public void windowActivated(WindowEvent e) {
+						updateHistogram();
+					}
+				});
+				
 				img5d.changes = false;
 			} catch (MMAcqDataException e) {
 				handleError(e.getMessage());
@@ -1910,14 +1927,23 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 	}
 
 	protected void zoomOut() {
-		if (isImageWindowOpen())
-			imageWin_.zoomOut();
+		ImageWindow curWin = WindowManager.getCurrentWindow();
+		if (curWin != null) {
+			ImageCanvas canvas = curWin.getCanvas();
+			Rectangle r = canvas.getBounds();
+			canvas.zoomOut(r.width / 2, r.height / 2);
+		}
+	}
+	
+	protected void zoomIn() {
+		ImageWindow curWin = WindowManager.getCurrentWindow();
+		if (curWin != null) {
+			ImageCanvas canvas = curWin.getCanvas();
+			Rectangle r = canvas.getBounds();
+			canvas.zoomIn(r.width / 2, r.height / 2);
+		}
 	}
 
-	protected void zoomIn() {
-		if (isImageWindowOpen())
-			imageWin_.zoomIn();
-	}
 
 	protected void changeBinning() {
 		try {
@@ -2302,6 +2328,7 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 			long depth = core_.getBytesPerPixel();
 			initializeAcquisition(acqName, (int) width, (int) height, (int) depth);
 			snapAndAddImage(acqName,0,0,0);
+
 			//closeAcquisition(acqName);
 		} catch (Exception e) {
 			handleException(e);
@@ -3079,13 +3106,13 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 		acq.setProperty(frame, channel, slice, propName, value);
 	}
 
+
 	public void snapAndAddImage(String name, int frame, int channel, int slice)
 			throws MMScriptException {
-		MMAcquisition acq = acqMgr_.getAcquisition(name);
-		Object img;
 
 		Metadata md =new Metadata();
 		try {
+			Object img;
 			if(core_.isSequenceRunning())
 			{
 				img=core_.getLastImage();
@@ -3100,11 +3127,15 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 					img = core_.getRGB32Image();
 			}
 
+			MMAcquisition acq = acqMgr_.getAcquisition(name);
 
+			long width = core_.getImageWidth();
+			long height = core_.getImageHeight();
+			long depth = core_.getBytesPerPixel();
+			
+			
 			if (!acq.isInitialized()) {
-				long width = core_.getImageWidth();
-				long height = core_.getImageHeight();
-				long depth = core_.getBytesPerPixel();
+
 				acq.setImagePhysicalDimensions((int) width, (int) height,
 						(int) depth);
 				acq.initialize();
@@ -3290,4 +3321,8 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 		return msg;
 	}
 
+   	public CMMCore getCore() {
+   		return core_;
+   	}
+   
 }

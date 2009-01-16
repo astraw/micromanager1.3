@@ -54,11 +54,25 @@ public class MMAcquisitionSnap extends MMAcquisition {
 		numFrames_++;
 	}
 	
+	private Boolean isCompatibleWithCameraSettings() {
+		CMMCore core = gui_.getCore();
+		Boolean compatible = 
+			(core.getImageWidth() == width_)
+		 && (core.getImageHeight() == height_ )
+		 && (core.getBytesPerPixel() == depth_ );		 
+		return compatible;
+	}
+	
 	public void doSnapReplace() {
 		try {
-			Image5D i5d = imgWin_.getImage5D();
-			int n = i5d.getCurrentFrame();
-			gui_.snapAndAddImage(name_ ,n-1,0,0);
+
+			if (isCompatibleWithCameraSettings()) {
+				Image5D i5d = imgWin_.getImage5D();
+				int n = i5d.getCurrentFrame();
+				gui_.snapAndAddImage(name_ ,n-1,0,0);
+			} else {
+				gui_.snapSingleImage();
+			}
 		} catch (MMScriptException e) {
 			System.err.println(e);
 		}
@@ -68,10 +82,15 @@ public class MMAcquisitionSnap extends MMAcquisition {
 
 	public void doSnapAppend() {
 		try {
-			Image5D i5d = imgWin_.getImage5D();
-			int n = i5d.getDimensionSize(4);
-			i5d.expandDimension(4,n+1,false);
-			gui_.snapAndAddImage(name_ ,n,0,0);
+			if (isCompatibleWithCameraSettings()) {
+				Image5D i5d = imgWin_.getImage5D();
+				int n = i5d.getDimensionSize(4);
+				if (isCompatibleWithCameraSettings()) 
+				i5d.expandDimension(4,n+1,false);
+				gui_.snapAndAddImage(name_ ,n,0,0);
+			} else {
+				gui_.snapSingleImage();
+			}
 		} catch (MMScriptException e) {
 			System.err.println(e);
 		}

@@ -370,15 +370,7 @@ public class MMImageWindow extends ImageWindow {
 		getImagePlus().mouseMoved(pt.x, pt.y);
 	}
 
-	public void zoomIn() {
-		Rectangle r = getCanvas().getBounds();
-		getCanvas().zoomIn(r.width / 2, r.height / 2);
-	}
 
-	public void zoomOut() {
-		Rectangle r = getCanvas().getBounds();
-		getCanvas().zoomOut(r.width / 2, r.height / 2);
-	}
 
 	// Set ImageJ pixel calibration
 	public void setIJCal() {

@@ -20,9 +20,9 @@ public class MMAcquisition {
    private int numChannels_;
    private int numSlices_;
    protected String name_;
-   private int width_;
-   private int height_;
-   private int depth_;
+   protected int width_;
+   protected int height_;
+   protected int depth_;
    private boolean initialized_ = false;
    private boolean show_ = true;
    protected Image5DWindow imgWin_;
@@ -49,11 +49,7 @@ public class MMAcquisition {
       this(name, dir);
       show_ = show;
    }
-
-   public Image5DWindow getWindow() {
-	   return imgWin_;
-   }
-   
+  
    public void setImagePhysicalDimensions(int width, int height, int depth) throws MMScriptException {   
       if (initialized_)
          throw new MMScriptException("Can't image change dimensions - the acquisition is already initialized");
@@ -65,6 +61,18 @@ public class MMAcquisition {
       } catch (MMAcqDataException e) {
          throw new MMScriptException(e);
       }
+   }
+   
+   public int getWidth() {
+	   return width_;
+   }
+   
+   public int getHeight() {
+	   return height_;
+   }
+   
+   public int getDepth() {
+	   return depth_;
    }
    
    public void setDimensions(int frames, int channels, int slices) throws MMScriptException {
@@ -241,6 +249,14 @@ public class MMAcquisition {
       }
    }
 
+   public String getProperty(String propertyName) throws MMScriptException {
+	   try {
+		   return acqData_.getSummaryValue(propertyName);
+	   } catch (MMAcqDataException e) {
+		   throw new MMScriptException(e);
+	   }
+   }
+   
    public void setProperty(int frame, int channel, int slice, String propName,
          String value) throws MMScriptException {
       try {
@@ -250,6 +266,16 @@ public class MMAcquisition {
       }
    }
 
+   
+   public String getProperty(int frame, int channel, int slice, String propName
+	         ) throws MMScriptException {
+	      try {
+	         return acqData_.getImageValue(frame, channel, slice, propName);
+	      } catch (MMAcqDataException e) {
+	         throw new MMScriptException(e);
+	      }
+	   }
+   
    protected Image5DWindow createImage5DWindow(Image5D img5d) {
 	   return new Image5DWindow(img5d);
 	   
