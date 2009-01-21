@@ -88,6 +88,7 @@ import mmcorej.StrVector;
 
 import org.micromanager.acquisition.AcquisitionManager;
 import org.micromanager.acquisition.MMAcquisition;
+import org.micromanager.acquisition.MMAcquisitionSnap;
 import org.micromanager.api.AcquisitionEngine;
 import org.micromanager.api.Autofocus;
 import org.micromanager.api.DeviceControlGUI;
@@ -185,7 +186,7 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 	private boolean shutterOrg_;
 	private MMOptions options_;
 	private boolean runsAsPlugin_;
-
+	private JButton buttonSnap_;
 	private JToggleButton toggleButtonShutter_;
 
 	// display settings
@@ -193,7 +194,7 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 //	private ContrastSettings contrastSettings16_;
 
 	private GUIColors guiColors_;
-   private ColorModel currentColorModel_;
+    private ColorModel currentColorModel_;
 
 	private GraphFrame profileWin_;
 	private PropertyEditor propertyBrowser_;
@@ -243,7 +244,7 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 	private AcquisitionManager acqMgr_;
 	private MMImageWindow imageWin_;
 
-	private int snapCount = 0;
+	private int snapCount_ = -1;
 	
 	public MMImageWindow getLiveWin() {
 		return imageWin_;
@@ -387,27 +388,27 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 
 		// Snap button
 		// -----------
-		final JButton buttonSnap = new JButton();
-		buttonSnap.setIconTextGap(6);
-		buttonSnap.setText("Snap");
-		buttonSnap.setIcon(SwingResourceManager.getIcon(
+		buttonSnap_ = new JButton();
+		buttonSnap_.setIconTextGap(6);
+		buttonSnap_.setText("Snap");
+		buttonSnap_.setIcon(SwingResourceManager.getIcon(
 				MMStudioMainFrame.class, "/org/micromanager/icons/camera.png"));
-		buttonSnap.setFont(new Font("", Font.PLAIN, 10));
-		buttonSnap.setToolTipText("Snap single image");
-		buttonSnap.setMaximumSize(new Dimension(0, 0));
-		buttonSnap.addActionListener(new ActionListener() {
+		buttonSnap_.setFont(new Font("", Font.PLAIN, 10));
+		buttonSnap_.setToolTipText("Snap single image");
+		buttonSnap_.setMaximumSize(new Dimension(0, 0));
+		buttonSnap_.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				doSnap();
 			}
 		});
-		getContentPane().add(buttonSnap);
-		springLayout_.putConstraint(SpringLayout.SOUTH, buttonSnap, 25,
+		getContentPane().add(buttonSnap_);
+		springLayout_.putConstraint(SpringLayout.SOUTH, buttonSnap_, 25,
 				SpringLayout.NORTH, getContentPane());
-		springLayout_.putConstraint(SpringLayout.NORTH, buttonSnap, 4,
+		springLayout_.putConstraint(SpringLayout.NORTH, buttonSnap_, 4,
 				SpringLayout.NORTH, getContentPane());
-		springLayout_.putConstraint(SpringLayout.EAST, buttonSnap, 95,
+		springLayout_.putConstraint(SpringLayout.EAST, buttonSnap_, 95,
 				SpringLayout.WEST, getContentPane());
-		springLayout_.putConstraint(SpringLayout.WEST, buttonSnap, 7,
+		springLayout_.putConstraint(SpringLayout.WEST, buttonSnap_, 7,
 				SpringLayout.WEST, getContentPane());
 
 		// Initialize
@@ -463,6 +464,8 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 		// Live button
 		// -----------
 		toggleButtonLive_ = new JToggleButton();
+		toggleButtonLive_.setMargin(new Insets(2, 2, 2, 2));
+		toggleButtonLive_.setIconTextGap(1);
 		toggleButtonLive_.setIcon(SwingResourceManager.getIcon(
 				MMStudioMainFrame.class,
 				"/org/micromanager/icons/camera_go.png"));
@@ -1696,7 +1699,7 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 				win.dispose();
 				win= null; 
 			}
-			win = new MMImageWindow(core_, contrastPanel_);
+			win = new MMImageWindow(core_, this, contrastPanel_);
 			win.setBackground(guiColors_.background
 					.get((options_.displayBackground)));
 			setIJCal(win);
@@ -2054,10 +2057,15 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 	// public interface available for scripting access
 	// //////////////////////////////////////////////////////////////////////////
 
-	public void snapSingleImage() {
+    public void snapSingleImage(){
+	      try {
+	         core_.setExposure(Double.parseDouble(textFieldExp_.getText()));
+	         updateImage();
+	      } catch (Exception e){
+	         handleException(e);
+	      }
+	   }
 
-		doSnap();
-	}
 
 	public Object getPixels() {
 		if (imageWin_ != null)
@@ -2171,6 +2179,7 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 				timer_.start();
 				toggleButtonLive_.setText("Stop Live");
 				// Only hide the shutter checkbox if we are in autoshuttermode
+				buttonSnap_.setEnabled(false);
 				if (autoShutterOrg_)
 					toggleButtonShutter_.setEnabled(false);
 				liveRunning_ = true;
@@ -2178,6 +2187,7 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 				JOptionPane.showMessageDialog(this,
 						"Exception while enabling Live mode "
 								+ err.getMessage());
+				err.printStackTrace();
 				if(imageWin_ != null)
 				{
 					WindowManager.removeWindow(imageWin_);
@@ -2207,6 +2217,7 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 				else
 					toggleButtonShutter_.setEnabled(true);
 				liveRunning_ = false;
+				buttonSnap_.setEnabled(true);
 				autoShutterCheckBox_.setEnabled(true);
 				// This is here to avoid crashes when changing ROI in live mode
 				// with Sensicam
@@ -2314,28 +2325,31 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 			ret = true;
 		return ret;
 	}
+	
 	private void doSnap() {
 		try {
-			String acqName = "Snap" + snapCount;
-			snapCount++;
-			//gui.closeAllAcquisitions();
-			core_.setExposure(Double.parseDouble(textFieldExp_.getText()));
-			openAcquisitionSnap(acqName,null,true); // (dir=null) -> keep in memory; don't save to file.
-			setChannelColor(acqName, 0, Color.WHITE);
-			setChannelName(acqName, 0, "Snap");
-			long width = core_.getImageWidth();
-			long height = core_.getImageHeight();
-			long depth = core_.getBytesPerPixel();
-			initializeAcquisition(acqName, (int) width, (int) height, (int) depth);
-			snapAndAddImage(acqName,0,0,0);
+			if (!isImageWindowOpen())
+				if (null == createImageWindow())
+					handleError("Image window open failed");
+			imageWin_.toFront();
 
-			//closeAcquisition(acqName);
-		} catch (Exception e) {
+			setIJCal(imageWin_);
+			// this is needed to clear the subtite, should be folded into drawInfo
+			imageWin_.getGraphics().clearRect(0,0,imageWin_.getWidth(),40);
+			imageWin_.drawInfo(imageWin_.getGraphics());
+
+			String expStr = textFieldExp_.getText();
+			if (expStr.length() > 0) {
+				core_.setExposure(Double.parseDouble(expStr));
+				updateImage();
+			}
+			else
+				handleError("Exposure field is empty!");
+		} catch (Exception e){
 			handleException(e);
-		}
-		
-	
+		}      
 	}
+
 
 	public void initializeGUI() {
 		try {
@@ -3065,7 +3079,7 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 
 	private void openAcquisitionSnap(String name, String rootDir, boolean show) throws MMScriptException {
 		MMAcquisition acq = acqMgr_.openAcquisitionSnap(name, rootDir, this, show);
-		acq.setDimensions(1, 1, 1);
+		acq.setDimensions(0, 1, 1);
 	}
 	
 	
@@ -3149,6 +3163,47 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 		
 	}
 
+	public void addToSnapSeries(Object img) {
+		try {
+			String acqName = "Snap" + snapCount_;
+			Boolean newSnap = false;
+			//gui.closeAllAcquisitions();
+			core_.setExposure(Double.parseDouble(textFieldExp_.getText()));
+			long width = core_.getImageWidth();
+			long height = core_.getImageHeight();
+			long depth = core_.getBytesPerPixel();
+			MMAcquisitionSnap acq = null;
+			
+			if (acqMgr_.hasActiveImage5D(acqName)) {
+				acq = (MMAcquisitionSnap) acqMgr_.getAcquisition(acqName);
+				newSnap = ! acq.isCompatibleWithCameraSettings();
+			}
+			else
+				newSnap = true;
+				
+			
+			if (newSnap) {
+				snapCount_++;
+				acqName = "Snap" + snapCount_;
+				this.openAcquisitionSnap(acqName, null, true); // (dir=null) -> keep in memory; don't save to file.
+				initializeAcquisition(acqName, (int) width, (int) height, (int) depth);
+
+			}
+			setChannelColor(acqName, 0, Color.WHITE);
+			setChannelName(acqName, 0, "Snap");
+
+			acq = (MMAcquisitionSnap) acqMgr_.getAcquisition(acqName);
+			acq.appendImage(img);
+
+			//closeAcquisition(acqName);
+		} catch (Exception e) {
+			handleException(e);
+		}
+		
+	
+	}
+
+	
 	public void addImage(String name, Object img, int frame, int channel,
 			int slice) throws MMScriptException {
 		MMAcquisition acq = acqMgr_.getAcquisition(name);

@@ -44,11 +44,12 @@ public class Image5DWindowSnap extends Image5DWindow {
 	public Image5DWindowSnap(Image5D imp, MMAcquisitionSnap acq) {
 		super(imp);
 		acq_ = acq;
-		addSnapAppendButton();
-		addSnapReplaceButton();
+		//addSnapAppendButton();
+		//addSnapReplaceButton();
 		channelControl.scrollbarWL.setVisible(false);
+		
 	}
-	
+	/*
 	public void addSnapReplaceButton() {
 		JButton snapButton = new JButton();
 		snapButton.setToolTipText("Snap a new image and overwrite current image in this sequence");
@@ -88,6 +89,8 @@ public class Image5DWindowSnap extends Image5DWindow {
 	private void doSnapAppend() {
 		acq_.doSnapAppend();
 	}
+
+*/
 
 	// Override createPlaybackPanel to prevent drawing Pause and Abort buttons:
 	public PlaybackPanel createPlaybackPanel() {

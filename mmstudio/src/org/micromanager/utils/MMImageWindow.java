@@ -70,7 +70,8 @@ public class MMImageWindow extends ImageWindow {
 	private static ColorModel currentColorModel_ = null;
 	private static Lock winAccesslock_;
 	private static Preferences prefs_=null;
-
+	private static MMStudioMainFrame gui_ = null;
+	
 	private Panel buttonPanel_;
 	private static ContrastSettings contrastSettings8_ = new ContrastSettings();
 	private static ContrastSettings contrastSettings16_ = new ContrastSettings();;
@@ -91,6 +92,15 @@ public class MMImageWindow extends ImageWindow {
 		Initialize();
 	}
 
+	public MMImageWindow(CMMCore core, MMStudioMainFrame gui, ImageController contrastPanel)
+			throws Exception {
+		super(createImagePlus(core_ = core, title_));
+		contrastPanel_ = contrastPanel;
+		gui_ = gui;
+		core_ = core;
+		Initialize();
+	}
+	
 	public MMImageWindow(CMMCore core, ImageController contrastPanel,
 			String wndTitle) throws Exception {
 		super(createImagePlus(core_ = core, title_ = wndTitle));
@@ -209,6 +219,23 @@ public class MMImageWindow extends ImageWindow {
 		});
 		buttonPanel_.add(saveAsButton);
 
+		
+
+		
+		AbstractButton addToSeriesButton = new JButton("Add to Series");
+		addToSeriesButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				try {
+					gui_.addToSnapSeries(getImagePlus().getProcessor().getPixels());
+			
+				} catch (Exception e2) {
+					e2.printStackTrace(System.err);
+				}
+			}
+		});
+		buttonPanel_.add(addToSeriesButton);
+		
+		
 		add(buttonPanel_);
 		pack();
 
@@ -341,16 +368,18 @@ public class MMImageWindow extends ImageWindow {
 		long imgWinByteLength = w * h * bitDepth / 8;
 
 		// warn the user if image dimensions do not match the current window
-		boolean ret = w != core_.getImageWidth()
+		boolean needsResizing = w != core_.getImageWidth()
 				|| h != core_.getImageHeight()
 				|| bitDepth != core_.getBytesPerPixel() * 8 * channels;
-		if (!ret) {
+		if (needsResizing) {
 			// 32-bit RGB image format is a special case with 24-bit pixel
 			// depth but physically
 			// using 32-bit pixels
-			ret = !(channels == 4 && bpp == 1 && bitDepth == 24);
+			if(channels == 4 && bpp == 1 && bitDepth == 24) {
+				needsResizing = false;
+			}
 		}
-		return ret;
+		return needsResizing;
 
 	}
 	

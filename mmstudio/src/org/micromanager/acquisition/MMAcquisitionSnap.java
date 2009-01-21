@@ -34,6 +34,8 @@ import org.micromanager.image5d.Image5DWindow;
 import org.micromanager.image5d.Image5DWindowSnap;
 import org.micromanager.utils.MMScriptException;
 
+
+
 public class MMAcquisitionSnap extends MMAcquisition {
 	MMStudioMainFrame gui_;
 	
@@ -54,7 +56,7 @@ public class MMAcquisitionSnap extends MMAcquisition {
 		numFrames_++;
 	}
 	
-	private Boolean isCompatibleWithCameraSettings() {
+	public Boolean isCompatibleWithCameraSettings() {
 		CMMCore core = gui_.getCore();
 		Boolean compatible = 
 			(core.getImageWidth() == width_)
@@ -80,21 +82,15 @@ public class MMAcquisitionSnap extends MMAcquisition {
 	}
 	
 
-	public void doSnapAppend() {
-		try {
-			if (isCompatibleWithCameraSettings()) {
-				Image5D i5d = imgWin_.getImage5D();
-				int n = i5d.getDimensionSize(4);
-				if (isCompatibleWithCameraSettings()) 
-				i5d.expandDimension(4,n+1,false);
-				gui_.snapAndAddImage(name_ ,n,0,0);
-			} else {
-				gui_.snapSingleImage();
-			}
-		} catch (MMScriptException e) {
-			System.err.println(e);
-		}
-
+	public void appendImage(Object pixels) throws MMScriptException {
+		numFrames_++;
+		Image5D i5d = imgWin_.getImage5D();
+		int n = i5d.getDimensionSize(4);
+		if (n < numFrames_)
+			i5d.expandDimension(4,numFrames_,false);
+		insertImage(pixels, numFrames_-1 , 0, 0);
 	}
+	
+
 
 }

@@ -280,4 +280,8 @@ public class MMAcquisition {
 	   return new Image5DWindow(img5d);
 	   
    }
+   
+   public boolean hasActiveImage5D() {
+	   return ! (this.imgWin_ == null);
+   }
 }
