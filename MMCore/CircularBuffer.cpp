@@ -47,6 +47,7 @@
 
 const int bytesInMB = 1048576;
 const long adjustThreshold = LONG_MAX / 2;
+const int maxCBSize = 1000;    //a reasonable limit to circular buffer size
 
 // mutex
 static ACE_Mutex g_bufferLock;
@@ -85,6 +86,10 @@ bool CircularBuffer::Initialize(unsigned channels, unsigned slices, unsigned int
    if (cbSize == 0)
       return false; // memory footprint too small
 
+   // set a reasonable limit to circular buffer capacity 
+   if (cbSize > maxCBSize)
+      cbSize=maxCBSize; 
+
    // TODO: verify if we have enough RAM to satisfy this request
 
    for (unsigned long i=0; i<frameArray_.size(); i++)
@@ -95,7 +100,7 @@ bool CircularBuffer::Initialize(unsigned channels, unsigned slices, unsigned int
    for (unsigned long i=0; i<frameArray_.size(); i++)
    {
       frameArray_[i].Resize(w, h, pixDepth);
-      frameArray_[i].Preallocate(1, 1);
+      frameArray_[i].Preallocate(numChannels_, numSlices_);
    }
 
    return true;
