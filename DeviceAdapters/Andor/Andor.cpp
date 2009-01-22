@@ -517,6 +517,31 @@ int Ixon::Initialize()
    }
    assert(nRet == DEVICE_OK);
 
+   // Camera serial number
+   int serialNumber;
+   ret = GetCameraSerialNumber(&serialNumber);
+   if (ret == DRV_SUCCESS) {
+      std::ostringstream sN;
+      sN << serialNumber;
+      nRet = CreateProperty("Serial Number", sN.str().c_str(), MM::String, true);
+      std::ostringstream msg;
+      msg << "Camera Serial Number: " << serialNumber;
+      LogMessage(msg.str().c_str(), false);
+   }
+
+   // Get various version numbers
+   unsigned int eprom, cofFile, vxdRev, vxdVer, dllRev, dllVer;
+   ret = GetSoftwareVersion(&eprom, &cofFile, &vxdRev, &vxdVer, &dllRev, &dllVer);
+   if (ret == DRV_SUCCESS) {
+      std::ostringstream verInfo;
+      verInfo << "Camera version info: " << std::endl;
+      verInfo << "EPROM: " << eprom << std::endl;
+      verInfo << "COF File: " << cofFile << std::endl;
+      verInfo << "Driver: " << vxdVer << "." << vxdRev << std::endl;
+      verInfo << "DLL: " << dllVer << "." << dllRev << std::endl;
+      LogMessage(verInfo.str().c_str(), false);
+   }
+
    // capabilities
    AndorCapabilities caps;
    caps.ulSize = sizeof(AndorCapabilities);
