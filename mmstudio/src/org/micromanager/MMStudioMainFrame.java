@@ -1212,9 +1212,9 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 				SpringLayout.WEST, getContentPane());
 		springLayout_.putConstraint(SpringLayout.WEST, setRoiButton, 7,
 				SpringLayout.WEST, getContentPane());
-		springLayout_.putConstraint(SpringLayout.SOUTH, setRoiButton, 172,
+		springLayout_.putConstraint(SpringLayout.SOUTH, setRoiButton, 174,
 				SpringLayout.NORTH, getContentPane());
-		springLayout_.putConstraint(SpringLayout.NORTH, setRoiButton, 152,
+		springLayout_.putConstraint(SpringLayout.NORTH, setRoiButton, 154,
 				SpringLayout.NORTH, getContentPane());
 
 		final JButton clearRoiButton = new JButton();
@@ -1233,9 +1233,9 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 				SpringLayout.WEST, getContentPane());
 		springLayout_.putConstraint(SpringLayout.WEST, clearRoiButton, 51,
 				SpringLayout.WEST, getContentPane());
-		springLayout_.putConstraint(SpringLayout.SOUTH, clearRoiButton, 172,
+		springLayout_.putConstraint(SpringLayout.SOUTH, clearRoiButton, 174,
 				SpringLayout.NORTH, getContentPane());
-		springLayout_.putConstraint(SpringLayout.NORTH, clearRoiButton, 152,
+		springLayout_.putConstraint(SpringLayout.NORTH, clearRoiButton, 154,
 				SpringLayout.NORTH, getContentPane());
 
 		final JLabel regionOfInterestLabel = new JLabel();
@@ -1243,9 +1243,9 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 		regionOfInterestLabel.setText("ROI");
 		getContentPane().add(regionOfInterestLabel);
 		springLayout_.putConstraint(SpringLayout.SOUTH, regionOfInterestLabel,
-				152, SpringLayout.NORTH, getContentPane());
+				154, SpringLayout.NORTH, getContentPane());
 		springLayout_.putConstraint(SpringLayout.NORTH, regionOfInterestLabel,
-				138, SpringLayout.NORTH, getContentPane());
+				140, SpringLayout.NORTH, getContentPane());
 		springLayout_.putConstraint(SpringLayout.EAST, regionOfInterestLabel,
 				71, SpringLayout.WEST, getContentPane());
 		springLayout_.putConstraint(SpringLayout.WEST, regionOfInterestLabel,
@@ -3165,6 +3165,9 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 
 	public void addToSnapSeries(Object img) {
 		try {
+			boolean liveRunning = liveRunning_;
+			if (liveRunning)
+				enableLiveMode(false);
 			String acqName = "Snap" + snapCount_;
 			Boolean newSnap = false;
 			//gui.closeAllAcquisitions();
@@ -3194,6 +3197,9 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 
 			acq = (MMAcquisitionSnap) acqMgr_.getAcquisition(acqName);
 			acq.appendImage(img);
+			
+			if (liveRunning)
+				enableLiveMode(true);
 
 			//closeAcquisition(acqName);
 		} catch (Exception e) {
