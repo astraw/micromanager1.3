@@ -92,6 +92,7 @@ public:
    int PushImage();
 
 private:
+
    //Do necessary for capturing
    //Is called from the thread function
    //Overrides ones defined in the CCameraBase class 
@@ -108,9 +109,19 @@ private:
    bool color_;
    unsigned char* rawBuffer_;
    bool stopOnOverflow_;
+   MMThreadLock rawBufferLock_;
 
    void GenerateSyntheticImage(ImgBuffer& img, double exp);
-   int ResizeImageBuffer();
+
+   int ResizeImageBuffer(  int imageSizeW = imageSize_, 
+                           int imageSizeH = imageSize_);
+   int ResizeImageBuffer(
+                           int imageSizeW, 
+                           int imageSizeH, 
+                           int byteDepth, 
+                           int binSize = 1);
+   int CopyToRawBuffer();
+
 };
 
 //////////////////////////////////////////////////////////////////////////////

@@ -372,7 +372,7 @@ int DemoStreamingCamera::SnapImage()
    else
       GenerateSyntheticImage(img_[0], exp);
 
-   while (GetCurrentMMTime() - startTime < MM::MMTime(expUs)) {CDeviceUtils::SleepMs(10);}
+   CopyToRawBuffer();
 
    MM::ImageProcessor* ip = GetCoreCallback()->GetImageProcessor(this);
    if (ip)
@@ -395,6 +395,7 @@ int DemoStreamingCamera::SnapImage()
    }
 
    readoutStartTime_ = GetCurrentMMTime();
+   CDeviceUtils::SleepMs((long)GetExposure());
 
    return DEVICE_OK;
 }
@@ -411,18 +412,6 @@ int DemoStreamingCamera::SnapImage()
 */
 const unsigned char* DemoStreamingCamera::GetImageBuffer()
 {
-   while (GetCurrentMMTime() - readoutStartTime_ < MM::MMTime(readoutUs_)) {CDeviceUtils::SleepMs(5);}
-   unsigned long singleChannelSize = img_[0].Width() * img_[0].Height() * img_[0].Depth();
-   if (color_)
-   {
-      memset(rawBuffer_, 0xff, singleChannelSize);
-      memcpy(rawBuffer_ + singleChannelSize, img_[0].GetPixels(), singleChannelSize);
-      memcpy(rawBuffer_ + 2 * singleChannelSize, img_[1].GetPixels(), singleChannelSize);
-      memcpy(rawBuffer_ + 3 * singleChannelSize, img_[2].GetPixels(), singleChannelSize);
-   }
-   else
-      memcpy(rawBuffer_, img_[0].GetPixels(), singleChannelSize);
-
    return rawBuffer_;
 }
 
@@ -431,29 +420,6 @@ const unsigned char* DemoStreamingCamera::GetImageBuffer()
 */
 const unsigned int* DemoStreamingCamera::GetImageBufferAsRGB32()
 {
-   while (GetCurrentMMTime() - readoutStartTime_ < MM::MMTime(readoutUs_)) {CDeviceUtils::SleepMs(5);}
-
-   // convert each pixel to RGB format
-   if (color_ && img_[0].Depth() == 1)
-   {
-      for (unsigned i=0; i<img_[0].Width(); i++)
-      {
-         unsigned lineOffset = img_[0].Width() * i;
-         for (unsigned j=0; j<img_[0].Height(); j++)
-         {
-            unsigned char* pBuf = rawBuffer_ + (lineOffset + j) * 4;
-            *(pBuf+3) = 0xff;
-            *(pBuf) =  * const_cast<unsigned char*>(img_[2].GetPixels() + lineOffset + j);
-            *(pBuf+1) = * const_cast<unsigned char*>(img_[1].GetPixels() + lineOffset + j);
-            *(pBuf+2) = * const_cast<unsigned char*>(img_[0].GetPixels() + lineOffset + j);
-         }
-      }
-   }
-   else
-   {
-      return 0; // doesn't make any sense in a single channel (grayscale) mode or 16-bit channel mode
-   }
-
    return (unsigned int*) rawBuffer_;
 }
 
@@ -524,19 +490,30 @@ long DemoStreamingCamera::GetImageBufferSize() const
 */
 int DemoStreamingCamera::SetROI(unsigned /*x*/, unsigned /*y*/, unsigned xSize, unsigned ySize)
 {
-    if(IsCapturing())
-            return ERR_BUSY_ACQIRING;
+   if(IsCapturing())
+      return ERR_BUSY_ACQIRING;
 
    if (xSize == 0 && ySize == 0)
       // effectively clear ROI
       ResizeImageBuffer();
    else
    {
+      char buf[MM::MaxStrLength];
+      int ret = GetProperty(MM::g_Keyword_Binning, buf);
+      if (ret != DEVICE_OK)
+         return ret;
+      long binSize = atol(buf);
+
+      ret = GetProperty(MM::g_Keyword_PixelType, buf);
+      if (ret != DEVICE_OK)
+         return ret;
+
+      int byteDepth = 1;
+      if (strcmp(buf, g_PixelType_16bit) == 0)
+         byteDepth = 2;
+
       // apply ROI
-      img_[0].Resize(xSize, ySize);
-      img_[1].Resize(xSize, ySize);
-      img_[2].Resize(xSize, ySize);
-      ResizeImageBuffer();
+      return ResizeImageBuffer(xSize*binSize, ySize*binSize, byteDepth, binSize);
    }
 
    return DEVICE_OK;
@@ -612,8 +589,8 @@ int DemoStreamingCamera::GetBinning() const
 */
 int DemoStreamingCamera::SetBinning(int binFactor)
 {
-    if(IsCapturing())
-            return ERR_BUSY_ACQIRING;
+   if(IsCapturing())
+      return ERR_BUSY_ACQIRING;
 
    return SetProperty(MM::g_Keyword_Binning, CDeviceUtils::ConvertToString(binFactor));
 }
@@ -642,17 +619,11 @@ int DemoStreamingCamera::OnBinning(MM::PropertyBase* pProp, MM::ActionType eAct)
 
          if (binFactor > 0 && binFactor < 10)
          {
-            img_[0].Resize(imageSize_/binFactor, imageSize_/binFactor);
-            img_[1].Resize(imageSize_/binFactor, imageSize_/binFactor);
-            img_[2].Resize(imageSize_/binFactor, imageSize_/binFactor);
-            ret = ResizeImageBuffer();
+            ret = ResizeImageBuffer(imageSize_, imageSize_, img_[0].Depth() , binFactor);
          }
          else
          {
             // on failure reset default binning of 1
-            img_[0].Resize(imageSize_, imageSize_);
-            img_[1].Resize(imageSize_, imageSize_);
-            img_[2].Resize(imageSize_, imageSize_);
             ResizeImageBuffer();
             pProp->Set(1L);
             return ERR_UNKNOWN_MODE;
@@ -682,33 +653,24 @@ int DemoStreamingCamera::OnPixelType(MM::PropertyBase* pProp, MM::ActionType eAc
          if(IsCapturing())
             return DEVICE_CAN_NOT_SET_PROPERTY;
 
-      string pixelType;
-      pProp->Get(pixelType);
+         string pixelType;
+         pProp->Get(pixelType);
 
-      if (pixelType.compare(g_PixelType_8bit) == 0)
-      {
-         img_[0].Resize(img_[0].Width(), img_[0].Height(), 1);
-         img_[1].Resize(img_[1].Width(), img_[1].Height(), 1);
-         img_[2].Resize(img_[2].Width(), img_[2].Height(), 1);
-         ret = ResizeImageBuffer();
-      }
-      else if (pixelType.compare(g_PixelType_16bit) == 0)
-      {
-         img_[0].Resize(img_[0].Width(), img_[0].Height(), 2);
-         img_[1].Resize(img_[1].Width(), img_[1].Height(), 2);
-         img_[2].Resize(img_[2].Width(), img_[2].Height(), 2);
-         ret = ResizeImageBuffer();
-      }
-      else
-      {
-         // on error switch to default pixel type
-         img_[0].Resize(img_[0].Width(), img_[0].Height(), 1);
-         img_[1].Resize(img_[1].Width(), img_[1].Height(), 1);
-         img_[2].Resize(img_[2].Width(), img_[2].Height(), 1);
-         pProp->Set(g_PixelType_8bit);
-         ResizeImageBuffer();
-         ret = ERR_UNKNOWN_MODE;
-      }
+         if (pixelType.compare(g_PixelType_8bit) == 0)
+         {
+            ret = ResizeImageBuffer(imageSize_, imageSize_, 1);
+         }
+         else if (pixelType.compare(g_PixelType_16bit) == 0)
+         {
+            ret = ResizeImageBuffer(imageSize_, imageSize_, 2);
+         }
+         else
+         {
+            // on error switch to default pixel type
+            pProp->Set(g_PixelType_8bit);
+            ResizeImageBuffer(imageSize_, imageSize_, 1);
+            ret = ERR_UNKNOWN_MODE;
+         }
 
       }break;
    case MM::BeforeGet:
@@ -754,7 +716,7 @@ int DemoStreamingCamera::OnColorMode(MM::PropertyBase* pProp, MM::ActionType eAc
    if (eAct == MM::AfterSet)
    {
       if(IsCapturing())
-            return DEVICE_CAN_NOT_SET_PROPERTY;
+         return DEVICE_CAN_NOT_SET_PROPERTY;
 
       string pixelType;
       pProp->Get(pixelType);
@@ -787,10 +749,11 @@ int DemoStreamingCamera::OnColorMode(MM::PropertyBase* pProp, MM::ActionType eAc
 // Private DemoStreamingCamera methods
 ///////////////////////////////////////////////////////////////////////////////
 
+
 /**
 * Sync internal image buffer size to the chosen property values.
 */
-int DemoStreamingCamera::ResizeImageBuffer()
+int DemoStreamingCamera::ResizeImageBuffer(int imageSizeW /*= imageSize_*/, int imageSizeH /*= imageSize_*/)
 {
    char buf[MM::MaxStrLength];
    int ret = GetProperty(MM::g_Keyword_Binning, buf);
@@ -806,9 +769,17 @@ int DemoStreamingCamera::ResizeImageBuffer()
    if (strcmp(buf, g_PixelType_16bit) == 0)
       byteDepth = 2;
 
-   img_[0].Resize(imageSize_/binSize, imageSize_/binSize, byteDepth);
-   img_[1].Resize(imageSize_/binSize, imageSize_/binSize, byteDepth);
-   img_[2].Resize(imageSize_/binSize, imageSize_/binSize, byteDepth);
+   return ResizeImageBuffer(imageSizeW, imageSizeH, byteDepth, binSize);
+}
+/**
+* Sync internal image buffer size to the chosen property values.
+*/
+int DemoStreamingCamera::ResizeImageBuffer(int imageSizeW, int imageSizeH, int byteDepth, int binSize /*=1*/)
+{
+
+   img_[0].Resize(imageSizeW/binSize, imageSizeH/binSize, byteDepth);
+   img_[1].Resize(imageSizeW/binSize, imageSizeH/binSize, byteDepth);
+   img_[2].Resize(imageSizeW/binSize, imageSizeH/binSize, byteDepth);
 
    delete[] rawBuffer_;
    if (color_)
@@ -890,7 +861,7 @@ int DemoStreamingCamera::StartSequenceAcquisition(long numImages, double interva
       return ret;
 
    // make sure the circular buffer is properly sized
-   GetCoreCallback()->InitializeImageBuffer(1, 1, GetImageWidth(), GetImageHeight(), GetImageBytesPerPixel());
+   GetCoreCallback()->InitializeImageBuffer(GetNumberOfChannels(), 1, GetImageWidth(), GetImageHeight(), GetImageBytesPerPixel());
 
    double actualIntervalMs = max(GetExposure(), interval_ms);
    SetProperty(MM::g_Keyword_ActualInterval_ms, CDeviceUtils::ConvertToString(actualIntervalMs)); 
@@ -934,28 +905,70 @@ int DemoStreamingCamera::PushImage()
    }
 
    // insert image into the circular buffer
-   GetImageBuffer(); // this effectively copies images to rawBuffer_
+   CopyToRawBuffer(); // this effectively copies images to rawBuffer_
 
    // insert all three channels at once
-   int ret = GetCoreCallback()->InsertMultiChannel(this, rawBuffer_, color_ ? 4 : 1, GetImageWidth(), GetImageHeight(), GetImageBytesPerPixel());
+   int ret = GetCoreCallback()->InsertMultiChannel(this, rawBuffer_, GetNumberOfChannels(), GetImageWidth(), GetImageHeight(), GetImageBytesPerPixel());
    if (!stopOnOverflow_ && ret == DEVICE_BUFFER_OVERFLOW)
    {
       // do not stop on overflow - just reset the buffer
       GetCoreCallback()->ClearImageBuffer(this);
       // repeat the insert
-      return GetCoreCallback()->InsertMultiChannel(this, rawBuffer_, color_ ? 4 : 1, GetImageWidth(), GetImageHeight(), GetImageBytesPerPixel());
+      return GetCoreCallback()->InsertMultiChannel(this, rawBuffer_, GetNumberOfChannels(), GetImageWidth(), GetImageHeight(), GetImageBytesPerPixel());
    } else
       return ret;
 }
+int DemoStreamingCamera::CopyToRawBuffer()
+{
+   int ret = DEVICE_ERR;
+   unsigned long singleChannelSize = img_[0].Width() * img_[0].Height() * img_[0].Depth();
+   try
+   {
+      MMThreadGuard(this->rawBufferLock_);
+      if (color_)
+      {
+         if (img_[0].Depth() == 1)
+         {
+            for (unsigned i=0; i<img_[0].Width(); i++)
+            {
+               unsigned lineOffset = img_[0].Width() * i;
+               for (unsigned j=0; j<img_[0].Height(); j++)
+               {
+                  unsigned char* pBuf = rawBuffer_ + (lineOffset + j) * 4;
+                  *(pBuf+3) = 0xff;
+                  *(pBuf) =  * const_cast<unsigned char*>(img_[2].GetPixels() + lineOffset + j);
+                  *(pBuf+1) = * const_cast<unsigned char*>(img_[1].GetPixels() + lineOffset + j);
+                  *(pBuf+2) = * const_cast<unsigned char*>(img_[0].GetPixels() + lineOffset + j);
+               }
+            }
+         }
+         /*
+         memset(rawBuffer_, 0xff, singleChannelSize);
+         memcpy(rawBuffer_ + singleChannelSize, img_[0].GetPixels(), singleChannelSize);
+         memcpy(rawBuffer_ + 2 * singleChannelSize, img_[1].GetPixels(), singleChannelSize);
+         memcpy(rawBuffer_ + 3 * singleChannelSize, img_[2].GetPixels(), singleChannelSize);
+         */
+      }
+      else
+      {
+         memcpy(rawBuffer_, img_[0].GetPixels(), singleChannelSize);
+      }
+      ret = DEVICE_OK;
+   }catch(...)
+   {
+      LogMessage("Exception in DemoStreamingCamera::CopyToRawBuffer()\n");
+   }
+   return ret;
+}
+
 int DemoStreamingCamera::ThreadRun()
 {
    int ret = PushImage();
    if (ret != DEVICE_OK)
    {
       // error occured so the acquisition must be stopped
-      StopSequenceAcquisition();
-      LogMessage("Overflow or image dimension mismatch!\n");
+      LogMessage("DemoStreamingCamera::ThreadRun(): Error\n");
    }
-   CDeviceUtils::SleepMs((long)thd_->GetIntervalMs());
+   CDeviceUtils::SleepMs((long)GetExposure());
    return ret;
 }
