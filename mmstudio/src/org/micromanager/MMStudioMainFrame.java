@@ -3055,6 +3055,12 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 		SwingUtilities.invokeLater(new RefreshPositionList());
 	}
 
+	public PositionList getPositionList() throws MMScriptException {
+		testForAbortRequests();
+		// use serialization to clone the PositionList object
+		return PositionList.newInstance(posList_);
+	}
+ 
 	public void sleep(long ms) throws MMScriptException {
 		if (scriptPanel_ != null) {
 			if (scriptPanel_.stopRequestPending())

@@ -74,6 +74,12 @@ public interface ScriptInterface {
     */
    public void openAcquisition(String name, String rootDir, int nrFrames, int nrChannels, int nrSlices) throws MMScriptException;
    
+   /**
+    * Opens a new acquisition context with explicit image physical parameters.
+    * Makes it possible to run acquisition without displaying a window
+    * @throws MMScriptException 
+    */
+   
    public void openAcquisition(String name, String rootDir, int nrFrames, int nrChannels, int nrSlices, boolean show) throws MMScriptException;
 
    public void initializeAcquisition(String name, int width, int height, int depth) throws MMScriptException;
@@ -163,6 +169,11 @@ public interface ScriptInterface {
     * It will open a position list dialog if it was not already open.
     */
    public void setPositionList(PositionList pl) throws MMScriptException;
+   
+   /**
+    * Returns a copy of the current PositionList, the one used by the Acquisition Protocol
+    */
+   public PositionList getPositionList() throws MMScriptException;
    
    /**
     * Sets the color of the specified channel in an image5d
