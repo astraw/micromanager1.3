@@ -394,7 +394,7 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 		// -----------
 		buttonSnap_ = new JButton();
 		buttonSnap_.setIconTextGap(6);
-		buttonSnap_.setText("Snap");
+		buttonSnap_.setText("Single");
 		buttonSnap_.setIcon(SwingResourceManager.getIcon(
 				MMStudioMainFrame.class, "/org/micromanager/icons/camera.png"));
 		buttonSnap_.setFont(new Font("", Font.PLAIN, 10));
@@ -474,7 +474,7 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 				MMStudioMainFrame.class,
 				"/org/micromanager/icons/camera_go.png"));
 		toggleButtonLive_.setIconTextGap(6);
-		toggleButtonLive_.setToolTipText("Continuously acquire images");
+		toggleButtonLive_.setToolTipText("Continuous live view");
 		toggleButtonLive_.setFont(new Font("Arial", Font.BOLD, 10));
 		toggleButtonLive_.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -498,6 +498,46 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 		springLayout_.putConstraint(SpringLayout.WEST, toggleButtonLive_, 7,
 				SpringLayout.WEST, getContentPane());
 
+		
+		// Acquire button
+		// -----------
+		JButton acquireButton = new JButton();
+		acquireButton.setMargin(new Insets(2, 2, 2, 2));
+		acquireButton.setIconTextGap(1);
+		acquireButton.setIcon(SwingResourceManager.getIcon(
+				MMStudioMainFrame.class,
+				"/org/micromanager/icons/snapAppend.png"));
+		acquireButton.setIconTextGap(6);
+		acquireButton.setToolTipText("Acquire single frame");
+		acquireButton.setFont(new Font("Arial", Font.BOLD, 10));
+		acquireButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				Object img;
+				try {
+					if (core_.isSequenceRunning())
+						img = core_.getLastImage();
+					else
+						core_.snapImage();
+						img = core_.getImage();
+					addToSnapSeries(img);
+				} catch (Exception e2) {
+					handleException(e2);
+				}
+			}
+		});
+
+		acquireButton.setText("Acquire");
+		getContentPane().add(acquireButton);
+		springLayout_.putConstraint(SpringLayout.SOUTH, acquireButton, 69,
+				SpringLayout.NORTH, getContentPane());
+		springLayout_.putConstraint(SpringLayout.NORTH, acquireButton, 48,
+				SpringLayout.NORTH, getContentPane());
+		springLayout_.putConstraint(SpringLayout.EAST, acquireButton, 95,
+				SpringLayout.WEST, getContentPane());
+		springLayout_.putConstraint(SpringLayout.WEST, acquireButton, 7,
+				SpringLayout.WEST, getContentPane());
+		
+		
 		// Shutter button
 		// --------------
 
@@ -570,30 +610,7 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 		springLayout_.putConstraint(SpringLayout.WEST, shutterComboBox_, 170,
 				SpringLayout.WEST, getContentPane());
 
-		// Profile
-		// -------
-		final JButton buttonProf = new JButton();
-		buttonProf.setIcon(SwingResourceManager.getIcon(
-				MMStudioMainFrame.class,
-				"/org/micromanager/icons/chart_curve.png"));
-		buttonProf.setFont(new Font("Arial", Font.PLAIN, 10));
-		buttonProf
-				.setToolTipText("Open line profile window (requires line selection)");
-		buttonProf.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				openLineProfileWindow();
-			}
-		});
-		buttonProf.setText("Profile");
-		getContentPane().add(buttonProf);
-		springLayout_.putConstraint(SpringLayout.SOUTH, buttonProf, 69,
-				SpringLayout.NORTH, getContentPane());
-		springLayout_.putConstraint(SpringLayout.NORTH, buttonProf, 48,
-				SpringLayout.NORTH, getContentPane());
-		springLayout_.putConstraint(SpringLayout.EAST, buttonProf, 95,
-				SpringLayout.WEST, getContentPane());
-		springLayout_.putConstraint(SpringLayout.WEST, buttonProf, 7,
-				SpringLayout.WEST, getContentPane());
+
 
 		menuBar_ = new JMenuBar();
 		setJMenuBar(menuBar_);
@@ -1057,7 +1074,7 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 				openAcqControlDialog();
 			}
 		});
-		buttonAcqSetup.setText("Acquisition");
+		buttonAcqSetup.setText("Multi-D Acq.");
 		getContentPane().add(buttonAcqSetup);
 		springLayout_.putConstraint(SpringLayout.SOUTH, buttonAcqSetup, 91,
 				SpringLayout.NORTH, getContentPane());
@@ -1099,6 +1116,34 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 		springLayout_.putConstraint(SpringLayout.NORTH, autoShutterCheckBox_,
 				118 - 22, SpringLayout.NORTH, getContentPane());
 
+		
+		final JButton burstButton = new JButton();
+		burstButton.setMargin(new Insets(2, 2, 2, 2));
+		burstButton.setIconTextGap(1);
+		burstButton.setIcon(SwingResourceManager.getIcon(
+				MMStudioMainFrame.class,
+				"/org/micromanager/icons/film_go.png"));
+		burstButton.setFont(new Font("Arial", Font.PLAIN, 10));
+		burstButton
+				.setToolTipText("Open Burst dialog for fast sequence acquisition");
+		burstButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				openSequenceDialog();
+			}
+		});
+		burstButton.setText("Burst");
+		getContentPane().add(burstButton);
+		springLayout_.putConstraint(SpringLayout.SOUTH, burstButton, 113,
+				SpringLayout.NORTH, getContentPane());
+		springLayout_.putConstraint(SpringLayout.NORTH, burstButton, 92,
+				SpringLayout.NORTH, getContentPane());
+		springLayout_.putConstraint(SpringLayout.EAST, burstButton, 95,
+				SpringLayout.WEST, getContentPane());
+		springLayout_.putConstraint(SpringLayout.WEST, burstButton, 7,
+				SpringLayout.WEST, getContentPane());
+		
+		
+		
 		final JButton refreshButton = new JButton();
 		refreshButton.setMargin(new Insets(2, 2, 2, 2));
 		refreshButton.setIconTextGap(1);
@@ -1115,9 +1160,9 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 		});
 		refreshButton.setText("Refresh");
 		getContentPane().add(refreshButton);
-		springLayout_.putConstraint(SpringLayout.SOUTH, refreshButton, 113,
+		springLayout_.putConstraint(SpringLayout.SOUTH, refreshButton, 135,
 				SpringLayout.NORTH, getContentPane());
-		springLayout_.putConstraint(SpringLayout.NORTH, refreshButton, 92,
+		springLayout_.putConstraint(SpringLayout.NORTH, refreshButton, 114,
 				SpringLayout.NORTH, getContentPane());
 		springLayout_.putConstraint(SpringLayout.EAST, refreshButton, 95,
 				SpringLayout.WEST, getContentPane());
@@ -1308,9 +1353,9 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 				regionOfInterestLabel_1, 140, SpringLayout.NORTH,
 				getContentPane());
 		springLayout_.putConstraint(SpringLayout.EAST, regionOfInterestLabel_1,
-				177, SpringLayout.WEST, getContentPane());
+				164, SpringLayout.WEST, getContentPane());
 		springLayout_.putConstraint(SpringLayout.WEST, regionOfInterestLabel_1,
-				114, SpringLayout.WEST, getContentPane());
+				101, SpringLayout.WEST, getContentPane());
 
 		final JButton zoomInButton = new JButton();
 		zoomInButton.addActionListener(new ActionListener() {
@@ -1329,9 +1374,9 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 				SpringLayout.NORTH, getContentPane());
 		springLayout_.putConstraint(SpringLayout.NORTH, zoomInButton, 154,
 				SpringLayout.NORTH, getContentPane());
-		springLayout_.putConstraint(SpringLayout.EAST, zoomInButton, 154,
+		springLayout_.putConstraint(SpringLayout.EAST, zoomInButton, 141,
 				SpringLayout.WEST, getContentPane());
-		springLayout_.putConstraint(SpringLayout.WEST, zoomInButton, 113,
+		springLayout_.putConstraint(SpringLayout.WEST, zoomInButton, 100,
 				SpringLayout.WEST, getContentPane());
 
 		final JButton zoomOutButton = new JButton();
@@ -1350,11 +1395,57 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 				SpringLayout.NORTH, getContentPane());
 		springLayout_.putConstraint(SpringLayout.NORTH, zoomOutButton, 154,
 				SpringLayout.NORTH, getContentPane());
-		springLayout_.putConstraint(SpringLayout.EAST, zoomOutButton, 199,
+		springLayout_.putConstraint(SpringLayout.EAST, zoomOutButton, 186,
 				SpringLayout.WEST, getContentPane());
-		springLayout_.putConstraint(SpringLayout.WEST, zoomOutButton, 157,
+		springLayout_.putConstraint(SpringLayout.WEST, zoomOutButton, 144,
 				SpringLayout.WEST, getContentPane());
 
+		
+		// Profile
+		// -------
+
+		final JLabel profileLabel_ = new JLabel();
+		profileLabel_.setFont(new Font("Arial", Font.BOLD, 11));
+		profileLabel_.setText("Profile");
+		getContentPane().add(profileLabel_);
+		springLayout_.putConstraint(SpringLayout.SOUTH,
+				profileLabel_, 154, SpringLayout.NORTH,
+				getContentPane());
+		springLayout_.putConstraint(SpringLayout.NORTH,
+				profileLabel_, 140, SpringLayout.NORTH,
+				getContentPane());
+		springLayout_.putConstraint(SpringLayout.EAST, profileLabel_,
+				257, SpringLayout.WEST, getContentPane());
+		springLayout_.putConstraint(SpringLayout.WEST, profileLabel_,
+				194, SpringLayout.WEST, getContentPane());
+		
+				
+		final JButton buttonProf = new JButton();
+		buttonProf.setIcon(SwingResourceManager.getIcon(
+				MMStudioMainFrame.class,
+				"/org/micromanager/icons/chart_curve.png"));
+		buttonProf.setFont(new Font("Arial", Font.PLAIN, 10));
+		buttonProf
+				.setToolTipText("Open line profile window (requires line selection)");
+		buttonProf.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				openLineProfileWindow();
+			}
+		});
+		//buttonProf.setText("Profile");
+		getContentPane().add(buttonProf);
+		springLayout_.putConstraint(SpringLayout.SOUTH, buttonProf, 174,
+				SpringLayout.NORTH, getContentPane());
+		springLayout_.putConstraint(SpringLayout.NORTH, buttonProf, 154,
+				SpringLayout.NORTH, getContentPane());
+		springLayout_.putConstraint(SpringLayout.EAST, buttonProf, 235,
+				SpringLayout.WEST, getContentPane());
+		springLayout_.putConstraint(SpringLayout.WEST, buttonProf, 193,
+				SpringLayout.WEST, getContentPane());
+		
+		
+		
+		
 		final JButton addGroupButton_ = new JButton();
 		addGroupButton_.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
@@ -1509,6 +1600,7 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 		springLayout_.putConstraint(SpringLayout.WEST, saveConfigButton_, 435,
 				SpringLayout.WEST, getContentPane());
 
+		/*
 		final JButton xyListButton_ = new JButton();
 		xyListButton_.setIcon(SwingResourceManager.getIcon(
 				MMStudioMainFrame.class, "icons/application_view_list.png"));
@@ -1526,11 +1618,11 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 				SpringLayout.WEST, getContentPane());
 		springLayout_.putConstraint(SpringLayout.WEST, xyListButton_, 7,
 				SpringLayout.WEST, getContentPane());
-		springLayout_.putConstraint(SpringLayout.SOUTH, xyListButton_, 136,
+		springLayout_.putConstraint(SpringLayout.SOUTH, xyListButton_, 135,
 				SpringLayout.NORTH, getContentPane());
-		springLayout_.putConstraint(SpringLayout.NORTH, xyListButton_, 115,
+		springLayout_.putConstraint(SpringLayout.NORTH, xyListButton_, 114,
 				SpringLayout.NORTH, getContentPane());
-
+		*/
 	}
 
 	private void handleException(Exception e) {
