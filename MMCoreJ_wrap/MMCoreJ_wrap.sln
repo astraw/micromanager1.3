@@ -129,6 +129,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ABSCamera", "..\DeviceAdapt
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PiperMmAdapter", "..\DeviceAdapters\Piper\PiperMmAdapter.vcproj", "{8FDA6D04-7C5D-4061-8467-AE0C104A2C83}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DemoRGBCamera", "..\DeviceAdapters\DemoRGBCamera\DemoRGBCamera.vcproj", "{028283B8-4E29-457E-9A78-AB6154A0F9D4}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -303,6 +305,10 @@ Global
 		{8FDA6D04-7C5D-4061-8467-AE0C104A2C83}.Debug|Win32.Build.0 = Debug|Win32
 		{8FDA6D04-7C5D-4061-8467-AE0C104A2C83}.Release|Win32.ActiveCfg = Release|Win32
 		{8FDA6D04-7C5D-4061-8467-AE0C104A2C83}.Release|Win32.Build.0 = Release|Win32
+		{028283B8-4E29-457E-9A78-AB6154A0F9D4}.Debug|Win32.ActiveCfg = Debug|Win32
+		{028283B8-4E29-457E-9A78-AB6154A0F9D4}.Debug|Win32.Build.0 = Debug|Win32
+		{028283B8-4E29-457E-9A78-AB6154A0F9D4}.Release|Win32.ActiveCfg = Release|Win32
+		{028283B8-4E29-457E-9A78-AB6154A0F9D4}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
