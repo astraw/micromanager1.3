@@ -81,6 +81,19 @@ public class MMAcquisitionSnap extends MMAcquisition {
 
 	}
 	
+	public void doSnapAppend() {
+		try {
+			numFrames_++;
+			Image5D i5d = imgWin_.getImage5D();
+			int n = i5d.getDimensionSize(4);
+			i5d.expandDimension(4,n+1,false);
+			gui_.snapAndAddImage(name_ ,n,0,0);
+		} catch (MMScriptException e) {
+			System.err.println(e);
+		}
+
+	}
+	
 
 	public void appendImage(Object pixels) throws MMScriptException {
 		numFrames_++;
