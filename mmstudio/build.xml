@@ -1,5 +1,5 @@
-<!-- Ant makefile for the Micro-Manager-1.3 for Windows distribution -->
-<!-- This file assumes Micro-Manager-1.3 project tree structure      -->
+<!-- Ant makefile for the Micro-Manager for Windows distribution -->
+<!-- This file assumes Micro-Manager project tree structure      -->
 
 <project name="MMJ" default="buildMMStudio">
 
