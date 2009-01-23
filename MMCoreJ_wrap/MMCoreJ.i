@@ -112,7 +112,7 @@
 
       $result = data;
    }
-   else if ((arg1)->getBytesPerPixel() == 2 && numChannels == 1)
+   else if ((arg1)->getBytesPerPixel() == 2)
    {
       // create a new short[] object in Java
       jshortArray data = JCALL1(NewShortArray, jenv, lSize * numChannels);
@@ -127,6 +127,24 @@
   
       // copy pixels from the image buffer
       JCALL4(SetShortArrayRegion, jenv, data, 0, lSize, (jshort*)result);
+
+      $result = data;
+   }
+   else if ((arg1)->getBytesPerPixel() == 4)
+   {
+      // create a new int[] object in Java
+      jintArray data = JCALL1(NewIntArray, jenv, lSize * numChannels);
+      if (data == 0)
+      {
+         jclass excep = jenv->FindClass("java/lang/Exception");
+		 if (excep)
+			jenv->ThrowNew(excep, "The system ran out of memory!");
+		$result = 0;
+		return $result;
+	  }
+	  
+      // copy pixels from the image buffer
+      JCALL4(SetIntArrayRegion, jenv, data, 0, lSize, (jint*)result);
 
       $result = data;
    }
