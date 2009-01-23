@@ -31,6 +31,7 @@ Name: desktopicon; Description: {cm:CreateDesktopIcon}; GroupDescription: {cm:Ad
 ; device libraries
 Source: micro-manager\mmgr_dal_Arduino.dll; DestDir: {app}; Flags: ignoreversion
 Source: micro-manager\mmgr_dal_DemoCamera.dll; DestDir: {app}; Flags: ignoreversion
+Source: micro-manager\mmgr_dal_DemoRGBCamera.dll; DestDir: {app}; Flags: ignoreversion
 Source: micro-manager\mmgr_dal_DemoStreamingCamera.dll; DestDir: {app}; Flags: ignoreversion
 Source: micro-manager\mmgr_dal_Hamamatsu.dll; DestDir: {app}; Flags: ignoreversion
 Source: micro-manager\inpout32.dll; DestDir: {app}; Flags: ignoreversion
@@ -89,6 +90,7 @@ Source: micro-manager\scripts\ManualAcq.bsh; DestDir: {app}\scripts; Flags: only
 
 ; configuration files
 Source: micro-manager\MMConfig_demo.cfg; DestDir: {app}; Flags: ignoreversion
+Source: micro-manager\MMConfig_demoRGB.cfg; DestDir: {app}; Flags: ignoreversion
 Source: micro-manager\MMDeviceList.txt; DestDir: {app}; Flags: ignoreversion
 Source: micro-manager\MMStartup.bsh; DestDir: {app}; Flags: onlyifdoesntexist
 
