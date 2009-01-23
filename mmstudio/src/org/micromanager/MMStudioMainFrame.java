@@ -2352,7 +2352,6 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 			long bpp = core_.getBytesPerPixel();
 
 			if (imageWin_.windowNeedsResizing()) {
-				imageWin_.close();
 				createImageWindow();
 			}
 
