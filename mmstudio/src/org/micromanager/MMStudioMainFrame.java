@@ -394,7 +394,7 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 		// -----------
 		buttonSnap_ = new JButton();
 		buttonSnap_.setIconTextGap(6);
-		buttonSnap_.setText("Single");
+		buttonSnap_.setText("Snap");
 		buttonSnap_.setIcon(SwingResourceManager.getIcon(
 				MMStudioMainFrame.class, "/org/micromanager/icons/camera.png"));
 		buttonSnap_.setFont(new Font("", Font.PLAIN, 10));
@@ -475,7 +475,7 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 				"/org/micromanager/icons/camera_go.png"));
 		toggleButtonLive_.setIconTextGap(6);
 		toggleButtonLive_.setToolTipText("Continuous live view");
-		toggleButtonLive_.setFont(new Font("Arial", Font.BOLD, 10));
+		toggleButtonLive_.setFont(new Font("Arial", Font.PLAIN, 10));
 		toggleButtonLive_.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				if (!IsLiveModeOn()) {
@@ -509,16 +509,21 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 				"/org/micromanager/icons/snapAppend.png"));
 		acquireButton.setIconTextGap(6);
 		acquireButton.setToolTipText("Acquire single frame");
-		acquireButton.setFont(new Font("Arial", Font.BOLD, 10));
+		acquireButton.setFont(new Font("Arial", Font.PLAIN, 10));
 		acquireButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				Object img;
 				try {
-					if (core_.isSequenceRunning())
-						img = core_.getLastImage();
-					else
-						core_.snapImage();
-						img = core_.getImage();
+					boolean liveRunning = liveRunning_; 
+				 	if (liveRunning) 
+				 		enableLiveMode(false); 
+
+				 	core_.snapImage();
+					img = core_.getImage();
+					
+				 	if (liveRunning) 
+				 		enableLiveMode(true); 			
+					
 					addToSnapSeries(img);
 				} catch (Exception e2) {
 					handleException(e2);
@@ -1068,7 +1073,7 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 		buttonAcqSetup.setIcon(SwingResourceManager.getIcon(
 				MMStudioMainFrame.class, "/org/micromanager/icons/film.png"));
 		buttonAcqSetup.setToolTipText("Open Acquistion dialog");
-		buttonAcqSetup.setFont(new Font("Arial", Font.BOLD, 10));
+		buttonAcqSetup.setFont(new Font("Arial", Font.PLAIN, 10));
 		buttonAcqSetup.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				openAcqControlDialog();
@@ -3177,6 +3182,14 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 	private void openAcquisitionSnap(String name, String rootDir, boolean show) throws MMScriptException {
 		MMAcquisition acq = acqMgr_.openAcquisitionSnap(name, rootDir, this, show);
 		acq.setDimensions(0, 1, 1);
+		try {
+			//acq.getAcqData().setPixelSizeUm(core_.getPixelSizeUm());
+			acq.setProperty(SummaryKeys.IMAGE_PIXEL_SIZE_UM, String.valueOf(core_.getPixelSizeUm()));
+
+		} catch (Exception e) {
+			handleException(e);
+		}
+
 	}
 	
 	
