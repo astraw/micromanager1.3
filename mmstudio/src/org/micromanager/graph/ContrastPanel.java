@@ -44,6 +44,7 @@ import javax.swing.event.ChangeListener;
 
 import org.micromanager.utils.ContrastSettings;
 import org.micromanager.utils.ImageController;
+import org.micromanager.utils.MMLogger;
 
 /**
  * Slider and histogram panel for adjusting contrast and brightness.
@@ -67,7 +68,7 @@ public class ContrastPanel extends JPanel implements ImageController {
    private static final int HIST_BINS = 256;
 //   int defMode8bit_ = 0;
 //   int defMode16bit_ = 4;
-   int numLevels_ = 256;
+   private int numLevels_ = 256;
    ContrastSettings cs8bit_;
    ContrastSettings cs16bit_;
    private JCheckBox stretchCheckBox_;
@@ -185,6 +186,13 @@ public class ContrastPanel extends JPanel implements ImageController {
       stretchCheckBox_ = new JCheckBox();
       stretchCheckBox_.setFont(new Font("", Font.PLAIN, 10));
       stretchCheckBox_.setText("Auto-stretch");
+      stretchCheckBox_.addChangeListener(new ChangeListener(){
+		@Override
+		public void stateChanged(ChangeEvent ce) {
+			sliderLow_.setEnabled(!stretchCheckBox_.isSelected());
+			sliderHigh_.setEnabled(!stretchCheckBox_.isSelected());
+		};
+      });
       add(stretchCheckBox_);
       springLayout.putConstraint(SpringLayout.EAST, sliderLow_, -1, SpringLayout.EAST, this);
       springLayout.putConstraint(SpringLayout.WEST, sliderLow_, 0, SpringLayout.EAST, stretchCheckBox_);
@@ -237,9 +245,12 @@ public class ContrastPanel extends JPanel implements ImageController {
    }
    
    public void setPixelBitDepth(int depth, boolean forceDepth) {
-      numLevels_ = 1 << depth;
+	   // histogram for 32bits is not supported in this implementation
+	   if(depth >= 32)
+		   depth = 8;
+	  numLevels_ = 1 << depth;
       maxIntensity_ = numLevels_ - 1;
-      binSize_ = (maxIntensity_ + 1)/ HIST_BINS;
+      binSize_ = (int)(maxIntensity_ + 1)/ Math.min(numLevels_,HIST_BINS);
       
       // override histogram depth based on the selected mode
       if (!forceDepth && modeComboBox_.getSelectedIndex() > 0) {
@@ -270,7 +281,7 @@ public class ContrastPanel extends JPanel implements ImageController {
             maxIntensity_ = 65535;
             break;
          default:
-            
+             maxIntensity_ = 255;
             break;
       }
       binSize_ = (maxIntensity_ + 1)/ HIST_BINS;

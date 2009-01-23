@@ -1170,10 +1170,12 @@ public class AcqControlDlg extends JDialog implements PropertyChangeListener {
 
    public void updateGroupsCombo() {
       String groups[] = acqEng_.getAvailableGroups();
-      channelGroupCombo_.setModel(new DefaultComboBoxModel(groups));
-      if (!inArray(acqEng_.getChannelGroup(), groups))
-    	  acqEng_.setChannelGroup(groups[0]);
-      channelGroupCombo_.setSelectedItem(acqEng_.getChannelGroup());
+      if(groups.length != 0){
+    	  channelGroupCombo_.setModel(new DefaultComboBoxModel(groups));
+    	  if (!inArray(acqEng_.getChannelGroup(), groups))
+    		  acqEng_.setChannelGroup(groups[0]);
+    	  channelGroupCombo_.setSelectedItem(acqEng_.getChannelGroup());
+      }
    }
 
    public void updateChannelAndGroupCombo() {

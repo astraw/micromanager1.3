@@ -69,7 +69,7 @@ public class MMImageWindow extends ImageWindow {
 	private static String title_ = "Live";
 	private static ColorModel currentColorModel_ = null;
 	private static Lock winAccesslock_;
-	private static Preferences prefs_=null;
+	private static Preferences prefs_ = null;
 	private static MMStudioMainFrame gui_ = null;
 	
 	private Panel buttonPanel_;
@@ -109,13 +109,16 @@ public class MMImageWindow extends ImageWindow {
 		Initialize();
 	}
 
-	public static void setContrastSettings(ContrastSettings s8, ContrastSettings s16) {
+	public static void setContrastSettings(ContrastSettings s8,
+			ContrastSettings s16) {
 		contrastSettings8_ = s8;
 		contrastSettings16_ = s16;
 	}
+
 	public static void setContrastSettings8(ContrastSettings s8) {
 		contrastSettings16_ = s8;
 	}
+
 	public static void setContrastSetting16(ContrastSettings s16) {
 		contrastSettings16_ = s16;
 	}
@@ -136,12 +139,12 @@ public class MMImageWindow extends ImageWindow {
 	}
 
 	public void loadPosition(int x, int y) {
-		if(prefs_!=null)
+		if (prefs_ != null)
 			setLocation(prefs_.getInt(WINDOW_X, x), prefs_.getInt(WINDOW_Y, y));
 	}
 
 	public void savePosition() {
-		if(prefs_ ==null)
+		if (prefs_ == null)
 			loadPreferences();
 		Rectangle r = getBounds();
 		// save window position
@@ -156,10 +159,12 @@ public class MMImageWindow extends ImageWindow {
 		ImageProcessor ip;
 		long byteDepth = core_.getBytesPerPixel();
 		long channels = core_.getNumberOfChannels();
-		int width=(int)core_.getImageWidth();
-		int height=(int)core_.getImageHeight();
-		if (byteDepth == 1 && channels == 1) 
-		{
+		int width = (int) core_.getImageWidth();
+		int height = (int) core_.getImageHeight();
+		if (byteDepth == 0) {
+			throw (new Exception(logError("Imaging device not initialized")));
+		}
+		if (byteDepth == 1 && channels == 1) {
 			ip = new ByteProcessor(width, height);
 			if (contrastSettings8_.getRange() == 0.0)
 				ip.setMinAndMax(0, 255);
@@ -172,8 +177,13 @@ public class MMImageWindow extends ImageWindow {
 			else
 				ip.setMinAndMax(contrastSettings16_.min,
 						contrastSettings16_.max);
-		} else if (byteDepth == 0) {
-			throw (new Exception(logError("Imaging device not initialized")));
+		} else if (byteDepth == 4 && channels == 1) {
+			// assuming RGB32 format
+			ip = new ColorProcessor(width, height);
+			if (contrastSettings8_.getRange() == 0.0)
+				ip.setMinAndMax(0, 255);
+			else
+				ip.setMinAndMax(contrastSettings8_.min, contrastSettings8_.max);
 		} else if (byteDepth == 1 && channels == 4) {
 			// assuming RGB32 format
 			ip = new ColorProcessor(width, height);
@@ -188,19 +198,19 @@ public class MMImageWindow extends ImageWindow {
 			throw (new Exception(logError(message)));
 		}
 		ip.setColor(Color.black);
-		if (currentColorModel_ != null){
+		if (currentColorModel_ != null) {
 			ip.setColorModel(currentColorModel_);
-			logError("Restoring color model:"+currentColorModel_.toString());
+			logError("Restoring color model:" + currentColorModel_.toString());
 		}
 		ip.fill();
 		return new ImagePlus(title_ = wndTitle, ip);
 	}
 
 	public void Initialize() {
-		
+
 		setIJCal();
 		setPreferredLocation();
-		
+
 		buttonPanel_ = new Panel();
 
 		AbstractButton saveButton = new JButton("Save");
@@ -242,28 +252,7 @@ public class MMImageWindow extends ImageWindow {
 		// add window listeners
 		addWindowListener(new WindowAdapter() {
 			public void windowClosing(WindowEvent e) {
-				finalizeClosing();
-
-				if (contrastDlg_ != null)
-					contrastDlg_.dispose();
-				savePosition();
-				// ToDo: implement winAccesslock_;
-				// remember LUT so that a new window can be opened with the
-				// same LUT
-				if (getImagePlus().getProcessor().isPseudoColorLut())
-				{
-					currentColorModel_ = getImagePlus().getProcessor()
-							.getColorModel();
-					logError("Storing color model:"+currentColorModel_.toString());
-					
-				}
-
- 				if(contrastPanel_ != null)
- 					contrastPanel_.setImagePlus(null);
-				// remember old color model
-//!!!				if (getImagePlus().getProcessor().isPseudoColorLut())
-//					currentColorModel_ = getImagePlus().getProcessor()
-//							.getColorModel();
+				saveAttributes();
 				WindowManager.removeWindow(getImagePlus().getWindow());
 			}
 		});
@@ -271,11 +260,10 @@ public class MMImageWindow extends ImageWindow {
 			public void windowClosed(WindowEvent e) {
 			}
 		});
-		
+
 		addWindowListener(new WindowAdapter() {
 			public void windowOpened(WindowEvent e) {
 				getCanvas().requestFocus();
-				finalizeOpening();
 			}
 		});
 
@@ -296,11 +284,30 @@ public class MMImageWindow extends ImageWindow {
 		setIJCal();
 	}
 
+	public void saveAttributes()
+	{
+		if (contrastDlg_ != null)
+			contrastDlg_.dispose();
+		savePosition();
+		// ToDo: implement winAccesslock_;
+		// remember LUT so that a new window can be opened with the
+		// same LUT
+		if (getImagePlus().getProcessor().isPseudoColorLut()) {
+			currentColorModel_ = getImagePlus().getProcessor()
+					.getColorModel();
+			logError("Storing color model:"
+					+ currentColorModel_.toString());
+
+		}
+
+		if (contrastPanel_ != null)
+			contrastPanel_.setImagePlus(null);
+		
+	}
 	public void windowOpened(WindowEvent e) {
 		getCanvas().requestFocus();
-		finalizeOpening();
 	}
-	
+
 	private void loadPreferences() {
 		prefs_ = Preferences.userNodeForPackage(this.getClass());
 	}
@@ -308,8 +315,8 @@ public class MMImageWindow extends ImageWindow {
 	public void setFirstInstanceLocation() {
 		setLocationRelativeTo(getParent());
 	}
-	public void setPreferredLocation()
-	{
+
+	public void setPreferredLocation() {
 		loadPreferences();
 		Point p = getLocation();
 		loadPosition(p.x, p.y);
@@ -320,11 +327,6 @@ public class MMImageWindow extends ImageWindow {
 		return message;
 	}
 
-	private void finalizeOpening() {
-	}
-
-	private void finalizeClosing() {
-	}
 
 	protected void updateHistogram() {
 		if (contrastPanel_ != null) {
@@ -335,17 +337,18 @@ public class MMImageWindow extends ImageWindow {
 		}
 	}
 
-	public long getImageWindowByteLength(){
+	public long getImageWindowByteLength() {
 		long imgWinByteLength;
-		ImageProcessor ip=getImagePlus().getProcessor();
-		int w=ip.getWidth();
-		int h=ip.getHeight();
-		int bitDepth=getImagePlus().getBitDepth();
-		return imgWinByteLength=w*h*bitDepth / 8;
+		ImageProcessor ip = getImagePlus().getProcessor();
+		int w = ip.getWidth();
+		int h = ip.getHeight();
+		int bitDepth = getImagePlus().getBitDepth();
+		// ImageWindow returns bitdepth 24 when Image processor type is Color
+		bitDepth = bitDepth == 24 ? 32 : bitDepth;
+		return imgWinByteLength = w * h * bitDepth / 8;
 	}
-	
-	public long imageByteLenth(Object pixels)
-			throws IllegalArgumentException {
+
+	public long imageByteLenth(Object pixels) throws IllegalArgumentException {
 		int byteLength = 0;
 		if (pixels instanceof byte[]) {
 			byte bytePixels[] = (byte[]) pixels;
@@ -353,6 +356,9 @@ public class MMImageWindow extends ImageWindow {
 		} else if (pixels instanceof short[]) {
 			short bytePixels[] = (short[]) pixels;
 			byteLength = bytePixels.length * 2;
+		} else if (pixels instanceof int[]) {
+			int bytePixels[] = (int[]) pixels;
+			byteLength = bytePixels.length * 4;
 		} else
 			throw (new IllegalArgumentException("Image bytelenth does not much"));
 		return byteLength;
@@ -365,41 +371,32 @@ public class MMImageWindow extends ImageWindow {
 		int w = ip.getWidth();
 		int h = ip.getHeight();
 		int bitDepth = getImagePlus().getBitDepth();
+		// ImageWindow returns bitdepth 24 when Image processor type is Color
+		bitDepth = bitDepth == 24 ? 32 : bitDepth;
 		long imgWinByteLength = w * h * bitDepth / 8;
 
 		// warn the user if image dimensions do not match the current window
-		boolean needsResizing = w != core_.getImageWidth()
-				|| h != core_.getImageHeight()
+		boolean ret = w != core_.getImageWidth() || h != core_.getImageHeight()
 				|| bitDepth != core_.getBytesPerPixel() * 8 * channels;
-		if (needsResizing) {
-			// 32-bit RGB image format is a special case with 24-bit pixel
-			// depth but physically
-			// using 32-bit pixels
-			if(channels == 4 && bpp == 1 && bitDepth == 24) {
-				needsResizing = false;
-			}
-		}
-		return needsResizing;
-
+		return ret;
 	}
-	
+
 	// public
 	public void newImage(Object img) {
-		
-		if ( getImageWindowByteLength() != imageByteLenth(img)) {
+
+		if (getImageWindowByteLength() != imageByteLenth(img)) {
 			throw (new RuntimeException("Image bytelenth does not much"));
 		}
 		getImagePlus().getProcessor().setPixels(img);
 		getImagePlus().updateAndDraw();
-		getCanvas().paint(getCanvas().getGraphics());
+		// Graphics
+		// getCanvas().paint(getCanvas().getGraphics());
 		updateHistogram();
 		// update coordinate and pixel info in imageJ by simulating mouse
 		// move
 		Point pt = getCanvas().getCursorLoc();
 		getImagePlus().mouseMoved(pt.x, pt.y);
 	}
-
-
 
 	// Set ImageJ pixel calibration
 	public void setIJCal() {
@@ -411,6 +408,15 @@ public class MMImageWindow extends ImageWindow {
 			cal.pixelHeight = pixSizeUm;
 		}
 		getImagePlus().setCalibration(cal);
+	}
+
+	public long getRawHistogramSize() {
+		long ret = 0;
+		int rawHistogram[] = getImagePlus().getProcessor().getHistogram();
+		if (rawHistogram != null) {
+			ret = rawHistogram.length;
+		}
+		return ret;
 	}
 
 }
