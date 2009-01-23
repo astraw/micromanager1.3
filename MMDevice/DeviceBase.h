@@ -60,6 +60,8 @@ const char* const g_Msg_DEVICE_NONEXISTENT_CHANNEL = "Requested channel is not d
 const char* const g_Msg_DEVICE_INVALID_PROPERTY_LIMTS = "Specified property limits are not valid."
 " Either the property already has a set of dicrete values, or the range is invalid";
 const char* const g_Msg_EXCEPTION_IN_THREAD = "Exception in the thread function.";
+const char* const g_Msg_EXCEPTION_IN_ON_THREAD_EXITING = "Exception in the OnThreadExiting function.";
+const char* const g_Msg_SEQUENCE_ACQUISITION_THREAD_EXITING="Sequence thread exiting";
 
 
 /**
@@ -779,24 +781,11 @@ public:
    */
    virtual int StopSequenceAcquisition()
    {
-      int ret=DEVICE_ERR;
 
       thd_->Stop();
       thd_->wait();
 
-      double actualDuration_ms
-         =(double)thd_->GetActualDuration().getMsec()/thd_->GetImageCounter();
-      SetProperty(MM::g_Keyword_ActualInterval_ms, 
-         CDeviceUtils::ConvertToString(actualDuration_ms));
-      LogMessage("Stopped sequence acquisition");
-
-      ret = INVOKE_CALLBACK(AcqFinished(this, 0));
-
-      MM::Core* cb = GetCoreCallback();
-      if (cb)
-         ret = cb->AcqFinished(this, 0);
-
-      return ret;
+      return DEVICE_OK;
    }
 
    /**
@@ -856,18 +845,13 @@ public:
       ret = SnapImage();
       if (ret != DEVICE_OK)
       {
-         StopSequenceAcquisition();
          return ret;
       }
       ret = InsertImage();
       if (ret != DEVICE_OK)
       {
-         // error occured so the acquisition must be stopped
-         StopSequenceAcquisition();
          return ret;
       }
-      //ToDo: get rid of the sleep
-      CDeviceUtils::SleepMs(20);
       return ret;
    };
    virtual bool IsCapturing(){return !thd_->IsStopped();}
@@ -888,6 +872,29 @@ public:
       }
    };
 
+protected:
+   // called from the thread function before exit 
+   virtual void OnThreadExiting() throw()
+   {
+      try
+      {
+         double actualDuration_ms
+            =(double)thd_->GetActualDuration().getMsec()/thd_->GetImageCounter();
+         SetProperty(MM::g_Keyword_ActualInterval_ms, 
+            CDeviceUtils::ConvertToString(actualDuration_ms));
+         LogMessage(g_Msg_SEQUENCE_ACQUISITION_THREAD_EXITING);
+
+         INVOKE_CALLBACK(AcqFinished(this, 0));
+
+         MM::Core* cb = GetCoreCallback();
+         if (cb)
+            cb->AcqFinished(this, 0);
+      }
+      catch(...)
+      {
+         LogMessage(g_Msg_EXCEPTION_IN_ON_THREAD_EXITING, false);
+      }
+   }
 protected:
    bool busy_;
    bool stopOnOverflow_;
@@ -914,10 +921,15 @@ protected:
 
       ~BaseSequenceThread() {}
 
-      void Stop() {stop_=true;}
+      void Stop() {
+         MMThreadGuard(this->stopLock_);
+         stop_=true;
+      }
 
       void Start(long numImages, double intervalMs)
       {
+         MMThreadGuard(this->stopLock_);
+         MMThreadGuard(this->suspendLock_);
          numImages_=numImages;
          intervalMs_=intervalMs;
          imageCounter_=0;
@@ -928,10 +940,22 @@ protected:
          startTime_= camera_->GetCurrentMMTime();
          lastFrameTime_ = 0;
       }
-      bool IsStopped(){return stop_;}
-      void Suspend() {suspend_ = true;}
-      bool IsSuspended() {return suspend_;}
-      void Resume() {suspend_ = false;}
+      bool IsStopped(){
+         MMThreadGuard(this->stopLock_);
+         return stop_;
+      }
+      void Suspend() {
+         MMThreadGuard(this->suspendLock_);
+         suspend_ = true;
+      }
+      bool IsSuspended() {
+         MMThreadGuard(this->suspendLock_);
+         return suspend_;
+      }
+      void Resume() {
+         MMThreadGuard(this->suspendLock_);
+         suspend_ = false;
+      }
       double GetIntervalMs(){return intervalMs_;}
       void SetLength(long images) {numImages_ = images;}
       long GetImageCounter(){return imageCounter_;}
@@ -949,7 +973,7 @@ protected:
                MM::MMTime currentTime=camera_->GetCurrentMMTime();
                double currentIntervalMs 
                   = (currentTime - lastFrameTime_).getMsec();
-               if(!suspend_ && currentIntervalMs >= intervalMs_)
+               if(!IsSuspended() && currentIntervalMs >= intervalMs_)
                {
                   //call virtual function overriden in the derived class
                   ret=camera_->ThreadRun();
@@ -958,8 +982,8 @@ protected:
                      lastFrameTime_=currentTime;
                   }
                }
-            } while (DEVICE_OK == ret && !stop_ && imageCounter_++ < numImages_-1);
-            if (stop_)
+            } while (DEVICE_OK == ret && !IsStopped() && imageCounter_++ < numImages_-1);
+            if (IsStopped())
                camera_->LogMessage("SeqAcquisition interrupted by the user\n");
          }catch(...)
          {
@@ -967,6 +991,7 @@ protected:
          }
          stop_=true;
          actualDuration_ = camera_->GetCurrentMMTime() - startTime_;
+         camera_->OnThreadExiting();
          return ret;
       }
    protected:
@@ -979,6 +1004,8 @@ protected:
       MM::MMTime startTime_;
       MM::MMTime actualDuration_;
       MM::MMTime lastFrameTime_;
+      MMThreadLock stopLock_;
+      MMThreadLock suspendLock_;
    };
 };
 
