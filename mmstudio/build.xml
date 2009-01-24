@@ -90,6 +90,7 @@
 
 		<copy file="${BinRoot}/mmgr_dal_Arduino.dll" todir="${InstallRoot}" />
 		<copy file="${BinRoot}/mmgr_dal_DemoCamera.dll" todir="${InstallRoot}" />
+		<copy file="${BinRoot}/mmgr_dal_DemoRGBCamera.dll" todir="${InstallRoot}" />
 		<copy file="${BinRoot}/mmgr_dal_DemoStreamingCamera.dll" todir="${InstallRoot}" />
 		<copy file="${BinRoot}/mmgr_dal_ZeissCAN.dll" todir="${InstallRoot}" />
 		<copy file="${BinRoot}/mmgr_dal_ZeissCAN29.dll" todir="${InstallRoot}" />
@@ -107,6 +108,7 @@
 		<copy file="${BinRoot}/mmgr_dal_Nikon.dll" todir="${InstallRoot}" />
 		<copy file="${BinRoot}/mmgr_dal_NikonTI.dll" todir="${InstallRoot}" />
 		<copy file="${BinRoot}/mmgr_dal_NikonAZ100.dll" todir="${InstallRoot}" />
+		<copy file="${BinRoot}/mmgr_dal_Piper.dll" todir="${InstallRoot}" />
 		<copy file="${BinRoot}/mmgr_dal_Prior.dll" todir="${InstallRoot}" />
 		<copy file="${BinRoot}/mmgr_dal_DTOpenLayer.dll" todir="${InstallRoot}" />
 		<copy file="${BinRoot}/mmgr_dal_SpectralLMM5.dll" todir="${InstallRoot}" />
