@@ -99,7 +99,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="copy &quot;$(TargetPath)&quot; &quot;$(MmDdkDir)\bin&quot;"
+				CommandLine="copy &quot;$(TargetPath)&quot; ..\..\bin"
 			/>
 		</Configuration>
 		<Configuration
@@ -186,7 +186,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine=""
+				CommandLine="copy &quot;$(TargetPath)&quot; ..\..\bin"
 				ExcludedFromBuild="true"
 			/>
 		</Configuration>
