@@ -232,6 +232,7 @@ public class MMScriptView extends JTabbedPane implements ScriptingGUI{
       outText += text + "\n";
       outputPane_.setText(outText);
       setSelectedComponent(outputView_);
+      
    }
    
    /**

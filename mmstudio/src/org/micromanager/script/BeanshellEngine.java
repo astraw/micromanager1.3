@@ -18,6 +18,7 @@ public class BeanshellEngine implements ScriptingEngine {
    boolean stop_ = false;
    private static MMLogger logger_;
    private ScriptingGUI gui_;
+private Interpreter interp_old_;
 
    public class EvalThread extends Thread {
       String script_;
@@ -57,8 +58,18 @@ public class BeanshellEngine implements ScriptingEngine {
       }
    }
 
+   
+   public void setInterpreter(Interpreter interp) {
+	   interp_old_ = interp_;
+	   interp_ = interp;
+   }
+   
+   public void resetInterpreter() {
+	   interp_ = interp_old_;
+   }
+   
    public BeanshellEngine(ScriptingGUI gui) {
-      interp_ = new Interpreter();
+      //interp_ = new Interpreter();
       running_ = false;
       evalThd_ = new EvalThread("");
       logger_ = new MMLogger();

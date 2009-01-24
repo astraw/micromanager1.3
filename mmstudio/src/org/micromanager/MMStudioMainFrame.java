@@ -823,6 +823,7 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 		scriptPanelMenuItem.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				createScriptPanel();
+				
 			}
 		});
 		scriptPanelMenuItem.setText("Script Panel");
@@ -2103,6 +2104,7 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 					.get((options_.displayBackground)));
 		}
 		scriptPanel_.setVisible(true);
+
 	}
 
 	private void updateStaticInfo() {

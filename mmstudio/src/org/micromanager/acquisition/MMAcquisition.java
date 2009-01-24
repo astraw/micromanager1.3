@@ -194,6 +194,10 @@ public class MMAcquisition {
          throw new MMScriptException(e);
       }
    }
+   
+   public AcquisitionData getAcqData() {
+	   return acqData_;
+   }
 
    public void setChannelName(int channel, String name) throws MMScriptException {
       // TODO: update image window if present

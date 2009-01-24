@@ -47,6 +47,7 @@ import javax.swing.BoxLayout;
 import javax.swing.InputMap;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
+import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -74,6 +75,7 @@ import mmcorej.CMMCore;
 
 import org.jeditsyntax.JEditTextArea;
 import org.jeditsyntax.JavaTokenMarker;
+import org.micromanager.api.AcquisitionEngine;
 import org.micromanager.api.ScriptInterface;
 import org.micromanager.api.ScriptingEngine;
 import org.micromanager.api.ScriptingGUI;
@@ -82,6 +84,10 @@ import org.micromanager.script.ScriptPanelMessageWindow;
 import org.micromanager.utils.GUIColors;
 import org.micromanager.utils.MMFrame;
 import org.micromanager.utils.MMScriptException;
+
+import bsh.EvalError;
+import bsh.Interpreter;
+import bsh.util.JConsole;
 
 import com.swtdesigner.SwingResourceManager;
 
@@ -104,7 +110,9 @@ public class ScriptPanel extends MMFrame implements MouseListener, ScriptingGUI 
    private JTextPane messagePane_;
    private StyleContext sc_;
    private ScriptPanelMessageWindow messageWindow_;
-
+   private Interpreter beanshellREPLint_;
+   private JConsole cons_;
+   
    private static final String SCRIPT_DIRECTORY = "script_directory";
    private static final String SCRIPT_FILE = "script_file_";
    private static final String RIGHT_DIVIDER_LOCATION = "right_divider_location";
@@ -295,12 +303,41 @@ public class ScriptPanel extends MMFrame implements MouseListener, ScriptingGUI 
 
    }
 
+   public void createBeanshellREPL() {
+	   // Create console and REPL interpreter:
+	   cons_ = new JConsole();
+	   beanshellREPLint_ = new Interpreter(cons_);
+	   new Thread(beanshellREPLint_).start();
+
+	   // Create convenience function "inspect(...)" from JOI "Inspector.inspect(...)":
+	   //int1.eval("import org.pf.joi.Inspector; inspect(x) { return Inspector.inspect(x); }");
+
+	   // This command allows variables to be inspected in the command-line
+	   // (e.g., typing "x;" causes the value of x to be returned):
+	   beanshellREPLint_.setShowResults(true);
+
+	   // Set up window for interpreter:
+/*	   JFrame frame = new JFrame();
+	   frame.setBounds(100,100,500,500);
+	   frame.setTitle("Beanshell Interactive Console (Micro-Manager)");
+	   frame.add(cons_);
+	   frame.setVisible(true);*/
+	   
+   }
+   
+   public JConsole getREPLCons() {
+	   return cons_;
+   }
+   
    /**
     * Create the dialog
     */
    public ScriptPanel(CMMCore core, MMOptions options) {
       super();
-
+      
+      // Beanshell REPL Console
+      createBeanshellREPL();
+      
       // Needed when Cancel button is pressed upon save file warning
       setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
 
@@ -317,6 +354,7 @@ public class ScriptPanel extends MMFrame implements MouseListener, ScriptingGUI 
       });
 
       interp_ = new BeanshellEngine(this);
+      interp_.setInterpreter(beanshellREPLint_);;
       
       new GUIColors();
       setTitle("Script Panel");
@@ -401,7 +439,10 @@ public class ScriptPanel extends MMFrame implements MouseListener, ScriptingGUI 
       spTopRight.putConstraint(SpringLayout.WEST, scriptPane_, 0, SpringLayout.WEST, topRightPanel);
       spTopRight.putConstraint(SpringLayout.NORTH, scriptPane_, buttonHeight + 2 * gap, SpringLayout.NORTH, topRightPanel);
       topRightPanel.add(scriptPane_);
+      
 
+      bottomRightPanel.add(cons_);
+      
       // Immediate Pane (executes single lines of script)
       immediatePane_ = new JTextField();
       immediatePane_.setFont(new Font("Courier New", Font.PLAIN, 12));
@@ -421,7 +462,7 @@ public class ScriptPanel extends MMFrame implements MouseListener, ScriptingGUI 
       });
       immediatePane_.setMinimumSize(new Dimension(100, 15));
       immediatePane_.setMaximumSize(new Dimension(2000, 15));
-      bottomRightPanel.add(immediatePane_);
+      //bottomRightPanel.add(immediatePane_);
 
       // Message (output) pane
       messagePane_ = new JTextPane();
@@ -430,7 +471,7 @@ public class ScriptPanel extends MMFrame implements MouseListener, ScriptingGUI 
       final JScrollPane messageScrollPane = new JScrollPane(messagePane_);
       messageScrollPane.setMinimumSize(new Dimension(100, 30));
       messageScrollPane.setMaximumSize(new Dimension(2000, 2000));
-      bottomRightPanel.add(messageScrollPane);
+      //bottomRightPanel.add(messageScrollPane);
 
       // Set up styles for the messagePane
       sc_ = new StyleContext();
@@ -442,6 +483,7 @@ public class ScriptPanel extends MMFrame implements MouseListener, ScriptingGUI 
 
       // disable user input to the messagePane
       messagePane_.setKeymap(null);
+          
       
       // Pane with buttons
       scriptTable_ = new JTable();
@@ -473,6 +515,20 @@ public class ScriptPanel extends MMFrame implements MouseListener, ScriptingGUI 
       spTopRight.putConstraint(SpringLayout.NORTH, runPaneButton, gap, SpringLayout.NORTH, topRightPanel);
       spTopRight.putConstraint(SpringLayout.WEST, runPaneButton, gap, SpringLayout.WEST, topRightPanel);
 
+/*      final JButton injectPaneButton = new JButton();
+      topRightPanel.add(injectPaneButton);
+      injectPaneButton.setFont(new Font("", Font.PLAIN, 10));
+      injectPaneButton.addActionListener(new ActionListener() {
+         public void actionPerformed(ActionEvent arg0) {
+             injectPane();
+         }
+      });
+      injectPaneButton.setText("Inject");
+      injectPaneButton.setPreferredSize(buttonSize);
+      spTopRight.putConstraint(SpringLayout.NORTH, injectPaneButton, gap, SpringLayout.NORTH, topRightPanel);
+      spTopRight.putConstraint(SpringLayout.WEST, injectPaneButton, gap, SpringLayout.WEST, runPaneButton);
+*/
+      
       final JButton stopButton = new JButton();
       topRightPanel.add(stopButton);
       stopButton.setFont(new Font("", Font.PLAIN, 10));
@@ -742,6 +798,15 @@ public class ScriptPanel extends MMFrame implements MouseListener, ScriptingGUI 
    }
    
    /*
+    * Runs the content of the editor Pane in the REPL context.
+    */
+   private void injectPane() {
+	   interp_.setInterpreter(beanshellREPLint_);
+	   runPane();
+	   interp_.resetInterpreter();
+   }
+   
+   /*
     * Runs the content of the editor Pane
     */
    private void runPane()
@@ -844,6 +909,7 @@ public class ScriptPanel extends MMFrame implements MouseListener, ScriptingGUI 
    public void insertScriptingObject(String varName, Object obj) {
       try {
          interp_.insertGlobalObject(varName, obj);
+         //beanshellREPLint_.set(varName,obj);
       } catch (Exception e) {
          handleException(e);
       }
@@ -910,6 +976,8 @@ public class ScriptPanel extends MMFrame implements MouseListener, ScriptingGUI 
    public void message (String text) {
       messagePane_.setCharacterAttributes(sc_.getStyle(blackStyleName_), false);
       messagePane_.replaceSelection(text + "\n");
+      cons_.print("\n"+text,java.awt.Color.black);
+      showPrompt();
    }
 
    public void Message (String text) {
@@ -929,8 +997,21 @@ public class ScriptPanel extends MMFrame implements MouseListener, ScriptingGUI 
       }
       messagePane_.setCharacterAttributes(sc_.getStyle(redStyleName_), false);
       messagePane_.replaceSelection(text + "\n");
+      cons_.print("\n"+text,java.awt.Color.red);
+      showPrompt();
+
    }
 
+   private void showPrompt() {
+	  String promptStr;
+      try {
+    	  promptStr = (String) beanshellREPLint_.eval("getBshPrompt();");
+      } catch (EvalError e) {
+    	  promptStr = "bsh % ";
+      } 
+	  cons_.print("\n"+promptStr,java.awt.Color.darkGray);  
+   }
+   
    /**
     * Clears the content of the message window
     */
@@ -1052,6 +1133,7 @@ public class ScriptPanel extends MMFrame implements MouseListener, ScriptingGUI 
       public void run() {
          if (error_)
             messageException(msg_, lineNumber_);
+         	
          else
             message(msg_);
       }
