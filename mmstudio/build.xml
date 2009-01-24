@@ -44,7 +44,7 @@
 
 	<target name="compileMMStudio" description="Compile MM Studio.">
 		<mkdir dir="build" />
-		<javac srcdir="./src" destdir="./build" optimize="on" source="1.5" debug="off">
+		<javac srcdir="./src" destdir="./build" optimize="on" source="1.5" target="1.5" debug="off">
 			<classpath refid="project.class.path" />
 			<!-- <compilerarg value="-Xlint"/> -->
 		</javac>
