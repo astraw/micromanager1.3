@@ -50,35 +50,129 @@ public interface AcquisitionEngine {
    public void setCore(CMMCore core_);
    public void setPositionList(PositionList posList);
    public void setParentGUI(DeviceControlGUI parent);
+
+   /**
+    * Sets which device will be used as the Z (focus) axis
+    */
    public void setZStageDevice(String stageLabel_);
+
+   /**
+    * Sets whether the Live window will be updated during acquistion
+    */
    public void setUpdateLiveWindow(boolean b);
    public String installAutofocusPlugin(String className);
    
    // run-time control
+
+   /**
+    * Starts acquisition as defined in the Multi-Dimensional Acquistion Window
+    * @throws MMException
+    * @throws MMAcqDataException
+    */
    public void acquire() throws MMException, MMAcqDataException;
+
+   /**
+    * Starts acquisition of a single well, based on the current protocol, using the supplied
+    * acquisition data structure.
+    * This command is specially designed for plate scanning and will automatically re-set
+    * all appropriate parameters.
+    * @throws MMAcqDataException 
+    * @throws Exception
+    */
    public void acquireWellScan(WellAcquisitionData wad) throws MMException, MMAcqDataException;
+
+   /**
+    * Stops a running Acquisition
+    * @param   interrupted when set, multifield acquisition will also be stopped
+    */
    public void stop(boolean interrupted);
+
+   /**
+    * Signals that a running acquisition is done.
+    */
    public void setFinished();
+
+   /**
+    * Returns true when Acquisition is running
+    */
    public boolean isAcquisitionRunning();
+
+   /**
+    * Determines if a multi-field acquistion is running
+    */
    public boolean isMultiFieldRunning();
+
+   /**
+    * Returns the number of frames acquired so far
+    */
    public int getCurrentFrameCount();
+
+   /**
+    * Unconditional shutdown.  Will stop acuiqistion and multi-field acquisition
+    */
    public void shutdown();
+
+   /**
+    * Pause/Unpause a running acquistion
+    */
    public void setPause(boolean state);
    
    // settings
+   /**
+    * Returns Frame Interval set by user in Multi-Dimensional Acquistion Windows
+    */
    public double getFrameIntervalMs();
+
+   /**
+    * Returns Z slice Step Size set by user in Multi-Dimensional Acquistion Windows
+    */
    public double getSliceZStepUm();
+
+   /**
+    * Returns Z slice bottom position set by user in Multi-Dimensional Acquistion Windows
+    */
    public double getSliceZBottomUm();
+
+   /**
+    * Sets channel specification in the given row
+    */
    public void setChannel(int row, ChannelSpec channel);
+
+   /**
+    * Find out which channels are currently available for the selected channel group.
+    * @return - list of channel (preset) names
+    */
    public String[] getChannelConfigs();
+
+   /**
+    * Returns number of frames set by user in Multi-Dimensional Acquistion Window
+    */
    public int getNumFrames();
+
+   /**
+    * Returns the configuration preset group currently selected in the Multi-Dimensional Acquistion Window
+    */
    public String getChannelGroup();
+
+   /**
+    * Set the channel group if the current hardware configuration permits.
+    * @param group
+    * @return - true if successful
+    */
    public boolean setChannelGroup(String newGroup);
+
+   /**
+    * Resets the engine
+    */
    public void clear();
    public void setFrames(int numFrames, double interval);
    public double getMinZStepUm();
    public void setSlices(double bottom, double top, double step, boolean b);
    public boolean isZSliceSettingEnabled();
+
+   /**
+    * returns Z slice top position set by user in Multi-Dimensional Acquistion Windows
+    */
    public double getZTopUm();
    public void enableZSliceSetting(boolean boolean1);
    public void enableMultiPosition(boolean selected);
