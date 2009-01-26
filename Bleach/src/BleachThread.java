@@ -180,7 +180,7 @@ public class BleachThread extends Thread {
          else if (ip instanceof ShortProcessor)
             i5dData.put(SummaryKeys.IMAGE_DEPTH, 2);
          i5dData.put(SummaryKeys.IJ_IMAGE_TYPE, imp.getType());
-         metadata.put(SummaryKeys.SUMMARY, i5dData);
+         metadata.put(SummaryKeys.SUMMARY_OBJ, i5dData);
 
       } catch (JSONException e1) {
          // TODO Auto-generated catch block

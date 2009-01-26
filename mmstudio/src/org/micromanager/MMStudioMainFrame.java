@@ -240,11 +240,11 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 	private ZWheelListener zWheelListener_;
 	private XYZKeyListener xyzKeyListener_;
 	private AcquisitionManager acqMgr_;
-	private MMImageWindow imageWin_;
+	private static MMImageWindow imageWin_;
 
 	private int snapCount_ = -1;
 
-	public MMImageWindow getLiveWin() {
+	public static MMImageWindow getLiveWin() {
 		return imageWin_;
 	}
 
