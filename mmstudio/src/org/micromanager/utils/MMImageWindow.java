@@ -253,7 +253,6 @@ public class MMImageWindow extends ImageWindow {
 		addWindowListener(new WindowAdapter() {
 			public void windowClosing(WindowEvent e) {
 				saveAttributes();
-				WindowManager.removeWindow(getImagePlus().getWindow());
 			}
 		});
 		addWindowListener(new WindowAdapter() {
