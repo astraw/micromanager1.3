@@ -2209,7 +2209,6 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 	public boolean isImageWindowOpen() {
 		boolean ret = imageWin_ != null;
 		ret = ret && !imageWin_.isClosed();
-		ret = ret && !imageWin_.running;
 		if (ret) {
 			try {
 				imageWin_.getGraphics().clearRect(0, 0, imageWin_.getWidth(),
