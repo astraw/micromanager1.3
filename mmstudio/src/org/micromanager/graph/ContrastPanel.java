@@ -187,7 +187,6 @@ public class ContrastPanel extends JPanel implements ImageController {
       stretchCheckBox_.setFont(new Font("", Font.PLAIN, 10));
       stretchCheckBox_.setText("Auto-stretch");
       stretchCheckBox_.addChangeListener(new ChangeListener(){
-		@Override
 		public void stateChanged(ChangeEvent ce) {
 			sliderLow_.setEnabled(!stretchCheckBox_.isSelected());
 			sliderHigh_.setEnabled(!stretchCheckBox_.isSelected());
