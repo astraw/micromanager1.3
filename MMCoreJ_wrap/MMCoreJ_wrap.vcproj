@@ -71,7 +71,7 @@
 				ShowProgress="0"
 				OutputFile="$(OutDir)/MMCoreJ_wrap.dll"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="..\lib;..\..\3rdparty\ACE_wrappers\lib"
+				AdditionalLibraryDirectories="..\lib;..\..\3rdparty\ACE_wrappers_5.5\lib"
 				IgnoreAllDefaultLibraries="false"
 				GenerateDebugInformation="true"
 				ProgramDatabaseFile="$(OutDir)/MMCoreJ_wrap.pdb"
