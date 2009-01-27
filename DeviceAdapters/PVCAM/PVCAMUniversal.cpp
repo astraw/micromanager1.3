@@ -213,10 +213,6 @@ int Universal::OnExposure(MM::PropertyBase* pProp, MM::ActionType eAct)
       {
          pl_exp_finish_seq(hPVCAM_, circBuffer_, 0);
          pl_exp_stop_cont(hPVCAM_, CCS_HALT);
-         if (!pl_exp_start_cont(hPVCAM_, circBuffer_, bufferSize_))
-         {
-            return pl_error_code();
-         }
       }
 
       double exp;
