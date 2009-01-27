@@ -1,10 +1,10 @@
 ///////////////////////////////////////////////////////////////////////////////
-//FILE:           TrackerControlDlg.java
-//PROJECT:        Micro-Manager-S
-//SUBSYSTEM:      ImaheJ plugins for Micro-Manager
+//FILE:           TrackerControl.java
+//PROJECT:        Micro-Manager-100X
+//SUBSYSTEM:      100X Imaging Inc micro-manager extentsions
 //-----------------------------------------------------------------------------
 //
-//AUTHOR:         Nenad Amodaj, nenad@amodaj.com, June 28, 2008
+//AUTHOR:         Nenad Amodaj, nenad@amodaj.com, June, 2008
 //
 //COPYRIGHT:      100X Imaging Inc, www.100ximaging.com, 2008
 //                
@@ -20,6 +20,8 @@
 //                INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES.
 //
 //CVS:            $Id: TrackerControlDlg.java 2019 2009-01-26 05:21:09Z nenad $
+
+package com.imaging100x.tracker;
 
 import ij.IJ;
 import ij.ImagePlus;
@@ -47,7 +49,6 @@ import javax.swing.JTextField;
 import javax.swing.Timer;
 import javax.swing.border.BevelBorder;
 
-import mmcorej.CMMCore;
 import mmcorej.Configuration;
 import mmcorej.MMCoreJ;
 
@@ -59,7 +60,7 @@ import org.micromanager.utils.Annotator;
 import org.micromanager.utils.MMFrame;
 import org.micromanager.utils.TextUtils;
 
-public class TrackerControlDlg extends MMFrame implements MMPlugin {
+public class TrackerControl extends MMFrame implements MMPlugin {
    private JTextField nameField_;
    private JTextField rootField_;
    private ButtonGroup buttonGroup = new ButtonGroup();
@@ -158,7 +159,7 @@ public class TrackerControlDlg extends MMFrame implements MMPlugin {
    /**
     * Create the dialog
     */
-   public TrackerControlDlg() {
+   public TrackerControl() {
       super();
       imageCounter_ = 0;
       limits_ = new MMRect();

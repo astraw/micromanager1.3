@@ -9,11 +9,10 @@
 
 	<!-- Do not modify from this point on -->
 	<property name="MMPluginDir" value="${ImageJPath}/plugins/Micro-Manager"/>
-	<property name="IJ" value="../classext/ij.jar"/>
-	<property name="beanshell" value="../classext/bsh-2.0b4.jar"/>
-	<property name="MMCoreJ" value="../bin/MMCoreJ.jar"/>
+	<property name="IJ" value="../../classext/ij.jar"/>
+	<property name="MMCoreJ" value="../../bin/MMCoreJ.jar"/>
 	<property name="MMPluginDir-inst" value="${InstallRoot}/plugins/Micro-Manager"/>
-	<property name="BinRoot" value="../bin"/>
+	<property name="BinRoot" value="../../bin"/>
 
 	<path id="project.MMPlugins.path">
 		<pathelement location="${MMPluginDir}"/>
@@ -33,24 +32,25 @@
 	   <pathelement location="${MMPluginDir}/MMJ_.jar"/>
 	</path>
 
-	<target name="compileMMTracking" description="Compile MM Tracking plugins.">
+	<target name="compileTracking" description="Compile Tracking plugin.">
 		<mkdir dir="build" />
 		<javac srcdir="./src" destdir="./build" optimize="on" source="1.4" debug="off">
 			<classpath refid="project.class.path" />
 		</javac>
 	</target>
 
-	<target name="buildMMTracking" description="Build MMTracking_.jar">
+	<target name="buildMMTracking" description="Build Tracking.jar">
 
-		<jar jarfile="MMTracking_.jar" basedir="build" />
+		<jar jarfile="Tracking.jar" basedir="build" />
 		
 		<mkdir dir="${MMPluginDir}" />
-		<copy file="MMTracking_.jar" todir="${MMPluginDir}" />
+		<copy file="Tracking.jar" todir="${MMPluginDir-inst}" />
+      <copy file="Tracking.jar" todir="${BinRoot}" />
 	</target>
 	
-	<target name="cleanMMTracking" description="Delete the MMTracking build files.">
-		<delete dir="bin" />
-		<delete file="MMTracking_.jar" />
+	<target name="cleanMMTracking" description="Delete the Tracking build files.">
+		<delete dir="build" />
+		<delete file="MMTracking.jar" />
 	</target>
 	
 </project>
