@@ -211,8 +211,8 @@ int Universal::OnExposure(MM::PropertyBase* pProp, MM::ActionType eAct)
       CaptureRestartHelper restart(this);
       if(restart)
       {
-         pl_exp_finish_seq(hPVCAM_, circBuffer_, 0);
          pl_exp_stop_cont(hPVCAM_, CCS_HALT); //Circular buffer only
+		 pl_exp_finish_seq(hPVCAM_, circBuffer_, 0);
       }
 
       double exp;
