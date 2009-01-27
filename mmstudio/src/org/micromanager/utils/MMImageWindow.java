@@ -257,6 +257,9 @@ public class MMImageWindow extends ImageWindow {
 		});
 		addWindowListener(new WindowAdapter() {
 			public void windowClosed(WindowEvent e) {
+				if (contrastPanel_ != null)
+					contrastPanel_.setImagePlus(null);
+				
 			}
 		});
 
@@ -287,21 +290,38 @@ public class MMImageWindow extends ImageWindow {
 	{
 		if (contrastDlg_ != null)
 			contrastDlg_.dispose();
-		savePosition();
-		// ToDo: implement winAccesslock_;
-		// remember LUT so that a new window can be opened with the
-		// same LUT
-		if (getImagePlus().getProcessor().isPseudoColorLut()) {
-			currentColorModel_ = getImagePlus().getProcessor()
-					.getColorModel();
-			logError("Storing color model:"
-					+ currentColorModel_.toString());
+		try {
+			savePosition();
+			// ToDo: implement winAccesslock_;
+			// remember LUT so that a new window can be opened with the
+			// same LUT
+			ImagePlus imgp = getImagePlus();
+			ImageProcessor ip = imgp != null ? imgp.getProcessor() : null;
+			boolean isLUT = ip != null ? ip.isPseudoColorLut() : false;
+			if (isLUT) {
+				currentColorModel_ = getImagePlus().getProcessor()
+						.getColorModel();
+				// !!!
+				MMLogger.getLogger().log(
+						Level.INFO,
+						"Storing color model:"
+								+ currentColorModel_.toString());
+			} else {
+				MMLogger
+						.getLogger()
+						.log(
+								Level.WARNING,
+								"Color model was not stored successfully"
+										+ currentColorModel_.toString()
+										+ "ImagePlus:" + imgp == null ? "null"
+										: "OK" + "ip:" + ip == null ? "null"
+												: "OK");
+			}
 
+		} catch (Exception e) {
+			MMLogger.getLogger().log(Level.SEVERE, e.getMessage());
 		}
-
-		if (contrastPanel_ != null)
-			contrastPanel_.setImagePlus(null);
-		
+			
 	}
 	public void windowOpened(WindowEvent e) {
 		getCanvas().requestFocus();
