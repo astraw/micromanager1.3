@@ -42,7 +42,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\..\3rdparty\ACE_wrappers;..\..\..\3rdparty\ACE_wrappers"
+				AdditionalIncludeDirectories="..\..\3rdparty\ACE_wrappers_5.5;..\..\..\3rdparty\ACE_wrappers_5.5"
 				PreprocessorDefinitions="WIN32;_DEBUG;_LIB"
 				MinimalRebuild="true"
 				ExceptionHandling="2"
