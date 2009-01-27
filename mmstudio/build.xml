@@ -80,6 +80,31 @@
 		<delete file="MMJ_.jar" />
 		<delete file="MMReader_.jar" />
 	</target>
+	
+   <!-- Tracking plugin -->
+	
+	  <target name="compileTracking" description="Compile Tracking plugin.">
+	      <mkdir dir="../plugins/Tracker/build" />
+	      <javac srcdir="../plugins/Tracker/src" destdir="../plugins/Tracker/build" optimize="on" source="1.4" debug="off">
+	         <classpath refid="project.class.path" />
+	      </javac>
+	   </target>
+
+	   <target name="buildMMTracking" description="Build Tracking.jar">
+
+	      <jar jarfile="../plugins/Tracker/Tracking.jar" basedir="../plugins/Tracker/build" />
+	      
+	      <mkdir dir="${MMPluginDir}" />
+	      <copy file="../plugins/Tracker/Tracking.jar" todir="${MMPluginDir-inst}" />
+	      <copy file="../plugins/Tracker/Tracking.jar" todir="${BinRoot}" />
+	   </target>
+	   
+	   <target name="cleanMMTracking" description="Delete the Tracking build files.">
+	      <delete dir="../plugins/Tracker/build" />
+	      <delete file="../plugins/Tracker/Tracking.jar" />
+	   </target>
+
+   <!-- End of Tracking plugin -->
 
 	<target name="install" description="Create installation image">
 		<copy file="MMJ_.jar" todir="${MMPluginDir-inst}" />
