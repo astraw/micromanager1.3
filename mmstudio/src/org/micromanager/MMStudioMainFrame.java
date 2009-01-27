@@ -57,6 +57,7 @@ import java.awt.image.ColorModel;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.logging.Level;
 import java.util.prefs.Preferences;
 
 import javax.swing.JButton;
@@ -338,7 +339,7 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 		// initialize timer
 		ActionListener timerHandler = new ActionListener() {
 			public void actionPerformed(ActionEvent evt) {
-				if (!isImageWindowOpen()) {
+				if (!isImageWindowOpen() ) {
 					// stop live acquisition if user closed the window
 					enableLiveMode(false);
 					return;
@@ -1644,9 +1645,11 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 
 	private void handleError(String message) {
 		if (IsLiveModeOn()) {
+//Should we always stop live mode on any error?
 			enableLiveMode(false);
 		}
 		JOptionPane.showMessageDialog(this, message);
+		MMLogger.getLogger().log(Level.SEVERE, message);		
 	}
 
 	private void updateTitle() {
@@ -1800,6 +1803,9 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 				win = null;
 			}
 			win = new MMImageWindow(core_, this, contrastPanel_);
+			
+			MMLogger.getLogger().log(Level.INFO, "createImageWin1");		
+
 			win.setBackground(guiColors_.background
 					.get((options_.displayBackground)));
 			setIJCal(win);
@@ -2283,6 +2289,7 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 				JOptionPane.showMessageDialog(this,
 						"Exception while enabling Live mode "
 								+ err.getMessage());
+				MMLogger.getLogger().log(Level.INFO, err.getMessage());		
 				if (imageWin_ != null) {
 					imageWin_.saveAttributes();
 					WindowManager.removeWindow(imageWin_);
@@ -2321,6 +2328,7 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 				JOptionPane.showMessageDialog(this,
 						"Exception while disabling Live mode "
 								+ err.getMessage());
+				MMLogger.getLogger().log(Level.INFO, err.getMessage());		
 				if (imageWin_ != null) {
 					WindowManager.removeWindow(imageWin_);
 					imageWin_.dispose();
