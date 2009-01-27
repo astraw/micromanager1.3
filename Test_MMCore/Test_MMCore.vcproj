@@ -42,7 +42,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\..\3rdparty\ACE_wrappers"
+				AdditionalIncludeDirectories="..\..\3rdparty\ACE_wrappers_5.5"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;_CRT_SECURE_NO_DEPRECATE;_M_IX86"
 				MinimalRebuild="true"
 				ExceptionHandling="2"
@@ -68,7 +68,7 @@
 				AdditionalDependencies="MMCored.lib aced.lib"
 				OutputFile="$(OutDir)/Test_MMCore.exe"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="..\lib;..\..\3rdparty\ACE_wrappers\lib"
+				AdditionalLibraryDirectories="..\lib;..\..\3rdparty\ACE_wrappers_5.5\lib"
 				GenerateDebugInformation="true"
 				ProgramDatabaseFile="$(OutDir)/Test_MMCore.pdb"
 				SubSystem="1"
@@ -124,7 +124,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="..\..\3rdparty\ACE_wrappers"
+				AdditionalIncludeDirectories="..\..\3rdparty\ACE_wrappers_5.5"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
 				ExceptionHandling="2"
 				RuntimeLibrary="0"
@@ -149,7 +149,7 @@
 				AdditionalDependencies="ace.lib MMCorer.lib"
 				OutputFile="$(OutDir)/Test_MMCore.exe"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="..\lib;..\..\3rdparty\ACE_wrappers\lib"
+				AdditionalLibraryDirectories="..\lib;..\..\3rdparty\ACE_wrappers_5.5\lib"
 				GenerateDebugInformation="true"
 				SubSystem="1"
 				OptimizeReferences="2"

@@ -155,7 +155,7 @@
 				AdditionalDependencies="mmcorer.lib ace.lib"
 				OutputFile="$(OutDir)/MMCoreJ_wrap.dll"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="..\lib;..\..\3rdparty\ACE_wrappers\lib"
+				AdditionalLibraryDirectories="..\lib;..\..\3rdparty\ACE_wrappers_5.5\lib"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				OptimizeReferences="2"
