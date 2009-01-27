@@ -1721,7 +1721,8 @@ int Ixon::OnExposure(MM::PropertyBase* pProp, MM::ActionType eAct)
          if (DRV_SUCCESS != ret)
             return (int)ret;
          expMs_ = exp;
-	   }
+	   } else
+          SetExposure_();
 
       if (acquiring)
          StartSequenceAcquisition(sequenceLength_ - imageCounter_, intervalMs_, stopOnOverflow_);
