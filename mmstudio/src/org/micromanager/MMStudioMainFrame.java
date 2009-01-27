@@ -2068,6 +2068,8 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 							.getG_Keyword_Binning(), item.toString());
 			}
 
+			updateStaticInfo();
+			
 			if (liveRunning) {
 				enableLiveMode(true);
 			}
@@ -2075,7 +2077,7 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 		} catch (Exception e) {
 			handleException(e);
 		}
-		updateStaticInfo();
+
 	}
 
 	private void createPropertyEditor() {
