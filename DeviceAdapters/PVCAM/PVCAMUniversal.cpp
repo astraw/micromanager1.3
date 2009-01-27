@@ -212,7 +212,7 @@ int Universal::OnExposure(MM::PropertyBase* pProp, MM::ActionType eAct)
       if(restart)
       {
          pl_exp_finish_seq(hPVCAM_, circBuffer_, 0);
-         pl_exp_stop_cont(hPVCAM_, CCS_HALT);
+         pl_exp_stop_cont(hPVCAM_, CCS_HALT); //Circular buffer only
       }
 
       double exp;
@@ -224,7 +224,7 @@ int Universal::OnExposure(MM::PropertyBase* pProp, MM::ActionType eAct)
 
       if(restart)
       {
-         if (!pl_exp_start_cont(hPVCAM_, circBuffer_, bufferSize_))
+         if (!pl_exp_start_cont(hPVCAM_, circBuffer_, bufferSize_)) //Circular buffer only
          {
             return pl_error_code();
          }
@@ -803,13 +803,13 @@ int Universal::SnapImage()
    if (ret != DEVICE_OK)
       return ret;
 
-   if (!pl_exp_start_cont(hPVCAM_, circBuffer_, bufferSize_))
+   if (!pl_exp_start_cont(hPVCAM_, circBuffer_, bufferSize_)) //Circular buffer only
    {
       ResizeImageBufferContinuous();
       return pl_error_code();
    }
    // wait until image is ready
-   while (pl_exp_check_cont_status(hPVCAM_, &status, &byteCnt, &bufferCnt) 
+   while (pl_exp_check_cont_status(hPVCAM_, &status, &byteCnt, &bufferCnt) //Circular buffer only
       && (status != READOUT_COMPLETE) 
       && (status != READOUT_FAILED))
    {
@@ -819,7 +819,7 @@ int Universal::SnapImage()
    {
       // get the image from the circular buffer
       void_ptr imgPtr;
-      if (!pl_exp_get_latest_frame(hPVCAM_, &imgPtr))
+      if (!pl_exp_get_latest_frame(hPVCAM_, &imgPtr)) //Circular buffer only
       {
          char msg[ERROR_MSG_LEN];
          pl_error_message(pl_error_code(), msg);
@@ -833,7 +833,7 @@ int Universal::SnapImage()
    else
       LogMessage("PVCamera readout failed");
 
-   pl_exp_stop_cont(hPVCAM_, CCS_HALT);
+   pl_exp_stop_cont(hPVCAM_, CCS_HALT); //Circular buffer only
    pl_exp_finish_seq(hPVCAM_, circBuffer_, 0);
 
    return ret;
@@ -1257,7 +1257,7 @@ int Universal::ResizeImageBufferContinuous()
 
    uns32 frameSize;
 
-   if (!pl_exp_setup_cont(hPVCAM_, 1, &region, TIMED_MODE, (uns32)exposure_, &frameSize, CIRC_OVERWRITE))
+   if (!pl_exp_setup_cont(hPVCAM_, 1, &region, TIMED_MODE, (uns32)exposure_, &frameSize, CIRC_OVERWRITE)) //Circular buffer only
       return pl_error_code();
    
    pl_exp_set_cont_mode(hPVCAM_, CIRC_OVERWRITE );
@@ -1295,7 +1295,7 @@ int Universal::ThreadRun(void)
 
    int ret=DEVICE_ERR;
       // wait until image is ready
-      while (pl_exp_check_cont_status(hPVCAM_, &status, &byteCnt, &bufferCnt) 
+      while (pl_exp_check_cont_status(hPVCAM_, &status, &byteCnt, &bufferCnt) //Circular buffer only
                            && (status != READOUT_COMPLETE) 
                            && (status != READOUT_FAILED))
       {
@@ -1336,7 +1336,7 @@ int Universal::StartSequenceAcquisition(long numImages, double interval_ms, bool
       return ret;
    }
 
-   if (!pl_exp_start_cont(hPVCAM_, circBuffer_, bufferSize_))
+   if (!pl_exp_start_cont(hPVCAM_, circBuffer_, bufferSize_)) //Circular buffer only
    {
       ResizeImageBufferContinuous();
       return pl_error_code();
@@ -1364,7 +1364,7 @@ int Universal::StopSequenceAcquisition()
    //call function of the base class, which does a useful work
    ret = this->CCameraBase<Universal>::StopSequenceAcquisition();
 
-   pl_exp_stop_cont(hPVCAM_, CCS_HALT);
+   pl_exp_stop_cont(hPVCAM_, CCS_HALT); //Circular buffer only
    pl_exp_finish_seq(hPVCAM_, circBuffer_, 0);
 
    return ret;
@@ -1385,8 +1385,8 @@ int Universal::PushImage()
    void_ptr imgPtr;
    bool oldest_frames_get_mode=false;/*=!noSupportForStreaming_*/
    rs_bool result = oldest_frames_get_mode
-      ?pl_exp_get_oldest_frame(hPVCAM_, &imgPtr)
-      :pl_exp_get_latest_frame(hPVCAM_, &imgPtr);
+      ?pl_exp_get_oldest_frame(hPVCAM_, &imgPtr) //Circular buffer only
+      :pl_exp_get_latest_frame(hPVCAM_, &imgPtr); //Circular buffer only
    if (!result)
    {
       int16 errorCode = pl_error_code();
@@ -1398,7 +1398,7 @@ int Universal::PushImage()
       return ret;
    }
    if(oldest_frames_get_mode)
-      pl_exp_unlock_oldest_frame(hPVCAM_);
+      pl_exp_unlock_oldest_frame(hPVCAM_); //Circular buffer only
 
    void* pixBuffer = const_cast<unsigned char*> (img_.GetPixels());
    memcpy(pixBuffer, imgPtr, GetImageBufferSize());
