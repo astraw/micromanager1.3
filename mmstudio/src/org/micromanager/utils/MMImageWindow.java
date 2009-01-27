@@ -34,6 +34,7 @@ import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.awt.image.ColorModel;
 import java.util.concurrent.locks.Lock;
+import java.util.logging.Level;
 import java.util.prefs.Preferences;
 
 import javax.swing.AbstractButton;
@@ -286,8 +287,7 @@ public class MMImageWindow extends ImageWindow {
 		setIJCal();
 	}
 
-	public void saveAttributes()
-	{
+	public void saveAttributes() {
 		if (contrastDlg_ != null)
 			contrastDlg_.dispose();
 		try {
@@ -302,26 +302,21 @@ public class MMImageWindow extends ImageWindow {
 				currentColorModel_ = getImagePlus().getProcessor()
 						.getColorModel();
 				// !!!
-				MMLogger.getLogger().log(
-						Level.INFO,
-						"Storing color model:"
-								+ currentColorModel_.toString());
+				MMLogger.getLogger().log(Level.INFO,
+						"Storing color model:" + currentColorModel_.toString());
 			} else {
-				MMLogger
-						.getLogger()
-						.log(
-								Level.WARNING,
-								"Color model was not stored successfully"
-										+ currentColorModel_.toString()
-										+ "ImagePlus:" + imgp == null ? "null"
-										: "OK" + "ip:" + ip == null ? "null"
-												: "OK");
+				MMLogger.getLogger().log(
+						Level.WARNING,
+						"Color model was not stored successfully"
+								+ currentColorModel_.toString() + "ImagePlus:"
+								+ imgp == null ? "null"
+								: "OK" + "ip:" + ip == null ? "null" : "OK");
 			}
 
 		} catch (Exception e) {
 			MMLogger.getLogger().log(Level.SEVERE, e.getMessage());
 		}
-			
+
 	}
 	public void windowOpened(WindowEvent e) {
 		getCanvas().requestFocus();
