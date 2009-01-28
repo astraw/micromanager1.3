@@ -189,7 +189,7 @@ int CHamamatsu::OnBinning(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
    if (eAct == MM::AfterSet)
    {
-      if (IsAcquiring())
+      if (IsCapturing())
          return ERR_BUSY_ACQUIRING;
 
       pProp->Get(lnBin_);
@@ -216,7 +216,7 @@ int CHamamatsu::OnTrigPolarity(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
    if (eAct == MM::AfterSet)
    {
-      bool acquiring = IsAcquiring();
+      bool acquiring = IsCapturing();
       if (acquiring)
          StopSequenceAcquisition();
 
@@ -298,7 +298,7 @@ int CHamamatsu::OnTrigMode(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
    if (eAct == MM::AfterSet)
    {
-      if (IsAcquiring())
+      if (IsCapturing())
          return ERR_BUSY_ACQUIRING;;
 
       std::string triggerMode;
@@ -378,7 +378,7 @@ int CHamamatsu::OnPixelType(MM::PropertyBase* pProp, MM::ActionType eAct)
    }
    else if (eAct == MM::AfterSet)
    {
-      bool acquiring = IsAcquiring();
+      bool acquiring = IsCapturing();
       if (acquiring)
          StopSequenceAcquisition();
 
@@ -420,7 +420,7 @@ int CHamamatsu::OnScanMode(MM::PropertyBase* pProp, MM::ActionType eAct)
 
    if (eAct == MM::AfterSet)
    {
-      bool acquiring = IsAcquiring();
+      bool acquiring = IsCapturing();
       if (acquiring)
          StopSequenceAcquisition();
 
@@ -477,7 +477,7 @@ int CHamamatsu::OnCCDMode(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
    if (eAct == MM::AfterSet)
    {
-      bool acquiring = IsAcquiring();
+      bool acquiring = IsCapturing();
       if (acquiring)
          StopSequenceAcquisition();
 
@@ -533,7 +533,7 @@ int CHamamatsu::OnPhotonImagingMode(MM::PropertyBase* pProp, MM::ActionType eAct
 {
    if (eAct == MM::AfterSet)
    {
-      bool acquiring = IsAcquiring();
+      bool acquiring = IsCapturing();
       if (acquiring)
          StopSequenceAcquisition();
 
@@ -652,7 +652,7 @@ int CHamamatsu::OnGain(MM::PropertyBase* pProp, MM::ActionType eAct)
 
    if (eAct == MM::AfterSet)
    {
-      bool acquiring = IsAcquiring();
+      bool acquiring = IsCapturing();
       if (acquiring)
          StopSequenceAcquisition();
 
@@ -731,7 +731,7 @@ int CHamamatsu::OnExtendedProperty(MM::PropertyBase* pProp, MM::ActionType eAct,
 {
    if (eAct == MM::AfterSet)
    {
-      bool acquiring = IsAcquiring();
+      bool acquiring = IsCapturing();
       if (acquiring)
          StopSequenceAcquisition();
 
@@ -1297,10 +1297,11 @@ bool CHamamatsu::Busy()
    return (snapInProgress_);
 }
 
-bool CHamamatsu::IsAcquiring()
+bool CHamamatsu::IsCapturing()
 {
    return acquiring_;
 }
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // Function name   : CHamamatsu::SnapImage
@@ -1394,7 +1395,7 @@ const unsigned char* CHamamatsu::GetImageBuffer()
 
 int CHamamatsu::SetROI(unsigned uX, unsigned uY, unsigned uXSize, unsigned uYSize)
 {
-   if (IsAcquiring())
+   if (IsCapturing())
       return ERR_BUSY_ACQUIRING;
 
    int ret = ShutdownImageBuffer();
@@ -1485,7 +1486,7 @@ int CHamamatsu::GetROI(unsigned& uX, unsigned& uY, unsigned& uXSize, unsigned& u
 
 int CHamamatsu::ClearROI()
 {
-   if (IsAcquiring())
+   if (IsCapturing())
       return ERR_BUSY_ACQUIRING;
 
   // inquire about capabilities

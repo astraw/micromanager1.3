@@ -106,7 +106,7 @@ public:
    int StartSequenceAcquisition(long numImages, double interval_ms, bool stopOnOverflow);
    int StopSequenceAcquisition();
    int RestartSequenceAcquisition();
-   bool IsAcquiring();
+   bool IsCapturing();
    int RestartSnapMode();
 
    // action interface
