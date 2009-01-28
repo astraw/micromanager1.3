@@ -159,4 +159,4 @@ if test -z "${BUILD_SECRETDEVICEADAPTERS}" ; then
 fi
 
 AC_CONFIG_SUBDIRS(DeviceAdapters)
-AC_OUTPUT(Makefile ModuleTest/Makefile MMCore/Makefile MMCoreJ_wrap/Makefile Test_MMCore/Makefile Test_Serial/Makefile mmstudio/Makefile Tracking/Makefile Bleach/Makefile autofocus/Makefile MMDevice/Makefile bin/Makefile)
+AC_OUTPUT(Makefile ModuleTest/Makefile MMCore/Makefile MMCoreJ_wrap/Makefile Test_MMCore/Makefile Test_Serial/Makefile mmstudio/Makefile Tracking/Makefile Bleach/Makefile plugins/Makefile autofocus/Makefile MMDevice/Makefile bin/Makefile)
