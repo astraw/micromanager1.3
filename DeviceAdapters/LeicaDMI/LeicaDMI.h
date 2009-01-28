@@ -225,9 +225,6 @@ public:
 
    // XYStage API                                                            
    // -----------
-  int SetPositionUm(double x, double y);
-  int SetRelativePositionUm(double x, double y);
-  int GetPositionUm(double& x, double& y);
   int SetPositionSteps(long x, long y);
   int SetRelativePositionSteps(long x, long y);
   int GetPositionSteps(long& x, long& y);

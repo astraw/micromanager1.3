@@ -1770,6 +1770,9 @@ int LeicaMonitoringThread::svc()
                       case (22) : // Completion of Position Absolute
                          scopeModel_->XDrive_.SetBusy(false);
                          break;
+                      case (122) : // Completion of Position Absolute, with error?
+                         scopeModel_->XDrive_.SetBusy(false);
+                         break;
                       case (23) : // Position
                          {
                             int pos;
@@ -1816,6 +1819,9 @@ int LeicaMonitoringThread::svc()
                          scopeModel_->YDrive_.SetBusy(false);
                          break;
                       case (22) : // Completion of Position Absolute
+                         scopeModel_->YDrive_.SetBusy(false);
+                         break;
+                      case (122) : // Completion of Position Absolute, with error?
                          scopeModel_->YDrive_.SetBusy(false);
                          break;
                       case (23) : // Position

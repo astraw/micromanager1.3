@@ -1357,68 +1357,6 @@ double XYStage::GetStepSizeYUm()
    return g_ScopeModel.YDrive_.GetStepSize();
 }
 
-int XYStage::SetPositionUm(double x, double y)
-{
-   long xSteps = 0;
-   long ySteps = 0;
-
-   /*
-   long xSteps = (long)(x / g_ScopeModel.XDrive_.GetStepSize());
-   long ySteps = (long)(y / g_ScopeModel.XDrive_.GetStepSize());
-   */
-
-   if (mirrorX_)
-      xSteps = (long) (originXSteps_ - (x / g_ScopeModel.XDrive_.GetStepSize() + 0.5));
-   else
-      xSteps = (long) (originXSteps_ + (x / g_ScopeModel.XDrive_.GetStepSize() + 0.5));
-
-   if (mirrorY_)
-      ySteps = (long) (originYSteps_ - (x / g_ScopeModel.XDrive_.GetStepSize() + 0.5));
-   else
-      ySteps = (long) (originYSteps_ + (x / g_ScopeModel.XDrive_.GetStepSize() + 0.5));
-
-   return SetPositionSteps(xSteps, ySteps);
-}
-
-int XYStage::SetRelativePositionUm(double x, double y)
-{
-/*
-   long xSteps = (long)(x / g_ScopeModel.XDrive_.GetStepSize());
-   long ySteps = (long)(y / g_ScopeModel.XDrive_.GetStepSize());
-*/
-   long xSteps = (long) (x / g_ScopeModel.XDrive_.GetStepSize() + 0.5);                            
-   if (mirrorX_)                                                             
-      xSteps = -xSteps;                                                      
-   long ySteps = (long) (y / g_ScopeModel.XDrive_.GetStepSize() + 0.5);                            
-   if (mirrorY_)                                                             
-      ySteps = -ySteps;                                                      
-
-   return  SetRelativePositionSteps(xSteps, ySteps);
-}
-
-int XYStage::GetPositionUm(double& x, double& y)
-{
-   long xSteps, ySteps;
-   int ret = GetPositionSteps(xSteps, ySteps);                         
-   if (ret != DEVICE_OK)                                      
-      return ret;                                             
-/*
-   x = xSteps * g_ScopeModel.XDrive_.GetStepSize();
-   y = ySteps * g_ScopeModel.XDrive_.GetStepSize();
-*/
-   if (mirrorX_)                                                             
-      x = (xSteps - originXSteps_) * g_ScopeModel.XDrive_.GetStepSize();
-   else
-      x = - (xSteps - originXSteps_) * g_ScopeModel.XDrive_.GetStepSize();
-
-   if (mirrorY_)                                                             
-      y = (ySteps - originYSteps_) * g_ScopeModel.XDrive_.GetStepSize();
-   else
-      y = - (ySteps - originYSteps_) * g_ScopeModel.XDrive_.GetStepSize();
-
-   return DEVICE_OK;
-}
-
 int XYStage::SetPositionSteps(long xSteps, long ySteps)
 {
    int ret = g_ScopeInterface.SetDrivePosition(*this, *GetCoreCallback(), g_ScopeModel.XDrive_, g_XDrive, xSteps);
