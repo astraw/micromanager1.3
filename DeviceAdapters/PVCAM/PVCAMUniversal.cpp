@@ -212,7 +212,7 @@ int Universal::OnExposure(MM::PropertyBase* pProp, MM::ActionType eAct)
       if(restart)
       {
          pl_exp_stop_cont(hPVCAM_, CCS_HALT); //Circular buffer only
-		 pl_exp_finish_seq(hPVCAM_, circBuffer_, 0);
+		   pl_exp_finish_seq(hPVCAM_, circBuffer_, 0);
       }
 
       double exp;
@@ -235,8 +235,6 @@ int Universal::OnExposure(MM::PropertyBase* pProp, MM::ActionType eAct)
 
 int Universal::OnPixelType(MM::PropertyBase* pProp, MM::ActionType /*eAct*/)
 {  
-   if (IsCapturing())
-      return ERR_BUSY_ACQUIRING;
 
    int16 bitDepth;
    pl_get_param( hPVCAM_, PARAM_BIT_DEPTH, ATTR_CURRENT, &bitDepth);
@@ -375,8 +373,33 @@ int Universal::OnMultiplierGain(MM::PropertyBase* pProp, MM::ActionType eAct)
    {
       long gain;
       pProp->Get(gain);
+      
+      CaptureRestartHelper restart(this);
+      if(restart)
+      {
+         pl_exp_stop_cont(hPVCAM_, CCS_HALT); //Circular buffer only
+		   pl_exp_finish_seq(hPVCAM_, circBuffer_, 0);
+      }
+
+
       if (!SetLongParam_PvCam(hPVCAM_, PARAM_GAIN_MULT_FACTOR, gain))
          return pl_error_code();
+
+
+
+      if (restart)
+      {
+         int ret = ResizeImageBufferContinuous();
+         if (ret != DEVICE_OK)
+            return ret;
+
+         if (!pl_exp_start_cont(hPVCAM_, circBuffer_, bufferSize_)) //Circular buffer only
+         {
+            return pl_error_code();
+         }
+      }
+
+
    }
    else if (eAct == MM::BeforeGet)
    {
@@ -403,7 +426,7 @@ int Universal::OnTemperature(MM::PropertyBase* pProp, MM::ActionType eAct)
    }
    else if (eAct == MM::BeforeGet)
    {
-	  long temp;
+	   long temp;
       if (!GetLongParam_PvCam(hPVCAM_, PARAM_TEMP, &temp))
          return pl_error_code();
 	  pProp->Set(temp/100);
@@ -501,8 +524,12 @@ int Universal::Initialize()
    
    // Camera name
    char name[CAM_NAME_LEN] = "Undef";
-   if (!pl_pvcam_init())
-      return pl_error_code();
+   if (!pl_pvcam_init()) {
+      // Try once more:
+      pl_pvcam_uninit();
+      if (!pl_pvcam_init())
+         return pl_error_code();
+   }
 
    // Get PVCAM version
    uns16 version;
@@ -1217,7 +1244,6 @@ bool Universal::GetEnumParam_PvCam(uns32 pvcam_cmd, uns32 index, std::string& en
 
 int Universal::ResizeImageBufferContinuous()
 {
-
    //ToDo: use semaphore
    bufferOK_ = false;
 
@@ -1294,17 +1320,20 @@ int Universal::ThreadRun(void)
    uns32 bufferCnt;
 
    int ret=DEVICE_ERR;
-      // wait until image is ready
-      while (pl_exp_check_cont_status(hPVCAM_, &status, &byteCnt, &bufferCnt) //Circular buffer only
+
+   // wait until image is ready
+   while (pl_exp_check_cont_status(hPVCAM_, &status, &byteCnt, &bufferCnt) //Circular buffer only
                            && (status != READOUT_COMPLETE) 
                            && (status != READOUT_FAILED))
-      {
-         CDeviceUtils::SleepMs(5);
-      }
-      if (status != READOUT_FAILED)
-         ret = PushImage();
-      else
-         LogMessage("PVCamera readout failed");
+   {
+      CDeviceUtils::SleepMs(5);
+   }
+
+   if (status != READOUT_FAILED)
+      ret = PushImage();
+   else
+      LogMessage("PVCamera readout failed");
+   
    return ret;
 }
 
