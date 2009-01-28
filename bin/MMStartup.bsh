@@ -4,5 +4,8 @@ mmc.logMessage("Processing startup script...");
 response = acq.installAutofocusPlugin("Autofocus_");
 mmc.logMessage(response);
 
+// Load Tracker plugin
+response = gui.installPlugin("com.imaging100x.tracker.TrackerControl", "Tracking...");
+mmc.logMessage(response);
 
 mmc.logMessage("Startup script finished.");
