@@ -248,6 +248,10 @@ private:
    int SetAllowedPixelTypes();
    int SetUniversalAllowedValues(int i, uns16 datatype);
    int SetGainLimits();
+   void Universal::suspend();
+   int Universal::resume();
+   bool restart_;
+
    int x_, y_, width_, height_, xBin_, yBin_, bin_;
 
    bool initialized_;

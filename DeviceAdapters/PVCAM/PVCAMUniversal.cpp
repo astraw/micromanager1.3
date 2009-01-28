@@ -114,7 +114,8 @@ Universal::Universal(short cameraId) :
    circBuffer_(0),
    init_seqStarted_(false),
    stopOnOverflow_(true),
-   noSupportForStreaming_(true)
+   noSupportForStreaming_(true),
+   restart_(false)
 {
    // ACE::init();
    InitializeDefaultErrorMessages();
@@ -184,6 +185,7 @@ int Universal::OnBinning(MM::PropertyBase* pProp, MM::ActionType eAct)
 // Chip Name
 int Universal::OnChipName(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
+   suspend();
    // Read-Only
    if (eAct == MM::BeforeGet)
    {
@@ -195,7 +197,9 @@ int Universal::OnChipName(MM::PropertyBase* pProp, MM::ActionType eAct)
       chipName_  = chipName;
    }
 
-   return DEVICE_OK;
+
+   return resume();
+
 }
 
 int Universal::OnExposure(MM::PropertyBase* pProp, MM::ActionType eAct)
@@ -208,33 +212,21 @@ int Universal::OnExposure(MM::PropertyBase* pProp, MM::ActionType eAct)
    }
    else if (eAct == MM::AfterSet)
    {
-      CaptureRestartHelper restart(this);
-      if(restart)
-      {
-         pl_exp_stop_cont(hPVCAM_, CCS_HALT); //Circular buffer only
-		   pl_exp_finish_seq(hPVCAM_, circBuffer_, 0);
-      }
+      suspend();
 
       double exp;
       pProp->Get(exp);
       exposure_ = exp;
-      int ret = ResizeImageBufferContinuous();
-      if (ret != DEVICE_OK)
-         return ret;
 
-      if(restart)
-      {
-         if (!pl_exp_start_cont(hPVCAM_, circBuffer_, bufferSize_)) //Circular buffer only
-         {
-            return pl_error_code();
-         }
-      }
+      return resume();
+
    }
    return DEVICE_OK;
 }
 
 int Universal::OnPixelType(MM::PropertyBase* pProp, MM::ActionType /*eAct*/)
 {  
+   suspend();
 
    int16 bitDepth;
    pl_get_param( hPVCAM_, PARAM_BIT_DEPTH, ATTR_CURRENT, &bitDepth);
@@ -245,12 +237,16 @@ int Universal::OnPixelType(MM::PropertyBase* pProp, MM::ActionType /*eAct*/)
       case (14) : pProp->Set(g_PixelType_14bit); return DEVICE_OK;
       case (16) : pProp->Set(g_PixelType_16bit); return DEVICE_OK;
    }
-   return DEVICE_OK;
+
+
+   return resume();
 }
 
 // Camera Speed
 int Universal::OnReadoutRate(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
+   suspend();
+
    if (eAct == MM::AfterSet)
    {
       long gain;
@@ -291,12 +287,15 @@ int Universal::OnReadoutRate(MM::PropertyBase* pProp, MM::ActionType eAct)
       pProp->Set(mode.c_str());
    }
 
-   return DEVICE_OK;
+
+   return resume();
 }
 
 // Readout Port
 int Universal::OnReadoutPort(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
+   suspend();
+
    if (eAct == MM::AfterSet)
    {
       string par;
@@ -342,12 +341,15 @@ int Universal::OnReadoutPort(MM::PropertyBase* pProp, MM::ActionType eAct)
 
       pProp->Set(portName.c_str());
    }
-   return DEVICE_OK;
+
+
+   return resume();
 }
 
 // Gain
 int Universal::OnGain(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
+   suspend();
    if (eAct == MM::AfterSet)
    {
       long gain;
@@ -363,53 +365,74 @@ int Universal::OnGain(MM::PropertyBase* pProp, MM::ActionType eAct)
       pProp->Set(gain);
    }
 
-   return DEVICE_OK;
+
+   return resume();
+
+
 }
+
+
+void Universal::suspend()
+{
+   CaptureRestartHelper restart(this);
+   if(restart)
+   {
+      restart_ = true;
+      pl_exp_stop_cont(hPVCAM_, CCS_HALT); //Circular buffer only
+	   pl_exp_finish_seq(hPVCAM_, circBuffer_, 0);
+   } 
+}
+
+int Universal::resume()
+{
+   CaptureRestartHelper cameraAlreadyRunning(this);
+   if(restart_) {
+      int ret = ResizeImageBufferContinuous();
+      if (ret != DEVICE_OK)
+         return ret;
+
+      if (!pl_exp_start_cont(hPVCAM_, circBuffer_, bufferSize_)) //Circular buffer only
+      {
+         return pl_error_code();
+      } else {
+         restart_ = false;
+         return DEVICE_OK;
+      }
+   } else
+      return DEVICE_OK;
+}
+
 
 // EM Gain
 int Universal::OnMultiplierGain(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
+   suspend();
+
    if (eAct == MM::AfterSet)
    {
       long gain;
       pProp->Get(gain);
-      
-      CaptureRestartHelper restart(this);
-      if(restart)
-      {
-         pl_exp_stop_cont(hPVCAM_, CCS_HALT); //Circular buffer only
-		   pl_exp_finish_seq(hPVCAM_, circBuffer_, 0);
-      }
-
+    
 
       if (!SetLongParam_PvCam(hPVCAM_, PARAM_GAIN_MULT_FACTOR, gain))
          return pl_error_code();
-
-
-
-      if (restart)
-      {
-         int ret = ResizeImageBufferContinuous();
-         if (ret != DEVICE_OK)
-            return ret;
-
-         if (!pl_exp_start_cont(hPVCAM_, circBuffer_, bufferSize_)) //Circular buffer only
-         {
-            return pl_error_code();
-         }
-      }
-
 
    }
    else if (eAct == MM::BeforeGet)
    {
       long gain;
+
+
       if (!GetLongParam_PvCam(hPVCAM_, PARAM_GAIN_MULT_FACTOR, &gain))
          return pl_error_code();
+
+
       pProp->Set(gain);
    }
 
-   return DEVICE_OK;
+
+   return resume();
+
 }
 
 // Offset
@@ -421,6 +444,8 @@ int Universal::OnOffset(MM::PropertyBase* /*pProp*/, MM::ActionType /*eAct*/)
 // Temperature
 int Universal::OnTemperature(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
+   suspend();
+
    if (eAct == MM::AfterSet)
    {
    }
@@ -431,11 +456,14 @@ int Universal::OnTemperature(MM::PropertyBase* pProp, MM::ActionType eAct)
          return pl_error_code();
 	  pProp->Set(temp/100);
    }
-   return DEVICE_OK;
+
+   return resume();
 }
 
 int Universal::OnTemperatureSetPoint(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
+   suspend();
+
 	if (eAct == MM::AfterSet)
 	{
 	   long temp;
@@ -451,11 +479,15 @@ int Universal::OnTemperatureSetPoint(MM::PropertyBase* pProp, MM::ActionType eAc
          return pl_error_code();
 	  pProp->Set(temp/100);
 	}
-	return DEVICE_OK;
+
+
+   return resume();
 }
 
 int Universal::OnUniversalProperty(MM::PropertyBase* pProp, MM::ActionType eAct, long index)
 {
+   suspend();
+
 	if (eAct == MM::AfterSet)
 	{
       uns16 dataType;
@@ -492,8 +524,9 @@ int Universal::OnUniversalProperty(MM::PropertyBase* pProp, MM::ActionType eAct,
          }
       }
 	}
-	return DEVICE_OK;
+	
 
+   return resume();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -584,7 +617,6 @@ int Universal::Initialize()
    binValues.push_back("1");
    binValues.push_back("2");
    binValues.push_back("4");
-   binValues.push_back("8");
    nRet = SetAllowedValues(MM::g_Keyword_Binning, binValues);
    if (nRet != DEVICE_OK)
       return nRet;
