@@ -24,7 +24,6 @@ public class StatusTimerTask extends TimerTask {
    }
 
    public void run() {
-
       try {
          totalCapacity_ = core_.getBufferTotalCapacity();
          int remaining = core_.getRemainingImageCount();
@@ -38,7 +37,7 @@ public class StatusTimerTask extends TimerTask {
          int percentFree = 0;
          if (totalCapacity_ > 0)
             percentFree = free * 100 / totalCapacity_;
-         boolean acquiring = core_.deviceBusy(cameraName_);
+         boolean acquiring = core_.isSequenceRunning();
          String bufState = new String("Acquiring.");
          if (!acquiring) {
             if (core_.isBufferOverflowed())
