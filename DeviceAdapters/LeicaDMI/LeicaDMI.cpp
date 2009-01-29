@@ -788,12 +788,17 @@ int ILTurret::Shutdown()
 
 bool ILTurret::Busy()
 {
-   bool busy;
-   int ret = g_ScopeModel.ILTurret_.GetBusy(busy);
-   if (ret != DEVICE_OK)  // This is bad and should not happen
+   // Since moving the IL Turret might move the condensor, we need to check both
+   bool busyIL, busyCond;
+   int ret = g_ScopeModel.ILTurret_.GetBusy(busyIL);
+   if (ret != DEVICE_OK)  
       return false;
 
-   return busy;
+   ret = g_ScopeModel.Condensor_.GetBusy(busyCond);
+   if (ret != DEVICE_OK)  
+      return false;
+
+   return busyIL || busyCond;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -825,7 +830,7 @@ int ILTurret::OnState(MM::PropertyBase* pProp, MM::ActionType eAct)
             // the new cube does not support the current method.  Look for a method:
             // Look first in the FLUO methods, than in all available methods
             int i = 10;
-            while (!g_ScopeModel.ILTurret_.cube_[pos].IsMethodAvailable(i) && (i < 13)) {
+            while (!g_ScopeModel.ILTurret_.cube_[pos].IsMethodAvailable(i) && (i <  13)) {
                i++;
             }
             if (!g_ScopeModel.ILTurret_.cube_[pos].IsMethodAvailable(i)) {
