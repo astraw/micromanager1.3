@@ -345,10 +345,18 @@ int CHamamatsu::OnExposure(MM::PropertyBase* pProp, MM::ActionType eAct)
    }
    else if (eAct == MM::AfterSet)
    {
+      bool acquiring = IsCapturing();
+      if (acquiring)
+         StopSequenceAcquisition();
+
       double dExp;
       pProp->Get(dExp);
       if (!dcam_setexposuretime(m_hDCAM, dExp / 1000.0))
          return ReportError("Error in dcam_setexposuretime: ");
+
+      if (acquiring)
+         RestartSequenceAcquisition();
+
    }
    return DEVICE_OK;
 }
