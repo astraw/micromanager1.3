@@ -75,7 +75,7 @@ public class MMSnapshotWindow extends Image5DWindow {
 	private static String title_ = "Snap";
 	private static ColorModel currentColorModel_ = null;
 	private static Lock winAccesslock_;
-	private static Preferences prefs_=null;
+	private static Preferences prefs_ = null;
 	private static ContrastSettings contrastSettings8_ = new ContrastSettings();
 	private static ContrastSettings contrastSettings16_ = new ContrastSettings();;
 	private static long instanceCounter_ = 0;
@@ -83,10 +83,10 @@ public class MMSnapshotWindow extends Image5DWindow {
 	private Panel buttonPanel_;
 	private LUTDialog contrastDlg_;
 	private ImageController contrastPanel_ = null;
-	
+
 	public MMSnapshotWindow(CMMCore core, ImageController contrastPanel)
 			throws Exception {
-		this(core,contrastPanel,createTitle(title_));
+		this(core, contrastPanel, createTitle(title_));
 	}
 
 	public MMSnapshotWindow(CMMCore core, ImageController contrastPanel,
@@ -118,12 +118,12 @@ public class MMSnapshotWindow extends Image5DWindow {
 	}
 
 	public void loadPosition(int x, int y) {
-		if(prefs_!=null)
+		if (prefs_ != null)
 			setLocation(prefs_.getInt(WINDOW_X, x), prefs_.getInt(WINDOW_Y, y));
 	}
 
 	public void savePosition() {
-		if(prefs_ ==null)
+		if (prefs_ == null)
 			loadPreferences();
 		Rectangle r = getBounds();
 		// save window position
@@ -175,18 +175,18 @@ public class MMSnapshotWindow extends Image5DWindow {
 		if (currentColorModel_ != null)
 			ip.setColorModel(currentColorModel_);
 		ip.fill();
-		Image5D img5d = new Image5D(wndTitle, type, width_, height_, 1, 1, 1, false);
+		Image5D img5d = new Image5D(wndTitle, type, width_, height_, 1, 1, 1,
+				false);
 		Image5DWindow i5dw = new Image5DWindow(img5d);
 		return img5d;
 
-		
 	}
 
 	public void Initialize() {
-		
+
 		setIJCal();
 		setPreferredLocation();
-		
+
 		buttonPanel_ = new Panel();
 
 		AbstractButton saveButton = new JButton("Save");
@@ -223,8 +223,8 @@ public class MMSnapshotWindow extends Image5DWindow {
 					currentColorModel_ = getImagePlus().getProcessor()
 							.getColorModel();
 
- 				if(contrastPanel_ != null)
- 					contrastPanel_.setImagePlus(null);
+				if (contrastPanel_ != null)
+					contrastPanel_.setImagePlus(null, null, null);
 				// remember old color model
 				if (getImagePlus().getProcessor().isPseudoColorLut())
 					currentColorModel_ = getImagePlus().getProcessor()
@@ -236,7 +236,7 @@ public class MMSnapshotWindow extends Image5DWindow {
 			public void windowClosed(WindowEvent e) {
 			}
 		});
-		
+
 		addWindowListener(new WindowAdapter() {
 			public void windowOpened(WindowEvent e) {
 				getCanvas().requestFocus();
@@ -256,11 +256,10 @@ public class MMSnapshotWindow extends Image5DWindow {
 			}
 		});
 		setIconImage(SwingResourceManager.getImage(MMStudioMainFrame.class,
-		"/org/micromanager/icons/camera.png"));
+				"/org/micromanager/icons/camera.png"));
 
 		setIJCal();
 	}
-
 
 	private void loadPreferences() {
 		prefs_ = Preferences.userNodeForPackage(this.getClass());
@@ -269,9 +268,8 @@ public class MMSnapshotWindow extends Image5DWindow {
 	public void setFirstInstanceLocation() {
 		setLocationRelativeTo(getParent());
 	}
-	
-	public void setPreferredLocation()
-	{
+
+	public void setPreferredLocation() {
 		loadPreferences();
 		Point p = getLocation();
 		loadPosition(p.x, p.y);
@@ -281,7 +279,7 @@ public class MMSnapshotWindow extends Image5DWindow {
 		MMLogger.getLogger().info("MMImageWindow:" + message);
 		return message;
 	}
-	
+
 	private static String createTitle(String wndTitle) {
 		return (wndTitle) + (new Long(instanceCounter_).toString());
 	}
@@ -295,10 +293,8 @@ public class MMSnapshotWindow extends Image5DWindow {
 
 	protected void updateHistogram() {
 		if (contrastPanel_ != null) {
-			contrastPanel_.setImagePlus(getImagePlus());
-			contrastPanel_.setContrastSettings(contrastSettings8_,
+			contrastPanel_.setImagePlus(getImagePlus(), contrastSettings8_,
 					contrastSettings16_);
-			contrastPanel_.update();
 		}
 	}
 
@@ -337,152 +333,98 @@ public class MMSnapshotWindow extends Image5DWindow {
 
 }
 
-
-
 /*
-
-
-package org.micromanager.utils;
-
-import ij.ImagePlus;
-import ij.WindowManager;
-import ij.io.FileSaver;
-import mmcorej.CMMCore;
-
-import java.awt.Panel;
-import java.awt.Point;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
-import java.lang.Long;
-import java.util.prefs.Preferences;
-
-import javax.swing.AbstractButton;
-import javax.swing.JButton;
-
-import org.micromanager.MMStudioMainFrame;
-
-import com.swtdesigner.SwingResourceManager;
-
-public class MMSnapshotWindow extends MMImageWindow {
-	private static final long serialVersionUID = 2L;
-	private static long instanceCounter_ = 0;
-	private static String title_ = "Snap";
-	private static Preferences prefs_=null;
-
-	public MMSnapshotWindow(CMMCore core, ImageController contrastPanel)
-			throws Exception {
-		super(core, contrastPanel, createTitle(title_));
-	}
-
-	public MMSnapshotWindow(CMMCore core, ImageController contrastPanel,
-			String wndTitle) throws Exception {
-		super(core, contrastPanel, createTitle(title_ = wndTitle));
-	}
-
-	private static String createTitle(String wndTitle) {
-		return (wndTitle) + (new Long(instanceCounter_).toString());
-	}
-
-	private void finalizeOpening() {
-		instanceCounter_++;
-	}
-
-	private void finalizeClosing() {
-	}
-
-	public void setFirstInstanceLocation() {
-		if (getImageWindowInstance() != null
-				&& getImageWindowInstance().isVisible())
-			setLocationRelativeTo(getImageWindowInstance());
-		else
-			setLocationRelativeTo(getParent());
-	}
-
-	private void loadPreferences() {
-		prefs_ = Preferences.userNodeForPackage(this.getClass());
-	}
-
-	public void Initialize() {
-		
-		setPreferredLocation();
-		
-		buttonPanel_ = new Panel();
-
-		AbstractButton saveButton = new JButton("Save");
-		saveButton.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				new FileSaver(getImagePlus()).save();
-			}
-		});
-		buttonPanel_.add(saveButton);
-
-		AbstractButton saveAsButton = new JButton("Save As...");
-		saveAsButton.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				new FileSaver(getImagePlus()).saveAsTiff();
-			}
-		});
-		buttonPanel_.add(saveAsButton);
-
-		add(buttonPanel_);
-		pack();
-
-		// add window listeners
-		addWindowListener(new WindowAdapter() {
-			public void windowClosing(WindowEvent e) {
-				finalizeClosing();
-
-				if (contrastDlg_ != null)
-					contrastDlg_.dispose();
-				savePosition();
-				// ToDo: implement winAccesslock_;
-				// remember LUT so that a new window can be opened with the
-				// same LUT
-				if (getImagePlus().getProcessor().isPseudoColorLut())
-					currentColorModel_ = getImagePlus().getProcessor()
-							.getColorModel();
-
- 				if(contrastPanel_ != null)
- 					contrastPanel_.setImagePlus(null);
-				// remember old color model
-				if (getImagePlus().getProcessor().isPseudoColorLut())
-					currentColorModel_ = getImagePlus().getProcessor()
-							.getColorModel();
-				WindowManager.removeWindow(getImagePlus().getWindow());
-			}
-		});
-		addWindowListener(new WindowAdapter() {
-			public void windowClosed(WindowEvent e) {
-			}
-		});
-		
-		addWindowListener(new WindowAdapter() {
-			public void windowOpened(WindowEvent e) {
-				getCanvas().requestFocus();
-				finalizeOpening();
-			}
-		});
-
-		addWindowListener(new WindowAdapter() {
-			public void windowGainedFocus(WindowEvent e) {
-				updateHistogram();
-			}
-		});
-
-		addWindowListener(new WindowAdapter() {
-			public void windowActivated(WindowEvent e) {
-				updateHistogram();
-			}
-		});
-		setIconImage(SwingResourceManager.getImage(MMStudioMainFrame.class,
-				"/org/micromanager/icons/camera_go.png"));
-
-		setIJCal();
-	}
-	
-	
-	
-}
-*/
+ * 
+ * 
+ * package org.micromanager.utils;
+ * 
+ * import ij.ImagePlus; import ij.WindowManager; import ij.io.FileSaver; import
+ * mmcorej.CMMCore;
+ * 
+ * import java.awt.Panel; import java.awt.Point; import
+ * java.awt.event.ActionEvent; import java.awt.event.ActionListener; import
+ * java.awt.event.WindowAdapter; import java.awt.event.WindowEvent; import
+ * java.lang.Long; import java.util.prefs.Preferences;
+ * 
+ * import javax.swing.AbstractButton; import javax.swing.JButton;
+ * 
+ * import org.micromanager.MMStudioMainFrame;
+ * 
+ * import com.swtdesigner.SwingResourceManager;
+ * 
+ * public class MMSnapshotWindow extends MMImageWindow { private static final
+ * long serialVersionUID = 2L; private static long instanceCounter_ = 0; private
+ * static String title_ = "Snap"; private static Preferences prefs_=null;
+ * 
+ * public MMSnapshotWindow(CMMCore core, ImageController contrastPanel) throws
+ * Exception { super(core, contrastPanel, createTitle(title_)); }
+ * 
+ * public MMSnapshotWindow(CMMCore core, ImageController contrastPanel, String
+ * wndTitle) throws Exception { super(core, contrastPanel, createTitle(title_ =
+ * wndTitle)); }
+ * 
+ * private static String createTitle(String wndTitle) { return (wndTitle) + (new
+ * Long(instanceCounter_).toString()); }
+ * 
+ * private void finalizeOpening() { instanceCounter_++; }
+ * 
+ * private void finalizeClosing() { }
+ * 
+ * public void setFirstInstanceLocation() { if (getImageWindowInstance() != null
+ * && getImageWindowInstance().isVisible())
+ * setLocationRelativeTo(getImageWindowInstance()); else
+ * setLocationRelativeTo(getParent()); }
+ * 
+ * private void loadPreferences() { prefs_ =
+ * Preferences.userNodeForPackage(this.getClass()); }
+ * 
+ * public void Initialize() {
+ * 
+ * setPreferredLocation();
+ * 
+ * buttonPanel_ = new Panel();
+ * 
+ * AbstractButton saveButton = new JButton("Save");
+ * saveButton.addActionListener(new ActionListener() { public void
+ * actionPerformed(ActionEvent e) { new FileSaver(getImagePlus()).save(); } });
+ * buttonPanel_.add(saveButton);
+ * 
+ * AbstractButton saveAsButton = new JButton("Save As...");
+ * saveAsButton.addActionListener(new ActionListener() { public void
+ * actionPerformed(ActionEvent e) { new FileSaver(getImagePlus()).saveAsTiff();
+ * } }); buttonPanel_.add(saveAsButton);
+ * 
+ * add(buttonPanel_); pack();
+ * 
+ * // add window listeners addWindowListener(new WindowAdapter() { public void
+ * windowClosing(WindowEvent e) { finalizeClosing();
+ * 
+ * if (contrastDlg_ != null) contrastDlg_.dispose(); savePosition(); // ToDo:
+ * implement winAccesslock_; // remember LUT so that a new window can be opened
+ * with the // same LUT if (getImagePlus().getProcessor().isPseudoColorLut())
+ * currentColorModel_ = getImagePlus().getProcessor() .getColorModel();
+ * 
+ * if(contrastPanel_ != null) contrastPanel_.setImagePlus(null); // remember old
+ * color model if (getImagePlus().getProcessor().isPseudoColorLut())
+ * currentColorModel_ = getImagePlus().getProcessor() .getColorModel();
+ * WindowManager.removeWindow(getImagePlus().getWindow()); } });
+ * addWindowListener(new WindowAdapter() { public void windowClosed(WindowEvent
+ * e) { } });
+ * 
+ * addWindowListener(new WindowAdapter() { public void windowOpened(WindowEvent
+ * e) { getCanvas().requestFocus(); finalizeOpening(); } });
+ * 
+ * addWindowListener(new WindowAdapter() { public void
+ * windowGainedFocus(WindowEvent e) { updateHistogram(); } });
+ * 
+ * addWindowListener(new WindowAdapter() { public void
+ * windowActivated(WindowEvent e) { updateHistogram(); } });
+ * setIconImage(SwingResourceManager.getImage(MMStudioMainFrame.class,
+ * "/org/micromanager/icons/camera_go.png"));
+ * 
+ * setIJCal(); }
+ * 
+ * 
+ * 
+ * }
+ */

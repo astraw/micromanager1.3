@@ -209,8 +209,8 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 	private ConfigGroupPad configPad_;
 	private ContrastPanel contrastPanel_;
 
-	//Timer interval - image display interval
-	private double interval_=40;
+	// Timer interval - image display interval
+	private double interval_ = 40;
 	private Timer timer_;
 	private GraphData lineProfileData_;
 
@@ -339,7 +339,7 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 		// initialize timer
 		ActionListener timerHandler = new ActionListener() {
 			public void actionPerformed(ActionEvent evt) {
-				if (!isImageWindowOpen() ) {
+				if (!isImageWindowOpen()) {
 					// stop live acquisition if user closed the window
 					enableLiveMode(false);
 					return;
@@ -499,7 +499,6 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 		springLayout_.putConstraint(SpringLayout.WEST, toggleButtonLive_, 7,
 				SpringLayout.WEST, getContentPane());
 
-		
 		// Acquire button
 		// -----------
 		JButton acquireButton = new JButton();
@@ -515,16 +514,16 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 			public void actionPerformed(ActionEvent e) {
 				Object img;
 				try {
-					boolean liveRunning = liveRunning_; 
-				 	if (liveRunning) 
-				 		enableLiveMode(false); 
+					boolean liveRunning = liveRunning_;
+					if (liveRunning)
+						enableLiveMode(false);
 
-				 	core_.snapImage();
+					core_.snapImage();
 					img = core_.getImage();
-					
-				 	if (liveRunning) 
-				 		enableLiveMode(true); 			
-					
+
+					if (liveRunning)
+						enableLiveMode(true);
+
 					addToSnapSeries(img);
 				} catch (Exception e2) {
 					handleException(e2);
@@ -542,8 +541,7 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 				SpringLayout.WEST, getContentPane());
 		springLayout_.putConstraint(SpringLayout.WEST, acquireButton, 7,
 				SpringLayout.WEST, getContentPane());
-		
-		
+
 		// Shutter button
 		// --------------
 
@@ -615,8 +613,6 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 				SpringLayout.WEST, getContentPane());
 		springLayout_.putConstraint(SpringLayout.WEST, shutterComboBox_, 170,
 				SpringLayout.WEST, getContentPane());
-
-
 
 		menuBar_ = new JMenuBar();
 		setJMenuBar(menuBar_);
@@ -824,7 +820,7 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 		scriptPanelMenuItem.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				createScriptPanel();
-				
+
 			}
 		});
 		scriptPanelMenuItem.setText("Script Panel");
@@ -1123,13 +1119,12 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 		springLayout_.putConstraint(SpringLayout.NORTH, autoShutterCheckBox_,
 				118 - 22, SpringLayout.NORTH, getContentPane());
 
-		
 		final JButton burstButton = new JButton();
 		burstButton.setMargin(new Insets(2, 2, 2, 2));
 		burstButton.setIconTextGap(1);
-		burstButton.setIcon(SwingResourceManager.getIcon(
-				MMStudioMainFrame.class,
-				"/org/micromanager/icons/film_go.png"));
+		burstButton
+				.setIcon(SwingResourceManager.getIcon(MMStudioMainFrame.class,
+						"/org/micromanager/icons/film_go.png"));
 		burstButton.setFont(new Font("Arial", Font.PLAIN, 10));
 		burstButton
 				.setToolTipText("Open Burst dialog for fast sequence acquisition");
@@ -1148,9 +1143,7 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 				SpringLayout.WEST, getContentPane());
 		springLayout_.putConstraint(SpringLayout.WEST, burstButton, 7,
 				SpringLayout.WEST, getContentPane());
-		
-		
-		
+
 		final JButton refreshButton = new JButton();
 		refreshButton.setMargin(new Insets(2, 2, 2, 2));
 		refreshButton.setIconTextGap(1);
@@ -1407,7 +1400,6 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 		springLayout_.putConstraint(SpringLayout.WEST, zoomOutButton, 144,
 				SpringLayout.WEST, getContentPane());
 
-		
 		// Profile
 		// -------
 
@@ -1415,18 +1407,15 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 		profileLabel_.setFont(new Font("Arial", Font.BOLD, 11));
 		profileLabel_.setText("Profile");
 		getContentPane().add(profileLabel_);
-		springLayout_.putConstraint(SpringLayout.SOUTH,
-				profileLabel_, 154, SpringLayout.NORTH,
-				getContentPane());
-		springLayout_.putConstraint(SpringLayout.NORTH,
-				profileLabel_, 140, SpringLayout.NORTH,
-				getContentPane());
-		springLayout_.putConstraint(SpringLayout.EAST, profileLabel_,
-				257, SpringLayout.WEST, getContentPane());
-		springLayout_.putConstraint(SpringLayout.WEST, profileLabel_,
-				194, SpringLayout.WEST, getContentPane());
-		
-				
+		springLayout_.putConstraint(SpringLayout.SOUTH, profileLabel_, 154,
+				SpringLayout.NORTH, getContentPane());
+		springLayout_.putConstraint(SpringLayout.NORTH, profileLabel_, 140,
+				SpringLayout.NORTH, getContentPane());
+		springLayout_.putConstraint(SpringLayout.EAST, profileLabel_, 257,
+				SpringLayout.WEST, getContentPane());
+		springLayout_.putConstraint(SpringLayout.WEST, profileLabel_, 194,
+				SpringLayout.WEST, getContentPane());
+
 		final JButton buttonProf = new JButton();
 		buttonProf.setIcon(SwingResourceManager.getIcon(
 				MMStudioMainFrame.class,
@@ -1439,7 +1428,7 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 				openLineProfileWindow();
 			}
 		});
-		//buttonProf.setText("Profile");
+		// buttonProf.setText("Profile");
 		getContentPane().add(buttonProf);
 		springLayout_.putConstraint(SpringLayout.SOUTH, buttonProf, 174,
 				SpringLayout.NORTH, getContentPane());
@@ -1449,10 +1438,7 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 				SpringLayout.WEST, getContentPane());
 		springLayout_.putConstraint(SpringLayout.WEST, buttonProf, 193,
 				SpringLayout.WEST, getContentPane());
-		
-		
-		
-		
+
 		final JButton addGroupButton_ = new JButton();
 		addGroupButton_.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
@@ -1608,28 +1594,25 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 				SpringLayout.WEST, getContentPane());
 
 		/*
-		final JButton xyListButton_ = new JButton();
-		xyListButton_.setIcon(SwingResourceManager.getIcon(
-				MMStudioMainFrame.class, "icons/application_view_list.png"));
-		xyListButton_.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-				showXYPositionList();
-			}
-		});
-		xyListButton_
-				.setToolTipText("Refresh all GUI controls directly from the hardware");
-		xyListButton_.setFont(new Font("Arial", Font.PLAIN, 10));
-		xyListButton_.setText("XY List");
-		getContentPane().add(xyListButton_);
-		springLayout_.putConstraint(SpringLayout.EAST, xyListButton_, 95,
-				SpringLayout.WEST, getContentPane());
-		springLayout_.putConstraint(SpringLayout.WEST, xyListButton_, 7,
-				SpringLayout.WEST, getContentPane());
-		springLayout_.putConstraint(SpringLayout.SOUTH, xyListButton_, 135,
-				SpringLayout.NORTH, getContentPane());
-		springLayout_.putConstraint(SpringLayout.NORTH, xyListButton_, 114,
-				SpringLayout.NORTH, getContentPane());
-		*/
+		 * final JButton xyListButton_ = new JButton();
+		 * xyListButton_.setIcon(SwingResourceManager.getIcon(
+		 * MMStudioMainFrame.class, "icons/application_view_list.png"));
+		 * xyListButton_.addActionListener(new ActionListener() { public void
+		 * actionPerformed(ActionEvent arg0) { showXYPositionList(); } });
+		 * xyListButton_
+		 * .setToolTipText("Refresh all GUI controls directly from the hardware"
+		 * ); xyListButton_.setFont(new Font("Arial", Font.PLAIN, 10));
+		 * xyListButton_.setText("XY List");
+		 * getContentPane().add(xyListButton_);
+		 * springLayout_.putConstraint(SpringLayout.EAST, xyListButton_, 95,
+		 * SpringLayout.WEST, getContentPane());
+		 * springLayout_.putConstraint(SpringLayout.WEST, xyListButton_, 7,
+		 * SpringLayout.WEST, getContentPane());
+		 * springLayout_.putConstraint(SpringLayout.SOUTH, xyListButton_, 135,
+		 * SpringLayout.NORTH, getContentPane());
+		 * springLayout_.putConstraint(SpringLayout.NORTH, xyListButton_, 114,
+		 * SpringLayout.NORTH, getContentPane());
+		 */
 	}
 
 	private void handleException(Exception e) {
@@ -1645,11 +1628,11 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 
 	private void handleError(String message) {
 		if (IsLiveModeOn()) {
-//Should we always stop live mode on any error?
+			// Should we always stop live mode on any error?
 			enableLiveMode(false);
 		}
 		JOptionPane.showMessageDialog(this, message);
-		MMLogger.getLogger().log(Level.SEVERE, message);		
+		MMLogger.getLogger().log(Level.SEVERE, message);
 	}
 
 	private void updateTitle() {
@@ -1662,7 +1645,6 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 			ImagePlus imp = imageWin_.getImagePlus();
 
 			if (imp != null) {
-				contrastPanel_.setImagePlus(imp);
 				contrastPanel_.setContrastSettings(MMImageWindow
 						.getContrastSettings8(), MMImageWindow
 						.getContrastSettings16());
@@ -1803,8 +1785,8 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 				win = null;
 			}
 			win = new MMImageWindow(core_, this, contrastPanel_);
-			
-			MMLogger.getLogger().log(Level.INFO, "createImageWin1");		
+
+			MMLogger.getLogger().log(Level.INFO, "createImageWin1");
 
 			win.setBackground(guiColors_.background
 					.get((options_.displayBackground)));
@@ -2069,7 +2051,7 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 			}
 
 			updateStaticInfo();
-			
+
 			if (liveRunning) {
 				enableLiveMode(true);
 			}
@@ -2162,15 +2144,14 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 	// public interface available for scripting access
 	// //////////////////////////////////////////////////////////////////////////
 
-    public void snapSingleImage(){
-	      try {
-	         core_.setExposure(Double.parseDouble(textFieldExp_.getText()));
-	         updateImage();
-	      } catch (Exception e){
-	         handleException(e);
-	      }
-	   }
-
+	public void snapSingleImage() {
+		try {
+			core_.setExposure(Double.parseDouble(textFieldExp_.getText()));
+			updateImage();
+		} catch (Exception e) {
+			handleException(e);
+		}
+	}
 
 	public Object getPixels() {
 		if (imageWin_ != null)
@@ -2291,7 +2272,7 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 				JOptionPane.showMessageDialog(this,
 						"Exception while enabling Live mode "
 								+ err.getMessage());
-				MMLogger.getLogger().log(Level.INFO, err.getMessage());		
+				MMLogger.getLogger().log(Level.INFO, err.getMessage());
 				if (imageWin_ != null) {
 					imageWin_.saveAttributes();
 					WindowManager.removeWindow(imageWin_);
@@ -2330,7 +2311,7 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 				JOptionPane.showMessageDialog(this,
 						"Exception while disabling Live mode "
 								+ err.getMessage());
-				MMLogger.getLogger().log(Level.INFO, err.getMessage());		
+				MMLogger.getLogger().log(Level.INFO, err.getMessage());
 				if (imageWin_ != null) {
 					WindowManager.removeWindow(imageWin_);
 					imageWin_.dispose();
@@ -2344,8 +2325,8 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 				: SwingResourceManager.getIcon(MMStudioMainFrame.class,
 						"/org/micromanager/icons/camera_go.png"));
 		toggleButtonLive_.setSelected(IsLiveModeOn());
-		toggleButtonLive_.setText(IsLiveModeOn()?"Stop Live":"Live");
-		
+		toggleButtonLive_.setText(IsLiveModeOn() ? "Stop Live" : "Live");
+
 	}
 
 	public boolean getLiveMode() {
@@ -2432,22 +2413,21 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 			imageWin_.toFront();
 
 			setIJCal(imageWin_);
-			// this is needed to clear the subtite, should be folded into drawInfo
-			imageWin_.getGraphics().clearRect(0,0,imageWin_.getWidth(),40);
+			// this is needed to clear the subtite, should be folded into
+			// drawInfo
+			imageWin_.getGraphics().clearRect(0, 0, imageWin_.getWidth(), 40);
 			imageWin_.drawInfo(imageWin_.getGraphics());
 
 			String expStr = textFieldExp_.getText();
 			if (expStr.length() > 0) {
 				core_.setExposure(Double.parseDouble(expStr));
 				updateImage();
-			}
-			else
+			} else
 				handleError("Exposure field is empty!");
-		} catch (Exception e){
+		} catch (Exception e) {
 			handleException(e);
-		}      
+		}
 	}
-
 
 	public void initializeGUI() {
 		try {
@@ -2597,7 +2577,7 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 				}
 
 				// bitDepth = core_.getImageBitDepth();
-				contrastPanel_.setPixelBitDepth((int) bitDepth, false);
+				// !!! contrastPanel_.setPixelBitDepth((int) bitDepth, false);
 			}
 
 			if (!timer_.isRunning()) {
@@ -3168,7 +3148,7 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 		// use serialization to clone the PositionList object
 		return PositionList.newInstance(posList_);
 	}
- 
+
 	public void sleep(long ms) throws MMScriptException {
 		if (scriptPanel_ != null) {
 			if (scriptPanel_.stopRequestPending())
@@ -3176,6 +3156,7 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 			scriptPanel_.sleep(ms);
 		}
 	}
+
 	public void openAcquisition(String name, String rootDir, int nrFrames,
 			int nrChannels, int nrSlices) throws MMScriptException {
 		acqMgr_.openAcquisition(name, rootDir);
@@ -3184,26 +3165,29 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 	}
 
 	public void openAcquisition(String name, String rootDir, int nrFrames,
-			int nrChannels, int nrSlices, boolean show) throws MMScriptException {
+			int nrChannels, int nrSlices, boolean show)
+			throws MMScriptException {
 		acqMgr_.openAcquisition(name, rootDir, show);
 		MMAcquisition acq = acqMgr_.getAcquisition(name);
 		acq.setDimensions(nrFrames, nrChannels, nrSlices);
 	}
 
-	private void openAcquisitionSnap(String name, String rootDir, boolean show) throws MMScriptException {
-		MMAcquisition acq = acqMgr_.openAcquisitionSnap(name, rootDir, this, show);
+	private void openAcquisitionSnap(String name, String rootDir, boolean show)
+			throws MMScriptException {
+		MMAcquisition acq = acqMgr_.openAcquisitionSnap(name, rootDir, this,
+				show);
 		acq.setDimensions(0, 1, 1);
 		try {
-			//acq.getAcqData().setPixelSizeUm(core_.getPixelSizeUm());
-			acq.setProperty(SummaryKeys.IMAGE_PIXEL_SIZE_UM, String.valueOf(core_.getPixelSizeUm()));
+			// acq.getAcqData().setPixelSizeUm(core_.getPixelSizeUm());
+			acq.setProperty(SummaryKeys.IMAGE_PIXEL_SIZE_UM, String
+					.valueOf(core_.getPixelSizeUm()));
 
 		} catch (Exception e) {
 			handleException(e);
 		}
 
 	}
-	
-	
+
 	public void initializeAcquisition(String name, int width, int height,
 			int depth) throws MMScriptException {
 		MMAcquisition acq = acqMgr_.getAcquisition(name);
@@ -3244,16 +3228,15 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 	public void snapAndAddImage(String name, int frame, int channel, int slice)
 			throws MMScriptException {
 
-		Metadata md =new Metadata();
+		Metadata md = new Metadata();
 		try {
 			Object img;
-			if(core_.isSequenceRunning())
-			{
-				img=core_.getLastImage();
-				core_.getLastImageMD(0,0,md);
+			if (core_.isSequenceRunning()) {
+				img = core_.getLastImage();
+				core_.getLastImageMD(0, 0, md);
 			} else {
 				core_.snapImage();
-				//ToDo: get metadata of the snapped image
+				// ToDo: get metadata of the snapped image
 				long channels = core_.getNumberOfChannels();
 				if (channels == 1)
 					img = core_.getImage();
@@ -3266,21 +3249,20 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 			long width = core_.getImageWidth();
 			long height = core_.getImageHeight();
 			long depth = core_.getBytesPerPixel();
-			
-			
+
 			if (!acq.isInitialized()) {
 
 				acq.setImagePhysicalDimensions((int) width, (int) height,
 						(int) depth);
 				acq.initialize();
 			}
-	
+
 			acq.insertImage(img, frame, channel, slice);
-		
+
 		} catch (Exception e) {
 			handleException(e);
 		}
-		
+
 	}
 
 	public void addToSnapSeries(Object img) {
@@ -3290,26 +3272,28 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 				enableLiveMode(false);
 			String acqName = "Snap" + snapCount_;
 			Boolean newSnap = false;
-			//gui.closeAllAcquisitions();
+			// gui.closeAllAcquisitions();
 			core_.setExposure(Double.parseDouble(textFieldExp_.getText()));
 			long width = core_.getImageWidth();
 			long height = core_.getImageHeight();
 			long depth = core_.getBytesPerPixel();
 			MMAcquisitionSnap acq = null;
-			
+
 			if (acqMgr_.hasActiveImage5D(acqName)) {
 				acq = (MMAcquisitionSnap) acqMgr_.getAcquisition(acqName);
-				newSnap = ! acq.isCompatibleWithCameraSettings();
-			}
-			else
+				newSnap = !acq.isCompatibleWithCameraSettings();
+			} else
 				newSnap = true;
-				
-			
+
 			if (newSnap) {
 				snapCount_++;
 				acqName = "Snap" + snapCount_;
-				this.openAcquisitionSnap(acqName, null, true); // (dir=null) -> keep in memory; don't save to file.
-				initializeAcquisition(acqName, (int) width, (int) height, (int) depth);
+				this.openAcquisitionSnap(acqName, null, true); // (dir=null) ->
+																// keep in
+																// memory; don't
+																// save to file.
+				initializeAcquisition(acqName, (int) width, (int) height,
+						(int) depth);
 
 			}
 			setChannelColor(acqName, 0, Color.WHITE);
@@ -3317,19 +3301,17 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 
 			acq = (MMAcquisitionSnap) acqMgr_.getAcquisition(acqName);
 			acq.appendImage(img);
-			
+
 			if (liveRunning)
 				enableLiveMode(true);
 
-			//closeAcquisition(acqName);
+			// closeAcquisition(acqName);
 		} catch (Exception e) {
 			handleException(e);
 		}
-		
-	
+
 	}
 
-	
 	public void addImage(String name, Object img, int frame, int channel,
 			int slice) throws MMScriptException {
 		MMAcquisition acq = acqMgr_.getAcquisition(name);

@@ -72,7 +72,7 @@ public class MMImageWindow extends ImageWindow {
 	private static Lock winAccesslock_;
 	private static Preferences prefs_ = null;
 	private static MMStudioMainFrame gui_ = null;
-	
+
 	private Panel buttonPanel_;
 	private static ContrastSettings contrastSettings8_ = new ContrastSettings();
 	private static ContrastSettings contrastSettings16_ = new ContrastSettings();;
@@ -93,15 +93,15 @@ public class MMImageWindow extends ImageWindow {
 		Initialize();
 	}
 
-	public MMImageWindow(CMMCore core, MMStudioMainFrame gui, ImageController contrastPanel)
-			throws Exception {
+	public MMImageWindow(CMMCore core, MMStudioMainFrame gui,
+			ImageController contrastPanel) throws Exception {
 		super(createImagePlus(core_ = core, title_));
 		contrastPanel_ = contrastPanel;
 		gui_ = gui;
 		core_ = core;
 		Initialize();
 	}
-	
+
 	public MMImageWindow(CMMCore core, ImageController contrastPanel,
 			String wndTitle) throws Exception {
 		super(createImagePlus(core_ = core, title_ = wndTitle));
@@ -230,23 +230,20 @@ public class MMImageWindow extends ImageWindow {
 		});
 		buttonPanel_.add(saveAsButton);
 
-		
-
-		
 		AbstractButton addToSeriesButton = new JButton("Add to Series");
 		addToSeriesButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				try {
-					gui_.addToSnapSeries(getImagePlus().getProcessor().getPixels());
-			
+					gui_.addToSnapSeries(getImagePlus().getProcessor()
+							.getPixels());
+
 				} catch (Exception e2) {
 					e2.printStackTrace(System.err);
 				}
 			}
 		});
 		buttonPanel_.add(addToSeriesButton);
-		
-		
+
 		add(buttonPanel_);
 		pack();
 
@@ -259,8 +256,8 @@ public class MMImageWindow extends ImageWindow {
 		addWindowListener(new WindowAdapter() {
 			public void windowClosed(WindowEvent e) {
 				if (contrastPanel_ != null)
-					contrastPanel_.setImagePlus(null);
-				
+					contrastPanel_.setImagePlus(null, null, null);
+
 			}
 		});
 
@@ -318,6 +315,7 @@ public class MMImageWindow extends ImageWindow {
 		}
 
 	}
+
 	public void windowOpened(WindowEvent e) {
 		getCanvas().requestFocus();
 	}
@@ -341,11 +339,9 @@ public class MMImageWindow extends ImageWindow {
 		return message;
 	}
 
-
 	protected void updateHistogram() {
 		if (contrastPanel_ != null) {
-			contrastPanel_.setImagePlus(getImagePlus());
-			contrastPanel_.setContrastSettings(contrastSettings8_,
+			contrastPanel_.setImagePlus(getImagePlus(), contrastSettings8_,
 					contrastSettings16_);
 			contrastPanel_.update();
 		}
