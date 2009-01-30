@@ -68,7 +68,7 @@ public class MMImageWindow extends ImageWindow {
 	private static final String WINDOW_HEIGHT = "mmimg_height";
 	private static CMMCore core_ = null;
 	private static String title_ = "Live";
-	private static ColorModel currentColorModel_ = null;
+	private static ColorModel currentColorLUT__ = null;
 	private static Lock winAccesslock_;
 	private static Preferences prefs_ = null;
 	private static MMStudioMainFrame gui_ = null;
@@ -157,7 +157,7 @@ public class MMImageWindow extends ImageWindow {
 
 	private static ImagePlus createImagePlus(CMMCore core, String wndTitle)
 			throws Exception {
-		ImageProcessor ip;
+		ImageProcessor ip = null;
 		long byteDepth = core_.getBytesPerPixel();
 		long channels = core_.getNumberOfChannels();
 		int width = (int) core_.getImageWidth();
@@ -199,9 +199,9 @@ public class MMImageWindow extends ImageWindow {
 			throw (new Exception(logError(message)));
 		}
 		ip.setColor(Color.black);
-		if (currentColorModel_ != null) {
-			ip.setColorModel(currentColorModel_);
-			logError("Restoring color model:" + currentColorModel_.toString());
+		if (currentColorLUT__ != null && !(ip instanceof ColorProcessor )) {
+			ip.setColorModel(currentColorLUT__);
+			logError("Restoring color model:" + currentColorLUT__.toString());
 		}
 		ip.fill();
 		return new ImagePlus(title_ = wndTitle, ip);
@@ -296,16 +296,16 @@ public class MMImageWindow extends ImageWindow {
 			ImageProcessor ip = imgp != null ? imgp.getProcessor() : null;
 			boolean isLUT = ip != null ? ip.isPseudoColorLut() : false;
 			if (isLUT) {
-				currentColorModel_ = getImagePlus().getProcessor()
+				currentColorLUT__ = getImagePlus().getProcessor()
 						.getColorModel();
 				// !!!
 				MMLogger.getLogger().log(Level.INFO,
-						"Storing color model:" + currentColorModel_.toString());
+						"Storing color model:" + currentColorLUT__.toString());
 			} else {
 				MMLogger.getLogger().log(
 						Level.WARNING,
 						"Color model was not stored successfully"
-								+ currentColorModel_.toString() + "ImagePlus:"
+								+ currentColorLUT__.toString() + "ImagePlus:"
 								+ imgp == null ? "null"
 								: "OK" + "ip:" + ip == null ? "null" : "OK");
 			}
