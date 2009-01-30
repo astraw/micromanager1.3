@@ -16,8 +16,8 @@
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
-			OutputDirectory="Debug"
-			IntermediateDirectory="Debug"
+			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
+			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="2"
 			CharacterSet="2"
 			>
@@ -59,7 +59,6 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="Madlib.lib"
-				OutputFile="$(OutDir)\mmgr_dal_MCL_NanoDrive.dll"
 				GenerateDebugInformation="true"
 				TargetMachine="1"
 			/>
@@ -86,13 +85,12 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="copy &quot;$(TargetPath)&quot; ..\..\bin"
 			/>
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory="Release"
-			IntermediateDirectory="Release"
+			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
+			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="2"
 			CharacterSet="2"
 			WholeProgramOptimization="1"
@@ -114,11 +112,12 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
+				WholeProgramOptimization="false"
 				PreprocessorDefinitions="MODULE_EXPORTS;WIN32"
 				RuntimeLibrary="0"
 				WarningLevel="4"
 				Detect64BitPortabilityProblems="false"
-				DebugInformationFormat="0"
+				DebugInformationFormat="3"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -161,7 +160,6 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="copy &quot;$(TargetPath)&quot; ..\..\bin"
 			/>
 		</Configuration>
 	</Configurations>
@@ -173,10 +171,6 @@
 			Filter="cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx"
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
-			<File
-				RelativePath="..\..\MMDevice\DeviceUtils.cpp"
-				>
-			</File>
 			<File
 				RelativePath=".\handle_list_if.cpp"
 				>
@@ -309,32 +303,6 @@
 					/>
 				</FileConfiguration>
 			</File>
-			<File
-				RelativePath="..\..\MMDevice\ModuleInterface.cpp"
-				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						ObjectFile="$(IntDir)\$(InputName)1.obj"
-						XMLDocumentationFileName="$(IntDir)\$(InputName)1.xdc"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						ObjectFile="$(IntDir)\$(InputName)1.obj"
-						XMLDocumentationFileName="$(IntDir)\$(InputName)1.xdc"
-					/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath="..\..\MMDevice\Property.cpp"
-				>
-			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -343,14 +311,6 @@
 			>
 			<File
 				RelativePath=".\device_list.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\MMDevice\DeviceBase.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\MMDevice\DeviceUtils.h"
 				>
 			</File>
 			<File
@@ -379,6 +339,52 @@
 			</File>
 			<File
 				RelativePath=".\MCL_NanoDrive_ZStage.h"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="Micro Manager 1.2"
+			>
+			<File
+				RelativePath="..\..\MMDevice\DeviceUtils.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\MMDevice\ModuleInterface.cpp"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						ObjectFile="$(IntDir)\$(InputName)1.obj"
+						XMLDocumentationFileName="$(IntDir)\$(InputName)1.xdc"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						ObjectFile="$(IntDir)\$(InputName)1.obj"
+						XMLDocumentationFileName="$(IntDir)\$(InputName)1.xdc"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\..\MMDevice\Property.cpp"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="Micro Manager 1.2 Headers"
+			>
+			<File
+				RelativePath="..\..\MMDevice\DeviceBase.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\MMDevice\DeviceUtils.h"
 				>
 			</File>
 			<File

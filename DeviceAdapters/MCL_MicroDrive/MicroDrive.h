@@ -31,6 +31,8 @@ MICRODRIVE_API	void	MCL_ReleaseLibrary();
 MICRODRIVE_API  int		MCL_InitHandle();
 MICRODRIVE_API  void	MCL_ReleaseHandle(int handle);
 
+MICRODRIVE_API  int		MCL_MicroDriveWait(int handle);
+
 MICRODRIVE_API	int		MCL_MicroDriveMoveProfileXY(
 							double velocityX,
 							double distanceX,

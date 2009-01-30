@@ -214,15 +214,12 @@ int MicroDriveXYStage::SetPositionMm(double x, double y)
 		if (err != MCL_SUCCESS)
 			return err;
 
-		PauseDeviceDistanceMm(fabs(y));
 	}
 	else if (noYMovement || YMoveBlocked(y))
 	{
 		err = MCL_MicroDriveMoveProfile(XAXIS, maxVelocity_, x, rounding_, MCLhandle_);
 		if (err != MCL_SUCCESS)
 			return err;
-
-		PauseDeviceDistanceMm(fabs(x));
 	}
 	else 
 	{
@@ -230,13 +227,9 @@ int MicroDriveXYStage::SetPositionMm(double x, double y)
 		if (err != MCL_SUCCESS)
 			return err;
 
-		///Wait for the longest movement	
-		if (fabs(x) > fabs(y))
-			PauseDeviceDistanceMm(fabs(x));
-		else
-			PauseDeviceDistanceMm(fabs(y));
 	}
 
+	PauseDevice();
 	return DEVICE_OK;
 }
 
@@ -277,11 +270,13 @@ int MicroDriveXYStage::Home()
 	return MoveToForwardLimits();
 }
 
-void MicroDriveXYStage::PauseDeviceDistanceMm(double distance)
+
+void MicroDriveXYStage::PauseDevice()
 {
 	int milliseconds;
 
-	milliseconds = (int)ceil((1000 * (distance/maxVelocity_)) * 1.25);
+	milliseconds = MCL_MicroDriveWait(MCLhandle_);
+
 	MCL_DeviceAttached(milliseconds, MCLhandle_);
 }
 

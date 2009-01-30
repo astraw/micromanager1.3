@@ -70,8 +70,7 @@ private:
    int ReturnToOrigin();
 
    // Pause devices
-   void PauseDeviceDistanceMm(double distance);
-   void PauseDeviceTimeMs(int milliseconds);
+   void PauseDevice();
 
    // Check if blocked
    bool XMoveBlocked(double possNewPos);
