@@ -79,10 +79,14 @@ private Interpreter interp_old_;
    public void evaluate(String script) throws MMScriptException {
       try {
          interp_.eval(script);
+    	 // interp_.set("micro_manager_script",script);
       } catch (EvalError e) {
          throw new MMScriptException(formatBeanshellError(e, e.getErrorLineNumber()));
       }
    }
+
+   
+   
    public void evaluateAsync(String script) throws MMScriptException {
       if (evalThd_.isAlive())
          throw new MMScriptException("Another script execution in progress!");
@@ -99,10 +103,16 @@ private Interpreter interp_old_;
       }
    }
 
+   @SuppressWarnings("deprecation")
    public void stopRequest() {
-      if (evalThd_.isAlive())
-         evalThd_.interrupt();
+	  // Thread.stop() is deprecated, but I use it here
+	  // because it is apparently the only way to actually interrupt
+	  // a Thread executing a beanshell interpreter that has
+	  // been created external to it. Thread.interrupt() doesn't work.
+      if (evalThd_.isAlive())    	  
+         evalThd_.stop();
       stop_ = true;
+      
    }
 
    public boolean stopRequestPending() {
@@ -126,7 +136,7 @@ private Interpreter interp_old_;
       try {
          Thread.sleep(ms);
       } catch (InterruptedException e) {
-         throw new MMScriptException("Execution interrupted by the user");
+         throw new MMScriptException	("Execution interrupted by the user");
       }
    }
 }
