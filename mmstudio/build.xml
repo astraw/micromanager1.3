@@ -112,6 +112,7 @@
 		<copy file="${MMCoreJ}" todir="${MMPluginDir-inst}" />
 		<copy file="${BinRoot}/MMCoreJ_wrap.dll" todir="${InstallRoot}" />
 		<copy file="${BinRoot}/MMConfig_demo.cfg" todir="${InstallRoot}" />
+		<copy file="${BinRoot}/MMConfig_demoRGB.cfg" todir="${InstallRoot}" />
 
 		<copy file="${BinRoot}/mmgr_dal_Arduino.dll" todir="${InstallRoot}" />
 		<copy file="${BinRoot}/mmgr_dal_DemoCamera.dll" todir="${InstallRoot}" />
