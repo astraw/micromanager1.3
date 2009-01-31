@@ -51,6 +51,21 @@ K8061,K8061-Switch,Switch,4
 K8061,K8061-Shutter,Shutter,3
 K8061,K8061-DAC,DA,13
 K8061,K8061-Input,Input,8
+LeicaDMI,Scope,Leica DMI microscope controlled through serial interface,8
+LeicaDMI,TL-Shutter,Transmitted Light Shutter,3
+LeicaDMI,IL-Shutter,Incident Light Shutter,3
+LeicaDMI,IL-Turret,Reflector Turret (dichroics),4
+LeicaDMI,ObjectiveTurret,Objective Turret,4
+LeicaDMI,FocusDrive,Z-drive,5
+LeicaDMI,XYStage,XYStage,6
+LeicaDMI,TL-FieldDiaphragm,Field Diaphragm (Trans),8
+LeicaDMI,TL-ApertureDiaphragm,Aperture Diaphragm (Condensor),8
+LeicaDMI,IL-FieldDiaphragm,Field Diaphragm (Fluorescence),8
+LeicaDMI,IL-ApertureDiaphragm,Aperture Diaphragm (Fluorescence),8
+LeicaDMI,MagnificationChanger,Tube Lens (magnification changer),14
+LeicaDMI,TLPolarizer,Transmitted light Polarizer,4
+LeicaDMI,DIC Turret,DIC Turret,4
+LeicaDMI,Condensor,Condensor Turret,4
 Ludl,LudlController,Ludl Controller,8
 Ludl,LudlShutter,Ludl Shutter,3
 Ludl,LudlWheel,Ludl Filter Wheel,4

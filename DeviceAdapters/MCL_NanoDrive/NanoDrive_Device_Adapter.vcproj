@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="8.00"
+	Version="9.00"
 	Name="NanoDrive_Device_Adapter"
 	ProjectGUID="{06A4A3EA-9461-4780-B6EA-81004B3F3D56}"
 	RootNamespace="NanoDrive_Device_Adapter"
+	TargetFrameworkVersion="131072"
 	>
 	<Platforms>
 		<Platform
@@ -41,6 +42,7 @@
 				Optimization="0"
 				PreprocessorDefinitions="MODULE_EXPORTS;WIN32"
 				MinimalRebuild="true"
+				ExceptionHandling="2"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
 				WarningLevel="3"
@@ -60,6 +62,8 @@
 				Name="VCLinkerTool"
 				AdditionalDependencies="Madlib.lib"
 				GenerateDebugInformation="true"
+				RandomizedBaseAddress="1"
+				DataExecutionPrevention="0"
 				TargetMachine="1"
 			/>
 			<Tool
@@ -79,9 +83,6 @@
 			/>
 			<Tool
 				Name="VCAppVerifierTool"
-			/>
-			<Tool
-				Name="VCWebDeploymentTool"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
@@ -114,6 +115,7 @@
 				Name="VCCLCompilerTool"
 				WholeProgramOptimization="false"
 				PreprocessorDefinitions="MODULE_EXPORTS;WIN32"
+				ExceptionHandling="2"
 				RuntimeLibrary="0"
 				WarningLevel="4"
 				Detect64BitPortabilityProblems="false"
@@ -135,6 +137,8 @@
 				GenerateDebugInformation="false"
 				OptimizeReferences="0"
 				EnableCOMDATFolding="0"
+				RandomizedBaseAddress="1"
+				DataExecutionPrevention="0"
 				TargetMachine="1"
 			/>
 			<Tool
@@ -154,9 +158,6 @@
 			/>
 			<Tool
 				Name="VCAppVerifierTool"
-			/>
-			<Tool
-				Name="VCWebDeploymentTool"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"

@@ -37,6 +37,7 @@ Source: micro-manager\mmgr_dal_Hamamatsu.dll; DestDir: {app}; Flags: ignoreversi
 Source: micro-manager\inpout32.dll; DestDir: {app}; Flags: ignoreversion
 Source: micro-manager\libusb0.dll; DestDir: {app}; Flags: ignoreversion
 Source: micro-manager\mmgr_dal_Ludl.dll; DestDir: {app}; Flags: ignoreversion
+Source: micro-manager\mmgr_dal_LeicaDMI.dll; DestDir: {app}; Flags: ignoreversion
 Source: micro-manager\MMCoreJ_wrap.dll; DestDir: {app}; Flags: ignoreversion
 Source: micro-manager\mmgr_dal_ParallelPort.dll; DestDir: {app}; Flags: ignoreversion
 Source: micro-manager\mmgr_dal_PVCAM.dll; DestDir: {app}; Flags: ignoreversion
@@ -49,6 +50,7 @@ Source: micro-manager\mmgr_dal_Sensicam.dll; DestDir: {app}; Flags: ignoreversio
 Source: micro-manager\mmgr_dal_Vincent.dll; DestDir: {app}; Flags: ignoreversion
 Source: micro-manager\mmgr_dal_NikonTE2000.dll; DestDir: {app}; Flags: ignoreversion
 Source: micro-manager\mmgr_dal_Prior.dll; DestDir: {app}; Flags: ignoreversion
+Source: micro-manager\mmgr_dal_Piper.dll; DestDir: {app}; Flags: ignoreversion
 Source: micro-manager\mmgr_dal_Andor.dll; DestDir: {app}; Flags: ignoreversion
 Source: micro-manager\ATMCD32D.dll; DestDir: {app}; Flags: ignoreversion
 Source: micro-manager\mmgr_dal_DTOpenLayer.dll; DestDir: {app}; Flags: ignoreversion

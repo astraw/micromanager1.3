@@ -125,6 +125,7 @@
 		<copy file="${BinRoot}/mmgr_dal_ParallelPort.dll" todir="${InstallRoot}" />
 		<copy file="${BinRoot}/mmgr_dal_Pecon.dll" todir="${InstallRoot}" />
 		<copy file="${BinRoot}/mmgr_dal_Piper.dll" todir="${InstallRoot}" />
+		<copy file="${BinRoot}/mmgr_dal_LeicaDMI.dll" todir="${InstallRoot}" />
 		<copy file="${BinRoot}/mmgr_dal_Ludl.dll" todir="${InstallRoot}" />
 		<copy file="${BinRoot}/mmgr_dal_PVCAM.dll" todir="${InstallRoot}" />
 		<copy file="${BinRoot}/mmgr_dal_SutterLambda.dll" todir="${InstallRoot}" />
