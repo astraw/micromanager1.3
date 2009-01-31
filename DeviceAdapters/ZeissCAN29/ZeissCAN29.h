@@ -73,8 +73,7 @@ typedef double ZeissDouble;
 #define MAXNUMBERDEVICES 0x80
 
 // Target addresses for various Zeiss CAN controllers:
-//#define AXIOOBSERVER 0x19
-#define AXIOOBSERVER 0x1B
+#define AXIOOBSERVER 0x19
 #define AXIOIMAGER 0x1B
 
 //////////////////////////////////////////////////////////////////////////////
