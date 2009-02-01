@@ -461,7 +461,7 @@ public class FastAcqDlg extends JDialog implements GUIStatus {
    }
    
    /**
-    * Tests if the acquistion is still in progress.
+    * Tests if the acquisition is still in progress.
     */
    public boolean isBusy() {
       // make sure writing thread finishes
