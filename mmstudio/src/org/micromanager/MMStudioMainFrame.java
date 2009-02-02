@@ -441,23 +441,13 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 		textFieldExp_ = new JTextField();
 		textFieldExp_.addFocusListener(new FocusAdapter() {
 			public void focusLost(FocusEvent fe) {
-				try {
-					core_.setExposure(Double.parseDouble(textFieldExp_
-							.getText()));
-				} catch (Exception exp) {
-					handleException(exp);
-				}
+            setExposure();
 			}
 		});
 		textFieldExp_.setFont(new Font("Arial", Font.PLAIN, 10));
 		textFieldExp_.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				try {
-					core_.setExposure(Double.parseDouble(textFieldExp_
-							.getText()));
-				} catch (Exception exp) {
-					handleException(exp);
-				}
+            setExposure();
 			}
 		});
 		getContentPane().add(textFieldExp_);
@@ -484,9 +474,16 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 		toggleButtonLive_.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				if (!IsLiveModeOn()) {
-					if (interval_ < 30.0)
-						interval_ = 30.0; // limit the interval to 30ms or more
-					timer_.setDelay((int) interval_);
+               // Display interval for Live Mode changes as well
+               interval_ = 33.0;
+               try {
+                  if (core_.getExposure() > 33.0)
+                     interval_ = core_.getExposure();
+               } catch (Exception ex) {
+                  handleException(ex);
+               }
+
+               timer_.setDelay((int)interval_);
 				}
 				enableLiveMode(!IsLiveModeOn());
 			}
@@ -1638,6 +1635,20 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 		JOptionPane.showMessageDialog(this, message);
 		MMLogger.getLogger().log(Level.SEVERE, message);
 	}
+
+   private void setExposure()  {
+      try {
+         core_.setExposure(Double.parseDouble(textFieldExp_
+               .getText()));
+         // Display interval for Live Mode changes as well
+         interval_ = 33.0;
+         if (core_.getExposure() > 33.0)
+            interval_ = core_.getExposure();
+         timer_.setDelay((int)interval_);
+      } catch (Exception exp) {
+         handleException(exp);
+      }
+   }
 
 	private void updateTitle() {
 		this.setTitle("System: " + sysConfigFile_);
