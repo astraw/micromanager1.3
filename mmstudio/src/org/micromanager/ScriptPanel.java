@@ -113,6 +113,7 @@ public class ScriptPanel extends MMFrame implements MouseListener, ScriptingGUI 
    private Interpreter beanshellREPLint_;
    private JConsole cons_;
    
+   
    private static final String SCRIPT_DIRECTORY = "script_directory";
    private static final String SCRIPT_FILE = "script_file_";
    private static final String RIGHT_DIVIDER_LOCATION = "right_divider_location";
@@ -308,7 +309,7 @@ public class ScriptPanel extends MMFrame implements MouseListener, ScriptingGUI 
 	   cons_ = new JConsole();
 	   beanshellREPLint_ = new Interpreter(cons_);
 	   new Thread(beanshellREPLint_).start();
-
+	   
 	   // Create convenience function "inspect(...)" from JOI "Inspector.inspect(...)":
 	   //int1.eval("import org.pf.joi.Inspector; inspect(x) { return Inspector.inspect(x); }");
 
@@ -841,7 +842,9 @@ public class ScriptPanel extends MMFrame implements MouseListener, ScriptingGUI 
          }
       }
       try {
+    
          interp_.evaluateAsync(scriptPane_.getText());
+         //interp_.evaluate(scriptPane_.getText());
       } catch (MMScriptException e) {
          messageException(e.getMessage(), -1);
       }
@@ -909,7 +912,7 @@ public class ScriptPanel extends MMFrame implements MouseListener, ScriptingGUI 
    public void insertScriptingObject(String varName, Object obj) {
       try {
          interp_.insertGlobalObject(varName, obj);
-         //beanshellREPLint_.set(varName,obj);
+         beanshellREPLint_.set(varName,obj);
       } catch (Exception e) {
          handleException(e);
       }
