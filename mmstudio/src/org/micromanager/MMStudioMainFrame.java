@@ -213,6 +213,7 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 	private double interval_ = 40;
 	private Timer timer_;
 	private GraphData lineProfileData_;
+   private Object img_;
 
 	// labels for standard devices
 	private String cameraLabel_;
@@ -344,8 +345,8 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 					enableLiveMode(false);
 					return;
 				}
-				Object img;
 				try {
+               Object img;
 					// ToDo: implement color and multi-channel camera support
 					// use core_.getLastImage()
 					long channels = core_.getNumberOfChannels();
@@ -354,11 +355,14 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 					else {
 						img = core_.getRGB32Image();
 					}
+               if (img != img_) {
+                  img_ = img;
+                  displayImage(img_);
+               }
 				} catch (Exception e) {
 					e.printStackTrace();
 					return;
 				}
-				displayImage(img);
 			}
 		};
 
@@ -2261,6 +2265,12 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 					xyzKeyListener_ = new XYZKeyListener(core_);
 				xyzKeyListener_.start(imageWin_);
 
+            // Do not display more often than dictated by the exposire time
+            interval_ = 33.0;
+            if (core_.getExposure() > 33.0)
+               interval_ = core_.getExposure();
+            timer_.setDelay((int)interval_);
+
 				core_.startContinuousSequenceAcquisition(0.0);
 				timer_.start();
 				// Only hide the shutter checkbox if we are in autoshuttermode
@@ -2408,8 +2418,11 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 	private void doSnap() {
 		try {
 			if (!isImageWindowOpen())
-				if (null == createImageWindow())
-					handleError("Image window open failed");
+				//if (null == createImageWindow())
+			//		handleError("Image window open failed");
+
+					imageWin_ = createImageWindow();
+          
 			imageWin_.toFront();
 
 			setIJCal(imageWin_);
