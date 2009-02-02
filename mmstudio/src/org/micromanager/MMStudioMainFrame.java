@@ -513,23 +513,8 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 		acquireButton.setFont(new Font("Arial", Font.PLAIN, 10));
 		acquireButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				Object img;
-				try {
-					boolean liveRunning = liveRunning_;
-					if (liveRunning)
-						enableLiveMode(false);
-
-					core_.snapImage();
-					img = core_.getImage();
-
-					if (liveRunning)
-						enableLiveMode(true);
-
-					addToSnapSeries(img);
-				} catch (Exception e2) {
-					handleException(e2);
-				}
-			}
+				snapAndAddToImage5D(null);
+			}			
 		});
 
 		acquireButton.setText("Acquire");
@@ -3289,12 +3274,13 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 
 	}
 
-	public void addToSnapSeries(Object img) {
+	public void addToSnapSeries(Object img, String acqName) {
 		try {
 			boolean liveRunning = liveRunning_;
 			if (liveRunning)
 				enableLiveMode(false);
-			String acqName = "Snap" + snapCount_;
+			if (acqName == null)
+				acqName = "Snap" + snapCount_;
 			Boolean newSnap = false;
 			// gui.closeAllAcquisitions();
 			core_.setExposure(Double.parseDouble(textFieldExp_.getText()));
@@ -3511,5 +3497,23 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 	public CMMCore getCore() {
 		return core_;
 	}
+	
+	public void snapAndAddToImage5D(String acqName) {
+		Object img;
+		try {
+			boolean liveRunning = liveRunning_;
+			if (liveRunning)
+				enableLiveMode(false);
 
+			core_.snapImage();
+			img = core_.getImage();
+
+			if (liveRunning)
+				enableLiveMode(true);
+
+			addToSnapSeries(img, acqName);
+		}	catch (Exception e) {
+			handleException(e);
+		}
+	}
 }

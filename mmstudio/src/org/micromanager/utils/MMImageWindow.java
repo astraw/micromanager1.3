@@ -235,7 +235,7 @@ public class MMImageWindow extends ImageWindow {
 			public void actionPerformed(ActionEvent e) {
 				try {
 					gui_.addToSnapSeries(getImagePlus().getProcessor()
-							.getPixels());
+							.getPixels(),null);
 
 				} catch (Exception e2) {
 					e2.printStackTrace(System.err);
