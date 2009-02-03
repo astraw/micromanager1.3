@@ -29,6 +29,7 @@ Name: desktopicon; Description: {cm:CreateDesktopIcon}; GroupDescription: {cm:Ad
 
 [Files]
 ; device libraries
+Source: micro-manager\mmgr_dal_ABSCamera.dll; DestDir: {app}; Flags: ignoreversion
 Source: micro-manager\mmgr_dal_Arduino.dll; DestDir: {app}; Flags: ignoreversion
 Source: micro-manager\mmgr_dal_DemoCamera.dll; DestDir: {app}; Flags: ignoreversion
 Source: micro-manager\mmgr_dal_DemoRGBCamera.dll; DestDir: {app}; Flags: ignoreversion
