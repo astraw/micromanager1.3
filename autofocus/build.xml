@@ -36,12 +36,12 @@
 	<target name="compileAutofocus" description="Compile MM Autofocus plugins.">
 		<mkdir dir="build" />
 		<mkdir dir="buildTB" />
-		<javac srcdir="."  destdir="./build" optimize="on" source="1.5" debug="off">
+		<javac srcdir="."  destdir="./build" optimize="on" source="1.5" target="1.5" debug="off">
 			<include name="*.java"/>
 			<exclude name="*TB*.java"/>
 			<classpath refid="project.class.path" />
 		</javac>
-		<javac srcdir="."  destdir="./buildTB" optimize="on" source="1.5" debug="off">
+		<javac srcdir="."  destdir="./buildTB" optimize="on" source="1.5" target="1.5" debug="off">
 			<include name="*TB*.java"/>
 			<exclude name="Autofocus_.java"/>
 			<classpath refid="project.class.path" />
