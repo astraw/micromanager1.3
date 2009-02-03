@@ -256,6 +256,7 @@ private:
 
    bool initialized_;
    bool busy_;
+   long numImages_;
    short hPVCAM_; // handle to the driver
    static Universal* instance_;
    static unsigned refCount_;

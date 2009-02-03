@@ -378,6 +378,8 @@ void Universal::suspend()
    if(restart)
    {
       restart_ = true;
+      thd_->Stop();
+      thd_->wait();
       pl_exp_stop_cont(hPVCAM_, CCS_HALT); //Circular buffer only
 	   pl_exp_finish_seq(hPVCAM_, circBuffer_, 0);
    } 
@@ -395,7 +397,9 @@ int Universal::resume()
       {
          return pl_error_code();
       } else {
+         thd_->Start(numImages_ - thd_->GetImageCounter(), thd_->GetIntervalMs());
          restart_ = false;
+         
          return DEVICE_OK;
       }
    } else
@@ -1379,6 +1383,7 @@ int Universal::StartSequenceAcquisition(long numImages, double interval_ms, bool
       return ERR_BUSY_ACQUIRING;
 
    stopOnOverflow_ = stopOnOverflow;
+   numImages_ = numImages;
    ostringstream os;
    os << "Started sequnce acquisition: " << numImages << " at " << interval_ms << " ms" << endl;
    LogMessage(os.str().c_str());
