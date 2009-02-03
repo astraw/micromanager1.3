@@ -85,6 +85,8 @@ import mmcorej.DeviceType;
 import mmcorej.MMCoreJ;
 import mmcorej.MMEventCallback;
 import mmcorej.Metadata;
+import mmcorej.MetadataSingleTag;
+import mmcorej.MetadataTag;
 import mmcorej.StrVector;
 
 import org.micromanager.acquisition.AcquisitionManager;
@@ -243,9 +245,9 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 	private XYZKeyListener xyzKeyListener_;
 	private AcquisitionManager acqMgr_;
 	private static MMImageWindow imageWin_;
-
 	private int snapCount_ = -1;
-
+	private double lastImageTimeMs_=0;
+	
 	public static MMImageWindow getLiveWin() {
 		return imageWin_;
 	}
@@ -343,6 +345,10 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 				if (!isImageWindowOpen()) {
 					// stop live acquisition if user closed the window
 					enableLiveMode(false);
+					return;
+				}
+				if(!isNewImageAvailable())
+				{
 					return;
 				}
 				try {
@@ -3516,4 +3522,36 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 			handleException(e);
 		}
 	}
+
+	//Returns true if there is a newer image to display that can be get from MMCore
+	//Implements "optimistic" approach: returns true even 
+	//if there was an error while getting the image time stamp 
+	private boolean isNewImageAvailable()
+	{
+		boolean ret=true;
+/* disabled until metadata-related methods in MMCoreJ can handle exceptions 		
+		Metadata md = new Metadata();
+		MetadataSingleTag tag = null; 
+		try
+		{
+			core_.getLastImageMD(0, 0, md);
+			String strTag=MMCoreJ.getG_Keyword_Elapsed_Time_ms();
+			tag = md.GetSingleTag(strTag);
+			if(tag != null)
+			{
+				double newFrameTimeStamp = Double.valueOf(tag.GetValue());
+				ret = newFrameTimeStamp > lastImageTimeMs_;
+				if (ret)
+				{
+					lastImageTimeMs_ = newFrameTimeStamp;
+				}
+			}
+		}
+		catch(Exception e)
+		{
+			e.printStackTrace();
+		}
+*/		
+		return ret;
+	};
 }
