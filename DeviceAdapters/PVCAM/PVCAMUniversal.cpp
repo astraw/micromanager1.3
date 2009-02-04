@@ -185,12 +185,12 @@ int Universal::OnBinning(MM::PropertyBase* pProp, MM::ActionType eAct)
 // Chip Name
 int Universal::OnChipName(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
-   suspend();
+
    // Read-Only
    if (eAct == MM::BeforeGet)
    {
       char chipName[CCD_NAME_LEN];
-      if (!pl_get_param(hPVCAM_, PARAM_CHIP_NAME, ATTR_CURRENT, chipName))
+      if (!pl_get_param_safe(hPVCAM_, PARAM_CHIP_NAME, ATTR_CURRENT, chipName))
          return pl_error_code();
 
       pProp->Set(chipName);
@@ -198,7 +198,7 @@ int Universal::OnChipName(MM::PropertyBase* pProp, MM::ActionType eAct)
    }
 
 
-   return resume();
+   return DEVICE_OK;
 
 }
 
@@ -212,13 +212,13 @@ int Universal::OnExposure(MM::PropertyBase* pProp, MM::ActionType eAct)
    }
    else if (eAct == MM::AfterSet)
    {
-      suspend();
+      
 
       double exp;
       pProp->Get(exp);
       exposure_ = exp;
 
-      return resume();
+      return DEVICE_OK;
 
    }
    return DEVICE_OK;
@@ -226,10 +226,10 @@ int Universal::OnExposure(MM::PropertyBase* pProp, MM::ActionType eAct)
 
 int Universal::OnPixelType(MM::PropertyBase* pProp, MM::ActionType /*eAct*/)
 {  
-   suspend();
+   
 
    int16 bitDepth;
-   pl_get_param( hPVCAM_, PARAM_BIT_DEPTH, ATTR_CURRENT, &bitDepth);
+   pl_get_param_safe( hPVCAM_, PARAM_BIT_DEPTH, ATTR_CURRENT, &bitDepth);
    switch (bitDepth) {
       case (8) : pProp->Set(g_PixelType_8bit); return DEVICE_OK;
       case (10) : pProp->Set(g_PixelType_10bit); return DEVICE_OK;
@@ -239,18 +239,18 @@ int Universal::OnPixelType(MM::PropertyBase* pProp, MM::ActionType /*eAct*/)
    }
 
 
-   return resume();
+   return DEVICE_OK;
 }
 
 // Camera Speed
 int Universal::OnReadoutRate(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
-   suspend();
+   
 
    if (eAct == MM::AfterSet)
    {
       long gain;
-      GetLongParam_PvCam(hPVCAM_, PARAM_GAIN_INDEX, &gain);
+      GetLongParam_PvCam_safe(hPVCAM_, PARAM_GAIN_INDEX, &gain);
 
       string par;
       pProp->Get(par);
@@ -261,11 +261,11 @@ int Universal::OnReadoutRate(MM::PropertyBase* pProp, MM::ActionType eAct)
       else
          return ERR_INVALID_PARAMETER_VALUE;
 
-      if (!SetLongParam_PvCam(hPVCAM_, PARAM_SPDTAB_INDEX, index))
+      if (!SetLongParam_PvCam_safe(hPVCAM_, PARAM_SPDTAB_INDEX, index))
          return pl_error_code();
 
       // Try setting the gain to original value, don't make a fuss when it fails
-      SetLongParam_PvCam(hPVCAM_, PARAM_GAIN_INDEX, gain);
+      SetLongParam_PvCam_safe(hPVCAM_, PARAM_GAIN_INDEX, gain);
       if (!SetGainLimits())
          return pl_error_code();
       if (!SetAllowedPixelTypes())
@@ -278,7 +278,7 @@ int Universal::OnReadoutRate(MM::PropertyBase* pProp, MM::ActionType eAct)
    else if (eAct == MM::BeforeGet)
    {
       long index;
-      if (!GetLongParam_PvCam(hPVCAM_, PARAM_SPDTAB_INDEX, &index))
+      if (!GetLongParam_PvCam_safe(hPVCAM_, PARAM_SPDTAB_INDEX, &index))
          return pl_error_code();
       string mode;
       int nRet = GetSpeedString(mode);
@@ -288,13 +288,13 @@ int Universal::OnReadoutRate(MM::PropertyBase* pProp, MM::ActionType eAct)
    }
 
 
-   return resume();
+   return DEVICE_OK;
 }
 
 // Readout Port
 int Universal::OnReadoutPort(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
-   suspend();
+   
 
    if (eAct == MM::AfterSet)
    {
@@ -311,7 +311,7 @@ int Universal::OnReadoutPort(MM::PropertyBase* pProp, MM::ActionType eAct)
       tmp << "Set port to: " << par << " ID: " << port;
       LogMessage(tmp.str().c_str(), true);
 
-      if (!SetLongParam_PvCam(hPVCAM_, PARAM_READOUT_PORT, port))
+      if (!SetLongParam_PvCam_safe(hPVCAM_, PARAM_READOUT_PORT, port))
          return pl_error_code();
 
       // Update elements that might have changes because of port change
@@ -331,7 +331,7 @@ int Universal::OnReadoutPort(MM::PropertyBase* pProp, MM::ActionType eAct)
    else if (eAct == MM::BeforeGet)
    {
       long port;
-      if (!GetLongParam_PvCam(hPVCAM_, PARAM_READOUT_PORT, &port))
+      if (!GetLongParam_PvCam_safe(hPVCAM_, PARAM_READOUT_PORT, &port))
          return pl_error_code();
       std::string portName = GetPortName(port);
 
@@ -343,30 +343,30 @@ int Universal::OnReadoutPort(MM::PropertyBase* pProp, MM::ActionType eAct)
    }
 
 
-   return resume();
+   return DEVICE_OK;
 }
 
 // Gain
 int Universal::OnGain(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
-   suspend();
+   
    if (eAct == MM::AfterSet)
    {
       long gain;
       pProp->Get(gain);
-      if (!SetLongParam_PvCam(hPVCAM_, PARAM_GAIN_INDEX, gain))
+      if (!SetLongParam_PvCam_safe(hPVCAM_, PARAM_GAIN_INDEX, gain))
          return pl_error_code();
    }
    else if (eAct == MM::BeforeGet)
    {
       long gain;
-      if (!GetLongParam_PvCam(hPVCAM_, PARAM_GAIN_INDEX, &gain))
+      if (!GetLongParam_PvCam_safe(hPVCAM_, PARAM_GAIN_INDEX, &gain))
          return pl_error_code();
       pProp->Set(gain);
    }
 
 
-   return resume();
+   return DEVICE_OK;
 
 
 }
@@ -374,10 +374,13 @@ int Universal::OnGain(MM::PropertyBase* pProp, MM::ActionType eAct)
 
 void Universal::suspend()
 {
-   CaptureRestartHelper restart(this);
-   if(restart)
+
+   //CaptureRestartHelper restart(this);
+   if(IsCapturing())
    {
       restart_ = true;
+      //thd_->Suspend();
+      //while (! thd_->IsSuspended());
       thd_->Stop();
       thd_->wait();
       pl_exp_stop_cont(hPVCAM_, CCS_HALT); //Circular buffer only
@@ -397,7 +400,10 @@ int Universal::resume()
       {
          return pl_error_code();
       } else {
-         thd_->Start(numImages_ - thd_->GetImageCounter(), thd_->GetIntervalMs());
+         long imageCount = thd_->GetImageCounter();
+         double intervalMs = thd_->GetIntervalMs();
+         //thd_->Resume();
+         thd_->Start(numImages_ - imageCount, intervalMs);
          restart_ = false;
          
          return DEVICE_OK;
@@ -410,7 +416,7 @@ int Universal::resume()
 // EM Gain
 int Universal::OnMultiplierGain(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
-   suspend();
+   
 
    if (eAct == MM::AfterSet)
    {
@@ -418,7 +424,7 @@ int Universal::OnMultiplierGain(MM::PropertyBase* pProp, MM::ActionType eAct)
       pProp->Get(gain);
     
 
-      if (!SetLongParam_PvCam(hPVCAM_, PARAM_GAIN_MULT_FACTOR, gain))
+      if (!SetLongParam_PvCam_safe(hPVCAM_, PARAM_GAIN_MULT_FACTOR, gain))
          return pl_error_code();
 
    }
@@ -427,7 +433,7 @@ int Universal::OnMultiplierGain(MM::PropertyBase* pProp, MM::ActionType eAct)
       long gain;
 
 
-      if (!GetLongParam_PvCam(hPVCAM_, PARAM_GAIN_MULT_FACTOR, &gain))
+      if (!GetLongParam_PvCam_safe(hPVCAM_, PARAM_GAIN_MULT_FACTOR, &gain))
          return pl_error_code();
 
 
@@ -435,7 +441,7 @@ int Universal::OnMultiplierGain(MM::PropertyBase* pProp, MM::ActionType eAct)
    }
 
 
-   return resume();
+   return DEVICE_OK;
 
 }
 
@@ -448,7 +454,7 @@ int Universal::OnOffset(MM::PropertyBase* /*pProp*/, MM::ActionType /*eAct*/)
 // Temperature
 int Universal::OnTemperature(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
-   suspend();
+   
 
    if (eAct == MM::AfterSet)
    {
@@ -456,81 +462,93 @@ int Universal::OnTemperature(MM::PropertyBase* pProp, MM::ActionType eAct)
    else if (eAct == MM::BeforeGet)
    {
 	   long temp;
-      if (!GetLongParam_PvCam(hPVCAM_, PARAM_TEMP, &temp))
+      
+      if (!GetLongParam_PvCam_safe(hPVCAM_, PARAM_TEMP, &temp))
          return pl_error_code();
+      
 	  pProp->Set(temp/100);
    }
 
-   return resume();
+   return DEVICE_OK;
 }
 
 int Universal::OnTemperatureSetPoint(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
-   suspend();
+   
 
 	if (eAct == MM::AfterSet)
 	{
 	   long temp;
 	   pProp->Get(temp);
 	   temp = temp * 100;
-	   if (!SetLongParam_PvCam(hPVCAM_, PARAM_TEMP_SETPOINT, temp))
+      
+	   if (!SetLongParam_PvCam_safe(hPVCAM_, PARAM_TEMP_SETPOINT, temp))
 			return pl_error_code();
+      
 	}
 	else if (eAct == MM::BeforeGet)
 	{
 	  long temp;
-      if (!GetLongParam_PvCam(hPVCAM_, PARAM_TEMP_SETPOINT, &temp))
+     
+      if (!GetLongParam_PvCam_safe(hPVCAM_, PARAM_TEMP_SETPOINT, &temp))
          return pl_error_code();
+      
 	  pProp->Set(temp/100);
 	}
 
 
-   return resume();
+   return DEVICE_OK;
 }
 
 int Universal::OnUniversalProperty(MM::PropertyBase* pProp, MM::ActionType eAct, long index)
 {
-   suspend();
+   
 
 	if (eAct == MM::AfterSet)
 	{
       uns16 dataType;
-      if (!pl_get_param(hPVCAM_, param_set[index].id, ATTR_TYPE, &dataType) || (dataType != TYPE_ENUM)) {
+      if (!pl_get_param_safe(hPVCAM_, param_set[index].id, ATTR_TYPE, &dataType) || (dataType != TYPE_ENUM)) {
 	      long ldata;
 	      pProp->Get(ldata);
-	      if (!SetLongParam_PvCam(hPVCAM_, (long)param_set[index].id, (uns32) ldata))
+         
+	      if (!SetLongParam_PvCam_safe(hPVCAM_, (long)param_set[index].id, (uns32) ldata))
 			   return pl_error_code();
+         
       } else {
          std::string mnemonic;
          pProp->Get(mnemonic);
          uns32 ldata = param_set[index].enumMap[mnemonic];
-         if (!SetLongParam_PvCam(hPVCAM_, (long)param_set[index].id, (uns32) ldata))
+         
+         if (!SetLongParam_PvCam_safe(hPVCAM_, (long)param_set[index].id, (uns32) ldata))
 		   	return pl_error_code();
+         
       }
 	}
 	else if (eAct == MM::BeforeGet)
 	{
   	   long ldata;
-      if (!GetLongParam_PvCam(hPVCAM_, param_set[index].id, &ldata))
+      
+      if (!GetLongParam_PvCam_safe(hPVCAM_, param_set[index].id, &ldata))
           return pl_error_code();
+      
       uns16 dataType;
-      if (!pl_get_param(hPVCAM_, param_set[index].id, ATTR_TYPE, &dataType) || (dataType != TYPE_ENUM)) {
+      if (!pl_get_param_safe(hPVCAM_, param_set[index].id, ATTR_TYPE, &dataType) || (dataType != TYPE_ENUM)) {
          pProp->Set(ldata);
       } else {
          char enumStr[100];
          int32 enumValue;
          // It is absurd, but we seem to need this param_set[index].indexMap[ldata] instead of straight ldata??!!!
-         if (pl_get_enum_param(hPVCAM_, param_set[index].id, param_set[index].indexMap[ldata], &enumValue, enumStr, 100)) {
+         if (pl_get_enum_param_safe(hPVCAM_, param_set[index].id, param_set[index].indexMap[ldata], &enumValue, enumStr, 100)) {
             pProp->Set(enumStr);
          } else {
-            LogMessage ("Error in pl_get_enum_param\n");
+            LogMessage ("Error in pl_get_enum_param_safe\n");
             return pl_error_code();
          }
       }
 	}
 	
 
-   return resume();
+   return DEVICE_OK;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -635,7 +653,7 @@ int Universal::Initialize()
 
    // Gain
    // Check the allowed gain settings.  Note that this can change depending on output port, and readout rate. SetGainLimits() should be called after changing those parameters. 
-   pl_get_param( hPVCAM_, PARAM_GAIN_INDEX, ATTR_AVAIL, &gainAvailable_);
+   pl_get_param_safe( hPVCAM_, PARAM_GAIN_INDEX, ATTR_AVAIL, &gainAvailable_);
    if (gainAvailable_) {
       pAct = new CPropertyAction (this, &Universal::OnGain);
       nRet = CreateProperty(MM::g_Keyword_Gain, "1", MM::Integer, false, pAct);
@@ -648,15 +666,17 @@ int Universal::Initialize()
 
    // ReadoutPorts
    rs_bool readoutPortAvailable;
-   pl_get_param( hPVCAM_, PARAM_READOUT_PORT, ATTR_AVAIL, &readoutPortAvailable);
+   pl_get_param_safe( hPVCAM_, PARAM_READOUT_PORT, ATTR_AVAIL, &readoutPortAvailable);
    if (readoutPortAvailable) {
       uns32 minPort, maxPort;
-      pl_get_param(hPVCAM_, PARAM_READOUT_PORT, ATTR_COUNT, &nrPorts_);
-      pl_get_param(hPVCAM_, PARAM_READOUT_PORT, ATTR_MIN, &minPort);
-      pl_get_param(hPVCAM_, PARAM_READOUT_PORT, ATTR_MAX, &maxPort);
+      pl_get_param_safe(hPVCAM_, PARAM_READOUT_PORT, ATTR_COUNT, &nrPorts_);
+      pl_get_param_safe(hPVCAM_, PARAM_READOUT_PORT, ATTR_MIN, &minPort);
+      pl_get_param_safe(hPVCAM_, PARAM_READOUT_PORT, ATTR_MAX, &maxPort);
       long currentPort;
-      if (!GetLongParam_PvCam(hPVCAM_, PARAM_READOUT_PORT, &currentPort))
+      
+      if (!GetLongParam_PvCam_safe(hPVCAM_, PARAM_READOUT_PORT, &currentPort))
          return pl_error_code();
+      
       ostringstream tmp;
       tmp << "Readout Ports, Nr: " << nrPorts_ << " min: " << minPort << " max: " << maxPort << "Current: " << currentPort;
       LogMessage(tmp.str().c_str(), true);
@@ -683,9 +703,9 @@ int Universal::Initialize()
    // The HQ2 has 'visual gain', which shows up as EM Gain.  
    // Detect whether this is an interline chip and do not expose EM Gain if it is.
    char chipName[CCD_NAME_LEN];
-   if (!pl_get_param(hPVCAM_, PARAM_CHIP_NAME, ATTR_CURRENT, chipName))
+   if (!pl_get_param_safe(hPVCAM_, PARAM_CHIP_NAME, ATTR_CURRENT, chipName))
       return pl_error_code();
-   pl_get_param( hPVCAM_, PARAM_GAIN_MULT_FACTOR, ATTR_AVAIL, &emGainAvailable);
+   pl_get_param_safe( hPVCAM_, PARAM_GAIN_MULT_FACTOR, ATTR_AVAIL, &emGainAvailable);
    LogMessage(chipName);
    if (emGainAvailable && (strstr(chipName, "ICX-285") == 0) && (strstr(chipName, "ICX285") == 0) ) {
       LogMessage("This Camera has Em Gain");
@@ -694,7 +714,7 @@ int Universal::Initialize()
       assert(nRet == DEVICE_OK);
       int16 emGainMax;
       // Apparently, the minimum EM gain is always 1
-      pl_get_param( hPVCAM_, PARAM_GAIN_MULT_FACTOR, ATTR_MAX, &emGainMax);
+      pl_get_param_safe( hPVCAM_, PARAM_GAIN_MULT_FACTOR, ATTR_MAX, &emGainMax);
       ostringstream s;
       s << "EMGain " << " " << emGainMax;
       LogMessage(s.str().c_str(), true);
@@ -737,15 +757,18 @@ int Universal::Initialize()
       if (strcmp(param_set[i].name, "PMode") == 0  && version < 0x0275)
          versionTest= false;
 
-	   bool getLongSuccess = GetLongParam_PvCam(hPVCAM_, param_set[i].id, &ldata);
-	   pl_get_param( hPVCAM_, param_set[i].id, ATTR_ACCESS, &AccessType);
-	   pl_get_param( hPVCAM_, param_set[i].id, ATTR_AVAIL, &bAvail);
+      
+	   bool getLongSuccess = GetLongParam_PvCam_safe(hPVCAM_, param_set[i].id, &ldata);
+      
+
+	   pl_get_param_safe( hPVCAM_, param_set[i].id, ATTR_ACCESS, &AccessType);
+	   pl_get_param_safe( hPVCAM_, param_set[i].id, ATTR_AVAIL, &bAvail);
 	   if ( (AccessType != ACC_ERROR) && bAvail && getLongSuccess && versionTest) 
 	   {
 	      snprintf(buf, BUFSIZE, "%ld", ldata);
 	      CPropertyActionEx *pAct = new CPropertyActionEx(this, &Universal::OnUniversalProperty, (long)i);
          uint16_t dataType;
-         rs_bool plResult = pl_get_param(hPVCAM_, param_set[i].id, ATTR_TYPE, &dataType);
+         rs_bool plResult = pl_get_param_safe(hPVCAM_, param_set[i].id, ATTR_TYPE, &dataType);
          if (!plResult || (dataType != TYPE_ENUM)) {
             nRet = CreateProperty(param_set[i].name, buf, MM::Integer, AccessType == ACC_READ_ONLY, pAct);
             if (nRet != DEVICE_OK)
@@ -769,16 +792,16 @@ int Universal::Initialize()
             uns32 count, index;
             int32 enumValue;
             char enumStr[100];
-            if (pl_get_param(hPVCAM_, param_set[i].id, ATTR_COUNT, (void *) &count)) {
+            if (pl_get_param_safe(hPVCAM_, param_set[i].id, ATTR_COUNT, (void *) &count)) {
                for (index = 0; index < count; index++) {
-                  if (pl_get_enum_param(hPVCAM_, param_set[i].id, index, &enumValue, enumStr, 100)) {
+                  if (pl_get_enum_param_safe(hPVCAM_, param_set[i].id, index, &enumValue, enumStr, 100)) {
                      AddAllowedValue(param_set[i].name, enumStr);
                      std::string tmp = enumStr;
                      param_set[i].indexMap[enumValue] = index;
                      param_set[i].enumMap[tmp] = enumValue;
                   }
                   else
-                     LogMessage ("Error in pl_get_enum_param");
+                     LogMessage ("Error in pl_get_enum_param_safe");
                }
             }
          }
@@ -804,7 +827,7 @@ int Universal::Initialize()
    // check for circular buffer support
    rs_bool availFlag;
    noSupportForStreaming_ = 
-      (!pl_get_param(hPVCAM_, PARAM_CIRC_BUFFER, ATTR_AVAIL, &availFlag) || !availFlag);
+      (!pl_get_param_safe(hPVCAM_, PARAM_CIRC_BUFFER, ATTR_AVAIL, &availFlag) || !availFlag);
 
    // setup the buffer
    // ----------------
@@ -929,14 +952,14 @@ void Universal::SetExposure(double exp)
 unsigned Universal::GetBitDepth() const
 {
    int16 bitDepth;
-   if (! pl_get_param( hPVCAM_, PARAM_BIT_DEPTH, ATTR_CURRENT, &bitDepth)) {
+/*   if (! pl_get_param_safe( hPVCAM_, PARAM_BIT_DEPTH, ATTR_CURRENT, &bitDepth)) {
       char buf[ERROR_MSG_LEN];
       pl_error_message (pl_error_code(), buf);
       // TODO: implement const LogMessage
       // LogMessage(buf);
       return 0;
-   }
-   return (unsigned) bitDepth;
+   }*/
+   return (unsigned) 16;//bitDepth;
 }
 
 
@@ -1002,10 +1025,10 @@ bool Universal::GetErrorText(int errorCode, char* text) const
 int Universal::SetAllowedPixelTypes() 
 {
    int16 bitDepth, minBitDepth, maxBitDepth, bitDepthIncrement;
-   pl_get_param( hPVCAM_, PARAM_BIT_DEPTH, ATTR_CURRENT, &bitDepth);
-   pl_get_param( hPVCAM_, PARAM_BIT_DEPTH, ATTR_INCREMENT, &bitDepthIncrement);
-   pl_get_param( hPVCAM_, PARAM_BIT_DEPTH, ATTR_MAX, &maxBitDepth);
-   pl_get_param( hPVCAM_, PARAM_BIT_DEPTH, ATTR_MIN, &minBitDepth);
+   pl_get_param_safe( hPVCAM_, PARAM_BIT_DEPTH, ATTR_CURRENT, &bitDepth);
+   pl_get_param_safe( hPVCAM_, PARAM_BIT_DEPTH, ATTR_INCREMENT, &bitDepthIncrement);
+   pl_get_param_safe( hPVCAM_, PARAM_BIT_DEPTH, ATTR_MAX, &maxBitDepth);
+   pl_get_param_safe( hPVCAM_, PARAM_BIT_DEPTH, ATTR_MIN, &minBitDepth);
    ostringstream os;
    os << "Pixel Type: " << bitDepth << " " << bitDepthIncrement << " " << minBitDepth << " " << maxBitDepth;
    LogMessage(os.str().c_str(), true);
@@ -1040,8 +1063,8 @@ int Universal::SetGainLimits()
    if (!gainAvailable_)
       return DEVICE_OK;
    int16 gainMin, gainMax;
-   pl_get_param( hPVCAM_, PARAM_GAIN_INDEX, ATTR_MIN, &gainMin);
-   pl_get_param( hPVCAM_, PARAM_GAIN_INDEX, ATTR_MAX, &gainMax);
+   pl_get_param_safe( hPVCAM_, PARAM_GAIN_INDEX, ATTR_MIN, &gainMin);
+   pl_get_param_safe( hPVCAM_, PARAM_GAIN_INDEX, ATTR_MAX, &gainMax);
    ostringstream s;
    s << "Gain " << " " << gainMin << " " << gainMax;
    LogMessage(s.str().c_str(), true);
@@ -1063,7 +1086,7 @@ int Universal::SetUniversalAllowedValues(int i, uns16 dataType)
    switch (dataType) { 
       case TYPE_INT8 : {
          int8 min, max, index;
-         if (pl_get_param(hPVCAM_, param_set[i].id, ATTR_MIN, (void *) &min) && pl_get_param(hPVCAM_, param_set[i].id, ATTR_MAX, (void*) &max ) )  {
+         if (pl_get_param_safe(hPVCAM_, param_set[i].id, ATTR_MIN, (void *) &min) && pl_get_param_safe(hPVCAM_, param_set[i].id, ATTR_MAX, (void*) &max ) )  {
             if ((max - min) > 10) {
                SetPropertyLimits(param_set[i].name, (double) min, (double) max);
             } else {
@@ -1080,7 +1103,7 @@ int Universal::SetUniversalAllowedValues(int i, uns16 dataType)
       }
       case TYPE_UNS8 : {
          uns8 min, max, index;
-         if (pl_get_param(hPVCAM_, param_set[i].id, ATTR_MIN, (void *) &min) && pl_get_param(hPVCAM_, param_set[i].id, ATTR_MAX, (void*) &max ) )  {
+         if (pl_get_param_safe(hPVCAM_, param_set[i].id, ATTR_MIN, (void *) &min) && pl_get_param_safe(hPVCAM_, param_set[i].id, ATTR_MAX, (void*) &max ) )  {
             if ((max - min) > 10) {
                SetPropertyLimits(param_set[i].name, (double) min, (double) max);
             } else {
@@ -1097,7 +1120,7 @@ int Universal::SetUniversalAllowedValues(int i, uns16 dataType)
       }
       case TYPE_INT16 : {
          int16 min, max, index;
-         if (pl_get_param(hPVCAM_, param_set[i].id, ATTR_MIN, (void *) &min) && pl_get_param(hPVCAM_, param_set[i].id, ATTR_MAX, (void*) &max ) )  {
+         if (pl_get_param_safe(hPVCAM_, param_set[i].id, ATTR_MIN, (void *) &min) && pl_get_param_safe(hPVCAM_, param_set[i].id, ATTR_MAX, (void*) &max ) )  {
             if ((max - min) > 10) {
                SetPropertyLimits(param_set[i].name, (double) min, (double) max);
             } else if ((max-min) < 1000000) {
@@ -1114,7 +1137,7 @@ int Universal::SetUniversalAllowedValues(int i, uns16 dataType)
       }
       case TYPE_UNS16 : {
          uns16 min, max, index;
-         if (pl_get_param(hPVCAM_, param_set[i].id, ATTR_MIN, (void *) &min) && pl_get_param(hPVCAM_, param_set[i].id, ATTR_MAX, (void*) &max ) )  {
+         if (pl_get_param_safe(hPVCAM_, param_set[i].id, ATTR_MIN, (void *) &min) && pl_get_param_safe(hPVCAM_, param_set[i].id, ATTR_MAX, (void*) &max ) )  {
             if ((max - min) > 10) {
                SetPropertyLimits(param_set[i].name, (double) min, (double) max);
             } else if ((max-min) < 1000000) {
@@ -1131,7 +1154,7 @@ int Universal::SetUniversalAllowedValues(int i, uns16 dataType)
       }
       case TYPE_INT32 : {
          int32 min, max, index;
-         if (pl_get_param(hPVCAM_, param_set[i].id, ATTR_MIN, (void *) &min) && pl_get_param(hPVCAM_, param_set[i].id, ATTR_MAX, (void*) &max ) )  {
+         if (pl_get_param_safe(hPVCAM_, param_set[i].id, ATTR_MIN, (void *) &min) && pl_get_param_safe(hPVCAM_, param_set[i].id, ATTR_MAX, (void*) &max ) )  {
             if ((max - min) > 10) {
                SetPropertyLimits(param_set[i].name, (double) min, (double) max);
             } else if ((max-min) < 1000000) {
@@ -1148,7 +1171,7 @@ int Universal::SetUniversalAllowedValues(int i, uns16 dataType)
       }
       case TYPE_UNS32 : {
          uns32 min, max, index;
-         if (pl_get_param(hPVCAM_, param_set[i].id, ATTR_MIN, (void *) &min) && pl_get_param(hPVCAM_, param_set[i].id, ATTR_MAX, (void*) &max ) )  {
+         if (pl_get_param_safe(hPVCAM_, param_set[i].id, ATTR_MIN, (void *) &min) && pl_get_param_safe(hPVCAM_, param_set[i].id, ATTR_MAX, (void*) &max ) )  {
             if ((max - min) > 10) {
                SetPropertyLimits(param_set[i].name, (double) min, (double) max);
             } else if ((max-min) < 1000000) {
@@ -1173,19 +1196,21 @@ int Universal::GetSpeedString(std::string& modeString)
    
    // read speed table setting from camera:
    int16 spdTableIndex;
-   if (!pl_get_param(hPVCAM_, PARAM_SPDTAB_INDEX, ATTR_CURRENT, &spdTableIndex))
+   if (!pl_get_param_safe(hPVCAM_, PARAM_SPDTAB_INDEX, ATTR_CURRENT, &spdTableIndex))
       return pl_error_code();
 
    // read pixel time:
    long pixelTime;
-   if (!GetLongParam_PvCam(hPVCAM_, PARAM_PIX_TIME, &pixelTime))
+   
+   if (!GetLongParam_PvCam_safe(hPVCAM_, PARAM_PIX_TIME, &pixelTime))
          return pl_error_code();
    double rate = 1000/pixelTime; // in MHz
 
    // read bit depth
    long bitDepth;
-   if (!GetLongParam_PvCam(hPVCAM_, PARAM_BIT_DEPTH, &bitDepth))
+   if (!GetLongParam_PvCam_safe(hPVCAM_, PARAM_BIT_DEPTH, &bitDepth))
          return pl_error_code();
+   
 
    tmp << rate << "MHz " << bitDepth << "bit";
    modeString = tmp.str();
@@ -1199,7 +1224,7 @@ int Universal::GetSpeedString(std::string& modeString)
 int Universal::GetSpeedTable()
 {
    int16 spdTableCount;
-   if (!pl_get_param(hPVCAM_, PARAM_SPDTAB_INDEX, ATTR_MAX, &spdTableCount))
+   if (!pl_get_param_safe(hPVCAM_, PARAM_SPDTAB_INDEX, ATTR_MAX, &spdTableCount))
       return pl_error_code();
    //Speed Table Index is 0 based.  We got the max number but want the total count
    spdTableCount +=1;
@@ -1208,7 +1233,7 @@ int Universal::GetSpeedTable()
 
    // log the current settings, so that we can revert to it after cycling through the options
    int16 spdTableIndex;
-   pl_get_param(hPVCAM_, PARAM_SPDTAB_INDEX, ATTR_CURRENT, &spdTableIndex);
+   pl_get_param_safe(hPVCAM_, PARAM_SPDTAB_INDEX, ATTR_CURRENT, &spdTableIndex);
    // cycle through the speed table entries and record the associated settings
    vector<string> speedValues;
    rateMap_.clear();
@@ -1216,7 +1241,7 @@ int Universal::GetSpeedTable()
    for (int16 i=0; i<spdTableCount; i++) 
    {
       stringstream tmp;
-      pl_set_param(hPVCAM_, PARAM_SPDTAB_INDEX, &i);
+      pl_set_param_safe(hPVCAM_, PARAM_SPDTAB_INDEX, &i);
       int nRet = GetSpeedString(speedString);
       if (nRet != DEVICE_OK)
          return nRet;
@@ -1226,7 +1251,7 @@ int Universal::GetSpeedTable()
    }
    LogMessage (os.str().c_str(), true);
    // switch back to original setting
-   pl_set_param(hPVCAM_, PARAM_SPDTAB_INDEX, &spdTableIndex);
+   pl_set_param_safe(hPVCAM_, PARAM_SPDTAB_INDEX, &spdTableIndex);
    return SetAllowedValues(g_ReadoutRate, speedValues);
 }
 
@@ -1255,20 +1280,20 @@ bool Universal::GetEnumParam_PvCam(uns32 pvcam_cmd, uns32 index, std::string& en
 {
    // First check this is an enumerated type:
    uint16_t dataType;
-   if (!pl_get_param(hPVCAM_, pvcam_cmd, ATTR_TYPE, &dataType))
+   if (!pl_get_param_safe(hPVCAM_, pvcam_cmd, ATTR_TYPE, &dataType))
          return false;
 
    if (dataType != TYPE_ENUM)
       return false;
 
    long unsigned int strLength;
-   if (!pl_enum_str_length(hPVCAM_, pvcam_cmd, index, &strLength))                           
+   if (!pl_enum_str_length_safe(hPVCAM_, pvcam_cmd, index, &strLength))                           
          return false;
 
    char* strTmp;
    strTmp = (char*) malloc(strLength);
    int32 tmp;
-   if (!pl_get_enum_param(hPVCAM_, pvcam_cmd, index, &tmp, strTmp, strLength))
+   if (!pl_get_enum_param_safe(hPVCAM_, pvcam_cmd, index, &tmp, strTmp, strLength))
       return false;
 
    enumIndex = tmp;
@@ -1492,5 +1517,69 @@ int Universal::PushImage()
                                            GetImageBytesPerPixel());;
    }
 
+   return ret;
+}
+
+
+
+rs_bool Universal::pl_get_param_safe(int16 hcam, uns32 param_id,
+                                int16 param_attribute, void_ptr param_value)
+{
+  rs_bool ret;
+  suspend();
+  ret = pl_get_param (hcam, param_id, param_attribute, param_value);
+  resume();
+  return ret;
+}
+
+
+rs_bool Universal::pl_set_param_safe(int16 hcam, uns32 param_id, void_ptr param_value)
+{
+  rs_bool ret;
+  suspend();
+  
+  ret = pl_set_param (hcam, param_id, param_value);
+  resume();
+  return ret;
+}
+
+
+bool Universal::GetLongParam_PvCam_safe(int16 handle, uns32 pvcam_cmd, long *value) 
+{
+   bool ret;
+   suspend();
+   ret = GetLongParam_PvCam(handle, pvcam_cmd, value);
+   resume();
+   return ret;
+}
+
+bool Universal::SetLongParam_PvCam_safe(int16 handle, uns32 pvcam_cmd, long value) 
+{
+   bool ret;
+   suspend();
+   ret = SetLongParam_PvCam(handle, pvcam_cmd, value);
+   resume();
+   return ret;
+}
+
+
+rs_bool Universal::pl_get_enum_param_safe (int16 hcam, uns32 param_id, uns32 index,
+                                     int32_ptr value, char_ptr desc,
+                                     uns32 length)
+{
+   bool ret;
+   suspend();
+   ret = pl_get_enum_param(hcam, param_id, index, value, desc, length);
+   resume();
+   return ret;
+}
+
+rs_bool Universal::pl_enum_str_length_safe (int16 hcam, uns32 param_id, uns32 index,
+                                      uns32_ptr length)
+{
+   bool ret;
+   suspend();
+   ret = pl_enum_str_length(hcam, param_id, index, length);
+   resume();
    return ret;
 }

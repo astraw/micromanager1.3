@@ -230,6 +230,16 @@ public:
    int OnTemperatureSetPoint(MM::PropertyBase* pProp, MM::ActionType eAct);
    int OnUniversalProperty(MM::PropertyBase* pProp, MM::ActionType eAct, long index);
 
+   // Thread-safe param access:
+   rs_bool pl_set_param_safe(int16 hcam, uns32 param_id, void_ptr param_value);
+   rs_bool pl_get_param_safe(int16 hcam, uns32 param_id, int16 param_attribute, void_ptr param_value);
+   bool GetLongParam_PvCam_safe(int16 handle, uns32 pvcam_cmd, long *value);
+   bool SetLongParam_PvCam_safe(int16 handle, uns32 pvcam_cmd, long value);
+   rs_bool pl_get_enum_param_safe(int16 hcam, uns32 param_id, uns32 index,
+                                     int32_ptr value, char_ptr desc,
+                                     uns32 length);
+   rs_bool pl_enum_str_length_safe(int16 hcam, uns32 param_id, uns32 index,
+                                      uns32_ptr length);
 
 protected:
    int ThreadRun(void);
