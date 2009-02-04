@@ -107,6 +107,7 @@
    <!-- End of Tracking plugin -->
 
 	<target name="install" description="Create installation image">
+		<copy file="${ImageJPath}/ImageJ.exe" todir="${InstallRoot}" />
 		<copy file="MMJ_.jar" todir="${MMPluginDir-inst}" />
 		<copy file="${beanshell}" todir="${MMPluginDir-inst}" />
 		<copy file="${MMCoreJ}" todir="${MMPluginDir-inst}" />
@@ -114,6 +115,7 @@
 		<copy file="${BinRoot}/MMConfig_demo.cfg" todir="${InstallRoot}" />
 		<copy file="${BinRoot}/MMConfig_demoRGB.cfg" todir="${InstallRoot}" />
 
+		<copy file="${BinRoot}/mmgr_dal_ABSCamera.dll" todir="${InstallRoot}" />
 		<copy file="${BinRoot}/mmgr_dal_Arduino.dll" todir="${InstallRoot}" />
 		<copy file="${BinRoot}/mmgr_dal_DemoCamera.dll" todir="${InstallRoot}" />
 		<copy file="${BinRoot}/mmgr_dal_DemoRGBCamera.dll" todir="${InstallRoot}" />
