@@ -94,7 +94,13 @@ public class PropertyEditor extends MMFrame {
    private JCheckBox showStateDevicesCheckBox_;
    private JCheckBox showOtherCheckBox_;
    private JScrollPane scrollPane_;
-    
+   private MMStudioMainFrame gui_;
+   
+   public void setGui(MMStudioMainFrame gui) {
+	   gui_ = gui;
+	   
+   }
+   
    public PropertyEditor() {
       super();
       Preferences root = Preferences.userNodeForPackage(this.getClass());
@@ -422,20 +428,27 @@ public class PropertyEditor extends MMFrame {
       
       public void refresh(){
          try {            
+        	gui_.suspendLiveMode();
+        	
             for (int i=0; i<propList_.size(); i++){
                PropertyItem item = propList_.get(i);
                item.value = core_.getProperty(item.device, item.name);
             }
+        	gui_.resumeLiveMode();
+        	
             this.fireTableDataChanged();
          } catch (Exception e) {
             handleException(e);
          }
       }
 
+
+      
       public void updateStatus(){
          try {
             StrVector devices = core_.getLoadedDevices();
             propList_.clear();
+            gui_.suspendLiveMode();
             
             for (int i=0; i<devices.size(); i++){
                
@@ -478,9 +491,11 @@ public class PropertyEditor extends MMFrame {
                         propList_.add(item);
                   }
                }
+               gui_.resumeLiveMode();
             }
          } catch (Exception e) {
             handleException(e);
+            gui_.resumeLiveMode();
          }
          this.fireTableStructureChanged();
       }

@@ -94,7 +94,8 @@ public class PresetEditor extends MMDialog {
    private JCheckBox showOtherCheckBox_;
    private Configuration initialCfg_;
    private JScrollPane scrollPane_;
-    
+   private MMStudioMainFrame gui_;
+   
    public PresetEditor(String presetName, String group) {
       super();
       setModal(true);
@@ -640,10 +641,12 @@ public class PresetEditor extends MMDialog {
       
       public void refresh(){
          try {            
+        	gui_.suspendLiveMode(); 
             for (int i=0; i<propList_.size(); i++){
                PropertyItem item = propList_.get(i);
                item.value = core_.getProperty(item.device, item.name);
             }
+            gui_.resumeLiveMode();
             this.fireTableDataChanged();
          } catch (Exception e) {
             handleException(e);
@@ -689,6 +692,7 @@ public class PresetEditor extends MMDialog {
             StrVector devices = core_.getLoadedDevices();
             propList_.clear();
             
+            gui_.suspendLiveMode();
             for (int i=0; i<devices.size(); i++){               
                // select which devices to display
                DeviceType dtype = core_.getDeviceType(devices.get(i));
@@ -744,6 +748,7 @@ public class PresetEditor extends MMDialog {
                   }
                }
             }
+            gui_.resumeLiveMode();
          } catch (Exception e) {
             handleException(e);
          }
@@ -1011,5 +1016,9 @@ public class PresetEditor extends MMDialog {
 
    public boolean isChanged() {
       return changed_.booleanValue();
+   }
+   
+   public void setGUI(MMStudioMainFrame gui) {
+	   gui_ = gui;
    }
 }

@@ -73,6 +73,7 @@ public class ConfigGroupPad extends JScrollPane{
    private static final String TITLE = "Preset Editing";
    Preferences prefs_;
    private String COLUMN_WIDTH = "group_col_width";
+   private MMStudioMainFrame gui_;
 
    /**
     * Property descriptor, representing MMCore data
@@ -92,7 +93,10 @@ public class ConfigGroupPad extends JScrollPane{
       public boolean isInt = false;
    }
 
-
+   public void setGUI(MMStudioMainFrame gui) {
+	   gui_ = gui;
+   }
+   
    public ConfigGroupPad() {
       super();
       Preferences root = Preferences.userNodeForPackage(this.getClass());
@@ -510,6 +514,7 @@ public class ConfigGroupPad extends JScrollPane{
 
       public boolean editPreset(String preset, String group) {
          PresetEditor dlg = new PresetEditor(preset, group);
+         dlg.setGUI(gui_);
          dlg.setCore(core_);
          dlg.setVisible(true);
          if (dlg.isChanged())

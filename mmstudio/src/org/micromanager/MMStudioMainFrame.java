@@ -247,6 +247,7 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 	private static MMImageWindow imageWin_;
 	private int snapCount_ = -1;
 	private double lastImageTimeMs_=0;
+	private boolean liveModeSuspended_;
 	
 	public static MMImageWindow getLiveWin() {
 		return imageWin_;
@@ -1025,6 +1026,7 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 				SpringLayout.NORTH, getContentPane());
 
 		configPad_ = new ConfigGroupPad();
+		configPad_.setGUI(this);
 		// configPad_.setDisplayStyle(options_.displayBackground, guiColors_);
 		configPad_.setFont(new Font("", Font.PLAIN, 10));
 		getContentPane().add(configPad_);
@@ -2073,6 +2075,7 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 			propertyBrowser_.dispose();
 
 		propertyBrowser_ = new PropertyEditor();
+		propertyBrowser_.setGui(this);
 		propertyBrowser_.setVisible(true);
 		propertyBrowser_.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		propertyBrowser_.setCore(core_);
@@ -3554,4 +3557,14 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 */		
 		return ret;
 	};
+
+	public void suspendLiveMode() {
+		liveModeSuspended_ = IsLiveModeOn();
+		enableLiveMode(false);
+	}
+	
+	public void resumeLiveMode() {
+		if (liveModeSuspended_)
+				enableLiveMode(true);
+	}
 }
