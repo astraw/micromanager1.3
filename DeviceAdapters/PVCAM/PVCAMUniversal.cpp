@@ -164,14 +164,20 @@ int Universal::OnBinning(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
    if (eAct == MM::AfterSet)
    {
-      if (IsCapturing())
-         return ERR_BUSY_ACQUIRING;
+      bool capturing = IsCapturing();
+      if (capturing)
+         suspend();
 
       long bin;
       pProp->Get(bin);
       binSize_ = bin;
       ClearROI(); // reset region of interest
-      int nRet = ResizeImageBufferContinuous();
+      int nRet;
+      if (capturing)      
+         nRet = resume(); 
+      else
+         nRet = ResizeImageBufferContinuous();
+
       if (nRet != DEVICE_OK)
          return nRet;
    }
@@ -622,6 +628,10 @@ int Universal::Initialize()
    CPropertyAction *pAct = new CPropertyAction (this, &Universal::OnChipName);
    nRet = CreateProperty("ChipName", "", MM::String, true, pAct);
 
+   // Bit depth
+   if (! pl_get_param_safe(hPVCAM_, PARAM_BIT_DEPTH, ATTR_CURRENT, &bitDepth_))
+      return pl_error_code();
+
    // setup image parameters
    // ----------------------
 
@@ -951,15 +961,8 @@ void Universal::SetExposure(double exp)
 
 unsigned Universal::GetBitDepth() const
 {
-   int16 bitDepth;
-   if (! pl_get_param_safe( hPVCAM_, PARAM_BIT_DEPTH, ATTR_CURRENT, &bitDepth)) {
-      char buf[ERROR_MSG_LEN];
-      pl_error_message (pl_error_code(), buf);
-      // TODO: implement const LogMessage
-      // LogMessage(buf);
-      return 0;
-   }
-   return (unsigned) bitDepth;
+
+   return (unsigned) bitDepth_;
 }
 
 

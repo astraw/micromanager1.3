@@ -261,7 +261,7 @@ private:
    void Universal::suspend();
    int Universal::resume();
    bool restart_;
-
+   int16 bitDepth_;
    int x_, y_, width_, height_, xBin_, yBin_, bin_;
 
    bool initialized_;
