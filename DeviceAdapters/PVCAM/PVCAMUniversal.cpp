@@ -213,11 +213,11 @@ int Universal::OnExposure(MM::PropertyBase* pProp, MM::ActionType eAct)
    else if (eAct == MM::AfterSet)
    {
       
-
+      suspend();
       double exp;
       pProp->Get(exp);
       exposure_ = exp;
-
+      resume();
       return DEVICE_OK;
 
    }
@@ -1379,7 +1379,7 @@ int Universal::ThreadRun(void)
    int16 status;
    uns32 byteCnt;
    uns32 bufferCnt;
-
+   
    int ret=DEVICE_ERR;
 
    // wait until image is ready
