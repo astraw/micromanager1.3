@@ -952,14 +952,14 @@ void Universal::SetExposure(double exp)
 unsigned Universal::GetBitDepth() const
 {
    int16 bitDepth;
-/*   if (! pl_get_param_safe( hPVCAM_, PARAM_BIT_DEPTH, ATTR_CURRENT, &bitDepth)) {
+   if (! pl_get_param_safe( hPVCAM_, PARAM_BIT_DEPTH, ATTR_CURRENT, &bitDepth)) {
       char buf[ERROR_MSG_LEN];
       pl_error_message (pl_error_code(), buf);
       // TODO: implement const LogMessage
       // LogMessage(buf);
       return 0;
-   }*/
-   return (unsigned) 16;//bitDepth;
+   }
+   return (unsigned) bitDepth;
 }
 
 
