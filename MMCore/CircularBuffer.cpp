@@ -164,7 +164,11 @@ bool CircularBuffer::InsertMultiChannel(const unsigned char* pixArray, unsigned 
             return false;
 
          if (pMd)
+         {
+            // TODO: the same metadata is inserted for each channel ???
+            // Perhaps we need to add specific tags to each channel
             pImg->SetMetadata(*pMd);
+         }
          else
          {
             // if metadata was not supplied by the camera insert current timestamp

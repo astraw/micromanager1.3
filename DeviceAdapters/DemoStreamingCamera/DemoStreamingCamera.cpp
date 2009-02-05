@@ -362,7 +362,7 @@ int DemoStreamingCamera::SnapImage()
 {
    MM::MMTime startTime = GetCurrentMMTime();
    double exp = GetExposure();
-   double expUs = exp * 1000.0;
+   //double expUs = exp * 1000.0;
    if (color_)
    {
       GenerateSyntheticImage(img_[0], exp); // r
@@ -907,14 +907,24 @@ int DemoStreamingCamera::PushImage()
    // insert image into the circular buffer
    CopyToRawBuffer(); // this effectively copies images to rawBuffer_
 
+   // create metadata
+   char label[MM::MaxStrLength];
+   GetLabel(label);
+
+   MM::MMTime timestamp = GetCurrentMMTime();
+   Metadata md;
+   MetadataSingleTag mst(MM::g_Keyword_Elapsed_Time_ms, label, true);
+   mst.SetValue(CDeviceUtils::ConvertToString(timestamp.getMsec()));
+   md.SetTag(mst);
+
    // insert all three channels at once
-   int ret = GetCoreCallback()->InsertMultiChannel(this, rawBuffer_, GetNumberOfChannels(), GetImageWidth(), GetImageHeight(), GetImageBytesPerPixel());
+   int ret = GetCoreCallback()->InsertMultiChannel(this, rawBuffer_, GetNumberOfChannels(), GetImageWidth(), GetImageHeight(), GetImageBytesPerPixel(), &md);
    if (!stopOnOverflow_ && ret == DEVICE_BUFFER_OVERFLOW)
    {
       // do not stop on overflow - just reset the buffer
       GetCoreCallback()->ClearImageBuffer(this);
       // repeat the insert
-      return GetCoreCallback()->InsertMultiChannel(this, rawBuffer_, GetNumberOfChannels(), GetImageWidth(), GetImageHeight(), GetImageBytesPerPixel());
+      return GetCoreCallback()->InsertMultiChannel(this, rawBuffer_, GetNumberOfChannels(), GetImageWidth(), GetImageHeight(), GetImageBytesPerPixel(), &md);
    } else
       return ret;
 }
