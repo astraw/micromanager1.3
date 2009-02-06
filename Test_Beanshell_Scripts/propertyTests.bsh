@@ -1,0 +1,67 @@
+
+
+stdout(obj) {
+	System.out.println(obj);
+}
+
+stderr(obj) {
+	System.err.println(obj);
+}
+
+//Sets and gets properties for devices:
+testProperty(deviceName, propName, sleepMs) {
+mmc.sleep(sleepMs);
+propValue = mmc.getProperty(deviceName,propName);
+	stdout(propName + " = " + propValue);
+	if (! mmc.isPropertyReadOnly(deviceName,propName)) {
+		if (! propName.equals("Binning") ) {
+			mmc.sleep(sleepMs);
+			stdout("      Set " + propName + " to " + propValue);
+			mmc.setProperty(deviceName,propName,propValue);
+			if (propName.equals("Gain"))
+				propValue = "1";
+			stdout("          ... OK");
+		}
+	}
+}
+
+
+
+cameraName = mmc.getCameraDevice();
+
+stdout("Test getting and setting properties:");
+pn = mmc.getDevicePropertyNames(cameraName);
+l = pn.size();
+gui.enableLiveMode(false);
+gui.enableLiveMode(true);
+mmc.sleep(1000);
+
+for (i=0;i<l;i++) {
+	propName = pn.get(i);
+	try {
+	testProperty(cameraName, propName, 100);
+	} catch (Exception e) {
+		stderr(e.getMessage());
+	}
+}
+gui.enableLiveMode(false);
+
+// Test snapping
+
+stdout("\n\nTest snapping:");
+for (i=0;i<10;i++)
+	try {
+		stdout("   snap "+ i);
+	gui.snapSingleImage();
+	} catch (Exception e) {
+		stderr(e.getMessage());
+	}
+
+
+// Test burst acquisition
+
+stdout("\n\nTest burst acquisition:");
+mmc.setExposure(100);
+mmc.startSequenceAcquisition(20,30);
+mmc.sleep(5000);
+mmc.stopSequenceAcquisition();
