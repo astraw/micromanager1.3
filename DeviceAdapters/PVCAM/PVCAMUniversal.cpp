@@ -1449,6 +1449,18 @@ int Universal::StartSequenceAcquisition(long numImages, double interval_ms, bool
    return DEVICE_OK;
 }
 
+
+void Universal::OnThreadExiting() throw ()
+{
+   try {
+      pl_exp_stop_cont(hPVCAM_, CCS_HALT); //Circular buffer only
+      pl_exp_finish_seq(hPVCAM_, circBuffer_, 0);
+   } catch (...) {
+      LogMessage(g_Msg_EXCEPTION_IN_ON_THREAD_EXITING, false);  
+   }
+   CCameraBase<Universal>::OnThreadExiting();
+}
+
 /**
  * Stops acquisition
  */

@@ -243,6 +243,7 @@ public:
 
 protected:
    int ThreadRun(void);
+   void OnThreadExiting() throw();
    int PushImage();
 
 private:
