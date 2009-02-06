@@ -56,7 +56,7 @@
 #define ERR_BUSY_ACQUIRING 106
 #define ERR_INVALID_PREAMPGAIN 107
 #define ERR_INVALID_VSPEED 108
-#define ERR_SOFTWARE_TRIGGER_NOT_SUPPORTED 109
+#define ERR_TRIGGER_NOT_SUPPORTED 109
 #define ERR_OPEN_OR_CLOSE_SHUTTER_IN_ACQUISITION_NOT_ALLOWEDD 110
 
 class AcqSequenceThread;
@@ -64,15 +64,15 @@ class AcqSequenceThread;
 //////////////////////////////////////////////////////////////////////////////
 // Implementation of the MMDevice and MMCamera interfaces
 //
-class Ixon : public CCameraBase<Ixon>
+class AndorCamera : public CCameraBase<AndorCamera>
 {
 public:
    friend class AcqSequenceThread;
-   static Ixon* GetInstance();
+   static AndorCamera* GetInstance();
    unsigned DeReference(); // jizhen 05.16.2007
-   static void ReleaseInstance(Ixon*); // jizhen 05.16.2007
+   static void ReleaseInstance(AndorCamera*); // jizhen 05.16.2007
 
-   ~Ixon();
+   ~AndorCamera();
    
    // MMDevice API
    int Initialize();
@@ -132,16 +132,17 @@ public:
    int OnVCVoltage(MM::PropertyBase* pProp, MM::ActionType eAct);
    int OnBaselineClamp(MM::PropertyBase* pProp, MM::ActionType eAct);
    int OnActualIntervalMS(MM::PropertyBase* pProp, MM::ActionType eAct);
-   int OnUseSoftwareTrigger(MM::PropertyBase* pProp, MM::ActionType eAct);
+   int OnSelectTrigger(MM::PropertyBase* pProp, MM::ActionType eAct);
+  
 
 
    // custom interface for the thread
    int PushImage();
 
-   //static void ReleaseInstance(Ixon * ixon);
+   //static void ReleaseInstance(AndorCamera * AndorCamera);
 
 private:
-   Ixon();
+   AndorCamera();
    int ResizeImageBuffer();
    int StopCameraAcquisition();
    void UpdateEMGainRange();
@@ -151,7 +152,7 @@ private:
    bool IsAcquiring();
    int SetExposure_();
 
-   static Ixon* instance_;
+   static AndorCamera* instance_;
    static unsigned refCount_;
    ImgBuffer img_;
    bool initialized_;
@@ -167,6 +168,7 @@ private:
    long currentGain_;
 
    std::vector<std::string> VSpeeds_;
+
 
    double currentExpMS_;
 
@@ -217,6 +219,13 @@ private:
    int HSSpeedIdx_;
 
    bool bSoftwareTriggerSupported;
+   int  iCurrentTriggerMode;
+
+   enum {
+	   INTERNAL,
+	   EXTERNAL,
+	   SOFTWARE
+   };
 
    long CurrentCameraID_;
    long NumberOfAvailableCameras_;
@@ -238,13 +247,14 @@ private:
    std::string BaselineClampValue_;
    float ActualInterval_ms_;
 
-   std::string UseSoftwareTrigger_;
-   std::vector<std::string> vUseSoftwareTrigger_;
+   std::string strCurrentTriggerMode;
+   std::vector<std::string> vTriggerModes;
 
    bool bFrameTransfer_;
 
    unsigned char* GetImageBuffer_();
    unsigned char* pImgBuffer_;
+   unsigned char* GetAcquiredImage();
 
 
 };
@@ -256,7 +266,7 @@ private:
 class AcqSequenceThread : public MMDeviceThreadBase
 {
 public:
-   AcqSequenceThread(Ixon* pCam) : 
+   AcqSequenceThread(AndorCamera* pCam) : 
       intervalMs_(100.0), 
       numImages_(1),
       waitTime_(10),
@@ -276,7 +286,7 @@ public:
    void Start() {stop_ = false; activate();}
 
 private:
-   Ixon* camera_;
+   AndorCamera* camera_;
    double intervalMs_;
    long numImages_;
    long waitTime_;

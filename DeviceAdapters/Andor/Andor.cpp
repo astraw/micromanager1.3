@@ -50,6 +50,7 @@
 #include <math.h>
 
 
+
 #include <iostream>
 using namespace std;
 
@@ -58,8 +59,7 @@ using namespace std;
 using namespace std;
 
 // global constants
-const char* g_IxonName = "Ixon";
-const char* g_IxonShutterName = "Ixon-Shutter";
+const char* g_AndorName = "Andor";
 
 const char* g_PixelType_8bit = "8bit";
 const char* g_PixelType_16bit = "16bit";
@@ -89,8 +89,8 @@ const char* g_ADChannel_16Bit = "16bit";
 
 
 // singleton instance
-Ixon* Ixon::instance_ = 0;
-unsigned Ixon::refCount_ = 0;
+AndorCamera* AndorCamera::instance_ = 0;
+unsigned AndorCamera::refCount_ = 0;
 
 // Windows dll entry routine
 BOOL APIENTRY DllMain( HANDLE /*hModule*/, 
@@ -116,7 +116,8 @@ BOOL APIENTRY DllMain( HANDLE /*hModule*/,
 
 MODULE_API void InitializeModuleData()
 {
-   AddAvailableDeviceName(g_IxonName, "Andor iXon camera adapter");
+   AddAvailableDeviceName(g_AndorName, "Generic Andor Camera Adapter");
+
 }
 
 char deviceName[64]; // jizhen 05.16.2007
@@ -126,9 +127,9 @@ MODULE_API void DeleteDevice(MM::Device* pDevice)
    // jizhen 05.16.2007
    //char* deviceName = new char[128]; // will crash the stack if put the variable here! 
    pDevice->GetName( deviceName);
-   if ( strcmp(deviceName, g_IxonName) == 0) 
+   if ( strcmp(deviceName, g_AndorName) == 0) 
    {
-	   Ixon::ReleaseInstance((Ixon*) pDevice);
+	   AndorCamera::ReleaseInstance((AndorCamera*) pDevice);
    } 
    else 
    // eof jizhen
@@ -142,26 +143,26 @@ MODULE_API MM::Device* CreateDevice(const char* deviceName)
 
    string strName(deviceName);
    
-   if (strcmp(deviceName, g_IxonName) == 0)
-      return Ixon::GetInstance();
+   if (strcmp(deviceName, g_AndorName) == 0)
+      return AndorCamera::GetInstance();
    
    return 0;
 }
 
-void Ixon::ReleaseInstance(Ixon * ixon) {
+void AndorCamera::ReleaseInstance(AndorCamera * andorCam) {
 
-	unsigned int refC = ixon->DeReference();
+	unsigned int refC = andorCam->DeReference();
 	if ( refC <=0 ) 
 	{
-		delete ixon;
-		ixon = 0;
+		delete andorCam;
+		andorCam = 0;
 	}
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// Ixon constructor/destructor
+// AndorCamera constructor/destructor
 
-Ixon::Ixon() :
+AndorCamera::AndorCamera() :
    initialized_(false),
    busy_(false),
    snapInProgress_(false),
@@ -190,9 +191,13 @@ Ixon::Ixon() :
    pImgBuffer_(0),
    currentExpMS_(0.0),
    bFrameTransfer_(0),
-   stopOnOverflow_(true)
+   stopOnOverflow_(true),
+   iCurrentTriggerMode(INTERNAL),
+   strCurrentTriggerMode("")
 {
    InitializeDefaultErrorMessages();
+
+
 
    // add custom messages
    SetErrorText(ERR_BUSY_ACQUIRING, "Camera Busy.  Stop camera activity first.");
@@ -217,7 +222,7 @@ Ixon::Ixon() :
 
 }
 
-Ixon::~Ixon()
+AndorCamera::~AndorCamera()
 {
    delete seqThread_;
    
@@ -243,17 +248,17 @@ Ixon::~Ixon()
    }
 }
 
-Ixon* Ixon::GetInstance()
+AndorCamera* AndorCamera::GetInstance()
 {
    if (!instance_)
-      instance_ = new Ixon();
+      instance_ = new AndorCamera();
 
    refCount_++;
    return instance_;
 }
 
 // jizhen 05.16.2007
-unsigned Ixon::DeReference()
+unsigned AndorCamera::DeReference()
 {
    refCount_--;
    return refCount_;
@@ -267,7 +272,7 @@ unsigned Ixon::DeReference()
 /**
 * Get list of all available cameras
 */
-int Ixon::GetListOfAvailableCameras()
+int AndorCamera::GetListOfAvailableCameras()
 {
    unsigned ret;
 
@@ -342,7 +347,7 @@ int Ixon::GetListOfAvailableCameras()
    {
        //camera property for multiple camera support
        /*  //removed because list boxes in Property Browser of MM are unable to update their values after switching camera
-       CPropertyAction *pAct = new CPropertyAction (this, &Ixon::OnCamera);
+       CPropertyAction *pAct = new CPropertyAction (this, &AndorCamera::OnCamera);
        int nRet = CreateProperty("Camera", cameraName_[NumberOfWorkableCameras_-1].c_str(), MM::String, false, pAct);
        assert(nRet == DEVICE_OK);
        nRet = SetAllowedValues("Camera", cameraName_);
@@ -357,7 +362,7 @@ int Ixon::GetListOfAvailableCameras()
 /**
  * Set camera
  */
-int Ixon::OnCamera(MM::PropertyBase* pProp, MM::ActionType eAct)
+int AndorCamera::OnCamera(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
    if (eAct == MM::AfterSet)
    {
@@ -388,7 +393,7 @@ int Ixon::OnCamera(MM::PropertyBase* pProp, MM::ActionType eAct)
 /**
  * Camera Name
  */
-int Ixon::OnCameraName(MM::PropertyBase* pProp, MM::ActionType eAct)
+int AndorCamera::OnCameraName(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
    if (eAct == MM::AfterSet)
    {
@@ -403,7 +408,7 @@ int Ixon::OnCameraName(MM::PropertyBase* pProp, MM::ActionType eAct)
 /**
  * iCam Features
  */
-int Ixon::OniCamFeatures(MM::PropertyBase* pProp, MM::ActionType eAct)
+int AndorCamera::OniCamFeatures(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
    if (eAct == MM::AfterSet)
    {
@@ -418,7 +423,7 @@ int Ixon::OniCamFeatures(MM::PropertyBase* pProp, MM::ActionType eAct)
 /**
  * Temperature Range Min
  */
-int Ixon::OnTemperatureRangeMin(MM::PropertyBase* pProp, MM::ActionType eAct)
+int AndorCamera::OnTemperatureRangeMin(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
    if (eAct == MM::AfterSet)
    {
@@ -433,7 +438,7 @@ int Ixon::OnTemperatureRangeMin(MM::PropertyBase* pProp, MM::ActionType eAct)
 /**
  * Temperature Range Min
  */
-int Ixon::OnTemperatureRangeMax(MM::PropertyBase* pProp, MM::ActionType eAct)
+int AndorCamera::OnTemperatureRangeMax(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
    if (eAct == MM::AfterSet)
    {
@@ -450,7 +455,7 @@ int Ixon::OnTemperatureRangeMax(MM::PropertyBase* pProp, MM::ActionType eAct)
 /**
  * Initialize the camera.
  */
-int Ixon::Initialize()
+int AndorCamera::Initialize()
 {
    if (initialized_)
       return DEVICE_OK;
@@ -464,8 +469,25 @@ int Ixon::Initialize()
       ret = GetListOfAvailableCameras();
       if (ret != DRV_SUCCESS)
          return ret;
+			for(int i = 0; i < NumberOfWorkableCameras_; ++i) {
+        CurrentCameraID_ = cameraID_[i];
+        ret = SetCurrentCamera(CurrentCameraID_);
+        if (ret == DRV_SUCCESS)
+          ret = ::Initialize(const_cast<char*>(driverDir_.c_str()));
+				if (ret == DRV_SUCCESS) {
+					if(HasProperty("Camera")) {
+            int placeholder = 0;
+					}
+					break;
+				}
+			}
+			if(ret != DRV_SUCCESS) {
+				return ret;
+			}
+			/*
 	   if(NumberOfAvailableCameras_>1 && NumberOfWorkableCameras_>=1)
 	   {
+			 
         CurrentCameraID_=cameraID_[0];
         ret = SetCurrentCamera(CurrentCameraID_);
         if (ret != DRV_SUCCESS)
@@ -474,6 +496,7 @@ int Ixon::Initialize()
         if (ret != DRV_SUCCESS)
            return ret;
 	   }
+		 */
    }
    else
    {
@@ -505,7 +528,7 @@ int Ixon::Initialize()
    }
    else
    {
-      CPropertyAction *pAct = new CPropertyAction (this, &Ixon::OnCameraName);
+      CPropertyAction *pAct = new CPropertyAction (this, &AndorCamera::OnCameraName);
       nRet = CreateProperty(MM::g_Keyword_Name, cameraName_[currentCameraIdx].c_str(), MM::String, true, pAct);
    }
    assert(nRet == DEVICE_OK);
@@ -513,7 +536,7 @@ int Ixon::Initialize()
    // Description
    if (!HasProperty(MM::g_Keyword_Description))
    {
-      nRet = CreateProperty(MM::g_Keyword_Description, "Andor iXon/Luca camera adapter", MM::String, true);
+      nRet = CreateProperty(MM::g_Keyword_Description, "Andor camera adapter", MM::String, true);
    }
    assert(nRet == DEVICE_OK);
 
@@ -550,58 +573,55 @@ int Ixon::Initialize()
       return ret;
 
    //check iCam feature
-   string striCam = "Not Supported";
+   vTriggerModes.clear();  
    if(caps.ulTriggerModes & AC_TRIGGERMODE_CONTINUOUS)
    {
+	   if(iCurrentTriggerMode == SOFTWARE) {
       ret = SetTriggerMode(10);  //set software trigger. mode 0:internal, 1: ext, 6:ext start, 7:bulb, 10:software
       if (ret != DRV_SUCCESS)
 	   {
          ShutDown();
          return ret;
 	   }
+		 strCurrentTriggerMode = "Software";
+	   }
+	   vTriggerModes.push_back("Software");
 	   bSoftwareTriggerSupported = true;
-      striCam = "Supported";
    }
-   else
-   {
-      ret = SetTriggerMode(0);  //set internal trigger. mode 0:internal, 1: ext, 6:ext start, 7:bulb, 10:software
+   if(caps.ulTriggerModes & AC_TRIGGERMODE_EXTERNAL) {
+	   if(iCurrentTriggerMode == EXTERNAL) {
+         ret = SetTriggerMode(1);  //set software trigger. mode 0:internal, 1: ext, 6:ext start, 7:bulb, 10:software
       if (ret != DRV_SUCCESS)
 	   {
          ShutDown();
          return ret;
 	   }
-      bSoftwareTriggerSupported = false;
+		 strCurrentTriggerMode = "External";
    }
-   iCamFeatures_ = striCam;
-   if(HasProperty("iCamFeatures"))
-   {
-      nRet = SetProperty("iCamFeatures",  striCam.c_str());   
+	   vTriggerModes.push_back("External");
    }
-   else
+   if(caps.ulTriggerModes & AC_TRIGGERMODE_INTERNAL) {
+	   if(iCurrentTriggerMode == INTERNAL) {
+         ret = SetTriggerMode(0);  //set software trigger. mode 0:internal, 1: ext, 6:ext start, 7:bulb, 10:software
+         if (ret != DRV_SUCCESS)
    {
-      CPropertyAction *pAct = new CPropertyAction (this, &Ixon::OniCamFeatures);
-      nRet = CreateProperty("iCamFeatures", striCam.c_str(), MM::String, true, pAct);
+           ShutDown();
+           return ret;
    }
-   assert(nRet == DEVICE_OK);
-
-   //Use iCamFeatures
-   if(bSoftwareTriggerSupported)
-   {
-      vUseSoftwareTrigger_.clear();
-      vUseSoftwareTrigger_.push_back("Yes");
-      vUseSoftwareTrigger_.push_back("No");
-      if(!HasProperty("UseSoftwareTrigger"))
+		 strCurrentTriggerMode = "Internal";
+	   }
+	   vTriggerModes.push_back("Internal");
+   }
+   if(!HasProperty("Trigger"))
       {
-         CPropertyAction *pAct = new CPropertyAction (this, &Ixon::OnUseSoftwareTrigger);
-         nRet = CreateProperty("UseSoftwareTrigger", striCam.c_str(), MM::String, false, pAct);
+     CPropertyAction *pAct = new CPropertyAction (this, &AndorCamera::OnSelectTrigger);
+     nRet = CreateProperty("Trigger", "Trigger Mode", MM::String, false, pAct);
          assert(nRet == DEVICE_OK);
       }
-      nRet = SetAllowedValues("UseSoftwareTrigger", vUseSoftwareTrigger_);
+   nRet = SetAllowedValues("Trigger", vTriggerModes);
       assert(nRet == DEVICE_OK);
-      nRet = SetProperty("UseSoftwareTrigger", vUseSoftwareTrigger_[0].c_str());
-      UseSoftwareTrigger_ = vUseSoftwareTrigger_[0];
+   nRet = SetProperty("Trigger", strCurrentTriggerMode.c_str());
       assert(nRet == DEVICE_OK);
-   }
 
    //Set EM Gain mode
    if(caps.ulEMGainCapability&AC_EMGAIN_REAL12)
@@ -630,7 +650,7 @@ int Ixon::Initialize()
       if (ret != DRV_SUCCESS)
          return ret;
    }
-   else
+   else if(caps.ulEMGainCapability&AC_EMGAIN_8BIT)
    {
       ret = SetEMGainMode(0);  //mode 0: 0-255; 1: 0-4095; 2: Linear; 3: real
       if (ret != DRV_SUCCESS)
@@ -646,7 +666,7 @@ int Ixon::Initialize()
    {
       if(!HasProperty(g_OutputAmplifier))
       {
-         CPropertyAction *pAct = new CPropertyAction (this, &Ixon::OnOutputAmplifier);
+         CPropertyAction *pAct = new CPropertyAction (this, &AndorCamera::OnOutputAmplifier);
          nRet = CreateProperty(g_OutputAmplifier, g_OutputAmplifier_EM, MM::String, false, pAct);
 	   }
       vector<string> OutputAmplifierValues;
@@ -669,7 +689,7 @@ int Ixon::Initialize()
    {
       if(!HasProperty(g_ADChannel))
       {
-         CPropertyAction *pAct = new CPropertyAction (this, &Ixon::OnADChannel);
+         CPropertyAction *pAct = new CPropertyAction (this, &AndorCamera::OnADChannel);
          nRet = CreateProperty(g_ADChannel, g_ADChannel_14Bit, MM::String, false, pAct);
          assert(nRet == DEVICE_OK);
 	   }
@@ -712,7 +732,7 @@ int Ixon::Initialize()
 
    // setup image parameters
    // ----------------------
-   if(bSoftwareTriggerSupported)
+   if(iCurrentTriggerMode == SOFTWARE)
      ret = SetAcquisitionMode(5);// 1: single scan mode, 5: RTA
    else
      ret = SetAcquisitionMode(1);// 1: single scan mode, 5: RTA
@@ -727,7 +747,7 @@ int Ixon::Initialize()
    // binning
    if(!HasProperty(MM::g_Keyword_Binning))
    {
-      CPropertyAction *pAct = new CPropertyAction (this, &Ixon::OnBinning);
+      CPropertyAction *pAct = new CPropertyAction (this, &AndorCamera::OnBinning);
       nRet = CreateProperty(MM::g_Keyword_Binning, "1", MM::Integer, false, pAct);
       assert(nRet == DEVICE_OK);
    }
@@ -750,7 +770,7 @@ int Ixon::Initialize()
    // pixel type
    if(!HasProperty(MM::g_Keyword_PixelType))
    {
-      pAct = new CPropertyAction (this, &Ixon::OnPixelType);
+      pAct = new CPropertyAction (this, &AndorCamera::OnPixelType);
       nRet = CreateProperty(MM::g_Keyword_PixelType, g_PixelType_16bit, MM::String, false, pAct);
       assert(nRet == DEVICE_OK);
    }
@@ -767,7 +787,7 @@ int Ixon::Initialize()
    // exposure
    if(!HasProperty(MM::g_Keyword_Exposure))
    {
-      pAct = new CPropertyAction (this, &Ixon::OnExposure);
+      pAct = new CPropertyAction (this, &AndorCamera::OnExposure);
       nRet = CreateProperty(MM::g_Keyword_Exposure, "10.0", MM::Float, false, pAct);
       assert(nRet == DEVICE_OK);
    }
@@ -786,7 +806,7 @@ int Ixon::Initialize()
 	   bShuterIntegrated = true;
 	   if(!HasProperty("InternalShutter"))
 	   {
-         pAct = new CPropertyAction (this, &Ixon::OnInternalShutter);
+         pAct = new CPropertyAction (this, &AndorCamera::OnInternalShutter);
          nRet = CreateProperty("InternalShutter", g_ShutterMode_Open, MM::String, false, pAct);
          assert(nRet == DEVICE_OK);
 	   }
@@ -802,13 +822,13 @@ int Ixon::Initialize()
          return nRet;
    }
    int ShutterMode = 1;  //0: auto, 1: open, 2: close
-   ret = SetShutter(1, ShutterMode, 20,20);//Opened any way because some old iXon has no flag for IsInternalMechanicalShutter
+   ret = SetShutter(1, ShutterMode, 20,20);//Opened any way because some old AndorCamera has no flag for IsInternalMechanicalShutter
 
 
    // camera gain
    if(!HasProperty(MM::g_Keyword_Gain))
    {
-      pAct = new CPropertyAction (this, &Ixon::OnGain);
+      pAct = new CPropertyAction (this, &AndorCamera::OnGain);
       nRet = CreateProperty(MM::g_Keyword_Gain, "0", MM::Integer, false, pAct);
       assert(nRet == DEVICE_OK);
    }
@@ -841,7 +861,7 @@ int Ixon::Initialize()
 
    if(!HasProperty(MM::g_Keyword_ReadoutMode))
    {
-      pAct = new CPropertyAction (this, &Ixon::OnReadoutMode);
+      pAct = new CPropertyAction (this, &AndorCamera::OnReadoutMode);
 	   if(numSpeeds>1)
          nRet = CreateProperty(MM::g_Keyword_ReadoutMode, readoutModes_[0].c_str(), MM::String, false, pAct);
 	   else
@@ -875,7 +895,7 @@ int Ixon::Initialize()
 
    if(!HasProperty("Pre-Amp-Gain"))
    {
-      pAct = new CPropertyAction (this, &Ixon::OnPreAmpGain);
+      pAct = new CPropertyAction (this, &AndorCamera::OnPreAmpGain);
 	   if(numPreAmpGain>1)
          nRet = CreateProperty("Pre-Amp-Gain", PreAmpGains_[numPreAmpGain-1].c_str(), MM::String, false, pAct);
 	   else
@@ -916,7 +936,7 @@ int Ixon::Initialize()
 
    if(!HasProperty("VerticalSpeed"))
    {
-      pAct = new CPropertyAction (this, &Ixon::OnVSpeed);
+      pAct = new CPropertyAction (this, &AndorCamera::OnVSpeed);
 	   if(numVSpeed>1)
          nRet = CreateProperty("VerticalSpeed", VSpeeds_[numVSpeed-1].c_str(), MM::String, false, pAct);
       else
@@ -976,7 +996,7 @@ int Ixon::Initialize()
    {
       if(!HasProperty("VerticalClockVoltage"))
       {
-         pAct = new CPropertyAction (this, &Ixon::OnVCVoltage);
+         pAct = new CPropertyAction (this, &AndorCamera::OnVCVoltage);
          if(numVCVoltages>1)
             nRet = CreateProperty("VerticalClockVoltage", VCVoltages_[0].c_str(), MM::String, false, pAct);
 	      else
@@ -1018,7 +1038,7 @@ int Ixon::Initialize()
    }
    assert(nRet == DEVICE_OK);
 
-   if(bSoftwareTriggerSupported)
+   if(iCurrentTriggerMode == SOFTWARE)
    {
       strTips = "To maximize frame rate, do not change camera parameters except Exposure in Configuration Presets.";
       if(!HasProperty(" Tip2"))
@@ -1038,7 +1058,7 @@ int Ixon::Initialize()
    strTemp<<temp;
    if(!HasProperty(MM::g_Keyword_CCDTemperature))
    {
-      pAct = new CPropertyAction (this, &Ixon::OnTemperature);
+      pAct = new CPropertyAction (this, &AndorCamera::OnTemperature);
 	   nRet = CreateProperty(MM::g_Keyword_CCDTemperature, strTemp.str().c_str(), MM::Integer, true, pAct);//Daigang 23-may-2007 changed back to read temperature only
    }
    else
@@ -1056,7 +1076,7 @@ int Ixon::Initialize()
 	   strTempSetPoint = TemperatureRangeMin_; 
    if(!HasProperty(MM::g_Keyword_CCDTemperatureSetPoint))
    {
-      pAct = new CPropertyAction (this, &Ixon::OnTemperatureSetPoint);
+      pAct = new CPropertyAction (this, &AndorCamera::OnTemperatureSetPoint);
       nRet = CreateProperty(MM::g_Keyword_CCDTemperatureSetPoint, strTempSetPoint.c_str(), MM::Integer, false, pAct);
       ret = SetPropertyLimits(MM::g_Keyword_CCDTemperatureSetPoint, minTemp_, maxTemp_);
    }
@@ -1070,7 +1090,7 @@ int Ixon::Initialize()
    // Cooler
    if(!HasProperty("CoolerMode"))
    {
-      pAct = new CPropertyAction (this, &Ixon::OnCooler);
+      pAct = new CPropertyAction (this, &AndorCamera::OnCooler);
       nRet = CreateProperty(/*Daigang 24-may-2007 "Cooler" */"CoolerMode", /*Daigang 24-may-2007 "0" */g_CoolerMode_FanOffAtShutdown, /*Daigang 24-may-2007 MM::Integer */MM::String, false, pAct); 
    }
    assert(nRet == DEVICE_OK);
@@ -1084,7 +1104,7 @@ int Ixon::Initialize()
    // Fan
    if(!HasProperty("FanMode"))
    {
-      pAct = new CPropertyAction (this, &Ixon::OnFanMode);
+      pAct = new CPropertyAction (this, &AndorCamera::OnFanMode);
       nRet = CreateProperty("FanMode", /*Daigang 24-may-2007 "0" */g_FanMode_Full, /*Daigang 24-may-2007 MM::Integer */MM::String, false, pAct); 
    }
    assert(nRet == DEVICE_OK);
@@ -1098,7 +1118,7 @@ int Ixon::Initialize()
    // frame transfer mode
    if(!HasProperty(g_FrameTransferProp))
    {
-      pAct = new CPropertyAction (this, &Ixon::OnFrameTransfer);
+      pAct = new CPropertyAction (this, &AndorCamera::OnFrameTransfer);
       nRet = CreateProperty(g_FrameTransferProp, g_FrameTransferOff, MM::String, false, pAct); 
    }
    assert(nRet == DEVICE_OK);
@@ -1111,7 +1131,7 @@ int Ixon::Initialize()
    // used by the application to get information on the actual camera interval
    if(!HasProperty(MM::g_Keyword_ActualInterval_ms))
    {
-      pAct = new CPropertyAction (this, &Ixon::OnActualIntervalMS);
+      pAct = new CPropertyAction (this, &AndorCamera::OnActualIntervalMS);
       nRet = CreateProperty(MM::g_Keyword_ActualInterval_ms, "0.0", MM::Float, false, pAct);
    }
    else
@@ -1123,7 +1143,7 @@ int Ixon::Initialize()
 
    if(!HasProperty(MM::g_Keyword_ReadoutTime))
    {
-      pAct = new CPropertyAction (this, &Ixon::OnReadoutTime);
+      pAct = new CPropertyAction (this, &AndorCamera::OnReadoutTime);
       nRet = CreateProperty(MM::g_Keyword_ReadoutTime, "1", MM::Integer, true, pAct);
    }
    else
@@ -1137,7 +1157,7 @@ int Ixon::Initialize()
    {
       if(!HasProperty("BaselineClamp"))
       {
-         pAct = new CPropertyAction (this, &Ixon::OnBaselineClamp);
+         pAct = new CPropertyAction (this, &AndorCamera::OnBaselineClamp);
          nRet = CreateProperty("BaselineClamp", "Enabled", MM::String, false, pAct);
          assert(nRet == DEVICE_OK);
       }
@@ -1209,7 +1229,7 @@ int Ixon::Initialize()
    //CreateProperty("EmCCDGainHigh", emgHigh.str().c_str(), MM::Integer, true);
    if(!HasProperty("EMGainRangeMin"))
    {
-     pAct = new CPropertyAction (this, &Ixon::OnEMGainRangeMin);  //daigang 24-may-2007 added
+     pAct = new CPropertyAction (this, &AndorCamera::OnEMGainRangeMin);  //daigang 24-may-2007 added
      nRet = CreateProperty("EMGainRangeMin", emgLow.str().c_str(), MM::Integer, true, pAct);
    }
    else
@@ -1220,7 +1240,7 @@ int Ixon::Initialize()
 
    if(!HasProperty("EMGainRangeMax"))
    {
-     pAct = new CPropertyAction (this, &Ixon::OnEMGainRangeMax);
+     pAct = new CPropertyAction (this, &AndorCamera::OnEMGainRangeMax);
      CreateProperty("EMGainRangeMax", emgHigh.str().c_str(), MM::Integer, true, pAct);
    }
    else
@@ -1276,15 +1296,15 @@ int Ixon::Initialize()
    return DEVICE_OK;
 }
 
-void Ixon::GetName(char* name) const 
+void AndorCamera::GetName(char* name) const 
 {
-   CDeviceUtils::CopyLimitedString(name, g_IxonName);
+   CDeviceUtils::CopyLimitedString(name, g_AndorName);
 }
 
 /**
  * Deactivate the camera, reverse the initialization process.
  */
-int Ixon::Shutdown()
+int AndorCamera::Shutdown()
 {
    if (initialized_)
    {
@@ -1300,7 +1320,7 @@ int Ixon::Shutdown()
 }
 
 
-double Ixon::GetExposure() const
+double AndorCamera::GetExposure() const
 {
    char Buf[MM::MaxStrLength];
    Buf[0] = '\0';
@@ -1308,7 +1328,7 @@ double Ixon::GetExposure() const
    return atof(Buf);
 }
 
-void Ixon::SetExposure(double dExp)
+void AndorCamera::SetExposure(double dExp)
 {
    SetProperty(MM::g_Keyword_Exposure, CDeviceUtils::ConvertToString(dExp));
 }
@@ -1319,7 +1339,7 @@ void Ixon::SetExposure(double dExp)
  * Acquires a single frame.
  * Micro-Manager expects that this function blocks the calling thread until the exposure phase is over.
  */
-int Ixon::SnapImage()
+int AndorCamera::SnapImage()
 {
    bool acquiring = acquiring_;
    if (acquiring)
@@ -1331,7 +1351,7 @@ int Ixon::SnapImage()
    unsigned ret;
    if(!IsAcquiring())
    {
-	   if(bFrameTransfer_ && bSoftwareTriggerSupported)
+	   if(bFrameTransfer_ && (iCurrentTriggerMode == SOFTWARE))
 		   ret = SetFrameTransferMode(0);  //Software trigger mode can not be used in FT mode
 
       GetReadoutTime();
@@ -1340,17 +1360,28 @@ int Ixon::SnapImage()
       if (ret != DRV_SUCCESS)
          return ret;
    }
-   if(bSoftwareTriggerSupported)
+   if(iCurrentTriggerMode == SOFTWARE) // Change to turned on
    {
       SetExposure_();
       ret = SendSoftwareTrigger();
       if (ret != DRV_SUCCESS)
          return ret;
    }
-
+   else
+   {
+     ret = WaitForAcquisition();
+	 if(ret != DRV_SUCCESS)
+		 return ret;
+   }
+   if(iCurrentTriggerMode != SOFTWARE) 
+   {
+     pImgBuffer_ = GetAcquiredImage(); 
+   }
+   else
+   {
    pImgBuffer_ = GetImageBuffer_();
-
-   if(bSoftwareTriggerSupported)
+   }
+   if(iCurrentTriggerMode == SOFTWARE)
       CDeviceUtils::SleepMs(KeepCleanTime_);
 
    if (acquiring)
@@ -1365,7 +1396,7 @@ int Ixon::SnapImage()
 /**
  * Returns the raw image buffer.
  */ 
-unsigned char* Ixon::GetImageBuffer_()
+unsigned char* AndorCamera::GetImageBuffer_()
 {
    if(!IsAcquiring())
    {
@@ -1405,7 +1436,7 @@ unsigned char* Ixon::GetImageBuffer_()
 		   {
 		      startT = GetTickCount();
 		   }
-         if(bSoftwareTriggerSupported)
+         if(iCurrentTriggerMode == SOFTWARE)
 		   {
             //unsigned ret1 = SendSoftwareTrigger();
             //if (ret1 != DRV_SUCCESS)
@@ -1425,7 +1456,7 @@ unsigned char* Ixon::GetImageBuffer_()
 }
 
 
-const unsigned char* Ixon::GetImageBuffer()
+const unsigned char* AndorCamera::GetImageBuffer()
 {
    assert(img_.Depth() == 2);
    assert(pImgBuffer_!=0);
@@ -1440,17 +1471,26 @@ const unsigned char* Ixon::GetImageBuffer()
    }
    return (unsigned char*)rawBuffer;
 }
+unsigned char* AndorCamera::GetAcquiredImage() {
 
+   assert(fullFrameBuffer_ != 0);
+   unsigned int ret = GetNewData16((WORD*)fullFrameBuffer_, roi_.xSize/binSize_ * roi_.ySize/binSize_);
+   if(ret != DRV_SUCCESS) {
+	   return 0;
+   }
+
+   return (unsigned char*)fullFrameBuffer_;
+}
 
 
 /**
  * Readout time
  */ 
-long Ixon::GetReadoutTime()
+long AndorCamera::GetReadoutTime()
 {
    long ReadoutTime;
    float fReadoutTime;
-   if(fpGetReadOutTime!=0 && bSoftwareTriggerSupported)
+   if(fpGetReadOutTime!=0 && (iCurrentTriggerMode == SOFTWARE))
    {
 	   fpGetReadOutTime(&fReadoutTime);
       ReadoutTime = long(fReadoutTime * 1000);
@@ -1479,7 +1519,7 @@ long Ixon::GetReadoutTime()
 //whenever readout needs update, keepcleantime also needs update
    long KeepCleanTime;
    float fKeepCleanTime;
-   if(fpGetKeepCleanTime!=0 && bSoftwareTriggerSupported)
+   if(fpGetKeepCleanTime!=0 && (iCurrentTriggerMode == SOFTWARE))
    {
 	   fpGetKeepCleanTime(&fKeepCleanTime);
       KeepCleanTime = long(fKeepCleanTime * 1000);
@@ -1500,7 +1540,7 @@ long Ixon::GetReadoutTime()
  * The internal representation of the ROI uses the full frame coordinates
  * in combination with binning factor.
  */
-int Ixon::SetROI(unsigned uX, unsigned uY, unsigned uXSize, unsigned uYSize)
+int AndorCamera::SetROI(unsigned uX, unsigned uY, unsigned uXSize, unsigned uYSize)
 {
    if (Busy())
       return ERR_BUSY_ACQUIRING;
@@ -1545,7 +1585,7 @@ int Ixon::SetROI(unsigned uX, unsigned uY, unsigned uXSize, unsigned uYSize)
    return DEVICE_OK;
 }
 
-unsigned Ixon::GetBitDepth() const
+unsigned AndorCamera::GetBitDepth() const
 {
    int depth;
    // TODO: channel 0 hardwired ???
@@ -1555,19 +1595,19 @@ unsigned Ixon::GetBitDepth() const
    return depth;
 }
 
-int Ixon::GetBinning () const
+int AndorCamera::GetBinning () const
 {
    return binSize_;
 }
 
-int Ixon::SetBinning (int binSize) 
+int AndorCamera::SetBinning (int binSize) 
 {
    ostringstream os;                                                         
    os << binSize;
    return SetProperty(MM::g_Keyword_Binning, os.str().c_str());                                                                                     
 } 
 
-int Ixon::GetROI(unsigned& uX, unsigned& uY, unsigned& uXSize, unsigned& uYSize)
+int AndorCamera::GetROI(unsigned& uX, unsigned& uY, unsigned& uXSize, unsigned& uYSize)
 {
    uX = roi_.x / binSize_;
    uY = roi_.y / binSize_;
@@ -1577,7 +1617,7 @@ int Ixon::GetROI(unsigned& uX, unsigned& uY, unsigned& uXSize, unsigned& uYSize)
    return DEVICE_OK;
 }
 
-int Ixon::ClearROI()
+int AndorCamera::ClearROI()
 {
    if (acquiring_)
       return ERR_BUSY_ACQUIRING;
@@ -1616,7 +1656,7 @@ int Ixon::ClearROI()
 /**
  * Set the directory for the Andor native driver dll.
  */
-/*int Ixon::OnDriverDir(MM::PropertyBase* pProp, MM::ActionType eAct)
+/*int AndorCamera::OnDriverDir(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
    if (eAct == MM::BeforeGet)
    {
@@ -1633,7 +1673,7 @@ int Ixon::ClearROI()
 /**
  * Set binning.
  */
-int Ixon::OnBinning(MM::PropertyBase* pProp, MM::ActionType eAct)
+int AndorCamera::OnBinning(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
    if (eAct == MM::AfterSet)
    {
@@ -1690,7 +1730,7 @@ int Ixon::OnBinning(MM::PropertyBase* pProp, MM::ActionType eAct)
 /**
  * Set camera exposure (milliseconds).
  */
-int Ixon::OnExposure(MM::PropertyBase* pProp, MM::ActionType eAct)
+int AndorCamera::OnExposure(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
    // exposure property is stored in milliseconds,
    // while the driver returns the value in seconds
@@ -1714,7 +1754,7 @@ int Ixon::OnExposure(MM::PropertyBase* pProp, MM::ActionType eAct)
          return DEVICE_OK;
 	   currentExpMS_ = exp;
 
-      if(!bSoftwareTriggerSupported)
+      if(!(iCurrentTriggerMode == SOFTWARE))
 	   {
 	      SetToIdle();
          unsigned ret = SetExposureTime((float)(exp / 1000.0));
@@ -1734,12 +1774,12 @@ int Ixon::OnExposure(MM::PropertyBase* pProp, MM::ActionType eAct)
 /**
  * Set camera exposure (milliseconds).
  */
-int Ixon::SetExposure_()
+int AndorCamera::SetExposure_()
 {
    if (acquiring_)
       return ERR_BUSY_ACQUIRING;
 
-   if(!bSoftwareTriggerSupported)
+   if(!(iCurrentTriggerMode == SOFTWARE))
 	  return DEVICE_OK;
 
    if(fabs(expMs_-currentExpMS_)<0.001)
@@ -1759,7 +1799,7 @@ int Ixon::SetExposure_()
  * Set camera pixel type. 
  * We support only 16-bit mode here.
  */
-int Ixon::OnPixelType(MM::PropertyBase* pProp, MM::ActionType eAct)
+int AndorCamera::OnPixelType(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
    if (eAct == MM::BeforeGet)
       pProp->Set(g_PixelType_16bit);
@@ -1769,7 +1809,7 @@ int Ixon::OnPixelType(MM::PropertyBase* pProp, MM::ActionType eAct)
 /**
  * Set readout mode.
  */
-int Ixon::OnReadoutMode(MM::PropertyBase* pProp, MM::ActionType eAct)
+int AndorCamera::OnReadoutMode(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
    if (eAct == MM::AfterSet)
    {
@@ -1813,7 +1853,7 @@ int Ixon::OnReadoutMode(MM::PropertyBase* pProp, MM::ActionType eAct)
  * Provides information on readout time.
  * TODO: Not implemented
  */
-int Ixon::OnReadoutTime(MM::PropertyBase* pProp, MM::ActionType eAct)
+int AndorCamera::OnReadoutTime(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
    if (eAct == MM::BeforeGet)
    {
@@ -1827,7 +1867,7 @@ int Ixon::OnReadoutTime(MM::PropertyBase* pProp, MM::ActionType eAct)
 /**
  * Set camera "regular" gain.
  */
-int Ixon::OnGain(MM::PropertyBase* pProp, MM::ActionType eAct)
+int AndorCamera::OnGain(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
    if (eAct == MM::AfterSet)
    {
@@ -1847,7 +1887,7 @@ int Ixon::OnGain(MM::PropertyBase* pProp, MM::ActionType eAct)
 	   pProp->Set(gain);
 
 	   //added to use RTA
-      if(!bSoftwareTriggerSupported)
+      if(!(iCurrentTriggerMode == SOFTWARE))
     	SetToIdle();
 
       unsigned ret = SetEMCCDGain((int)gain);
@@ -1870,7 +1910,7 @@ int Ixon::OnGain(MM::PropertyBase* pProp, MM::ActionType eAct)
 /**
  * Enable or Disable Software Trigger.
  */
-int Ixon::OnUseSoftwareTrigger(MM::PropertyBase* pProp, MM::ActionType eAct)
+int AndorCamera::OnSelectTrigger(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
    if (eAct == MM::AfterSet)
    {
@@ -1881,21 +1921,21 @@ int Ixon::OnUseSoftwareTrigger(MM::PropertyBase* pProp, MM::ActionType eAct)
       if (acquiring_)
          return ERR_BUSY_ACQUIRING;
 
-      std::string useSoftwareTrigger;
-      pProp->Get(useSoftwareTrigger);
-      if(useSoftwareTrigger == UseSoftwareTrigger_)
+      std::string trigger;
+      pProp->Get(trigger);
+      if(trigger == strCurrentTriggerMode)
          return DEVICE_OK;
 
-      UseSoftwareTrigger_ = useSoftwareTrigger;
+      strCurrentTriggerMode = trigger;
 
       SetToIdle();
 
       int ret;
 
 
-      if(useSoftwareTrigger == "Yes")
+      if(trigger == "Software")
       {
-         bSoftwareTriggerSupported = true;
+         iCurrentTriggerMode = SOFTWARE;
          ret = SetTriggerMode(10);//software trigger mode
          if (ret != DRV_SUCCESS)
             return ret;
@@ -1903,9 +1943,19 @@ int Ixon::OnUseSoftwareTrigger(MM::PropertyBase* pProp, MM::ActionType eAct)
          if (ret != DRV_SUCCESS)
             return ret;
 	  }
+	  else if(trigger == "External")
+	  {
+         iCurrentTriggerMode = EXTERNAL;
+		  ret = SetAcquisitionMode(1);//SingleScan
+        if (ret != DRV_SUCCESS)
+           return ret;
+		  ret = SetTriggerMode(1);//internal trigger mode
+        if (ret != DRV_SUCCESS)
+            return ret;
+	  }
 	  else
 	  {
-		  bSoftwareTriggerSupported = false;
+          iCurrentTriggerMode = INTERNAL;
 		  ret = SetAcquisitionMode(1);//SingleScan
         if (ret != DRV_SUCCESS)
            return ret;
@@ -1919,7 +1969,7 @@ int Ixon::OnUseSoftwareTrigger(MM::PropertyBase* pProp, MM::ActionType eAct)
    }
    else if (eAct == MM::BeforeGet)
    {
-	   pProp->Set(UseSoftwareTrigger_.c_str());
+	   pProp->Set(strCurrentTriggerMode.c_str());
    }
    return DEVICE_OK;
 }
@@ -1928,7 +1978,7 @@ int Ixon::OnUseSoftwareTrigger(MM::PropertyBase* pProp, MM::ActionType eAct)
 /**
  * Set camera pre-amp-gain.
  */
-int Ixon::OnPreAmpGain(MM::PropertyBase* pProp, MM::ActionType eAct)
+int AndorCamera::OnPreAmpGain(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
    if (eAct == MM::AfterSet)
    {
@@ -1973,7 +2023,7 @@ int Ixon::OnPreAmpGain(MM::PropertyBase* pProp, MM::ActionType eAct)
 /**
  * Set camera Vertical Clock Voltage
  */
-int Ixon::OnVCVoltage(MM::PropertyBase* pProp, MM::ActionType eAct)
+int AndorCamera::OnVCVoltage(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
    if (eAct == MM::AfterSet)
    {
@@ -2017,7 +2067,7 @@ int Ixon::OnVCVoltage(MM::PropertyBase* pProp, MM::ActionType eAct)
 /**
  * Set camera Baseline Clamp.
  */
-int Ixon::OnBaselineClamp(MM::PropertyBase* pProp, MM::ActionType eAct)
+int AndorCamera::OnBaselineClamp(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
    if (eAct == MM::AfterSet)
    {
@@ -2067,7 +2117,7 @@ int Ixon::OnBaselineClamp(MM::PropertyBase* pProp, MM::ActionType eAct)
 /**
  * Set camera vertical shift speed.
  */
-int Ixon::OnVSpeed(MM::PropertyBase* pProp, MM::ActionType eAct)
+int AndorCamera::OnVSpeed(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
    if (eAct == MM::AfterSet)
    {
@@ -2113,7 +2163,7 @@ int Ixon::OnVSpeed(MM::PropertyBase* pProp, MM::ActionType eAct)
 /**
  * Obtain temperature in Celsius.
  */
-int Ixon::OnTemperature(MM::PropertyBase* pProp, MM::ActionType eAct)
+int AndorCamera::OnTemperature(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
    if (eAct == MM::AfterSet)
    {
@@ -2154,7 +2204,7 @@ int Ixon::OnTemperature(MM::PropertyBase* pProp, MM::ActionType eAct)
 /**
  * Set temperature setpoint in Celsius.
  */
-int Ixon::OnTemperatureSetPoint(MM::PropertyBase* pProp, MM::ActionType eAct)
+int AndorCamera::OnTemperatureSetPoint(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
    if (eAct == MM::AfterSet)
    {
@@ -2201,7 +2251,7 @@ int Ixon::OnTemperatureSetPoint(MM::PropertyBase* pProp, MM::ActionType eAct)
 /**
  * Set cooler on/off.
  */
-int Ixon::OnCooler(MM::PropertyBase* pProp, MM::ActionType eAct)
+int AndorCamera::OnCooler(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
    if (eAct == MM::AfterSet)
    {
@@ -2250,7 +2300,7 @@ int Ixon::OnCooler(MM::PropertyBase* pProp, MM::ActionType eAct)
 /**
  * Set fan mode.
  */
-int Ixon::OnFanMode(MM::PropertyBase* pProp, MM::ActionType eAct)
+int AndorCamera::OnFanMode(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
    if (eAct == MM::AfterSet)
    {
@@ -2296,7 +2346,7 @@ int Ixon::OnFanMode(MM::PropertyBase* pProp, MM::ActionType eAct)
 }
 // eof jizhen
 
-int Ixon::OnInternalShutter(MM::PropertyBase* pProp, MM::ActionType eAct)
+int AndorCamera::OnInternalShutter(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
    if (eAct == MM::AfterSet)
    {
@@ -2348,7 +2398,7 @@ int Ixon::OnInternalShutter(MM::PropertyBase* pProp, MM::ActionType eAct)
 // Utility methods
 ///////////////////////////////////////////////////////////////////////////////
 
-int Ixon::ResizeImageBuffer()
+int AndorCamera::ResizeImageBuffer()
 {
    // resize internal buffers
    // NOTE: we are assuming 16-bit pixel type
@@ -2359,7 +2409,7 @@ int Ixon::ResizeImageBuffer()
 
 
 //daigang 24-may-2007
-void Ixon::UpdateEMGainRange()
+void AndorCamera::UpdateEMGainRange()
 {
 	//added to use RTA
 	SetToIdle();
@@ -2393,7 +2443,7 @@ void Ixon::UpdateEMGainRange()
 /**
  * EMGain Range Max
  */
-int Ixon::OnEMGainRangeMax(MM::PropertyBase* pProp, MM::ActionType eAct)
+int AndorCamera::OnEMGainRangeMax(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
    if (eAct == MM::AfterSet)
    {
@@ -2409,7 +2459,7 @@ int Ixon::OnEMGainRangeMax(MM::PropertyBase* pProp, MM::ActionType eAct)
 /**
  * ActualInterval_ms
  */
-int Ixon::OnActualIntervalMS(MM::PropertyBase* pProp, MM::ActionType eAct)
+int AndorCamera::OnActualIntervalMS(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
    if (eAct == MM::AfterSet)
    {
@@ -2431,7 +2481,7 @@ int Ixon::OnActualIntervalMS(MM::PropertyBase* pProp, MM::ActionType eAct)
 /**
  * EMGain Range Max
  */
-int Ixon::OnEMGainRangeMin(MM::PropertyBase* pProp, MM::ActionType eAct)
+int AndorCamera::OnEMGainRangeMin(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
    if (eAct == MM::AfterSet)
    {
@@ -2450,7 +2500,7 @@ int Ixon::OnEMGainRangeMin(MM::PropertyBase* pProp, MM::ActionType eAct)
 /**
  * Frame transfer mode ON or OFF.
  */
-int Ixon::OnFrameTransfer(MM::PropertyBase* pProp, MM::ActionType eAct)
+int AndorCamera::OnFrameTransfer(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
    if (eAct == MM::AfterSet)
    {
@@ -2506,7 +2556,7 @@ int Ixon::OnFrameTransfer(MM::PropertyBase* pProp, MM::ActionType eAct)
 /**
  * Set caemra to idle
  */
-void Ixon::SetToIdle()
+void AndorCamera::SetToIdle()
 {
    if(!initialized_ || !IsAcquiring())
       return;
@@ -2519,7 +2569,7 @@ void Ixon::SetToIdle()
 /**
  * check if camera is acquiring
  */
-bool Ixon::IsAcquiring()
+bool AndorCamera::IsAcquiring()
 {
    if(!initialized_)
       return 0;
@@ -2538,19 +2588,19 @@ bool Ixon::IsAcquiring()
 /**
  * check if camera is thermosteady
  */
-bool Ixon::IsThermoSteady()
+bool AndorCamera::IsThermoSteady()
 {
 	return ThermoSteady_;
 }
 
-void Ixon::CheckError(unsigned int /*errorVal*/)
+void AndorCamera::CheckError(unsigned int /*errorVal*/)
 {
 }
 
 /**
  * Set output amplifier.
  */
-int Ixon::OnOutputAmplifier(MM::PropertyBase* pProp, MM::ActionType eAct)
+int AndorCamera::OnOutputAmplifier(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
    if (eAct == MM::AfterSet)
    {
@@ -2598,7 +2648,7 @@ int Ixon::OnOutputAmplifier(MM::PropertyBase* pProp, MM::ActionType eAct)
 /**
  * Set output amplifier.
  */
-int Ixon::OnADChannel(MM::PropertyBase* pProp, MM::ActionType eAct)
+int AndorCamera::OnADChannel(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
    if (eAct == MM::AfterSet)
    {
@@ -2643,7 +2693,7 @@ int Ixon::OnADChannel(MM::PropertyBase* pProp, MM::ActionType eAct)
 }
 
 //daigang 24-may-2007
-void Ixon::UpdateHSSpeeds()
+void AndorCamera::UpdateHSSpeeds()
 {
 	//Daigang 28-may-2007 added to use RTA
 	SetToIdle();
@@ -2687,7 +2737,7 @@ void Ixon::UpdateHSSpeeds()
 
 /**
  * Continuous acquisition thread service routine.
- * Starts acquisition on the IXon and repeatedly calls PushImage()
+ * Starts acquisition on the AndorCamera and repeatedly calls PushImage()
  * to transfer any new images to the MMCore circularr buffer.
  */
 int AcqSequenceThread::svc(void)
@@ -2813,7 +2863,7 @@ int AcqSequenceThread::svc(void)
 /**
  * Starts continuous acquisition.
  */
-int Ixon::StartSequenceAcquisition(long numImages, double interval_ms, bool stopOnOverflow)
+int AndorCamera::StartSequenceAcquisition(long numImages, double interval_ms, bool stopOnOverflow)
 {
    if (acquiring_)
       return ERR_BUSY_ACQUIRING;
@@ -2832,7 +2882,7 @@ int Ixon::StartSequenceAcquisition(long numImages, double interval_ms, bool stop
       return ret0;
 
    LogMessage("Setting Frame Transfer mode on", true);
-   if(bFrameTransfer_ && bSoftwareTriggerSupported)
+   if(bFrameTransfer_ && (iCurrentTriggerMode == SOFTWARE))
      ret0 = SetFrameTransferMode(1);  //FT mode might be turned off in SnapImage when Software trigger mode is used. Resume it here
 
    ostringstream os;
@@ -2855,6 +2905,8 @@ int Ixon::StartSequenceAcquisition(long numImages, double interval_ms, bool stop
    if (ret != DRV_SUCCESS)
       return ret;
 
+   if(iCurrentTriggerMode == SOFTWARE) // Change to turned on
+   SetExposure_();
    SetExposureTime((float) (expMs_/1000.0));
 
    LogMessage ("Set Exposure time", true);
@@ -2950,7 +3002,7 @@ int Ixon::StartSequenceAcquisition(long numImages, double interval_ms, bool stop
  * Stop Seq sequence acquisition
  * This is the function for internal use and can/should be called from the thread
  */
-int Ixon::StopCameraAcquisition()
+int AndorCamera::StopCameraAcquisition()
 {
    if (!acquiring_)
       return DEVICE_OK;
@@ -2960,12 +3012,21 @@ int Ixon::StopCameraAcquisition()
    acquiring_ = false;
 
    int ret;
-   if(bSoftwareTriggerSupported)
+   if(iCurrentTriggerMode == SOFTWARE)
    {
      ret = SetTriggerMode(10);  //set software trigger. mode 0:internal, 1: ext, 6:ext start, 7:bulb, 10:software
      //if (ret != DRV_SUCCESS) //not check to allow call of AcqFinished
      //  return ret;
      ret = SetAcquisitionMode(5);//set RTA non-iCam camera
+     //if (ret != DRV_SUCCESS)
+     //  return ret;
+   }
+   else if(iCurrentTriggerMode == EXTERNAL)
+   {
+     ret = SetTriggerMode(1);  //set software trigger. mode 0:internal, 1: ext, 6:ext start, 7:bulb, 10:software
+     //if (ret != DRV_SUCCESS)
+     //  return ret;
+     ret = SetAcquisitionMode(1);//set SingleScan non-iCam camera
      //if (ret != DRV_SUCCESS)
      //  return ret;
    }
@@ -2989,7 +3050,7 @@ int Ixon::StopCameraAcquisition()
  * Stops Squence acquisition
  * This is for external use only (if called from the sequence acquisition thread, deadlock will ensue!
  */
-int Ixon::StopSequenceAcquisition()
+int AndorCamera::StopSequenceAcquisition()
 {
    StopCameraAcquisition();
    seqThread_->Stop();
@@ -3006,7 +3067,7 @@ int Ixon::StopSequenceAcquisition()
  * In case of error or if the sequecne is finished StopSequenceAcquisition()
  * is called, which will raise the stop_ flag and cause the thread to exit.
  */
-int Ixon::PushImage()
+int AndorCamera::PushImage()
 {
    // get the top most image from the driver
    unsigned ret = GetNewData16((WORD*)fullFrameBuffer_, roi_.xSize/binSize_ * roi_.ySize/binSize_);
