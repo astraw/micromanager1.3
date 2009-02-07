@@ -760,8 +760,10 @@ public:
 
    virtual ~CCameraBase()
    {
-      thd_->Stop();
-      thd_->wait();
+      if (!thd_->IsStopped()) {
+         thd_->Stop();
+         thd_->wait();
+      }
       delete thd_;
    }
 
