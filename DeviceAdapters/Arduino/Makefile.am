@@ -7,4 +7,4 @@ Arduino_la_LIBADD = ../../MMDevice/.libs/libMMDevice.a
 Arduino_la_LDFLAGS = -module
 
 install:
-	cp .libs/Arduino.so $(IJPATH)/$(MMPREFIX)Arduino$(MMSUFFIX)
+	cp .libs/Arduino.so  $(DEVICEADAPTERPATH)/$(MMPREFIX)Arduino$(MMSUFFIX)

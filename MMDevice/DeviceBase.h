@@ -783,9 +783,10 @@ public:
    */
    virtual int StopSequenceAcquisition()
    {
-
-      thd_->Stop();
-      thd_->wait();
+      if (!thd_->IsStopped()) {
+         thd_->Stop();
+         thd_->wait();
+      }
 
       return DEVICE_OK;
    }
