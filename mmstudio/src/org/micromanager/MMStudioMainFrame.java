@@ -2154,12 +2154,7 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 	// //////////////////////////////////////////////////////////////////////////
 
 	public void snapSingleImage() {
-		try {
-			core_.setExposure(Double.parseDouble(textFieldExp_.getText()));
-			updateImage();
-		} catch (Exception e) {
-			handleException(e);
-		}
+		doSnap();
 	}
 
 	public Object getPixels() {
@@ -2352,8 +2347,10 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 		try {
 			if (!isImageWindowOpen()) {
 				// stop live acquistion if the window is not open
-				enableLiveMode(false);
-				return true; // nothing to do
+				if (IsLiveModeOn()) {
+					enableLiveMode(false);
+					return true; // nothing to do
+				}
 			}
 
 			long channels = core_.getNumberOfChannels();
