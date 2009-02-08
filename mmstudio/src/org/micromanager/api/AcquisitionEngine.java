@@ -139,6 +139,11 @@ public interface AcquisitionEngine {
    public void setChannel(int row, ChannelSpec channel);
 
    /**
+    *     * Find out which groups are available
+    *         */
+   public String getFirstConfigGroup();
+
+   /**
     * Find out which channels are currently available for the selected channel group.
     * @return - list of channel (preset) names
     */

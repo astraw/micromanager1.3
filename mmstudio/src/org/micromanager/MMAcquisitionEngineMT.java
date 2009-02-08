@@ -604,6 +604,16 @@ public class MMAcquisitionEngineMT implements AcquisitionEngine {
    }
 
    /**
+    * Get first available config group
+    */
+   public String getFirstConfigGroup() {
+      if (core_ == null)
+         return new String("");
+
+      return core_.getAvailableConfigGroups().get(0);
+   }
+
+   /**
     * Find out which channels are currently available for the selected channel group.
     * @return - list of channel (preset) names
     */

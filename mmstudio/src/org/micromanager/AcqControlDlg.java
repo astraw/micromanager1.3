@@ -1230,7 +1230,8 @@ public class AcqControlDlg extends JDialog implements PropertyChangeListener {
          acqEng_.enableAutoFocus(false);
       }
 
-      acqEng_.setChannelGroup(acqPrefs_.get(ACQ_CHANNEL_GROUP, ChannelSpec.DEFAULT_CHANNEL_GROUP));
+      acqEng_.setChannelGroup(acqPrefs_.get(ACQ_CHANNEL_GROUP, acqEng_.getFirstConfigGroup()));
+
       int numChannels = acqPrefs_.getInt(ACQ_NUM_CHANNELS, 0);
 
       ChannelSpec defaultChannel = new ChannelSpec();

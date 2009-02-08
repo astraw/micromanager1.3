@@ -470,7 +470,7 @@ public class FastAcqDlg extends JDialog implements GUIStatus {
       }
       
       try {
-         if (core_.deviceBusy(cameraName_)) {
+         if (core_.deviceBusy(cameraName_) || core_.isSequenceRunning()) {
             return true;
          }
       } catch (Exception e) {
