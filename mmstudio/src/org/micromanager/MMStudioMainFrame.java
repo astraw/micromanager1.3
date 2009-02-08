@@ -140,8 +140,6 @@ import org.micromanager.utils.ProgressBar;
 import org.micromanager.utils.TextUtils;
 import org.micromanager.utils.WaitDialog;
 
-import sun.security.x509.IPAddressName;
-
 import bsh.EvalError;
 import bsh.Interpreter;
 

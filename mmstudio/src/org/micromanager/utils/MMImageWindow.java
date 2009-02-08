@@ -422,9 +422,15 @@ public class MMImageWindow extends ImageWindow {
 
 	public long getRawHistogramSize() {
 		long ret = 0;
-		int rawHistogram[] = getImagePlus().getProcessor().getHistogram();
-		if (rawHistogram != null) {
-			ret = rawHistogram.length;
+      ImagePlus ip = getImagePlus();
+      if (ip != null) {
+         ImageProcessor pp = ip.getProcessor();
+         if (pp != null)  {
+            int rawHistogram[] = pp.getHistogram();
+            if (rawHistogram != null) {
+               ret = rawHistogram.length;
+            }
+         }
 		}
 		return ret;
 	}
