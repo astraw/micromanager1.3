@@ -2672,8 +2672,8 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 		if (propertyBrowser_ != null)
 			propertyBrowser_.dispose();
 
-		if (acqControlWin_ != null)
-			acqControlWin_.dispose();
+		if (acqControlWin_ != null) 
+         acqControlWin_.close();
 
 		if (engine_ != null)
 			engine_.shutdown();
