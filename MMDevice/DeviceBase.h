@@ -41,7 +41,7 @@
 #include <sstream>
 
 // common error messages
-const char* const g_Msg_ERR = "Name";
+const char* const g_Msg_ERR = "Unknown error in the device";
 const char* const g_Msg_INVALID_PROPERTY = "Invalid property name encountered";
 const char* const g_Msg_INVALID_PROPERTY_VALUE = "Invalid property value";
 const char* const g_Msg_DUPLICATE_PROPERTY = "Duplicate property names are not allowed";
@@ -62,6 +62,9 @@ const char* const g_Msg_DEVICE_INVALID_PROPERTY_LIMTS = "Specified property limi
 const char* const g_Msg_EXCEPTION_IN_THREAD = "Exception in the thread function.";
 const char* const g_Msg_EXCEPTION_IN_ON_THREAD_EXITING = "Exception in the OnThreadExiting function.";
 const char* const g_Msg_SEQUENCE_ACQUISITION_THREAD_EXITING="Sequence thread exiting";
+const char* const g_Msg_DEVICE_CAMERA_BUSY_ACQUIRING="Camera is busy acquiring images.  Stop camera activity before changing this property";
+const char* const g_Msg_DEVICE_CAN_NOT_SET_PROPERTY="The device can not set this property at this moment";
+
 
 
 /**
@@ -517,6 +520,8 @@ protected:
       SetErrorText(DEVICE_SERIAL_INVALID_RESPONSE, g_Msg_SERIAL_INVALID_RESPONSE);
       SetErrorText(DEVICE_NONEXISTENT_CHANNEL, g_Msg_DEVICE_NONEXISTENT_CHANNEL);
       SetErrorText(DEVICE_INVALID_PROPERTY_LIMTS, g_Msg_DEVICE_INVALID_PROPERTY_LIMTS);
+      SetErrorText(DEVICE_CAMERA_BUSY_ACQUIRING, g_Msg_DEVICE_CAMERA_BUSY_ACQUIRING);
+      SetErrorText(DEVICE_CAN_NOT_SET_PROPERTY, g_Msg_DEVICE_CAN_NOT_SET_PROPERTY);
    }
 
    /**

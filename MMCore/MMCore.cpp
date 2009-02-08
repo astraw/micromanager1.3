@@ -155,7 +155,7 @@ CMMCore::CMMCore() :
    errorText_[MMERR_CircularBufferEmpty] = "Circular buffer is empty.";
    errorText_[MMERR_ContFocusNotAvailable] = "Auto-focus focus device not defined.";
    errorText_[MMERR_BadConfigName] = "Configuration name contains illegale characters (/\\*!')";
-   errorText_[MMERR_NotAllowedDuringSequenceAcquisition] = "This operation is not allowed while sequence acquisition is run.";
+   errorText_[MMERR_NotAllowedDuringSequenceAcquisition] = "This operation can not be executed while sequence acquisition is runnning.";
 
    // open the log output stream
    logStream_= new std::ofstream();

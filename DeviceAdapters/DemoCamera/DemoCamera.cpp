@@ -537,7 +537,7 @@ int CDemoCamera::OnBinning(MM::PropertyBase* pProp, MM::ActionType eAct)
    case MM::AfterSet:
       {
          if(IsCapturing())
-            return DEVICE_CAN_NOT_SET_PROPERTY;
+            return DEVICE_CAMERA_BUSY_ACQUIRING;
 
          // the user just set the new value for the property, so we have to
          // apply this value to the 'hardware'.
@@ -580,7 +580,8 @@ int CDemoCamera::OnPixelType(MM::PropertyBase* pProp, MM::ActionType eAct)
    case MM::AfterSet:
       {
          if(IsCapturing())
-            return DEVICE_CAN_NOT_SET_PROPERTY;
+            return DEVICE_CAMERA_BUSY_ACQUIRING;
+
          string pixelType;
          pProp->Get(pixelType);
 
