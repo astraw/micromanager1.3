@@ -87,7 +87,7 @@ public:
    // ------------
    int SnapImage();
    const unsigned char* GetImageBuffer();
-   int StartSequenceAcquisition(long numImages, double interval_ms);
+   int StartSequenceAcquisition(long numImages, double interval_ms, bool stopOnOverflow);
    int StopSequenceAcquisition();
    unsigned GetImageWidth() const;
    unsigned GetImageHeight() const;

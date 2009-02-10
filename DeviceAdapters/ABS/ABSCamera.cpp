@@ -1301,7 +1301,7 @@ int ABSCamera::SetCameraFunction( unsigned __int64 CamFuncID, void* functionPara
   return DEVICE_OK;
 }
 
-int ABSCamera::StartSequenceAcquisition(long /*numImages*/, double /*interval_ms*/)
+int ABSCamera::StartSequenceAcquisition(long /*numImages*/, double /*interval_ms*/, bool /*stopOnOverflow*/)
 {
   return DEVICE_UNSUPPORTED_COMMAND;
 }

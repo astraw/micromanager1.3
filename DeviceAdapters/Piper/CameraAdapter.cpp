@@ -1287,7 +1287,7 @@ const unsigned char* CCameraAdapter::GetImageBuffer()
    return m_punRoi;
 }
 
-int CCameraAdapter::StartSequenceAcquisition(long numImages, double interval_ms)
+int CCameraAdapter::StartSequenceAcquisition(long numImages, double interval_ms, bool /*stopOnOverflow*/)
 {
    if( m_bStream )
    {
