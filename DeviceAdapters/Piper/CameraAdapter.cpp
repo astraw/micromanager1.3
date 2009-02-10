@@ -223,6 +223,7 @@ CCameraAdapter::CCameraAdapter( LPCTSTR pszName )
    m_bUpdateInProgress = FALSE;
    m_bExposureInSync = TRUE;
    m_bShowControlPanel = TRUE;
+   m_bStopOnOverflow = FALSE;
    m_bModeChanged = FALSE;
    m_bPropsChanged = FALSE;
    m_bClearROI = FALSE;
@@ -1287,12 +1288,13 @@ const unsigned char* CCameraAdapter::GetImageBuffer()
    return m_punRoi;
 }
 
-int CCameraAdapter::StartSequenceAcquisition(long numImages, double interval_ms, bool /*stopOnOverflow*/)
+int CCameraAdapter::StartSequenceAcquisition(long numImages, double interval_ms, bool stopOnOverflow)
 {
    if( m_bStream )
    {
       return ERR_BUSY_ACQUIRING;
    }
+   m_bStopOnOverflow = (BOOL)stopOnOverflow;
 
    double fFullExposure = m_fExposure * (double)m_nIntegratorDepth;
    double fInterval = interval_ms / 1000.0;
@@ -1423,7 +1425,23 @@ void CCameraAdapter::Capture()
       if (ret != DEVICE_OK)
       {
          // Micro-Manager can't keep up
-         m_bStream = FALSE;
+         if (!m_bStopOnOverflow && ret == DEVICE_BUFFER_OVERFLOW)
+         {
+            // do not stop on overflow - just reset the buffer
+           GetCoreCallback()->ClearImageBuffer(this);
+           ret = GetCoreCallback()->InsertImage
+                  (
+                     this,
+                     punBuffer,
+                     m_nRoiWidth,
+                     m_nRoiHeight,
+                     m_nImgPixelBytes
+                     );
+            if (ret != DEVICE_OK)
+            {
+               m_bStream = FALSE;
+            }
+         }
       }
       if( !m_bStream || (m_nStreamCount == (long)unMaxCnt) )
       {
@@ -1440,6 +1458,7 @@ void CCameraAdapter::Capture()
    oCS.Unlock();
 
    GetCoreCallback()->AcqFinished(this, 0);
+   LogMessage(g_Msg_SEQUENCE_ACQUISITION_THREAD_EXITING);
 }
 
 /**

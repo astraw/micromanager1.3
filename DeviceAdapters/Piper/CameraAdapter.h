@@ -163,6 +163,7 @@ private:
    double m_fStreamAvgTime;
    UINT m_unTimeout;
    BOOL m_bShowControlPanel;
+   BOOL m_bStopOnOverflow;
 
    // operator settings
    double m_fSourceBrightness;
