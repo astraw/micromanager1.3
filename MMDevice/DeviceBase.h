@@ -893,10 +893,6 @@ protected:
          LogMessage(g_Msg_SEQUENCE_ACQUISITION_THREAD_EXITING);
 
          INVOKE_CALLBACK(AcqFinished(this, 0));
-
-         MM::Core* cb = GetCoreCallback();
-         if (cb)
-            cb->AcqFinished(this, 0);
       }
       catch(...)
       {
