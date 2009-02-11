@@ -1019,7 +1019,25 @@ public class ScriptPanel extends MMFrame implements MouseListener, ScriptingGUI 
     * Clears the content of the message window
     */
    public void clearOutput() {
-      messagePane_.setText("");
+	   boolean originalAccessibility = true;
+	   try {
+		   beanshellREPLint_.eval("bsh.console.text");
+	   } catch (EvalError e) {
+		   originalAccessibility = false;
+		   try {
+			   beanshellREPLint_.eval("setAccessibility(true);");
+		   } catch (EvalError e1) {
+			   // TODO Auto-generated catch block
+			   e1.printStackTrace();
+		   }
+	   }
+	   try {
+		   beanshellREPLint_.eval("bsh.console.text.setText(\"\");"
+				   + "setAccessibility("+originalAccessibility+");");
+	   } catch (EvalError e) {
+		   // TODO Auto-generated catch block
+		   e.printStackTrace();
+	   }
    }
 
    public void ClearOutput() {

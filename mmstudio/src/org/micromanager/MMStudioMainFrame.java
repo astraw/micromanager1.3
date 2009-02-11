@@ -407,7 +407,7 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 		buttonSnap_.setText("Snap");
 		buttonSnap_.setIcon(SwingResourceManager.getIcon(
 				MMStudioMainFrame.class, "/org/micromanager/icons/camera.png"));
-		buttonSnap_.setFont(new Font("", Font.PLAIN, 10));
+		buttonSnap_.setFont(new Font("Arial", Font.PLAIN, 10));
 		buttonSnap_.setToolTipText("Snap single image");
 		buttonSnap_.setMaximumSize(new Dimension(0, 0));
 		buttonSnap_.addActionListener(new ActionListener() {
