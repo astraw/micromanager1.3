@@ -272,7 +272,8 @@ public:
     * API for controlling auto-focusing devices or software modules.
     */
    //@ {
-   double getFocusScore();
+   double getLastFocusScore();
+   double getCurrentFocusScore();
    void enableContinuousFocus(bool enable) throw (CMMError);
    bool isContinuousFocusEnabled() throw (CMMError);
    bool isContinuousFocusLocked() throw (CMMError);

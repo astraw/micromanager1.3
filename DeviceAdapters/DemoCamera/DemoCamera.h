@@ -373,9 +373,9 @@ public:
    virtual int GetContinuousFocusing(bool& state) {state = running_; return DEVICE_OK;}
    virtual bool IsContinuousFocusLocked() {return running_;}
    virtual int FullFocus() {return DEVICE_UNSUPPORTED_COMMAND;}
-   virtual int IncrementalFocus() {return DEVICE_UNSUPPORTED_COMMAND;}
-   virtual int GetFocusScore(double& score) {score = 0.0; return DEVICE_OK;}
-   virtual int CalculateFocusScore(double& score) {score = 1.0; return DEVICE_OK;}
+   virtual int IncrementalFocus() {return DEVICE_OK;}
+   virtual int GetLastFocusScore(double& score) {score = 0.0; return DEVICE_OK;}
+   virtual int GetCurrentFocusScore(double& score) {score = 1.0; return DEVICE_OK;}
 
 private:
    bool running_;

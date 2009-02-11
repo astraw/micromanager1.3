@@ -410,8 +410,9 @@ namespace MM {
       virtual bool IsContinuousFocusLocked() = 0;
       virtual int FullFocus() = 0;
       virtual int IncrementalFocus() = 0;
-      virtual int GetFocusScore(double& score) = 0;
-      virtual int CalculateFocusScore(double& score) = 0;
+      virtual int GetLastFocusScore(double& score) = 0;
+      virtual int GetCurrentFocusScore(double& score) = 0;
+      virtual int AutoSetParameters() = 0;
    };
 
    /**

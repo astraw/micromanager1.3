@@ -2014,7 +2014,7 @@ int CRIF::IncrementalFocus()
    return SetContinuousFocusing(true);
 }
 
-int CRIF::GetFocusScore(double& score)
+int CRIF::GetLastFocusScore(double& score)
 {
    // empty the Rx serial buffer before sending command
    ClearPort(*this, *GetCoreCallback(), port_.c_str()); 

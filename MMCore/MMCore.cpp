@@ -3829,12 +3829,12 @@ void CMMCore::registerCallback(MMEventCallback* cb)
  * Use this value to estimate or record how reliable the focus is.
  * The range of values is device dependent.
  */
-double CMMCore::getFocusScore()
+double CMMCore::getLastFocusScore()
 {
    if (autoFocus_ != 0)
    {
       double score;
-      int ret = autoFocus_->GetFocusScore(score);
+      int ret = autoFocus_->GetLastFocusScore(score);
       if (ret != DEVICE_OK)
          return 0.0;
       return score;
@@ -3842,6 +3842,27 @@ double CMMCore::getFocusScore()
    else
       return 0.0;
 }
+
+/**
+ * Returns the focus score from the default focusing device measured
+ * at the current Z position.
+ * Use this value to create profiles or just to verify that the image is in focus.
+ * The absolute range of returned scores depends on the actual focusing device.
+ */
+double CMMCore::getCurrentFocusScore()
+{
+   if (autoFocus_ != 0)
+   {
+      double score;
+      int ret = autoFocus_->GetCurrentFocusScore(score);
+      if (ret != DEVICE_OK)
+         return 0.0;
+      return score;
+   }
+   else
+      return 0.0;
+}
+
 
 /**
  * Enables or disables the operation of the continouous focusing hardware device.

@@ -1217,6 +1217,7 @@ class CSerialBase : public CDeviceBase<MM::Serial, U>
 template <class U>
 class CAutoFocusBase : public CDeviceBase<MM::AutoFocus, U>
 {
+   virtual int AutoSetParameters() {return DEVICE_UNSUPPORTED_COMMAND;}
 };
 
 /**

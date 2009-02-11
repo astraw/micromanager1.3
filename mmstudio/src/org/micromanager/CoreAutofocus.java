@@ -29,7 +29,7 @@ public class CoreAutofocus implements Autofocus {
       }
       
       try {
-         return core_.getFocusScore();
+         return core_.getLastFocusScore();
       } catch (Exception e) {
          e.printStackTrace();
          return 0.0;
@@ -53,7 +53,7 @@ public class CoreAutofocus implements Autofocus {
       }
       
       try {
-         return core_.getFocusScore();
+         return core_.getLastFocusScore();
       } catch (Exception e) {
          e.printStackTrace();
          return 0.0;
