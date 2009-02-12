@@ -1432,7 +1432,7 @@ public class AcquisitionData {
          GregorianCalendar gc = new GregorianCalendar();
          frameData.put(ImagePropertyKeys.TIME, gc.getTime());
          frameData.put(ImagePropertyKeys.ELAPSED_TIME_MS, gc.getTimeInMillis() - creationTime_.getTimeInMillis() );
-         frameData.put(ImagePropertyKeys.EXPOSURE_MS, 0.0); // TODO
+         //frameData.put(ImagePropertyKeys.EXPOSURE_MS, 0.0); // TODO
 
          metadata_.put(frameKey, frameData);
       } catch (JSONException e) {
