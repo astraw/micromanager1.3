@@ -269,7 +269,6 @@ ZeissHub::ZeissHub() :
 
 ZeissHub::~ZeissHub()
 {
-   printf("in Hub destructor\n");
    MM_THREAD_DELETE_GUARD(&mutex);
 }
 
@@ -388,12 +387,6 @@ int ZeissHub::Initialize(MM::Device& device, MM::Core& core)
    }
    core.LogMessage(&device, os.str().c_str(), false);
 
-   if (targetDevice_ == AXIOIMAGER) {
-      for (ZeissUByte i=0; i < availableDevices_.size(); i++) {
-         ZeissUByte devId = availableDevices_[i];
-         InitDev(device, core, g_commandGroup[devId], devId);
-      }
-   }
    monitoringThread_ = new ZeissMonitoringThread(device, core);
    monitoringThread_->Start();
    scopeInitialized_ = true;
@@ -431,8 +424,8 @@ int ZeissHub::GetVersion(MM::Device& device, MM::Core& core)
    unsigned long signatureLength = 4;
    // Version string starts in 6th character, length is in first char
    unsigned char signature[] = { 0x08, command[2], command[3], command[4] };
-   while  (tries < 3 && !success) {
-      for (int i = 0; i < 2; i++) {
+   while  ((tries < 3) && !success) {
+      for (int i = 0; (i < 2) && !success; i++) {
          ret = ExecuteCommand(device, core,  command, commandLength, targetAddress[i]);
          if (ret != DEVICE_OK)
             return ret;
@@ -441,9 +434,6 @@ int ZeissHub::GetVersion(MM::Device& device, MM::Core& core)
          if (ret == DEVICE_OK) {
             success = true;
             targetDevice_ = targetAddress[i];
-            ostringstream os;
-            os << "Microscope type Detected: " << targetDevice_;
-            core.LogMessage(&device, os.str().c_str(), false);
          }
       }
       tries++;
@@ -452,6 +442,16 @@ int ZeissHub::GetVersion(MM::Device& device, MM::Core& core)
       core.LogMessage(&device, "Microscope type detection failed!", false);
       return ret;
    }
+
+   ostringstream os;
+   os << "Microscope type Detected: ";
+   if (targetDevice_ == AXIOIMAGER)
+      os << "AxioImager";
+   else if (targetDevice_ ==AXIOOBSERVER)
+      os << "AxioObserver";
+   else
+      os << "???";
+   core.LogMessage(&device, os.str().c_str(), false);
 
    response[responseLength] = 0;
    string answer((char *)response);
@@ -1115,8 +1115,6 @@ int ZeissHub::GetAnswer(MM::Device& device, MM::Core& core, unsigned char* answe
       ret = GetAnswer(device, core, answer, answerLength);
       if (ret != DEVICE_OK)
          return ret;
-      // MM::MMTime dif = core.GetCurrentMMTime() - startTime;
-      // printf ("Waited for %f usec, timeout: %f usec\n", dif.getUsec(), timeOutTime_.getUsec());
       if ((core.GetCurrentMMTime() - startTime) > timeOutTime_) {
          timeOut = true;
          ret = ERR_ANSWER_TIMEOUT;
@@ -1336,13 +1334,15 @@ ZeissMonitoringThread::ZeissMonitoringThread(MM::Device& device, MM::Core& core)
    device_ (device),
    core_ (core),
    stop_ (true),
-   intervalUs_(5000) // check every 5 ms for new messages, 
+   intervalUs_(10000) // check every 5 ms for new messages, 
 {
 }
 
 ZeissMonitoringThread::~ZeissMonitoringThread()
 {
-   printf("Destructing monitoringThread\n");
+   Stop();
+   wait();
+   core_.LogMessage(&device_, "Destructing MonitoringThread", true);
 }
 
 void ZeissMonitoringThread::interpretMessage(unsigned char* message)
@@ -1352,7 +1352,12 @@ void ZeissMonitoringThread::interpretMessage(unsigned char* message)
    //   return;
    if (message[3] == 0x07) { // events/unsolicited message
       if (message[6] == 0x01) // leaving settled position
+      {
          g_hub.SetModelBusy(message[5], true);
+         std::ostringstream os;
+         os << "Setting Busy flag of device: " << hex << message[5] << " to true.";
+         core_.LogMessage(&device_, os.str().c_str(), true);
+      }
       else if (message[6] == 0x02) { // actual moving position 
          ZeissLong position;
          if (message[4] == 0xA3) {
@@ -1364,6 +1369,10 @@ void ZeissMonitoringThread::interpretMessage(unsigned char* message)
          }
          g_hub.SetModelPosition(message[7], position);
          g_hub.SetModelBusy(message[7], true);
+
+         std::ostringstream os;
+         os << "Setting Busy flag of device: " << hex << message[7] << " to true.";
+         core_.LogMessage(&device_, os.str().c_str(), true);
       }
       else if (message[6] == 0x03) { // target position settled
          ZeissLong position;
@@ -1374,6 +1383,11 @@ void ZeissMonitoringThread::interpretMessage(unsigned char* message)
             memcpy(&position, message + 8, 2);
             position = ntohs((unsigned short) position);
          }
+
+         std::ostringstream os;
+         os << "Setting status of device: " << hex << message[7] << " to: " << dec << position << " and Busy flag to false";
+         core_.LogMessage(&device_, os.str().c_str(), true);
+
          g_hub.SetModelPosition(message[7], position);
          g_hub.SetModelBusy(message[7], false);
       }
@@ -1399,14 +1413,27 @@ void ZeissMonitoringThread::interpretMessage(unsigned char* message)
          position = ntohl(position);
          g_hub.SetLowerHardwareStop(message[5], position);
          // TODO: How to unlock the stage from here?
-       }
+       } else if (message[6] == 0x07) { // Status updated as we requested (only on AxioImager)
+          ZeissShort status;
+          memcpy(&status, message + 8, 2);
+          status = ntohs((unsigned short) status);
+          int tmp = status & 1024;
+
+          ostringstream os;
+          os << "Setting status of device: " << hex << message[7] << " to: " << dec << tmp;
+          core_.LogMessage(&device_, os.str().c_str(), true);
+
+          if ( (status & 1024) > 0)
+             g_hub.SetModelBusy(message[7], true);
+          else
+             g_hub.SetModelBusy(message[7], false);
+      }
    }
 }
 
-MM_THREAD_FUNC_DECL ZeissMonitoringThread::svc(void *arg) {
-   ZeissMonitoringThread* thd = (ZeissMonitoringThread*) arg;
+int ZeissMonitoringThread::svc() {
 
-   printf ("Starting MonitoringThread\n");
+   core_.LogMessage(&device_, "Starting MonitoringThread", true);
 
    unsigned long dataLength;
    unsigned long charsRead = 0;
@@ -1414,16 +1441,16 @@ MM_THREAD_FUNC_DECL ZeissMonitoringThread::svc(void *arg) {
    unsigned char rcvBuf[ZeissHub::RCV_BUF_LENGTH];
    memset(rcvBuf, 0, ZeissHub::RCV_BUF_LENGTH);
 
-   while (!thd->stop_) 
+   while (!stop_) 
    {
       do { 
          dataLength = ZeissHub::RCV_BUF_LENGTH - charsRemaining;
          // Do the scope monitoring stuff here
-         int ret = thd->core_.ReadFromSerial(&(thd->device_), g_hub.port_.c_str(), rcvBuf + charsRemaining, dataLength, charsRead); 
+         int ret = core_.ReadFromSerial(&device_, g_hub.port_.c_str(), rcvBuf + charsRemaining, dataLength, charsRead); 
          if (ret != DEVICE_OK) {
             ostringstream oss;
             oss << "Monitoring Thread: ERROR while reading from serial port, error code: " << ret;
-            thd->core_.LogMessage(&(thd->device_), oss.str().c_str(), false);
+            core_.LogMessage(&device_, oss.str().c_str(), false);
          } else if (charsRead > 0) {
             ZeissMessageParser* parser = new ZeissMessageParser(rcvBuf, charsRead + charsRemaining);
             do {
@@ -1436,9 +1463,10 @@ MM_THREAD_FUNC_DECL ZeissMonitoringThread::svc(void *arg) {
                   os << "Monitoring Thread incoming message: ";
                   for (int i=0; i< messageLength; i++)
                      os << hex << (unsigned int)message[i] << " ";
-                  thd->core_.LogMessage(&(thd->device_), os.str().c_str(), true);
+                  core_.LogMessage(&device_, os.str().c_str(), true);
+
                   // and do the real stuff
-                  thd->interpretMessage(message);
+                  interpretMessage(message);
                 }
                else {
                   // no more messages, copy remaining (if any) back to beginning of buffer
@@ -1449,11 +1477,11 @@ MM_THREAD_FUNC_DECL ZeissMonitoringThread::svc(void *arg) {
                }
             } while (ret == 0);
          }
-      } while ((charsRead != 0) && (!thd->stop_)); 
+      } while ((charsRead != 0) && (!stop_)); 
 
-       CDeviceUtils::SleepMs(thd->intervalUs_/1000);
+       CDeviceUtils::SleepMs(intervalUs_/1000);
    }
-   printf("Monitoring thread finished\n");
+   core_.LogMessage(&device_, "Monitoring Thread finished", true);
    return 0;
 }
 
@@ -1461,8 +1489,7 @@ void ZeissMonitoringThread::Start()
 {
 
    stop_ = false;
-
-   MM_THREAD_CREATE(&thread_, svc, this);
+   activate();
 }
 
 
@@ -1506,7 +1533,7 @@ int ZeissDevice::SetPosition(MM::Device& device, MM::Core& core, ZeissUByte comm
    ZeissShort tmp = htons((ZeissShort) position);
    memcpy(command+6, &tmp, ZeissShortSize); 
    ostringstream os;
-   os << "Setting device "<< hex << (unsigned int) devId << " to position " << dec << position;
+   os << "Setting device "<< hex << (unsigned int) devId << " to position " << dec << position << " and Busy flag to true";
    core.LogMessage(&device, os.str().c_str(), false);
    ret = g_hub.ExecuteCommand(device, core,  command, commandLength);
    if (ret != DEVICE_OK)
@@ -1515,7 +1542,34 @@ int ZeissDevice::SetPosition(MM::Device& device, MM::Core& core, ZeissUByte comm
 
    return DEVICE_OK;
 }
+/*
+ * Send status request to Servo or Changer. 
+ */
+int ZeissDevice::GetStatus(MM::Device& device, MM::Core& core, ZeissUByte commandGroup, ZeissUByte devId)
+{
+   int ret;
+   const int commandLength = 6;
+   unsigned char command[commandLength];
+   // Size of data block
+   command[0] = 0x03;
+   // Write command, do not expect answer:
+   command[1] = 0x18;
+   command[2] = commandGroup; 
+   // ProcessID
+   command[3] = 0x11;
+   // SubID
+   command[4] = 0x07;
+   // Device ID
+   command[5] = devId;
+   ostringstream os;
+   os << "Requesting status for device: "<< hex << (unsigned int) devId;
+   core.LogMessage(&device, os.str().c_str(), false);
+   ret = g_hub.ExecuteCommand(device, core,  command, commandLength);
+   if (ret != DEVICE_OK)
+      return ret;
 
+   return DEVICE_OK;
+}
 /*
  * Requests Lock from Microscope 
  */
@@ -1835,12 +1889,9 @@ ZeissScope::ZeissScope() :
 
 ZeissScope::~ZeissScope() 
 {
-   printf ("In ZeissScope destructor\n");
    if (g_hub.monitoringThread_ != 0) {
       g_hub.monitoringThread_->Stop();
-   printf ("Stopping monitoringThread\n");
       g_hub.monitoringThread_->wait();
-   printf ("Thread stopped\n");
       delete g_hub.monitoringThread_;
       g_hub.monitoringThread_ = 0;
    }
@@ -1931,9 +1982,11 @@ Shutter::Shutter (ZeissUByte devId, std::string name, std::string description):
    name_ = name;
    description_ = description;
    InitializeDefaultErrorMessages();
-
+ 
    SetErrorText(ERR_SCOPE_NOT_ACTIVE, "Zeiss Scope is not initialized.  It is needed for the Zeiss Shutter to work");
    SetErrorText(ERR_MODULE_NOT_FOUND, "This shutter is not installed in this Zeiss microscope");
+   SetErrorText(ERR_SHUTTER_POS_UNKNOWN, "Shutter reported that it was neither opened or closed, so I am confused");
+
 }
 
 Shutter::~Shutter ()
@@ -2026,6 +2079,12 @@ int Shutter::SetOpen(bool open)
    else
       position = 1;
 
+   // debuggin, delete when done:
+   ostringstream os;
+   os << "Setting shutter with ID: " <<  hex << (unsigned int)devId_ << " to position " << position << "and Busy flag to true";
+   LogMessage(os.str().c_str(), true);
+   // end debugging
+
    int ret = SetPosition(*this, *GetCoreCallback(), devId_, position);
    if (ret != DEVICE_OK)
       return ret;
@@ -2035,7 +2094,6 @@ int Shutter::SetOpen(bool open)
 
 int Shutter::GetOpen(bool &open)
 {
-
    int position;
    int ret = GetPosition(*this, *GetCoreCallback(), devId_, position);
    if (ret != DEVICE_OK)
@@ -2046,8 +2104,12 @@ int Shutter::GetOpen(bool &open)
       open = false;
    else if (position == 2)
       open = true;
-   else
-      return ERR_UNEXPECTED_ANSWER;
+   else {
+      std::ostringstream os;
+      os << "Shutter was in unexpected position: " << position;
+      LogMessage(os.str(), false);
+      return ERR_SHUTTER_POS_UNKNOWN;
+   }
 
    return DEVICE_OK;
 }

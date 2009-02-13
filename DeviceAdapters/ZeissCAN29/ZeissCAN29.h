@@ -93,6 +93,7 @@ typedef double ZeissDouble;
 #define ERR_MODULE_NOT_FOUND         10014
 #define ERR_ANSWER_TIMEOUT           10015
 #define ERR_PORT_NOT_OPEN            10016
+#define ERR_SHUTTER_POS_UNKNOWN      10017
 
 enum HardwareStops {
    UPPER,
@@ -167,6 +168,9 @@ class ZeissHub
       MM::MMTime GetTimeOutTime(){ return timeOutTime_;}
       void SetTimeOutTime(MM::MMTime timeOutTime) { timeOutTime_ = timeOutTime;}
 
+      // Tells whether we have an AxioImager or AxioObserver
+      unsigned char GetAxioType() {return targetDevice_;};
+
       // access functions for device info from microscope model (use lock)
       int GetVersion(MM::Device& device, MM::Core& core, std::string& ver);
       int GetModelPosition(MM::Device& device, MM::Core& core, ZeissUByte devId, ZeissLong& position);
@@ -240,18 +244,18 @@ class ZeissMessageParser{
       long index_;
 };
 
-class ZeissMonitoringThread
+class ZeissMonitoringThread : public MMDeviceThreadBase
 {
    public:
       ZeissMonitoringThread(MM::Device& device, MM::Core& core); 
       ~ZeissMonitoringThread(); 
-      static MM_THREAD_FUNC_DECL svc(void *arg);
+      int svc();
       int open (void*) { return 0;}
       int close(unsigned long) {return 0;}
 
       void Start();
       void Stop() {stop_ = true;}
-      void wait() {MM_THREAD_JOIN(thread_);}
+      //void wait() {MM_THREAD_JOIN(thread_);}
 
    private:
       MM_THREAD_HANDLE thread_;
@@ -272,6 +276,7 @@ class ZeissDevice
 
       int GetPosition(MM::Device& device, MM::Core& core, ZeissUByte devId, ZeissLong& position);
       int SetPosition(MM::Device& device, MM::Core& core, ZeissUByte commandGroup, ZeissUByte devId, int position);
+      int GetStatus(MM::Device& device, MM::Core& core, ZeissUByte commandGroup, ZeissUByte devId);
       int GetTargetPosition(MM::Device& device, MM::Core& core, ZeissUByte devId, ZeissLong& position);
       int GetMaxPosition(MM::Device& device, MM::Core& core, ZeissUByte devId, ZeissLong& position);
       int GetStatus(MM::Device& device, MM::Core& core, ZeissUByte devId, ZeissULong& status);
