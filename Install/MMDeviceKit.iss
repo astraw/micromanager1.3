@@ -13,10 +13,11 @@ DisableDirPage=true
 
 [Files]
 ; driver files
-Source: ..\MMDevice\Property.h; DestDir: {app}\MMDevice
 Source: ..\MMDevice\DeviceBase.h; DestDir: {app}\MMDevice
+Source: ..\MMDevice\DeviceThreads.h; DestDir: {app}\MMDevice
 Source: ..\MMDevice\DeviceUtils.cpp; DestDir: {app}\MMDevice
 Source: ..\MMDevice\DeviceUtils.h; DestDir: {app}\MMDevice
+Source: ..\MMDevice\ImageMetadata.h; DestDir: {app}\MMDevice
 Source: ..\MMDevice\ImgBuffer.cpp; DestDir: {app}\MMDevice
 Source: ..\MMDevice\ImgBuffer.h; DestDir: {app}\MMDevice
 Source: ..\MMDevice\license.txt; DestDir: {app}\MMDevice
@@ -25,6 +26,7 @@ Source: ..\MMDevice\MMDeviceConstants.h; DestDir: {app}\MMDevice
 Source: ..\MMDevice\ModuleInterface.cpp; DestDir: {app}\MMDevice
 Source: ..\MMDevice\ModuleInterface.h; DestDir: {app}\MMDevice
 Source: ..\MMDevice\Property.cpp; DestDir: {app}\MMDevice
+Source: ..\MMDevice\Property.h; DestDir: {app}\MMDevice
 Source: ..\DeviceAdapters\DemoCamera\DemoCamera.cpp; DestDir: {app}\DeviceAdapters\DemoCamera
 Source: ..\DeviceAdapters\DemoCamera\DemoCamera.h; DestDir: {app}\DeviceAdapters\DemoCamera
 Source: ..\DeviceAdapters\DemoCamera\DemoCamera.vcproj; DestDir: {app}\DeviceAdapters\DemoCamera
