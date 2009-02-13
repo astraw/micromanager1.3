@@ -161,7 +161,7 @@ class ZeissHub
       ZeissHub();
       ~ZeissHub();
 
-      int ExecuteCommand(MM::Device& device, MM::Core& core, const unsigned char* command, int commandLength, unsigned char targetDevice = AXIOOBSERVER);
+      int ExecuteCommand(MM::Device& device, MM::Core& core, const unsigned char* command, int commandLength, unsigned char targetDevice = 0);
       int GetAnswer(MM::Device& device, MM::Core& core, unsigned char* answer, unsigned long &answerLength); 
       int GetAnswer(MM::Device& device, MM::Core& core, unsigned char* answer, unsigned long &answerLength, unsigned char* signature, unsigned long signatureStart, unsigned long signatureLength); 
       MM::MMTime GetTimeOutTime(){ return timeOutTime_;}
@@ -216,12 +216,13 @@ class ZeissHub
       int GetTubeLensLabels(MM::Device& device, MM::Core& core);
       int GetSidePortLabels(MM::Device& device, MM::Core& core);
       int GetCondenserLabels(MM::Device& device, MM::Core& core);
+      int InitDev(MM::Device& device, MM::Core& core, ZeissUByte commandGroup, ZeissUByte devId);
+
 
       ZeissMonitoringThread* monitoringThread_;
       MM::MMTime timeOutTime_;
-      //static ZeissDeviceInfo deviceInfo_[MAXNUMBERDEVICES];
+      unsigned char targetDevice_;
       std::vector<ZeissUByte > availableDevices_;
-      //static std::vector<ZeissUByte > commandGroup_; // relates device to commandgroup, initialized in constructor
       std::string version_;
       bool scopeInitialized_;
 };
@@ -270,11 +271,11 @@ class ZeissDevice
       virtual ~ZeissDevice();
 
       int GetPosition(MM::Device& device, MM::Core& core, ZeissUByte devId, ZeissLong& position);
-      int SetPosition(MM::Device& device, MM::Core& core, ZeissUByte commandGroup, ZeissUByte devId, int position, unsigned char targetDevice = AXIOOBSERVER);
+      int SetPosition(MM::Device& device, MM::Core& core, ZeissUByte commandGroup, ZeissUByte devId, int position);
       int GetTargetPosition(MM::Device& device, MM::Core& core, ZeissUByte devId, ZeissLong& position);
       int GetMaxPosition(MM::Device& device, MM::Core& core, ZeissUByte devId, ZeissLong& position);
       int GetStatus(MM::Device& device, MM::Core& core, ZeissUByte devId, ZeissULong& status);
-      int SetLock(MM::Device& device, MM::Core& core, ZeissUByte devId, bool on, unsigned char targetDevice = AXIOOBSERVER);
+      int SetLock(MM::Device& device, MM::Core& core, ZeissUByte devId, bool on);
       int GetBusy(MM::Device& device, MM::Core& core, ZeissUByte devId, bool& busy);
       int GetPresent(MM::Device& device, MM::Core& core, ZeissUByte devId, bool& present);
 
@@ -315,10 +316,10 @@ class ZeissAxis : public ZeissDevice
       ZeissAxis();
       ~ZeissAxis();
 
-      int SetPosition(MM::Device& device, MM::Core& core, ZeissUByte devId, long position, ZeissByte moveMode, unsigned char targetDevice = AXIOOBSERVER);
-      int SetRelativePosition(MM::Device& device, MM::Core& core, ZeissUByte devId, long increment, ZeissByte moveMode, unsigned char targetDevice = AXIOOBSERVER);
-      int FindHardwareStop(MM::Device& device, MM::Core& core, ZeissUByte devId, HardwareStops stop, unsigned char targetDevice = AXIOOBSERVER);
-      int StopMove(MM::Device& device, MM::Core& core, ZeissUByte devId, ZeissByte moveMode, unsigned char targetDevice = AXIOOBSERVER);
+      int SetPosition(MM::Device& device, MM::Core& core, ZeissUByte devId, long position, ZeissByte moveMode);
+      int SetRelativePosition(MM::Device& device, MM::Core& core, ZeissUByte devId, long increment, ZeissByte moveMode);
+      int FindHardwareStop(MM::Device& device, MM::Core& core, ZeissUByte devId, HardwareStops stop);
+      int StopMove(MM::Device& device, MM::Core& core, ZeissUByte devId, ZeissByte moveMode);
       ZeissUByte devId_;
 
    private:

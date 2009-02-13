@@ -242,6 +242,7 @@ MODULE_API void DeleteDevice(MM::Device* pDevice)
 // Interface to the Zeis microscope
 //
 ZeissHub::ZeissHub() :
+   targetDevice_ (AXIOOBSERVER),
    portInitialized_ (false),
    monitoringThread_(0),
    timeOutTime_(250000),
@@ -298,13 +299,7 @@ int ZeissHub::Initialize(MM::Device& device, MM::Core& core)
 
    int ret = GetVersion(device, core);
    if (ret != DEVICE_OK) {
-      // Sometimes we time out on the first try....  Try twice more...
-      ret = GetVersion(device, core);
-      if (ret != DEVICE_OK) {
-         ret = GetVersion(device, core);
-         if (ret != DEVICE_OK)
-            return ret;
-      }
+      return ret;
    }
 
    availableDevices_.clear();
@@ -393,6 +388,12 @@ int ZeissHub::Initialize(MM::Device& device, MM::Core& core)
    }
    core.LogMessage(&device, os.str().c_str(), false);
 
+   if (targetDevice_ == AXIOIMAGER) {
+      for (ZeissUByte i=0; i < availableDevices_.size(); i++) {
+         ZeissUByte devId = availableDevices_[i];
+         InitDev(device, core, g_commandGroup[devId], devId);
+      }
+   }
    monitoringThread_ = new ZeissMonitoringThread(device, core);
    monitoringThread_->Start();
    scopeInitialized_ = true;
@@ -402,6 +403,7 @@ int ZeissHub::Initialize(MM::Device& device, MM::Core& core)
 /**
  * Reads in version info
  * Stores version info in variable version_
+ * Also determined whether this is an AxioImager or AxioObserver
  */
 int ZeissHub::GetVersion(MM::Device& device, MM::Core& core)
 {
@@ -418,24 +420,77 @@ int ZeissHub::GetVersion(MM::Device& device, MM::Core& core)
    // SubID 
    command[4] = 0x07;
 
-   int ret = ExecuteCommand(device, core,  command, commandLength);
-   if (ret != DEVICE_OK)
-      return ret;
-
-   // Version string starts in 6th character, length is in first char
+   // The CAN address for the AxioImager A1/D1 is 0x1B, for the Z1/D1 0x19
+   // Try up to three times, alternating between Observer and Imager
+   int ret = DEVICE_OK;
+   unsigned char targetAddress[] = {AXIOOBSERVER, AXIOIMAGER};
+   int tries = 0;
+   bool success = false;
    long unsigned int responseLength = RCV_BUF_LENGTH;
    unsigned char response[RCV_BUF_LENGTH];
    unsigned long signatureLength = 4;
+   // Version string starts in 6th character, length is in first char
    unsigned char signature[] = { 0x08, command[2], command[3], command[4] };
-   ret = GetAnswer(device, core, response, responseLength, signature, 1, signatureLength);
-   if (ret != DEVICE_OK)
+   while  (tries < 3 && !success) {
+      for (int i = 0; i < 2; i++) {
+         ret = ExecuteCommand(device, core,  command, commandLength, targetAddress[i]);
+         if (ret != DEVICE_OK)
+            return ret;
+
+         ret = GetAnswer(device, core, response, responseLength, signature, 1, signatureLength);
+         if (ret == DEVICE_OK) {
+            success = true;
+            targetDevice_ = targetAddress[i];
+            ostringstream os;
+            os << "Microscope type Detected: " << targetDevice_;
+            core.LogMessage(&device, os.str().c_str(), false);
+         }
+      }
+      tries++;
+   }
+   if (!success) {
+      core.LogMessage(&device, "Microscope type detection failed!", false);
       return ret;
+   }
+
    response[responseLength] = 0;
    string answer((char *)response);
    version_ = "Application version: " + answer.substr(6, atoi(answer.substr(0,1).c_str()));
   
    if (ret != DEVICE_OK)
       return ret;
+
+   return DEVICE_OK;
+}
+
+/*
+ * Initializes a device inside the microscope
+ * This is only needed on the AxioImagers
+ * Only to be called from ZeissHub::Initialize for an AxioImager
+ */
+int ZeissHub::InitDev(MM::Device& device, MM::Core& core, ZeissUByte commandGroup, ZeissUByte devId)
+{
+   int ret;
+   unsigned char command[8];
+   // Size of data block
+   command[0] = 0x03;
+   // Write command, Do not expect answer
+   command[1] = 0x1B;
+   command[2] = commandGroup;
+   // ProcessID
+   command[3] = 0x11;
+   // SubID (FD = Init Device)
+   command[4] = 0xFD;
+   // Device ID
+   command[5] = (ZeissUByte) devId;
+
+   ret = ExecuteCommand(device, core, command, 6);
+   if (ret != DEVICE_OK)
+      return ret;
+
+   ostringstream os;
+   os << "Send Init Dev command to microscope for device: " << devId;
+   core.LogMessage(&device, os.str().c_str(), false);
 
    return DEVICE_OK;
 }
@@ -940,10 +995,13 @@ int ZeissHub::GetVersion(MM::Device& device, MM::Core& core, std::string& ver)
 
 /**
  * Sends command to serial port
- * The first (10 02 19 11) and last part of the command (10 03) are added here
+ * The first (10 02 targetDevice 11) and last part of the command (10 03) are added here
  */
 int ZeissHub::ExecuteCommand(MM::Device& device, MM::Core& core, const unsigned char* command, int commandLength, unsigned char targetDevice) 
 {
+   if (targetDevice <= 0)
+      targetDevice = targetDevice_;
+
    // Prepare command according to CAN29 Protocol
    vector<unsigned char> preparedCommand(commandLength + 20); // make provision for doubling tens
    preparedCommand[0] = 0x10;
@@ -962,14 +1020,10 @@ int ZeissHub::ExecuteCommand(MM::Device& device, MM::Core& core, const unsigned 
    preparedCommand[commandLength+4+tenCounter]=0x10;
    preparedCommand[commandLength+5+tenCounter]=0x03;
 
-   // int preparedCommandLength = commandLength + 6 + tenCounter;
    // send command
-   //int ret = core.WriteToSerial(&device, port_.c_str(), &(preparedCommand[0]), (unsigned long) preparedCommand.size());
    int ret = core.WriteToSerial(&device, port_.c_str(), &(preparedCommand[0]), (unsigned long) commandLength + tenCounter + 6);
    if (ret != DEVICE_OK)                                                     
       return ret;                                                            
-                                                                             
-   // core.LogMessage(&device, preparedCommand, true);
 
    return DEVICE_OK;                                                         
 }
@@ -1407,11 +1461,8 @@ void ZeissMonitoringThread::Start()
 {
 
    stop_ = false;
-   //pthread_create(&thread_, NULL, svc, this);
+
    MM_THREAD_CREATE(&thread_, svc, this);
-   //activate();
-   //activate(THR_NEW_LWP | THR_JOINABLE, 1, 1, ACE_THR_PRI_OTHER_MAX);
-   //activate(THR_NEW_LWP | THR_JOINABLE, 1, 1, THREAD_PRIORITY_TIME_CRITICAL);
 }
 
 
@@ -1420,7 +1471,6 @@ void ZeissMonitoringThread::Start()
  */
 ZeissDevice::ZeissDevice() 
 {
-   // targetProcessId_ = 0x12;
 }
 
 ZeissDevice::~ZeissDevice()
@@ -1436,7 +1486,7 @@ int ZeissDevice::GetPosition(MM::Device& device, MM::Core& core, ZeissUByte devI
  * Send command to microscope to set position of Servo and Changer. 
  * Do not use this for Axis (override in Axis device)
  */
-int ZeissDevice::SetPosition(MM::Device& device, MM::Core& core, ZeissUByte commandGroup, ZeissUByte devId, int position, unsigned char targetDevice)
+int ZeissDevice::SetPosition(MM::Device& device, MM::Core& core, ZeissUByte commandGroup, ZeissUByte devId, int position)
 {
    int ret;
    const int commandLength = 8;
@@ -1458,7 +1508,7 @@ int ZeissDevice::SetPosition(MM::Device& device, MM::Core& core, ZeissUByte comm
    ostringstream os;
    os << "Setting device "<< hex << (unsigned int) devId << " to position " << dec << position;
    core.LogMessage(&device, os.str().c_str(), false);
-   ret = g_hub.ExecuteCommand(device, core,  command, commandLength, targetDevice);
+   ret = g_hub.ExecuteCommand(device, core,  command, commandLength);
    if (ret != DEVICE_OK)
       return ret;
    g_hub.SetModelBusy(devId, true);
@@ -1469,7 +1519,7 @@ int ZeissDevice::SetPosition(MM::Device& device, MM::Core& core, ZeissUByte comm
 /*
  * Requests Lock from Microscope 
  */
-int ZeissDevice::SetLock(MM::Device& device, MM::Core& core, ZeissUByte devId, bool on, unsigned char targetDevice)
+int ZeissDevice::SetLock(MM::Device& device, MM::Core& core, ZeissUByte devId, bool on)
 {
    int ret;
    const int commandLength = 14;
@@ -1507,7 +1557,7 @@ int ZeissDevice::SetLock(MM::Device& device, MM::Core& core, ZeissUByte devId, b
    else
       os << "Requesting unlocking for device "<< hex << (unsigned int) devId ;
    core.LogMessage(&device, os.str().c_str(), false);
-   ret = g_hub.ExecuteCommand(device, core,  command, commandLength, targetDevice);
+   ret = g_hub.ExecuteCommand(device, core,  command, commandLength);
    if (ret != DEVICE_OK)
       return ret;
 
@@ -1626,7 +1676,7 @@ ZeissAxis::~ZeissAxis()
 /*
  * Send command to microscope to set position of Axis. 
  */
-int ZeissAxis::SetPosition(MM::Device& device, MM::Core& core, ZeissUByte devId, long position, ZeissByte moveMode, unsigned char targetDevice)
+int ZeissAxis::SetPosition(MM::Device& device, MM::Core& core, ZeissUByte devId, long position, ZeissByte moveMode)
 {
    int ret;
    const int commandLength = 11;
@@ -1647,7 +1697,7 @@ int ZeissAxis::SetPosition(MM::Device& device, MM::Core& core, ZeissUByte devId,
    // position is a ZeissLong (4-byte) in big endian format...
    ZeissLong tmp = htonl((ZeissLong) position);
    memcpy(command+7, &tmp, ZeissLongSize); 
-   ret = g_hub.ExecuteCommand(device, core,  command, commandLength, targetDevice);
+   ret = g_hub.ExecuteCommand(device, core,  command, commandLength);
    if (ret != DEVICE_OK)
       return ret;
    g_hub.SetModelBusy(devId, true);
@@ -1658,7 +1708,7 @@ int ZeissAxis::SetPosition(MM::Device& device, MM::Core& core, ZeissUByte devId,
 /*
  * Send command to microscope to move relative to current position of Axis
  */
-int ZeissAxis::SetRelativePosition(MM::Device& device, MM::Core& core, ZeissUByte devId, long increment, ZeissByte moveMode, unsigned char targetDevice)
+int ZeissAxis::SetRelativePosition(MM::Device& device, MM::Core& core, ZeissUByte devId, long increment, ZeissByte moveMode)
 {
    int ret;
    const int commandLength = 11;
@@ -1680,7 +1730,7 @@ int ZeissAxis::SetRelativePosition(MM::Device& device, MM::Core& core, ZeissUByt
    ZeissLong tmp = htonl((ZeissLong) increment);
    memcpy(command+7, &tmp, ZeissLongSize); 
 
-   ret = g_hub.ExecuteCommand(device, core,  command, commandLength, targetDevice);
+   ret = g_hub.ExecuteCommand(device, core,  command, commandLength);
    if (ret != DEVICE_OK)
       return ret;
    g_hub.SetModelBusy(devId, true);
@@ -1691,7 +1741,7 @@ int ZeissAxis::SetRelativePosition(MM::Device& device, MM::Core& core, ZeissUByt
 /*
  * Moves the Stage to the specified (upper or lower) hardware stop
  */
-int ZeissAxis::FindHardwareStop(MM::Device& device, MM::Core& core, ZeissUByte devId, HardwareStops stop, unsigned char targetDevice)
+int ZeissAxis::FindHardwareStop(MM::Device& device, MM::Core& core, ZeissUByte devId, HardwareStops stop)
 {
    // Lock the stage
    int ret = SetLock(device, core, devId, true);
@@ -1715,7 +1765,7 @@ int ZeissAxis::FindHardwareStop(MM::Device& device, MM::Core& core, ZeissUByte d
    // Device ID
    command[5] = devId;
 
-   ret = g_hub.ExecuteCommand(device, core,  command, commandLength, targetDevice);
+   ret = g_hub.ExecuteCommand(device, core,  command, commandLength);
    if (ret != DEVICE_OK)
       return ret;
    g_hub.SetModelBusy(devId, true);
@@ -1727,7 +1777,7 @@ int ZeissAxis::FindHardwareStop(MM::Device& device, MM::Core& core, ZeissUByte d
 /*
  * Stops movement for this Axis immediately
  */
-int ZeissAxis::StopMove(MM::Device& device, MM::Core& core, ZeissUByte devId, ZeissByte moveMode, unsigned char targetDevice)
+int ZeissAxis::StopMove(MM::Device& device, MM::Core& core, ZeissUByte devId, ZeissByte moveMode)
 {
    int ret;
    const int commandLength = 11;
@@ -1746,7 +1796,7 @@ int ZeissAxis::StopMove(MM::Device& device, MM::Core& core, ZeissUByte devId, Ze
    // movemode
    command[6] = moveMode;
 
-   ret = g_hub.ExecuteCommand(device, core,  command, commandLength, targetDevice);
+   ret = g_hub.ExecuteCommand(device, core,  command, commandLength);
    if (ret != DEVICE_OK)
       return ret;
 
