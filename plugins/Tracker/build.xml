@@ -32,7 +32,7 @@
 	   <pathelement location="${MMPluginDir}/MMJ_.jar"/>
 	</path>
 
-	<target name="compileTracking" description="Compile Tracking plugin.">
+	<target name="compileMMTracking" description="Compile Tracking plugin.">
 		<mkdir dir="build" />
 		<javac srcdir="./src" destdir="./build" optimize="on" source="1.4" debug="off">
 			<classpath refid="project.class.path" />
