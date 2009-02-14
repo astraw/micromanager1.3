@@ -78,28 +78,6 @@ fi
 AC_SUBST(LIBUSB)
 AM_CONDITIONAL([BUILD_USBMANAGER], [test -f $(LIBUSB)])
 
-# Only build the Nikon TE2000 when the code is there
-AM_CONDITIONAL([BUILD_TE2000],[test -f "NikonTE2000/NikonTE2000.h"])
-if test -f "NikonTE2000/NikonTE2000.h"; then
-   # TE2000=NikonTE2000
-   TE2000MAKEFILE="NikonTE2000/Makefile"
-else
-   # TE2000=
-   TE2000MAKEFILE=
-fi
-#AC_SUBST(TE2000)
-
-# Only build the Nikon AZ100 when the code is there
-AM_CONDITIONAL([BUILD_AZ100],[test -f "NikonAZ100/NikonAZ100.h"])
-if test -f "NikonAZ100/NikonAZ100.h"; then
-   AZ100=NikonAZ100
-   AZ100MAKEFILE="NikonAZ100/Makefile"
-else
-   AZ100=
-   AZ100MAKEFILE=
-fi
-AC_SUBST(AZ100)
-
 # Only build ... when the code is there
 AM_CONDITIONAL([BUILD_TEST],[test -f "Test/Test.h"])
 if test -f "Test/Test.h"; then
