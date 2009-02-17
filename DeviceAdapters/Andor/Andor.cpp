@@ -60,6 +60,7 @@ using namespace std;
 
 // global constants
 const char* g_AndorName = "Andor";
+const char* g_IxonName = "Ixon";
 
 const char* g_PixelType_8bit = "8bit";
 const char* g_PixelType_16bit = "16bit";
@@ -145,6 +146,9 @@ MODULE_API MM::Device* CreateDevice(const char* deviceName)
    
    if (strcmp(deviceName, g_AndorName) == 0)
       return AndorCamera::GetInstance();
+   else if (strcmp(deviceName, g_IxonName) == 0)
+      return AndorCamera::GetInstance();
+
    
    return 0;
 }
