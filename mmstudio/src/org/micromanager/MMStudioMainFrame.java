@@ -152,7 +152,7 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 		ScriptInterface {
 
 	private static final String MICRO_MANAGER_TITLE = "Micro-Manager 1.3";
-	private static final String VERSION = "1.3.22 (beta)";
+	private static final String VERSION = "1.3.23 (beta)";
 	private static final long serialVersionUID = 3556500289598574541L;
 
 	private static final String MAIN_FRAME_X = "x";
