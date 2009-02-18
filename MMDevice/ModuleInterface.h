@@ -52,8 +52,8 @@
 // must be incremented
 #define MODULE_INTERFACE_VERSION 4
 
-#ifdef linux
-const char* const LIB_NAME_PREFIX = "libmmgr_dal_";
+#ifdef WIN32
+const char* const LIB_NAME_PREFIX = "mmgr_dal_";
 #else
 const char* const LIB_NAME_PREFIX = "libmmgr_dal_";
 #endif
