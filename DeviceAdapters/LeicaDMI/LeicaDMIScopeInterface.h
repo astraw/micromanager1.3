@@ -36,9 +36,8 @@
 #include <vector>
 #include <map>
 
-//////////////////////////////////////////////////////////////////////////////
-// Error codes
-//
+class LeicaMonitoringThread;
+
 class LeicaScopeInterface
 {
    friend class LeicaScope;
