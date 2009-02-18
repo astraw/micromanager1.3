@@ -5,6 +5,6 @@ libmmgr_dal_DemoStreamingCamera_la_LDFLAGS = -module
 libmmgr_dal_DemoStreamingCamera_la_LIBADD = ../../MMDevice/.libs/libMMDevice.a $(LIBACE)
 
 install:
-	cp .libs/libmmgr_dal_DemoStreamingCamera.so $(DEVICEADAPTERPATH)/libmmgr_dal_DemoStreamingCamera$(MMSUFFIX)
+	cp .libs/libmmgr_dal_DemoStreamingCamera.so $(DEVICEADAPTERPATH)/DemoStreamingCamera$(MMSUFFIX)
 
 EXTRA_DIST = DemoStreamingCamera.vcproj license.txt

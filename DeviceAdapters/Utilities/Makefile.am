@@ -1,11 +1,11 @@
 AM_CXXFLAGS = -fpermissive
-lib_LTLIBRARIES = Utilities.la
-Utilities_la_SOURCES = Utilities.cpp Utilities.h
-Utilities_la_LIBADD = ../../MMDevice/.libs/libMMDevice.a 
-Utilities_la_LDFLAGS = -module
+lib_LTLIBRARIES = libmmgr_dal_Utilities.la
+libmmgr_dal_Utilities_la_SOURCES = Utilities.cpp Utilities.h
+libmmgr_dal_Utilities_la_LIBADD = ../../MMDevice/.libs/libMMDevice.a 
+libmmgr_dal_Utilities_la_LDFLAGS = -module
 
 install:
-	cp .libs/Utilities.so $(DEVICEADAPTERPATH)/$(MMPREFIX)Utlities$(MMSUFFIX)
+	cp .libs/libmmgr_dal_Utilities.so $(DEVICEADAPTERPATH)/libmmgr_dal_Utlities$(MMSUFFIX)
 
 EXTRA_DIST = DAZStage.vcproj license.txt
 

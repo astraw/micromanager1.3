@@ -1,10 +1,10 @@
 AM_CXXFLAGS = -fpermissive
-lib_LTLIBRARIES = Arduino.la
-Arduino_la_SOURCES = Arduino.cpp Arduino.h \
+lib_LTLIBRARIES = libmmgr_dal_Arduino.la
+libmmgr_dal_Arduino_la_SOURCES = Arduino.cpp Arduino.h \
    ../../MMDevice/MMDevice.h ../../MMDevice/DeviceBase.h
 ## adding the libtool library gives problems on OS X 10.4, adding the static lib works
-Arduino_la_LIBADD = ../../MMDevice/.libs/libMMDevice.a 
-Arduino_la_LDFLAGS = -module
+libmmgr_dal_Arduino_la_LIBADD = ../../MMDevice/.libs/libMMDevice.a 
+libmmgr_dal_Arduino_la_LDFLAGS = -module
 
 install:
-	cp .libs/Arduino.so  $(DEVICEADAPTERPATH)/$(MMPREFIX)Arduino$(MMSUFFIX)
+	cp .libs/libmmgr_dal_Arduino.so  $(DEVICEADAPTERPATH)/libmmgr_dal_Arduino$(MMSUFFIX)

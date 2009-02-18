@@ -1,10 +1,10 @@
 AM_CXXFLAGS = -fpermissive -fweak
-lib_LTLIBRARIES = DemoRGBCamera.la
-DemoRGBCamera_la_SOURCES = DemoRGBCamera.cpp DemoRGBCamera.h RGBSignalGenerator.cpp
-DemoRGBCamera_la_LDFLAGS = -module 
-DemoRGBCamera_la_LIBADD = ../../MMDevice/.libs/libMMDevice.a $(LIBACE)
+lib_LTLIBRARIES = libmmgr_dal_DemoRGBCamera.la
+libmmgr_dal_DemoRGBCamera_la_SOURCES = DemoRGBCamera.cpp DemoRGBCamera.h RGBSignalGenerator.cpp
+libmmgr_dal_DemoRGBCamera_la_LDFLAGS = -module 
+libmmgr_dal_DemoRGBCamera_la_LIBADD = ../../MMDevice/.libs/libMMDevice.a $(LIBACE)
 
 install:
-	cp .libs/DemoRGBCamera.so $(DEVICEADAPTERPATH)/$(MMPREFIX)DemoRGBCamera$(MMSUFFIX)
+	cp .libs/libmmgr_dal_DemoRGBCamera.so $(DEVICEADAPTERPATH)/libmmgr_dal_DemoRGBCamera$(MMSUFFIX)
 
 EXTRA_DIST = DemoRGBCamera.vcproj license.txt
