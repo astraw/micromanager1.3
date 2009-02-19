@@ -297,7 +297,6 @@ int CPCOCam::OnPixelType(MM::PropertyBase* pProp, MM::ActionType eAct)
          pixelDepth_ = 4;
       else
       {
-         assert(!"Unsupported pixel type");
          return DEVICE_INTERNAL_INCONSISTENCY;
       }
       return ResizeImageBuffer();
@@ -312,7 +311,6 @@ int CPCOCam::OnPixelType(MM::PropertyBase* pProp, MM::ActionType eAct)
          pProp->Set(g_PixelType_RGB32bit);
       else
       {
-         assert(!"Unsupported pixel type");
          return DEVICE_INTERNAL_INCONSISTENCY;
       }
    }
@@ -532,12 +530,14 @@ int CPCOCam::Initialize()
    // Gain
    pAct = new CPropertyAction (this, &CPCOCam::OnGain);
    nRet = CreateProperty(MM::g_Keyword_Gain, "1", MM::Integer, false, pAct);
-   assert(nRet == DEVICE_OK);
+   if (nRet != DEVICE_OK)
+      return nRet;
 
    // Exposure
    pAct = new CPropertyAction (this, &CPCOCam::OnExposure);
    nRet = CreateProperty(MM::g_Keyword_Exposure, "10", MM::Float, false, pAct);
-   assert(nRet == DEVICE_OK);
+   if (nRet != DEVICE_OK)
+      return nRet;
 
    //test if SET_COC gets right values 
    if(m_pCamera->iCamClass == 1)
@@ -629,7 +629,6 @@ unsigned CPCOCam::GetBitDepth() const
    }
    else
    {
-      assert(!"unsupported bytes per pixel count");
       return 0; // should not happen
    }
 }
@@ -718,9 +717,6 @@ const unsigned char* CPCOCam::GetImageBuffer()
       }
     }
   }
-	else {
-      assert(!"Unsupported pixel depth.");
-	}
 
    if (nErr != 0)
       return 0;
@@ -847,7 +843,8 @@ int CPCOCam::ResizeImageBuffer()
 	}
   m_pCamera->ReloadSize();
 
-	assert(pixelDepth_ == 1 || pixelDepth_ == 2 || pixelDepth_ == 4);
+	if(!(pixelDepth_ == 1 || pixelDepth_ == 2 || pixelDepth_ == 4))
+    return -1;
 	img_.Resize(nWidth, nHeight, pixelDepth_);
 
 	return DEVICE_OK;
