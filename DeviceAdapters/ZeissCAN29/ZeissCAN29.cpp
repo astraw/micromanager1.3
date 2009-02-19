@@ -96,6 +96,7 @@ std::string ZeissHub::condenserList_[7];
 ZeissUByte g_commandGroup[MAXNUMBERDEVICES];
 
 ZeissHub g_hub;
+static bool g_debug = false;
 
 ///////////////////////////////////////////////////////////////////////////////
 // Devices in this adapter.  
@@ -1334,7 +1335,7 @@ ZeissMonitoringThread::ZeissMonitoringThread(MM::Device& device, MM::Core& core)
    device_ (device),
    core_ (core),
    stop_ (true),
-   intervalUs_(10000) // check every 5 ms for new messages, 
+   intervalUs_(10000) // check every 10 ms for new messages, 
 {
 }
 
@@ -1354,9 +1355,6 @@ void ZeissMonitoringThread::interpretMessage(unsigned char* message)
       if (message[6] == 0x01) // leaving settled position
       {
          g_hub.SetModelBusy(message[5], true);
-         std::ostringstream os;
-         os << "Setting Busy flag of device: " << hex << message[5] << " to true.";
-         core_.LogMessage(&device_, os.str().c_str(), true);
       }
       else if (message[6] == 0x02) { // actual moving position 
          ZeissLong position;
@@ -1369,10 +1367,6 @@ void ZeissMonitoringThread::interpretMessage(unsigned char* message)
          }
          g_hub.SetModelPosition(message[7], position);
          g_hub.SetModelBusy(message[7], true);
-
-         std::ostringstream os;
-         os << "Setting Busy flag of device: " << hex << message[7] << " to true.";
-         core_.LogMessage(&device_, os.str().c_str(), true);
       }
       else if (message[6] == 0x03) { // target position settled
          ZeissLong position;
@@ -1383,20 +1377,17 @@ void ZeissMonitoringThread::interpretMessage(unsigned char* message)
             memcpy(&position, message + 8, 2);
             position = ntohs((unsigned short) position);
          }
-
-         std::ostringstream os;
-         os << "Setting status of device: " << hex << message[7] << " to: " << dec << position << " and Busy flag to false";
-         core_.LogMessage(&device_, os.str().c_str(), true);
-
          g_hub.SetModelPosition(message[7], position);
          g_hub.SetModelBusy(message[7], false);
       }
       else if (message[6] == 0x04) { // status changed
-         ZeissULong status;
-         memcpy(&status, message + 8, 4);
-         status = ntohl(status);
-         g_hub.SetModelStatus(message[7], status);
-         g_hub.SetModelBusy(message[7], !(status & 32)); // 'is settled' bit 
+         if (g_hub.GetAxioType() == AXIOOBSERVER) { // status is a short in Imager and documentation is unclear, so only use on Observer
+            ZeissULong status;
+            memcpy(&status, message + 8, 4);
+            status = ntohl(status);
+            g_hub.SetModelStatus(message[7], status);
+            g_hub.SetModelBusy(message[7], !(status & 32)); // 'is settled' bit 
+         }
       }
    } else if (message[3] == 0x08) { // Some direct answers that we want to interpret
       if (message[6] == 0x20) { // Axis: Upper hardware stop reached
@@ -1417,12 +1408,6 @@ void ZeissMonitoringThread::interpretMessage(unsigned char* message)
           ZeissShort status;
           memcpy(&status, message + 8, 2);
           status = ntohs((unsigned short) status);
-          int tmp = status & 1024;
-
-          ostringstream os;
-          os << "Setting status of device: " << hex << message[7] << " to: " << dec << tmp;
-          core_.LogMessage(&device_, os.str().c_str(), true);
-
           if ( (status & 1024) > 0)
              g_hub.SetModelBusy(message[7], true);
           else
@@ -1457,14 +1442,15 @@ int ZeissMonitoringThread::svc() {
                unsigned char message[ZeissMessageParser::messageMaxLength_];
                int messageLength;
                ret = parser->GetNextMessage(message, messageLength);
-               if (ret == 0) {
+               if (ret == 0) {                  
                   // Report 
-                  ostringstream os;
-                  os << "Monitoring Thread incoming message: ";
-                  for (int i=0; i< messageLength; i++)
-                     os << hex << (unsigned int)message[i] << " ";
-                  core_.LogMessage(&device_, os.str().c_str(), true);
-
+                  if (g_debug) {
+                     ostringstream os;
+                     os << "Monitoring Thread incoming message: ";
+                     for (int i=0; i< messageLength; i++)
+                        os << hex << (unsigned int)message[i] << " ";
+                     core_.LogMessage(&device_, os.str().c_str(), true);
+                  }
                   // and do the real stuff
                   interpretMessage(message);
                 }
@@ -1532,9 +1518,11 @@ int ZeissDevice::SetPosition(MM::Device& device, MM::Core& core, ZeissUByte comm
    // position is a short (2-byte) in big endian format...
    ZeissShort tmp = htons((ZeissShort) position);
    memcpy(command+6, &tmp, ZeissShortSize); 
-   ostringstream os;
-   os << "Setting device "<< hex << (unsigned int) devId << " to position " << dec << position << " and Busy flag to true";
-   core.LogMessage(&device, os.str().c_str(), false);
+   if (g_debug) {
+     ostringstream os;
+     os << "Setting device "<< hex << (unsigned int) devId << " to position " << dec << position << " and Busy flag to true";
+     core.LogMessage(&device, os.str().c_str(), false);
+   }
    ret = g_hub.ExecuteCommand(device, core,  command, commandLength);
    if (ret != DEVICE_OK)
       return ret;
@@ -1561,9 +1549,11 @@ int ZeissDevice::GetStatus(MM::Device& device, MM::Core& core, ZeissUByte comman
    command[4] = 0x07;
    // Device ID
    command[5] = devId;
-   ostringstream os;
-   os << "Requesting status for device: "<< hex << (unsigned int) devId;
-   core.LogMessage(&device, os.str().c_str(), false);
+   if (g_debug) {
+      ostringstream os;
+      os << "Requesting status for device: "<< hex << (unsigned int) devId;
+      core.LogMessage(&device, os.str().c_str(), true);
+   }
    ret = g_hub.ExecuteCommand(device, core,  command, commandLength);
    if (ret != DEVICE_OK)
       return ret;
@@ -2079,12 +2069,6 @@ int Shutter::SetOpen(bool open)
    else
       position = 1;
 
-   // debuggin, delete when done:
-   ostringstream os;
-   os << "Setting shutter with ID: " <<  hex << (unsigned int)devId_ << " to position " << position << "and Busy flag to true";
-   LogMessage(os.str().c_str(), true);
-   // end debugging
-
    int ret = SetPosition(*this, *GetCoreCallback(), devId_, position);
    if (ret != DEVICE_OK)
       return ret;
@@ -2467,8 +2451,8 @@ Servo::Servo(ZeissUByte devId, std::string name, std::string description):
    InitializeDefaultErrorMessages();
 
    // TODO provide error messages
-   SetErrorText(ERR_SCOPE_NOT_ACTIVE, "Zeiss Scope is not initialized.  It is needed for this Turret to work");
-   SetErrorText(ERR_INVALID_TURRET_POSITION, "The requested position is not available on this turret");
+   SetErrorText(ERR_SCOPE_NOT_ACTIVE, "Zeiss Scope is not initialized.  It is needed for this Servo to work");
+   SetErrorText(ERR_INVALID_TURRET_POSITION, "The requested position is not available on this servo");
    SetErrorText(ERR_MODULE_NOT_FOUND, "This device is not installed in this Zeiss microscope");
 
    // Create pre-initialization properties
@@ -2610,7 +2594,7 @@ Axis::Axis (ZeissUByte devId, std::string name, std::string description):
    description_ = description;
    InitializeDefaultErrorMessages();
 
-   SetErrorText(ERR_SCOPE_NOT_ACTIVE, "Zeiss Scope is not initialized.  It is needed for the Zeiss Shutter to work");
+   SetErrorText(ERR_SCOPE_NOT_ACTIVE, "Zeiss Scope is not initialized.  It is needed for this Zeiss Axis to work");
    SetErrorText(ERR_MODULE_NOT_FOUND, "This Axis is not installed in this Zeiss microscope");
 }
 
@@ -2838,7 +2822,7 @@ XYStage::XYStage ():
    name_ = g_ZeissXYStage;
    InitializeDefaultErrorMessages();
 
-   SetErrorText(ERR_SCOPE_NOT_ACTIVE, "Zeiss Scope is not initialized.  It is needed for the Zeiss Shutter to work");
+   SetErrorText(ERR_SCOPE_NOT_ACTIVE, "Zeiss Scope is not initialized.  It is needed for the Zeiss XYStage to work");
    SetErrorText(ERR_MODULE_NOT_FOUND, "No XYStage installed on this Zeiss microscope");
 }
 

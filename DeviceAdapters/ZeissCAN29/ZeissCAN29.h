@@ -10,7 +10,7 @@
 // LICENSE:       Please note: This code could only be developed thanks to information 
 //                provided by Zeiss under a non-disclosure agreement.  Subsequently, 
 //                this code has been reviewed by Zeiss and we were permitted to release 
-//                this under the LGPL on 1/16/2008 (and again on 7/3/2208 after changes 
+//                this under the LGPL on 1/16/2008 (and again on 2/19/2009 after changes 
 //                to the code).  If you modify this code using information you obtained 
 //                under a NDA with Zeiss, you will need to ask Zeiss whether you can release 
 //                your modifications.  
