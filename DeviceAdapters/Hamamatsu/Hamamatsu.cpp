@@ -25,7 +25,8 @@
 // NOTES:    
 //
 // CVS:           $Id$
-//
+
+
 #ifdef WIN32
    #define WIN32_LEAN_AND_MEAN
    #include <windows.h>
@@ -76,6 +77,7 @@ const char* g_TrigMode_Start = "Start";
 const char* g_TrigMode_SyncReadout = "Sync Readout";
 const char* g_TrigPolarity_Positive = "Positive";
 const char* g_TrigPolarity_Negative = "Negative";
+const char* g_HighDynamicRangeMode = "High Dynamic Range Mode";
 
 
 // singleton instance
@@ -189,8 +191,9 @@ int CHamamatsu::OnBinning(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
    if (eAct == MM::AfterSet)
    {
-      if (IsCapturing())
-         return ERR_BUSY_ACQUIRING;
+      bool acquiring = IsCapturing();
+      if (acquiring)
+         StopSequenceAcquisition();
 
       pProp->Get(lnBin_);
       int nRet = ShutdownImageBuffer();
@@ -201,6 +204,20 @@ int CHamamatsu::OnBinning(MM::PropertyBase* pProp, MM::ActionType eAct)
       nRet = ResizeImageBuffer();
       if (nRet != DEVICE_OK)
          return nRet;
+
+      // Changed binning might affect High Dynamic Range mode
+      DCAM_PROPERTYATTR propAttr;
+      if (IsPropertySupported(propAttr, DCAM_IDPROP_HIGHDYNAMICRANGE_MODE)) {
+         SetAllowedPropValues(propAttr, g_HighDynamicRangeMode);
+         // propagate changes to GUI
+         nRet = OnPropertiesChanged();
+         if (nRet != DEVICE_OK)
+            return nRet;
+      }
+
+      if (acquiring)
+         RestartSequenceAcquisition();
+
    }
    else if (eAct == MM::BeforeGet)
    {
@@ -445,7 +462,7 @@ int CHamamatsu::OnScanMode(MM::PropertyBase* pProp, MM::ActionType eAct)
       if (ret != DEVICE_OK)
          return ret;
 
-      // Reset allowedValues for binning and gain
+      // Reset allowedValues for binning and gain, and high dynamic range mode
       DWORD	cap;
       if(!dcam_getcapability(m_hDCAM, &cap, DCAM_QUERYCAPABILITY_FUNCTIONS))
          return ReportError("Error in dcam_getcapability: ");
@@ -459,6 +476,11 @@ int CHamamatsu::OnScanMode(MM::PropertyBase* pProp, MM::ActionType eAct)
          if (ret != DEVICE_OK)
             return ret;
       }
+      DCAM_PROPERTYATTR propAttr;
+      if (IsPropertySupported(propAttr, DCAM_IDPROP_HIGHDYNAMICRANGE_MODE)) {
+         SetAllowedPropValues(propAttr, g_HighDynamicRangeMode);
+      }
+    
       // propagate changes to GUI
       ret = OnPropertiesChanged();
       if (ret != DEVICE_OK)
@@ -1109,25 +1131,6 @@ int CHamamatsu::Initialize()
       if (nRet != DEVICE_OK)
          return nRet;
    }
-/*
-   // Sensivity (=EM GAIN?)
-   if (IsFeatureSupported(DCAM_IDFEATURE_SENSITIVITY))
-   {
-      DCAM_PARAM_FEATURE_INQ featureInq = GetFeatureInquiry(DCAM_IDFEATURE_SENSITIVITY);
-      CPropertyActionEx* pActEx = new CPropertyActionEx (this, &CHamamatsu::OnExtended, (long) DCAM_IDFEATURE_SENSITIVITY);
-      ostringstream defaultValue;
-      defaultValue << featureInq.defaultvalue;
-      if (featureInq.step == 1.0)
-         nRet = CreateProperty("Sensitivity", defaultValue.str().c_str(), MM::Integer, false, pActEx);
-      else
-         nRet = CreateProperty("Sensitivity", defaultValue.str().c_str(), MM::Float, false, pActEx);
-      assert(nRet == DEVICE_OK);
-      if (featureInq.max > featureInq.min)
-      {
-         nRet = SetPropertyLimits("Sensitivity", featureInq.min, featureInq.max);
-      }
-   }
-*/
  
    // Sensor temperature readout
    if (IsPropertySupported(propAttr, DCAM_IDPROP_SENSORTEMPERATURE))
@@ -1148,11 +1151,24 @@ int CHamamatsu::Initialize()
    if (nRet != DEVICE_OK)
       return nRet;
 
+   nRet = AddExtendedProperty(g_HighDynamicRangeMode,  DCAM_IDPROP_HIGHDYNAMICRANGE_MODE);
+   if (nRet != DEVICE_OK)
+      return nRet;
+
+   nRet = AddExtendedProperty("Bits per Channel",  DCAM_IDPROP_BITSPERCHANNEL);
+   if (nRet != DEVICE_OK)
+      return nRet;
+
+   nRet = AddExtendedProperty("Temperature Set Point",  DCAM_IDPROP_SENSORTEMPERATURETARGET);
    nRet = AddExtendedProperty("Temperature Set Point",  DCAM_IDPROP_SENSORTEMPERATURETARGET);
    if (nRet != DEVICE_OK)
       return nRet;
 
    nRet = AddExtendedProperty("Direct EM Gain Mode",  DCAM_IDPROP_DIRECTEMGAIN_MODE);
+   if (nRet != DEVICE_OK)
+      return nRet;
+
+   nRet = AddExtendedProperty("Sensor Temperature", DCAM_IDPROP_SENSORTEMPERATURE);
    if (nRet != DEVICE_OK)
       return nRet;
 
@@ -1760,7 +1776,7 @@ int CHamamatsu::AddExtendedProperty(std::string propName, long propertyId)
       }
       if (nRet != DEVICE_OK)
          return nRet;
-      nRet = SetAllowedPropValues(propAttr, propName.c_str());
+      nRet = SetAllowedPropValues(propAttr, propName);
       if (nRet != DEVICE_OK)
          return nRet;
    }
@@ -1848,10 +1864,21 @@ int CHamamatsu::SetAllowedPropValues(DCAM_PROPERTYATTR propAttr, std::string pro
 
    // low number of values, make a list
    if ( (propAttr.valuemax >= propAttr.valuemin) && ((propAttr.valuemax - propAttr.valuemin) < 10) && (propAttr.valuestep == 1.0 || propAttr.valuestep==0.0) ) {
-      for (long i = (long) propAttr.valuemin; i<= (long) propAttr.valuemax; i++) {
+      if (propAttr.valuestep == 0.0) {
          ostringstream value;
-         value << i;
+         value << propAttr.valuemin;
          values.push_back(value.str());
+         if (propAttr.valuemin != propAttr.valuemax) {
+            ostringstream valuemax;
+            valuemax << propAttr.valuemax;
+            values.push_back(valuemax.str());
+         }
+      } else {
+         for (long i = (long) propAttr.valuemin; i<= (long) propAttr.valuemax; i++) {
+            ostringstream value;
+            value << i;
+            values.push_back(value.str());
+         }
       }
       return SetAllowedValues(propName.c_str(), values);
 
