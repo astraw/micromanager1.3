@@ -30,7 +30,7 @@ else
          LIBACE="/usr/local/lib/libACE.la"
       else
         if test -r /usr/lib/libACE.so ; then 
-           LIBZCE="-lACE"i
+           LIBACE="-lACE"
          else
            AC_MSG_ERROR([not found, download from http://deuce.doc.wustl.edu/Download.html, build and install (cd ACE_wrappers \ mkdir build \ cd build \ ../configure \ make \ make install ) and rerun configure])
          fi
