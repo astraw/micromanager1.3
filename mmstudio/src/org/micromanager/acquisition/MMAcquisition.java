@@ -183,7 +183,7 @@ public class MMAcquisition {
    
    public void closeImage5D() {
       if ((imgWin_ != null) && initialized_) {
-         imgWin_.dispose();
+         imgWin_.close();
       }
    }
 
