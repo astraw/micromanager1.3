@@ -152,8 +152,7 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 		ScriptInterface {
 
 	private static final String MICRO_MANAGER_TITLE = "Micro-Manager 1.3";
-	private static final String VERSION = "1.3.23 (beta)";
-	private static final long serialVersionUID = 3556500289598574541L;
+	private static final String VERSION = "1.3.23 (beta)-test single Acq window";	private static final long serialVersionUID = 3556500289598574541L;
 
 	private static final String MAIN_FRAME_X = "x";
 	private static final String MAIN_FRAME_Y = "y";
@@ -2393,6 +2392,25 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 			}
 
 			imageWin_.newImage(pixels);
+			updateLineProfile();
+		} catch (Exception e) {
+			handleException(e);
+			e.printStackTrace();
+			return false;
+		}
+
+		return true;
+	}
+	
+	public boolean displayImageWithStatusLine(Object pixels, String statusLine) {
+		try {
+			if (!isImageWindowOpen()
+					|| imageWin_.getImageWindowByteLength() != imageWin_
+							.imageByteLenth(pixels)) {
+				createImageWindow();
+			}
+
+			imageWin_.newImageWithStatusLine(pixels, statusLine);
 			updateLineProfile();
 		} catch (Exception e) {
 			handleException(e);

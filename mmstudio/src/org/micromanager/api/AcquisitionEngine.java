@@ -193,6 +193,7 @@ public interface AcquisitionEngine {
    public void setSaveFiles(boolean selected);
    public boolean getSaveFiles();
    public void setSingleFrame(boolean selected);
+   public void setSingleWindow(boolean selected);
    public int getSliceMode();
    public void setSliceMode(int mode);
    public int getPositionMode();

@@ -47,6 +47,7 @@ import com.swtdesigner.SwingResourceManager;
 
 import ij.ImagePlus;
 import ij.WindowManager;
+import ij.gui.ImageCanvas;
 import ij.gui.ImageWindow;
 import ij.io.FileSaver;
 import ij.measure.Calibration;
@@ -393,6 +394,62 @@ public class MMImageWindow extends ImageWindow {
 
 	// public
 	public void newImage(Object img) {
+//ToDo: add error handling
+		if (getImageWindowByteLength() != imageByteLenth(img)) {
+			throw (new RuntimeException("Image bytelenth does not much"));
+		}
+		ImagePlus ip = getImagePlus();
+		if(null != ip)
+		{
+			ip.setTitle(title_);
+			ImageProcessor ipr = ip.getProcessor();
+			if(null != ipr){
+				ipr.setPixels(img);
+			}
+			ip.updateAndDraw();
+			updateHistogram();
+			// update coordinate and pixel info in imageJ by simulating mouse
+			// move
+			ImageCanvas ic = getCanvas();
+			if(null != ic)
+			{
+				Point pt = ic.getCursorLoc();
+				ip.mouseMoved(pt.x, pt.y);
+			}
+		}
+	}
+
+	// public
+	public void newImageWithStatusLine(Object img, String statusLine) {
+//ToDo: add error handling
+		if (getImageWindowByteLength() != imageByteLenth(img)) {
+			throw (new RuntimeException("Image bytelenth does not much"));
+		}
+		ImagePlus ip = getImagePlus();
+		if(null != ip)
+		{
+			ip.setTitle(title_+": "+statusLine);
+			ImageProcessor ipr = ip.getProcessor();
+			if(null != ipr){
+				ipr.setPixels(img);
+			}
+			ip.updateAndDraw();
+			updateHistogram();
+			// update coordinate and pixel info in imageJ by simulating mouse
+			// move
+			ImageCanvas ic = getCanvas();
+			if(null != ic)
+			{
+				Point pt = ic.getCursorLoc();
+				ip.mouseMoved(pt.x, pt.y);
+			}
+		}
+	}
+	
+	
+//!!!	// public
+/*
+	public void newImage(Object img) {
 
 		if (getImageWindowByteLength() != imageByteLenth(img)) {
 			throw (new RuntimeException("Image bytelenth does not much"));
@@ -407,7 +464,7 @@ public class MMImageWindow extends ImageWindow {
 		Point pt = getCanvas().getCursorLoc();
 		getImagePlus().mouseMoved(pt.x, pt.y);
 	}
-
+*/	
 	// Set ImageJ pixel calibration
 	public void setIJCal() {
 		double pixSizeUm = core_.getPixelSizeUm();

@@ -184,9 +184,11 @@ public class AcqControlDlg extends JDialog implements PropertyChangeListener {
    private static final String ACQ_AF_ENABLE = "autofocus_enabled";
    private static final String ACQ_COLUMN_WIDTH = "column_width";
    private static final String ACQ_COLUMN_ORDER = "column_order";
+   private static final String ACQ_SINGLE_WINDOW = "singleWindow";
    private static final int ACQ_DEFAULT_COLUMN_WIDTH = 77;
    private JCheckBox multiPosCheckBox_;
    private JCheckBox singleFrameCheckBox_;
+   private JCheckBox singleWindowCheckBox_;
    private int columnWidth_[];
    private int columnOrder_[];
 
@@ -899,23 +901,6 @@ public class AcqControlDlg extends JDialog implements PropertyChangeListener {
       continuousFocusOffForZMoveCheckBox_.setBounds(370, 230, 130, 23);
       getContentPane().add(continuousFocusOffForZMoveCheckBox_);
 
-      saveFilesCheckBox_ = new JCheckBox();
-      saveFilesCheckBox_.addActionListener(new ActionListener() {
-         public void actionPerformed(final ActionEvent e) {
-            if (saveFilesCheckBox_.isSelected())
-               singleFrameCheckBox_.setEnabled(true);
-            else
-            {
-               singleFrameCheckBox_.setSelected(false);
-               singleFrameCheckBox_.setEnabled(false);
-            }
-         }
-      });
-      saveFilesCheckBox_.setFont(new Font("Arial", Font.PLAIN, 10));
-      saveFilesCheckBox_.setText("Save files to acquisition directory");
-      saveFilesCheckBox_.setBounds(6, 402, 207, 21);
-      getContentPane().add(saveFilesCheckBox_);
-
       final JLabel directoryPrefixLabel = new JLabel();
       directoryPrefixLabel.setFont(new Font("Arial", Font.PLAIN, 10));
       directoryPrefixLabel.setText("Name prefix");
@@ -1055,6 +1040,29 @@ public class AcqControlDlg extends JDialog implements PropertyChangeListener {
       slicechannelOrderingLabel_1.setBounds(230, 0, 130, 14);
       getContentPane().add(slicechannelOrderingLabel_1);
 
+      saveFilesCheckBox_ = new JCheckBox();
+      saveFilesCheckBox_.addActionListener(new ActionListener() {
+         public void actionPerformed(final ActionEvent e) {
+            if (saveFilesCheckBox_.isSelected())
+            {
+               singleFrameCheckBox_.setEnabled(true);
+               singleWindowCheckBox_.setEnabled(true);
+            }
+            else
+            {
+               singleFrameCheckBox_.setSelected(false);
+               singleFrameCheckBox_.setEnabled(false);
+               singleWindowCheckBox_.setSelected(false);
+               singleWindowCheckBox_.setEnabled(false);
+            }
+         }
+      });
+      saveFilesCheckBox_.setFont(new Font("Arial", Font.PLAIN, 10));
+      saveFilesCheckBox_.setText("Save files to acquisition directory");
+      saveFilesCheckBox_.setBounds(6, 400, 190, 21);
+      getContentPane().add(saveFilesCheckBox_);
+      
+      
       singleFrameCheckBox_ = new JCheckBox();
       singleFrameCheckBox_.addActionListener(new ActionListener() {
          public void actionPerformed(ActionEvent e) {
@@ -1063,9 +1071,22 @@ public class AcqControlDlg extends JDialog implements PropertyChangeListener {
       singleFrameCheckBox_.setFont(new Font("", Font.PLAIN, 10));
       singleFrameCheckBox_.setText("Display only last frame");
       singleFrameCheckBox_.setEnabled(false);
-      singleFrameCheckBox_.setBounds(223, 401, 183, 23);
+      singleFrameCheckBox_.setBounds(192, 400, 150, 21);
       getContentPane().add(singleFrameCheckBox_);
 
+      singleWindowCheckBox_ = new JCheckBox();
+      singleWindowCheckBox_.addActionListener(new ActionListener() {
+         public void actionPerformed(ActionEvent e) {
+         }
+      });
+      singleWindowCheckBox_.setFont(new Font("", Font.PLAIN, 10));
+      singleWindowCheckBox_.setText("Display in Live window");
+      singleWindowCheckBox_.setEnabled(false);
+      singleWindowCheckBox_.setBounds(344, 400, 200, 21);
+      getContentPane().add(singleWindowCheckBox_);
+      
+      
+      
       afCheckBox_ = new JCheckBox();
       afCheckBox_.addActionListener(new ActionListener() {
          public void actionPerformed(ActionEvent arg0) {
@@ -1204,12 +1225,18 @@ public class AcqControlDlg extends JDialog implements PropertyChangeListener {
       continuousFocusOffForZMoveCheckBox_.setSelected(acqPrefs_.getBoolean(ACQ_FOCUS_OFF_ZMOVE, false));
       saveFilesCheckBox_.setSelected(acqPrefs_.getBoolean(ACQ_SAVE_FILES, false));
       singleFrameCheckBox_.setSelected(acqPrefs_.getBoolean(ACQ_SINGLE_FRAME, false));
+      singleWindowCheckBox_.setSelected(acqPrefs_.getBoolean(ACQ_SINGLE_WINDOW, false));
       if (saveFilesCheckBox_.isSelected())
-         singleFrameCheckBox_.setEnabled(true);
+      {
+          singleFrameCheckBox_.setEnabled(true);
+          singleWindowCheckBox_.setEnabled(true);
+      }
       else
       {
          singleFrameCheckBox_.setEnabled(false);
          singleFrameCheckBox_.setSelected(false);
+         singleWindowCheckBox_.setEnabled(false);
+         singleWindowCheckBox_.setSelected(false);
       }
       nameField_.setText(acqPrefs_.get(ACQ_DIR_NAME, "Untitled"));
       String os_name = System.getProperty("os.name","");
@@ -1287,6 +1314,7 @@ public class AcqControlDlg extends JDialog implements PropertyChangeListener {
       acqPrefs_.putBoolean(ACQ_FOCUS_OFF_ZMOVE, continuousFocusOffForZMoveCheckBox_.isSelected());
       acqPrefs_.putBoolean(ACQ_SAVE_FILES, saveFilesCheckBox_.isSelected());
       acqPrefs_.putBoolean(ACQ_SINGLE_FRAME, singleFrameCheckBox_.isSelected());
+      acqPrefs_.putBoolean(ACQ_SINGLE_WINDOW, singleWindowCheckBox_.isSelected());
       acqPrefs_.put(ACQ_DIR_NAME, nameField_.getText());
       acqPrefs_.put(ACQ_ROOT_NAME, rootField_.getText());
       
@@ -1631,6 +1659,7 @@ public class AcqControlDlg extends JDialog implements PropertyChangeListener {
       acqEng_.setContinuousFocusOffForZMove(continuousFocusOffForZMoveCheckBox_.isSelected());
       acqEng_.setSaveFiles(saveFilesCheckBox_.isSelected());
       acqEng_.setSingleFrame(singleFrameCheckBox_.isSelected());
+      acqEng_.setSingleWindow(singleWindowCheckBox_.isSelected());
       acqEng_.setDirName(nameField_.getText());
       acqEng_.setRootName(rootField_.getText());
 
