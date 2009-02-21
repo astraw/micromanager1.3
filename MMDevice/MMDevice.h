@@ -222,6 +222,14 @@ namespace MM {
       virtual void GetModuleName(char* name) const = 0;
 
       virtual int Initialize() = 0;
+      /**
+       * Shuts down (unloads) the device.
+       * Required by the MM::Device API.
+       * Ideally this method will completely unload the device and release all resources.
+       * Shutdown() may be called multiple times in a row.
+       * After Shutdown() we should be allowed to call Initialize() again to load the device
+       * without causing problems.
+       */
       virtual int Shutdown() = 0;
    
       virtual DeviceType GetType() const = 0;
@@ -241,28 +249,124 @@ namespace MM {
       static const DeviceType Type = CameraDevice;
 
       // Camera API
+      /**
+       * Performs exposure and grabs a single image.
+       * Required by the MM::Camera API.
+       *
+       * SnapImage should start the image exposure in the camera and block until
+       * the exposure is finished.  It should not wait for read-out and transfer of data.
+       * Return DEVICE_OK on succes, error code otherwise.
+       */
       virtual int SnapImage() = 0;
+      /**
+       * Returns pixel data.
+       * Required by the MM::Camera API.
+       * GetImageBuffer will be called shortly after SnapImag returns.  
+       * Use it to wait for camera read-out and transfer of data into memory
+       * Return a pointer to a buffer containing the image data
+       * The calling program will assume the size of the buffer based on the values
+       * obtained from GetImageBufferSize(), which in turn should be consistent with
+       * values returned by GetImageWidth(), GetImageHight() and GetImageBytesPerPixel().
+       * The calling program allso assumes that camera never changes the size of
+       * the pixel buffer on its own. In other words, the buffer can change only if
+       * appropriate properties are set (such as binning, pixel type, etc.)
+       *
+       */
       virtual const unsigned char* GetImageBuffer() = 0;
+      /**
+       * Returns pixel data with interleaved RGB pixels in 32 bpp format
+       */
       virtual const unsigned int* GetImageBufferAsRGB32() = 0;
+      /**
+       * Returns the number of channels in this image.  This is '1' for grayscale cameras,
+       * and '4' for RGB cameras.
+       */
       virtual unsigned GetNumberOfChannels() const = 0;
+      /**
+       * Returns the name for each channel 
+       */
       virtual int GetChannelName(unsigned channel, char* name) = 0;
+      /**
+       * Returns the size in bytes of the image buffer.
+       * Required by the MM::Camera API.
+       */
       virtual long GetImageBufferSize()const = 0;
+      /**
+       * Returns image buffer X-size in pixels.
+       * Required by the MM::Camera API.
+       */
       virtual unsigned GetImageWidth() const = 0;
+      /**
+       * Returns image buffer Y-size in pixels.
+       * Required by the MM::Camera API.
+       */
       virtual unsigned GetImageHeight() const = 0;
+      /**
+       * Returns image buffer pixel depth in bytes.
+       * Required by the MM::Camera API.
+       */
       virtual unsigned GetImageBytesPerPixel() const = 0;
+      /**
+       * Returns the bit depth (dynamic range) of the pixel.
+       * This does not affect the buffer size, it just gives the client application
+       * a guideline on how to interpret pixel values.
+       * Required by the MM::Camera API.
+       */
       virtual unsigned GetBitDepth() const = 0;
+      /**
+       * Returns binnings factor.  Used to calculate current pixelsize
+       * Not appropriately named.  Implemented in DeviceBase.h
+       */
       virtual double GetPixelSizeUm() const = 0;
+      /**
+       * Returns the current binning factor.
+       */
       virtual int GetBinning() const = 0;
+      /**
+       * Sets binning factor.
+       */
       virtual int SetBinning(int binSize) = 0;
+      /**
+       * Sets exposure in milliseconds.
+       */
       virtual void SetExposure(double exp_ms) = 0;
+      /**
+       * Returns the current exposure setting in milliseconds.
+       */
       virtual double GetExposure() const = 0;
+      /**
+       * Sets the camera Region Of Interest.
+       * Required by the MM::Camera API.
+       * This command will change the dimensions of the image.
+       * Depending on the hardware capabilities the camera may not be able to configure the
+       * exact dimensions requested - but should try do as close as possible.
+       * If the hardware does not have this capability the software should simulate the ROI by
+       * appropriately cropping each frame.
+       * @param x - top-left corner coordinate
+       * @param y - top-left corner coordinate
+       * @param xSize - width
+       * @param ySize - height
+       */
       virtual int SetROI(unsigned x, unsigned y, unsigned xSize, unsigned ySize) = 0; 
+      /**
+       * Returns the actual dimensions of the current ROI.
+       */
       virtual int GetROI(unsigned& x, unsigned& y, unsigned& xSize, unsigned& ySize) = 0;
+      /**
+       * Resets the Region of Interest to full frame.
+       */
       virtual int ClearROI() = 0;
 
+      /**
+       * Starts continuous acquisition.
+       */
       virtual int StartSequenceAcquisition(long numImages, double interval_ms, bool stopOnOverflow) = 0;
       virtual int StartSequenceAcquisition(double interval_ms) = 0;
       virtual int StopSequenceAcquisition() = 0;
+      /**
+       * Flag to indicate whether Sequence Acquisition is currently running.
+       * Return true when Sequence acquisition is activce, false otherwise
+       */
       virtual bool IsCapturing() = 0;
 
    };
