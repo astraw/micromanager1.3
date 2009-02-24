@@ -37,6 +37,7 @@
 
 #ifdef WIN32
 #include "../../../3rdparty/RoperScientific/Windows/PvCam/SDK/Headers/master.h"
+#include "../../../3rdparty/RoperScientific/Windows/PvCam/SDK/Headers/pvcam.h"
 #else 
 #ifdef __APPLE__
 #define __mac_os_x
@@ -77,10 +78,12 @@ struct ROI {
    uns16 xSize;
    uns16 ySize;
 
-    ROI() : x(0), y(0), xSize(0), ySize(0) {}
-    ~ROI() {}
+   ROI::ROI() : x(0), y(0), xSize(0), ySize(0) {}
+   ROI::ROI(uns16 _x, uns16 _y, uns16 _xSize, uns16 _ySize )
+      : x(_x), y(_y), xSize(_xSize), ySize(_ySize) {}
+   ROI::~ROI() {}
 
-    bool isEmpty() {return x==0 && y==0 && xSize==0 && ySize == 0;}
+   bool ROI::isEmpty() {return x==0 && y==0 && xSize==0 && ySize == 0;}
 };
 
 typedef std::map<uns32, uns32> SMap;
@@ -96,7 +99,6 @@ typedef struct
 
 // forward declarations
 //class AcqSequenceThread;
-
 
 //////////////////////////////////////////////////////////////////////////////
 // Implementation of the MMDevice and MMCamera interfaces
@@ -174,8 +176,6 @@ class Universal : public CCameraBase<Universal>
 public:
    
    Universal(short id);
-
-   //friend class AcqSequenceThread;
    typedef PVCAMAction<Universal> CUniversalPropertyAction;
 
    static Universal* GetInstance(short cameraId)
@@ -249,8 +249,15 @@ protected:
    int PushImage();
 
 private:
+   rgn_type newRegion;
+
    Universal(Universal&) {}
-   ROI roi_;
+   int CalculateImageBufferSize(
+                                 ROI &newROI, 
+                                 unsigned short &newXSize, 
+                                 unsigned short &newYSize, 
+                                 rgn_type &newRegion
+                                 );
    int ResizeImageBufferSingle();
    int ResizeImageBufferContinuous();
    int GetSpeedString(std::string& modeString);
@@ -262,10 +269,11 @@ private:
    int SetGainLimits();
    void Universal::suspend();
    int Universal::resume();
+
    bool restart_;
    int16 bitDepth_;
    int x_, y_, width_, height_, xBin_, yBin_, bin_;
-
+   ROI roi_;
    bool initialized_;
    bool busy_;
    long numImages_;
@@ -291,6 +299,8 @@ private:
    bool stopOnOverflow_;
    MMThreadLock imgLock_;
    bool noSupportForStreaming_;
+   bool snappingSingleFrame_;
+
 };
 
 #endif //_PVCAM_H_
