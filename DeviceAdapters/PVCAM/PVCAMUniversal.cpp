@@ -51,6 +51,8 @@ using namespace std;
 Universal* Universal::instance_ = 0;
 unsigned Universal::refCount_ = 0;
 
+bool g_PVCAM_initialized = false;
+
 const int BUFSIZE = 60;
 #if WIN32
    #define snprintf _snprintf
@@ -585,11 +587,17 @@ int Universal::Initialize()
    
    // Camera name
    char name[CAM_NAME_LEN] = "Undef";
-   if (!pl_pvcam_init()) {
-      // Try once more:
-      pl_pvcam_uninit();
+
+   if (!g_PVCAM_initialized)
+   {
       if (!pl_pvcam_init())
-         return pl_error_code();
+      {
+         // Try once more:
+         pl_pvcam_uninit();
+         if (!pl_pvcam_init())
+            return pl_error_code();
+      }
+      g_PVCAM_initialized = true;
    }
 
    // Get PVCAM version
@@ -862,7 +870,11 @@ int Universal::Shutdown()
    {
       pl_exp_uninit_seq();
       pl_cam_close(hPVCAM_);
-      pl_pvcam_uninit();
+      if (g_PVCAM_initialized)
+      {
+         pl_pvcam_uninit();
+         g_PVCAM_initialized = false;
+      }
       initialized_ = false;
    }
    return DEVICE_OK;
