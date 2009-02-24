@@ -131,9 +131,11 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PiperMmAdapter", "..\Device
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DemoRGBCamera", "..\DeviceAdapters\DemoRGBCamera\DemoRGBCamera.vcproj", "{028283B8-4E29-457E-9A78-AB6154A0F9D4}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LeicaDMI", "..\DeviceAdapters\LeicaDMI\LeicaDMI.vcproj", "{31FE7D1C-8B0F-4E6C-9A50-F63596606764}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Olympus", "..\SecretDeviceAdapters\Olympus\Olympus.vcproj", "{3BFC5BBD-6C7D-44A7-8361-F9D6E03C98AB}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Olympus", "..\DeviceAdapters\Olympus\Olympus.vcproj", "{3BFC5BBD-6C7D-44A7-8361-F9D6E03C98AB}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PCO-Generic", "..\DeviceAdapters\PCO_Generic\MicroManager.vcproj", "{391502E7-BAAF-42DF-9327-2114B73FF8DF}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LeicaDMI", "..\DeviceAdapters\LeicaDMI\LeicaDMI.vcproj", "{31FE7D1C-8B0F-4E6C-9A50-F63596606764}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -313,14 +315,18 @@ Global
 		{028283B8-4E29-457E-9A78-AB6154A0F9D4}.Debug|Win32.Build.0 = Debug|Win32
 		{028283B8-4E29-457E-9A78-AB6154A0F9D4}.Release|Win32.ActiveCfg = Release|Win32
 		{028283B8-4E29-457E-9A78-AB6154A0F9D4}.Release|Win32.Build.0 = Release|Win32
-		{31FE7D1C-8B0F-4E6C-9A50-F63596606764}.Debug|Win32.ActiveCfg = Debug|Win32
-		{31FE7D1C-8B0F-4E6C-9A50-F63596606764}.Debug|Win32.Build.0 = Debug|Win32
-		{31FE7D1C-8B0F-4E6C-9A50-F63596606764}.Release|Win32.ActiveCfg = Release|Win32
-		{31FE7D1C-8B0F-4E6C-9A50-F63596606764}.Release|Win32.Build.0 = Release|Win32
 		{3BFC5BBD-6C7D-44A7-8361-F9D6E03C98AB}.Debug|Win32.ActiveCfg = Debug|Win32
 		{3BFC5BBD-6C7D-44A7-8361-F9D6E03C98AB}.Debug|Win32.Build.0 = Debug|Win32
 		{3BFC5BBD-6C7D-44A7-8361-F9D6E03C98AB}.Release|Win32.ActiveCfg = Release|Win32
 		{3BFC5BBD-6C7D-44A7-8361-F9D6E03C98AB}.Release|Win32.Build.0 = Release|Win32
+		{391502E7-BAAF-42DF-9327-2114B73FF8DF}.Debug|Win32.ActiveCfg = Debug|Win32
+		{391502E7-BAAF-42DF-9327-2114B73FF8DF}.Debug|Win32.Build.0 = Debug|Win32
+		{391502E7-BAAF-42DF-9327-2114B73FF8DF}.Release|Win32.ActiveCfg = Release|Win32
+		{391502E7-BAAF-42DF-9327-2114B73FF8DF}.Release|Win32.Build.0 = Release|Win32
+		{31FE7D1C-8B0F-4E6C-9A50-F63596606764}.Debug|Win32.ActiveCfg = Debug|Win32
+		{31FE7D1C-8B0F-4E6C-9A50-F63596606764}.Debug|Win32.Build.0 = Debug|Win32
+		{31FE7D1C-8B0F-4E6C-9A50-F63596606764}.Release|Win32.ActiveCfg = Release|Win32
+		{31FE7D1C-8B0F-4E6C-9A50-F63596606764}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
