@@ -154,6 +154,7 @@
 		<copy file="${BinRoot}/mmgr_dal_CSUX.dll" todir="${InstallRoot}" />
 		<copy file="${BinRoot}/mmgr_dal_PI_GCS.dll" todir="${InstallRoot}" />
 		<copy file="${BinRoot}/mmgr_dal_PI.dll" todir="${InstallRoot}" />
+		<copy file="${BinRoot}/mmgr_dal_Olympus.dll" todir="${InstallRoot}" />
 		<copy file="${BinRoot}/mmgr_dal_Utilities.dll" todir="${InstallRoot}" />
 
 		<copy file="${BinRoot}/MMDeviceList.txt" todir="${InstallRoot}" />
