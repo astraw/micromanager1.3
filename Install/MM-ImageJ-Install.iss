@@ -71,6 +71,7 @@ Source: micro-manager\mmgr_dal_SpectralLMM5.dll; DestDir: {app}; Flags: ignoreve
 Source: micro-manager\mmgr_dal_PI_GCS.dll; DestDir: {app}; Flags: ignoreversion
 Source: micro-manager\mmgr_dal_PI.dll; DestDir: {app}; Flags: ignoreversion
 Source: micro-manager\mmgr_dal_Pecon.dll; DestDir: {app}; Flags: ignoreversion
+Source: micro-manager\mmgr_dal_Olympus.dll; DestDir: {app}; Flags: ignoreversion
 Source: micro-manager\mmgr_dal_Utilities.dll; DestDir: {app}; Flags: ignoreversion
 Source: micro-manager\ace.dll; DestDir: {app}; Flags: ignoreversion
 
