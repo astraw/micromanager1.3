@@ -95,7 +95,7 @@ typedef struct
 } SParam;
 
 // forward declarations
-class AcqSequenceThread;
+//class AcqSequenceThread;
 
 
 //////////////////////////////////////////////////////////////////////////////
@@ -172,8 +172,10 @@ private:
 class Universal : public CCameraBase<Universal>
 {
 public:
- 
-   friend class AcqSequenceThread;
+   
+   Universal(short id);
+
+   //friend class AcqSequenceThread;
    typedef PVCAMAction<Universal> CUniversalPropertyAction;
 
    static Universal* GetInstance(short cameraId)
@@ -247,7 +249,6 @@ protected:
    int PushImage();
 
 private:
-   Universal(short id);
    Universal(Universal&) {}
    ROI roi_;
    int ResizeImageBufferSingle();

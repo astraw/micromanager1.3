@@ -129,9 +129,9 @@ MODULE_API MM::Device* CreateDevice(const char* deviceName)
    if (strcmp(deviceName, g_DeviceCascade) == 0)
       return Cascade::GetInstance();
    else if (strcmp(deviceName, g_DeviceUniversal_1) == 0)
-      return Universal::GetInstance(0);
+      return new Universal(0); //Universal::GetInstance(0);
    else if (strcmp(deviceName, g_DeviceUniversal_2) == 0)
-      return Universal::GetInstance(1);
+      return new Universal(1); //Universal::GetInstance(1);
    
    return 0;
 }

@@ -128,20 +128,27 @@ Universal::Universal(short cameraId) :
 }
 
 
+//Universal::~Universal()
+//{   
+//   refCount_--;
+//   if (refCount_ <= 0)
+//   {
+//      // release resources
+//      if (initialized_)
+//         Shutdown();
+//
+//      // clear the instance pointer
+//      instance_ = 0;      
+//      // ACE::fini();
+//      delete[] circBuffer_;
+//   }
+//}
+
 Universal::~Universal()
 {   
-   refCount_--;
-   if (refCount_ <= 0)
-   {
       // release resources
-      if (initialized_)
-         Shutdown();
-
-      // clear the instance pointer
-      instance_ = 0;      
-      // ACE::fini();
+      Shutdown();
       delete[] circBuffer_;
-   }
 }
 
 int Universal::GetBinning () const 
@@ -625,6 +632,8 @@ int Universal::Initialize()
    if (!pl_cam_get_diags(hPVCAM_))
       return pl_error_code();
 
+   refCount_++;
+
    name_ = name;
 
    // Name
@@ -868,9 +877,12 @@ int Universal::Shutdown()
 {
    if (initialized_)
    {
-      pl_exp_uninit_seq();
-      pl_cam_close(hPVCAM_);
-      if (g_PVCAM_initialized)
+      rs_bool ret = pl_exp_uninit_seq();
+	  assert(ret);
+      ret = pl_cam_close(hPVCAM_);
+	  assert(ret);
+	  refCount_--;
+      if (g_PVCAM_initialized && refCount_ == 0)
       {
          pl_pvcam_uninit();
          g_PVCAM_initialized = false;
