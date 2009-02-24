@@ -302,8 +302,8 @@ void CMMCore::enableStderrLog(bool enable)
    }
 }
 
-/**
- * Displays current user name.
+/*!
+ Displays current user name.
  */
 string CMMCore::getUserId() const
 {
