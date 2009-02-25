@@ -47,11 +47,10 @@
 #include <iomanip>
 
 using namespace std;
-
-Universal* Universal::instance_ = 0;
 unsigned Universal::refCount_ = 0;
+bool Universal::PVCAM_initialized_ = false;
 
-bool g_PVCAM_initialized = false;const int BUFSIZE = 60;
+const int BUFSIZE = 60;
 #if WIN32
 #define snprintf _snprintf
 #endif
@@ -130,15 +129,11 @@ snappingSingleFrame_(false)
 Universal::~Universal()
 {   
    refCount_--;
-   if (refCount_ <= 0)
+   if (refCount_ == 0)
    {
       // release resources
       if (initialized_)
          Shutdown();
-
-      // clear the instance pointer
-      instance_ = 0;      
-      // ACE::fini();
       delete[] circBuffer_;
    }
 }
@@ -587,12 +582,18 @@ int Universal::Initialize()
    // Camera name
    char name[CAM_NAME_LEN] = "Undef";
 
-   if (!g_PVCAM_initialized)
+   if (!PVCAM_initialized_)
    {
       if (!pl_pvcam_init())
       {
          // Try once more:
-         pl_pvcam_uninit();         if (!pl_pvcam_init())            return pl_error_code();      }      g_PVCAM_initialized = true;   }
+         pl_pvcam_uninit();
+         if (!pl_pvcam_init())
+            return pl_error_code();
+      }
+      PVCAM_initialized_ = true;
+   }
+   
    // Get PVCAM version
    uns16 version;
    if (!pl_pvcam_get_ver(&version))
@@ -866,10 +867,10 @@ int Universal::Shutdown()
       ret = pl_cam_close(hPVCAM_);
       assert(ret);	  
       refCount_--;      
-      if (g_PVCAM_initialized && refCount_ == 0)      
+      if (PVCAM_initialized_ && refCount_ == 0)      
       {         
          pl_pvcam_uninit();
-         g_PVCAM_initialized = false;
+         PVCAM_initialized_ = false;
       }      
       initialized_ = false;
    }

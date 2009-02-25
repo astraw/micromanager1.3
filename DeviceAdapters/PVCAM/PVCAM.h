@@ -176,18 +176,9 @@ class Universal : public CCameraBase<Universal>
 public:
    
    Universal(short id);
-   typedef PVCAMAction<Universal> CUniversalPropertyAction;
-
-   static Universal* GetInstance(short cameraId)
-   {
-      if (!instance_)
-         instance_ = new Universal(cameraId);
-
-      refCount_++;
-      return instance_;
-   }
-
    ~Universal();
+
+   typedef PVCAMAction<Universal> CUniversalPropertyAction;
    
    // MMDevice API
    int Initialize();
@@ -278,8 +269,8 @@ private:
    bool busy_;
    long numImages_;
    short hPVCAM_; // handle to the driver
-   static Universal* instance_;
    static unsigned refCount_;
+   static bool PVCAM_initialized_;
    ImgBuffer img_;
    rs_bool gainAvailable_;
    double exposure_;
