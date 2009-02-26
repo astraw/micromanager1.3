@@ -1133,6 +1133,7 @@ int CHamamatsu::Initialize()
    }
  
    // Sensor temperature readout
+   /*
    if (IsPropertySupported(propAttr, DCAM_IDPROP_SENSORTEMPERATURE))
    {
       ostringstream defaultValue;
@@ -1142,6 +1143,7 @@ int CHamamatsu::Initialize()
       if (nRet != DEVICE_OK)
          return nRet;
    }
+   */
 
    nRet = AddExtendedProperty("CCDMode",  DCAM_IDPROP_CCDMODE);
    if (nRet != DEVICE_OK)
@@ -1159,7 +1161,6 @@ int CHamamatsu::Initialize()
    if (nRet != DEVICE_OK)
       return nRet;
 
-   nRet = AddExtendedProperty("Temperature Set Point",  DCAM_IDPROP_SENSORTEMPERATURETARGET);
    nRet = AddExtendedProperty("Temperature Set Point",  DCAM_IDPROP_SENSORTEMPERATURETARGET);
    if (nRet != DEVICE_OK)
       return nRet;
