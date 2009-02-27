@@ -1681,7 +1681,7 @@ int Universal::StartSequenceAcquisition(long numImages, double interval_ms, bool
    // set actual interval the same as exposure
    // with PVCAM there is no straightforward way to get actual interval
    // TODO: create a better estimate
-   //SetProperty(MM::g_Keyword_ActualInterval_ms, CDeviceUtils::ConvertToString(exposure_)); 
+   SetProperty(MM::g_Keyword_ActualInterval_ms, CDeviceUtils::ConvertToString(exposure_)); 
 
    os << "Started sequence acquisition: " << numImages << " at " << interval_ms << " ms" << endl;
    LogMessage(os.str().c_str());
