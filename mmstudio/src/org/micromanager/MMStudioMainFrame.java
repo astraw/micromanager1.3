@@ -1779,7 +1779,18 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 		}
 	}
 
+	private BooleanLock creatingImageWindow_ = new BooleanLock(false);
+	private static long waitForCreateImageWindowTimeout_ = 5000;
 	private MMImageWindow createImageWindow() {
+		if(creatingImageWindow_.isTrue()){
+			try{
+				creatingImageWindow_.waitToSetFalse(waitForCreateImageWindowTimeout_);
+			}catch(Exception e)
+			{
+			}
+			return imageWin_;
+		}
+		creatingImageWindow_.setValue(true);
 		MMImageWindow win = imageWin_;
 		imageWin_ = null;
 		try {
@@ -1817,6 +1828,7 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 			}
 			handleException(e);
 		}
+		creatingImageWindow_.setValue(false);
 		return imageWin_;
 	}
 
@@ -2228,7 +2240,7 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 			if (IsLiveModeOn())
 				return;
 			try {
-				if (!isImageWindowOpen())
+				if (!isImageWindowOpen() && creatingImageWindow_.isFalse())
 					imageWin_ = createImageWindow();
 
 				// this is needed to clear the subtitle, should be folded into
@@ -2386,8 +2398,9 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 	public boolean displayImage(Object pixels) {
 		try {
 			if (!isImageWindowOpen()
-					|| imageWin_.getImageWindowByteLength() != imageWin_
-							.imageByteLenth(pixels)) {
+					|| imageWin_.getImageWindowByteLength() 
+						!= imageWin_.imageByteLenth(pixels)
+					&& creatingImageWindow_.isFalse()) {
 				createImageWindow();
 			}
 
@@ -2405,8 +2418,9 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 	public boolean displayImageWithStatusLine(Object pixels, String statusLine) {
 		try {
 			if (!isImageWindowOpen()
-					|| imageWin_.getImageWindowByteLength() != imageWin_
-							.imageByteLenth(pixels)) {
+					|| imageWin_.getImageWindowByteLength() 
+						!= imageWin_.imageByteLenth(pixels)
+						&& creatingImageWindow_.isFalse()) {
 				createImageWindow();
 			}
 
@@ -3581,3 +3595,91 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 				enableLiveMode(true);
 	}
 }
+
+
+
+class BooleanLock extends Object {
+	  private boolean value;
+
+	  public BooleanLock(boolean initialValue) {
+	    value = initialValue;
+	  }
+
+	  public BooleanLock() {
+	    this(false);
+	  }
+
+	  public synchronized void setValue(boolean newValue) {
+	    if ( newValue != value ) {
+	      value = newValue;
+	      notifyAll();
+	    }
+	  }
+
+	  public synchronized boolean waitToSetTrue(long msTimeout) 
+	      throws InterruptedException {
+
+	    boolean success = waitUntilFalse(msTimeout);
+	    if ( success ) {
+	      setValue(true);
+	    }
+
+	    return success;
+	  }
+
+	  public synchronized boolean waitToSetFalse(long msTimeout) 
+	      throws InterruptedException {
+
+	    boolean success = waitUntilTrue(msTimeout);
+	    if ( success ) {
+	      setValue(false);
+	    }
+
+	    return success;
+	  }
+
+	  public synchronized boolean isTrue() {
+	    return value;
+	  }
+
+	  public synchronized boolean isFalse() {
+	    return !value;
+	  }
+
+	  public synchronized boolean waitUntilTrue(long msTimeout) 
+	      throws InterruptedException {
+
+	    return waitUntilStateIs(true, msTimeout);
+	  }
+
+	  public synchronized boolean waitUntilFalse(long msTimeout) 
+	      throws InterruptedException {
+
+	    return waitUntilStateIs(false, msTimeout);
+	  }
+
+	  public synchronized boolean waitUntilStateIs(
+	        boolean state, 
+	        long msTimeout
+	      ) throws InterruptedException {
+
+	    if ( msTimeout == 0L ) {
+	      while ( value != state ) {
+	        wait();
+	      }
+
+	      return true;
+	    } 
+
+	    long endTime = System.currentTimeMillis() + msTimeout;
+	    long msRemaining = msTimeout;
+
+	    while ( ( value != state ) && ( msRemaining > 0L ) ) {
+	      wait(msRemaining);
+	      msRemaining = endTime - System.currentTimeMillis();
+	    }
+
+	    return ( value == state );
+	  }
+	}
+
