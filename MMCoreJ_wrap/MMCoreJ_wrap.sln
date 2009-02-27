@@ -59,9 +59,6 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PVCAM", "..\DeviceAdapters\PVCAM\PVCAM.vcproj", "{A28DEB4E-E645-4990-A91D-4A7FF6762239}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Test_MMCore", "..\Test_MMCore\Test_MMCore.vcproj", "{83FA5FB2-61F2-431F-BCC9-9278BE6C9CA0}"
-	ProjectSection(ProjectDependencies) = postProject
-		{36571628-728C-4ACD-A47F-503BA91C5D43} = {36571628-728C-4ACD-A47F-503BA91C5D43}
-	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SerialManager", "..\DeviceAdapters\SerialManager\SerialManager.vcproj", "{2EF7ACDC-F742-4CB6-B301-A242F52BE5C3}"
 EndProject
