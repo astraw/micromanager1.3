@@ -178,6 +178,7 @@ AndorCamera::AndorCamera() :
    fullFrameY_(0),
    EmCCDGainLow_(0),
    EmCCDGainHigh_(0),
+   EMSwitch_(true),
    minTemp_(0),
    ThermoSteady_(0),
    lSnapImageCnt_(0),
@@ -474,17 +475,20 @@ int AndorCamera::Initialize()
       if (ret != DRV_SUCCESS)
          return ret;
 			for(int i = 0; i < NumberOfWorkableCameras_; ++i) {
-        CurrentCameraID_ = cameraID_[i];
-        ret = SetCurrentCamera(CurrentCameraID_);
-        if (ret == DRV_SUCCESS)
-          ret = ::Initialize(const_cast<char*>(driverDir_.c_str()));
-				if (ret == DRV_SUCCESS) {
-					if(HasProperty("Camera")) {
+         CurrentCameraID_ = cameraID_[i];
+         ret = SetCurrentCamera(CurrentCameraID_);
+         if (ret == DRV_SUCCESS)
+            ret = ::Initialize(const_cast<char*>(driverDir_.c_str()));
+         /*
+			if (ret == DRV_SUCCESS) {
+				if(HasProperty("Camera")) {
             int placeholder = 0;
 					}
 					break;
 				}
+            */
 			}
+         
 			if(ret != DRV_SUCCESS) {
 				return ret;
 			}
@@ -526,6 +530,10 @@ int AndorCamera::Initialize()
       }
    }
    CameraName_ = cameraName_[currentCameraIdx];
+   bool isLuca = false;
+   if (CameraName_.substr(0,3).compare("Luc")==0)
+      isLuca = true;
+
    if(HasProperty(MM::g_Keyword_Name))
    {
       nRet = SetProperty(MM::g_Keyword_Name,cameraName_[currentCameraIdx].c_str());   
@@ -842,6 +850,13 @@ int AndorCamera::Initialize()
       assert(nRet == DEVICE_OK);
    }
 
+   if (isLuca) {
+      pAct = new CPropertyAction(this, &AndorCamera::OnEMSwitch);
+      nRet = CreateProperty("EMSwitch", "On", MM::String, false, pAct);
+      assert (nRet == DEVICE_OK);
+      AddAllowedValue("EMSwitch", "On");      
+      AddAllowedValue("EMSwitch", "Off");
+   }
 
    // readout mode
    int numSpeeds;
@@ -1074,35 +1089,37 @@ int AndorCamera::Initialize()
 
    // Temperature Set Point
    std::string strTempSetPoint;
-   if(minTemp<-70)
-	   strTempSetPoint = "-70";
-   else
-	   strTempSetPoint = TemperatureRangeMin_; 
-   if(!HasProperty(MM::g_Keyword_CCDTemperatureSetPoint))
-   {
-      pAct = new CPropertyAction (this, &AndorCamera::OnTemperatureSetPoint);
-      nRet = CreateProperty(MM::g_Keyword_CCDTemperatureSetPoint, strTempSetPoint.c_str(), MM::Integer, false, pAct);
-      ret = SetPropertyLimits(MM::g_Keyword_CCDTemperatureSetPoint, minTemp_, maxTemp_);
+   if (!isLuca) {      
+      if(minTemp<-70)
+	      strTempSetPoint = "-70";
+      else
+	      strTempSetPoint = TemperatureRangeMin_; 
+      if(!HasProperty(MM::g_Keyword_CCDTemperatureSetPoint))
+      {
+         pAct = new CPropertyAction (this, &AndorCamera::OnTemperatureSetPoint);
+         nRet = CreateProperty(MM::g_Keyword_CCDTemperatureSetPoint, strTempSetPoint.c_str(), MM::Integer, false, pAct);
+         ret = SetPropertyLimits(MM::g_Keyword_CCDTemperatureSetPoint, minTemp_, maxTemp_);
+      }
+      else
+      {
+	      nRet = SetProperty(MM::g_Keyword_CCDTemperatureSetPoint, strTempSetPoint.c_str());
+      }
+      assert(nRet == DEVICE_OK);
    }
-   else
-   {
-	   nRet = SetProperty(MM::g_Keyword_CCDTemperatureSetPoint, strTempSetPoint.c_str());
-   }
-   assert(nRet == DEVICE_OK);
 
-
-   // Cooler
-   if(!HasProperty("CoolerMode"))
-   {
-      pAct = new CPropertyAction (this, &AndorCamera::OnCooler);
-      nRet = CreateProperty(/*Daigang 24-may-2007 "Cooler" */"CoolerMode", /*Daigang 24-may-2007 "0" */g_CoolerMode_FanOffAtShutdown, /*Daigang 24-may-2007 MM::Integer */MM::String, false, pAct); 
+   // Cooler  
+   if (!isLuca) {
+      if(!HasProperty("CoolerMode"))
+      {
+         pAct = new CPropertyAction (this, &AndorCamera::OnCooler);
+         nRet = CreateProperty("CoolerMode", g_CoolerMode_FanOffAtShutdown, MM::String, false, pAct); 
+      }
+     assert(nRet == DEVICE_OK);
+      AddAllowedValue(/*Daigang 24-may-2007 "Cooler" */"CoolerMode", g_CoolerMode_FanOffAtShutdown);//"0");  //Daigang 24-may-2007
+      AddAllowedValue(/*Daigang 24-may-2007 "Cooler" */"CoolerMode", g_CoolerMode_FanOnAtShutdown);//"1");  //Daigang 24-may-2007
+      nRet = SetProperty("CoolerMode", g_CoolerMode_FanOffAtShutdown);
+      assert(nRet == DEVICE_OK);
    }
-   assert(nRet == DEVICE_OK);
-   AddAllowedValue(/*Daigang 24-may-2007 "Cooler" */"CoolerMode", g_CoolerMode_FanOffAtShutdown);//"0");  //Daigang 24-may-2007
-   AddAllowedValue(/*Daigang 24-may-2007 "Cooler" */"CoolerMode", g_CoolerMode_FanOnAtShutdown);//"1");  //Daigang 24-may-2007
-   nRet = SetProperty("CoolerMode", g_CoolerMode_FanOffAtShutdown);
-   assert(nRet == DEVICE_OK);
-   // eof jizhen
 
    //jizhen 05.16.2007
    // Fan
@@ -1188,9 +1205,11 @@ int AndorCamera::Initialize()
 
    // synchronize all properties
    // --------------------------
+  /*
    nRet = UpdateStatus();
    if (nRet != DEVICE_OK)
       return nRet;
+      */
 
    // setup the buffer
    // ----------------
@@ -1202,6 +1221,7 @@ int AndorCamera::Initialize()
    nRet = SetProperty(MM::g_Keyword_Binning, "1");
    if (nRet != DEVICE_OK)
       return nRet;
+
    if(bShuterIntegrated)
    {
       nRet = SetProperty("InternalShutter", g_ShutterMode_Open);
@@ -1209,9 +1229,11 @@ int AndorCamera::Initialize()
          return nRet;
    }
 
-   nRet = SetProperty(MM::g_Keyword_CCDTemperatureSetPoint, strTempSetPoint.c_str());
-   if (nRet != DEVICE_OK)
-      return nRet;
+   if (!isLuca) {
+     nRet = SetProperty(MM::g_Keyword_CCDTemperatureSetPoint, strTempSetPoint.c_str());
+     if (nRet != DEVICE_OK)
+         return nRet;
+   }
 
    // EM gain
    // jizhen 05.08.2007
@@ -1223,74 +1245,42 @@ int AndorCamera::Initialize()
    EmCCDGainLow_ = EmCCDGainLow;
    EmCCDGainHigh_ = EmCCDGainHigh;
 
-  /* 
-   ostringstream emgLow; 
-   ostringstream emgHigh; 
-   emgLow << EmCCDGainLow;
-   emgHigh << EmCCDGainHigh;
-   //daigang 24-may-2007 changed
-   //CreateProperty("EmCCDGainLow", emgLow.str().c_str(), MM::Integer, true);
-   //CreateProperty("EmCCDGainHigh", emgHigh.str().c_str(), MM::Integer, true);
-   if(!HasProperty("EMGainRangeMin"))
-   {
-     pAct = new CPropertyAction (this, &AndorCamera::OnEMGainRangeMin);  //daigang 24-may-2007 added
-     nRet = CreateProperty("EMGainRangeMin", emgLow.str().c_str(), MM::Integer, true, pAct);
-   }
-   else
-   {
-     nRet = SetProperty("EMGainRangeMin", emgLow.str().c_str());
-   }
-   assert(nRet == DEVICE_OK);
-
-   if(!HasProperty("EMGainRangeMax"))
-   {
-     pAct = new CPropertyAction (this, &AndorCamera::OnEMGainRangeMax);
-     CreateProperty("EMGainRangeMax", emgHigh.str().c_str(), MM::Integer, true, pAct);
-   }
-   else
-   {
-     SetProperty("EMGainRangeMax", emgHigh.str().c_str());
-   }
-   assert(nRet == DEVICE_OK);
-   //eof Daigang
-
-   // eof jizhen
-*/
-
 
    nRet = SetProperty(MM::g_Keyword_Exposure, "10.0");
    if (nRet != DEVICE_OK)
       return nRet;
-   /*
-   nRet = SetProperty(MM::g_Keyword_Gain, emgLow.str().c_str());//use Gain to set EMGain
-   if (nRet != DEVICE_OK)
-      return nRet;
-   */
+
    nRet = SetProperty(MM::g_Keyword_ReadoutMode, readoutModes_[0].c_str());
    if (nRet != DEVICE_OK)
       return nRet;
-   //Daigang 24-may-2007
+
    nRet = SetProperty("FanMode", g_FanMode_Full);
    if (nRet != DEVICE_OK)
       return nRet;
+
    nRet = SetProperty(g_FrameTransferProp, g_FrameTransferOff);
    if (nRet != DEVICE_OK)
       return nRet;
-   nRet = SetProperty("CoolerMode", g_CoolerMode_FanOffAtShutdown);
-   if (nRet != DEVICE_OK)
-      return nRet;
+
+   if (!isLuca) {
+     nRet = SetProperty("CoolerMode", g_CoolerMode_FanOffAtShutdown);
+     if (nRet != DEVICE_OK)
+        return nRet;
+   }
+
    ret = CoolerON();  //turn on the cooler at startup
    if (DRV_SUCCESS != ret)
       return (int)ret;
+
    if(EmCCDGainHigh_>=300)
    {
       ret = SetEMAdvanced(1);  //Enable extended range of EMGain
       if (DRV_SUCCESS != ret)
          return (int)ret;
    }
+
    UpdateEMGainRange();
    GetReadoutTime();
-   //eof Daigang
 
    nRet = UpdateStatus();
    if (nRet != DEVICE_OK)
@@ -1875,6 +1865,15 @@ int AndorCamera::OnGain(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
    if (eAct == MM::AfterSet)
    {
+      long gain;
+      pProp->Get(gain);
+      if (!EMSwitch_) {
+         currentGain_ = gain;
+         return DEVICE_OK;
+      }
+      if(gain == currentGain_)
+		   return DEVICE_OK;
+
       bool acquiring = acquiring_;
       if (acquiring)
          StopSequenceAcquisition();
@@ -1882,17 +1881,15 @@ int AndorCamera::OnGain(MM::PropertyBase* pProp, MM::ActionType eAct)
       if (acquiring_)
          return ERR_BUSY_ACQUIRING;
 
-      long gain;
-      pProp->Get(gain);
-	   if(gain == currentGain_)
-		   return DEVICE_OK;
-	   if (gain!=0 && gain < (long) EmCCDGainLow_ ) gain = (long)EmCCDGainLow_;
-      if (gain > (long) EmCCDGainHigh_ ) gain = (long)EmCCDGainHigh_;
+	   if (gain!=0 && gain < (long) EmCCDGainLow_ ) 
+         gain = (long)EmCCDGainLow_;
+      if (gain > (long) EmCCDGainHigh_ ) 
+         gain = (long)EmCCDGainHigh_;
 	   pProp->Set(gain);
 
 	   //added to use RTA
       if(!(iCurrentTriggerMode == SOFTWARE))
-    	SetToIdle();
+         SetToIdle();
 
       unsigned ret = SetEMCCDGain((int)gain);
       if (DRV_SUCCESS != ret)
@@ -1901,11 +1898,62 @@ int AndorCamera::OnGain(MM::PropertyBase* pProp, MM::ActionType eAct)
 
       if (acquiring)
          StartSequenceAcquisition(sequenceLength_ - imageCounter_, intervalMs_, stopOnOverflow_);
-
    }
    else if (eAct == MM::BeforeGet)
    {
 	   pProp->Set(currentGain_);
+   }
+   return DEVICE_OK;
+}
+
+/**
+ * Set camera "regular" gain.
+ */
+int AndorCamera::OnEMSwitch(MM::PropertyBase* pProp, MM::ActionType eAct)
+{
+   if (eAct == MM::AfterSet)
+   {
+      std::string EMSwitch;
+      pProp->Get(EMSwitch);
+      if (EMSwitch == "Off" && !EMSwitch_)
+         return DEVICE_OK;
+      if (EMSwitch == "On" && EMSwitch_)
+         return DEVICE_OK;
+
+      bool acquiring = acquiring_;
+      if (acquiring)
+         StopSequenceAcquisition();
+
+      if (acquiring_)
+         return ERR_BUSY_ACQUIRING;
+
+      //pProp->Get(currentGain_);
+
+	   //added to use RTA
+      if(!(iCurrentTriggerMode == SOFTWARE))
+    	   SetToIdle();
+
+      unsigned ret = DRV_SUCCESS;
+      if (EMSwitch == "On") {
+         ret = SetEMCCDGain((int)currentGain_);
+         EMSwitch_ = true;
+      } else {
+         ret = SetEMCCDGain(0);
+         EMSwitch_ = false;
+      }
+      if (DRV_SUCCESS != ret)
+         return (int)ret;
+
+      if (acquiring)
+         StartSequenceAcquisition(sequenceLength_ - imageCounter_, intervalMs_, stopOnOverflow_);
+
+   }
+   else if (eAct == MM::BeforeGet)
+   {
+      if (EMSwitch_)
+	      pProp->Set("On");
+      else
+         pProp->Set("Off");
    }
    return DEVICE_OK;
 }

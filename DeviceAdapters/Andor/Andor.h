@@ -116,6 +116,7 @@ public:
    int OnExposure(MM::PropertyBase* pProp, MM::ActionType eAct);
    int OnPixelType(MM::PropertyBase* pProp, MM::ActionType eAct);
    int OnGain(MM::PropertyBase* pProp, MM::ActionType eAct);
+   int OnEMSwitch(MM::PropertyBase* pProp, MM::ActionType eAct);
    int OnReadoutMode(MM::PropertyBase* pProp, MM::ActionType eAct);
    int OnReadoutTime(MM::PropertyBase* pProp, MM::ActionType eAct);
    int OnOffset(MM::PropertyBase* pProp, MM::ActionType eAct);
@@ -160,6 +161,8 @@ private:
    void SetToIdle();
    bool IsAcquiring();
    int SetExposure_();
+
+   bool EMSwitch_;
 
    static AndorCamera* instance_;
    static unsigned refCount_;
