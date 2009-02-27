@@ -99,6 +99,15 @@ public:
 
    // high-speed interface
    int StartSequenceAcquisition(long numImages, double interval_ms, bool stopOnOverflow);
+   /**
+   * Continuous sequence acquisition.  
+   * Default to sequence acquisition with a high number of images
+   */
+   int StartSequenceAcquisition(double interval)
+   {
+      return StartSequenceAcquisition(LONG_MAX, interval, false);
+   }
+
    int StopSequenceAcquisition();
    bool IsCapturing(){return acquiring_;};
 
