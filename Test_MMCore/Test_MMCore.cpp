@@ -26,6 +26,7 @@
 
 
 #include "../MMCore/MMCore.h"
+#include "../MMDevice/ImageMetadata.h"
 #define ACE_NTRACE 0
 #define ACE_NDEBUG 0
 
@@ -106,9 +107,9 @@ int main(int argc, char* argv[])
       // TestDemoDevices is just an example for a testing rountine
       // It assumes that specific demo configuration is already loaded
       //TestDemoDevices(core);
-      //TestCameraStreaming(core);
+      TestCameraStreaming(core);
       // TestColorMode(core);
-      TestCameraLive(core);
+      // TestCameraLive(core);
       //TestPixelSize(core);
       //TestHam(core);
 
@@ -255,9 +256,12 @@ void TestCameraStreaming(CMMCore& core)
    int count=0;
    while (core.deviceBusy(camera.c_str()))
    {
-      core.getLastImage();
+      Metadata md;
+      core.getLastImageMD(0, 0, md);
       double interval = core.getBufferIntervalMs();
       printf("Displaying current image, %ld in que, %.0f ms interval.\n", core.getRemainingImageCount(), interval);
+      MetadataSingleTag mdst = md.GetSingleTag(MM::g_Keyword_Elapsed_Time_ms);
+      printf("Elapsed time %s, device %s\n", mdst.GetValue().c_str(), mdst.GetDevice().c_str());
       ACE_OS::sleep(displayTime);
    }
    printf("Camera finished with %.0f ms interval.\n", core.getBufferIntervalMs());
@@ -276,10 +280,13 @@ void TestCameraStreaming(CMMCore& core)
    count=0;
    while (core.deviceBusy(camera.c_str()))
    {
-      core.getLastImage();
+      Metadata md;
+      core.getLastImageMD(0, 0, md);
       double interval = core.getBufferIntervalMs();
       printf("Displaying current image, %ld in que, %.0f ms interval.\n", core.getRemainingImageCount(), interval);
       ACE_OS::sleep(displayTime);
+      MetadataSingleTag mdst = md.GetSingleTag(MM::g_Keyword_Elapsed_Time_ms);
+      printf("Elapsed time %s, device %s\n", mdst.GetValue().c_str(), mdst.GetDevice().c_str());
    }
    printf("Camera finished with %.0f ms interval.\n", core.getBufferIntervalMs());
    core.setProperty(camera.c_str(), "ShutterMode", "Auto");

@@ -51,8 +51,9 @@ int CoreCallback::InsertImage(const MM::Device* /*caller*/, const unsigned char*
 }
 int CoreCallback::InsertImage(const MM::Device* caller, const ImgBuffer & imgBuf)
 {
+   Metadata md = imgBuf.GetMetadata();
    return InsertImage(caller, imgBuf.GetPixels(), imgBuf.Width(), 
-      imgBuf.Height(), imgBuf.Depth(), &imgBuf.GetMetadata());
+      imgBuf.Height(), imgBuf.Depth(), &md);
 }
 
 void CoreCallback::ClearImageBuffer(const MM::Device* /*caller*/)

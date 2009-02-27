@@ -206,9 +206,12 @@
 }
 
 //
-// CMMError exception objects
+// Map all exception objects coming from C++ level
+// generic Java Exception
 //
 %rename(eql) operator=;
+
+// CMMError used by MMCore
 %typemap(throws, throws="java.lang.Exception") CMMError {
    jclass excep = jenv->FindClass("java/lang/Exception");
    if (excep)
@@ -216,13 +219,44 @@
    return $null;
 }
 
+// MetadataKeyError used by Metadata class
+%typemap(throws, throws="java.lang.Exception") MetadataKeyError {
+   jclass excep = jenv->FindClass("java/lang/Exception");
+   if (excep)
+     jenv->ThrowNew(excep, $1.getMsg().c_str());
+   return $null;
+}
+
+// MetadataIndexError used by Metadata class
+%typemap(throws, throws="java.lang.Exception") MetadataIndexError {
+   jclass excep = jenv->FindClass("java/lang/Exception");
+   if (excep)
+     jenv->ThrowNew(excep, $1.getMsg().c_str());
+   return $null;
+}
+
 %typemap(javabase) CMMError "java.lang.Exception"
+//%typemap(javabase) MetadataKeyError "java.lang.Exception"
+//%typemap(javabase) MetadataIndexError "java.lang.Exception"
 
 %typemap(javacode) CMMError %{
    public String getMessage() {
       return getMsg();
    }
 %}
+
+%typemap(javacode) MetadataKeyError %{
+   public String getMessage() {
+      return getMsg();
+   }
+%}
+
+%typemap(javacode) MetadataIndexError %{
+   public String getMessage() {
+      return getMsg();
+   }
+%}
+
 
 %pragma(java) jniclasscode=%{
   static {

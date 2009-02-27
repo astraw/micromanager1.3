@@ -247,14 +247,14 @@ public:
       return keyList;
    }
    
-   MetadataSingleTag GetSingleTag(const char* key) const
+   MetadataSingleTag GetSingleTag(const char* key) const throw (MetadataKeyError)
    {
       MetadataTag* tag = FindTag(key);
       MetadataSingleTag* stag = dynamic_cast<MetadataSingleTag*>(tag);
       return *stag;
    }
 
-   MetadataArrayTag GetArrayTag(const char* key) const
+   MetadataArrayTag GetArrayTag(const char* key) const throw (MetadataKeyError)
    {
       MetadataTag* tag = FindTag(key);
       MetadataArrayTag* atag = dynamic_cast<MetadataArrayTag*>(tag);
