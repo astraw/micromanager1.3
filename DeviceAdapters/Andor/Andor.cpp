@@ -531,8 +531,10 @@ int AndorCamera::Initialize()
    }
    CameraName_ = cameraName_[currentCameraIdx];
    bool isLuca = false;
-   if (CameraName_.substr(0,3).compare("Luc")==0)
+   if (CameraName_.substr(0,3).compare("Luc")==0) {
       isLuca = true;
+      LogMessage("Camera is a Luca");
+   }
 
    if(HasProperty(MM::g_Keyword_Name))
    {
@@ -593,6 +595,7 @@ int AndorCamera::Initialize()
       if (ret != DRV_SUCCESS)
 	   {
          ShutDown();
+         LogMessage("Could not set trigger mode");
          return ret;
 	   }
 		 strCurrentTriggerMode = "Software";
@@ -606,6 +609,7 @@ int AndorCamera::Initialize()
       if (ret != DRV_SUCCESS)
 	   {
          ShutDown();
+         LogMessage("Could not set external trigger mode");
          return ret;
 	   }
 		 strCurrentTriggerMode = "External";
@@ -618,6 +622,7 @@ int AndorCamera::Initialize()
          if (ret != DRV_SUCCESS)
    {
            ShutDown();
+           LogMessage("Could not set software trigger mode");
            return ret;
    }
 		 strCurrentTriggerMode = "Internal";
@@ -625,33 +630,42 @@ int AndorCamera::Initialize()
 	   vTriggerModes.push_back("Internal");
    }
    if(!HasProperty("Trigger"))
-      {
-     CPropertyAction *pAct = new CPropertyAction (this, &AndorCamera::OnSelectTrigger);
-     nRet = CreateProperty("Trigger", "Trigger Mode", MM::String, false, pAct);
-         assert(nRet == DEVICE_OK);
-      }
+   {
+      CPropertyAction *pAct = new CPropertyAction (this, &AndorCamera::OnSelectTrigger);
+      nRet = CreateProperty("Trigger", "Trigger Mode", MM::String, false, pAct);
+      assert(nRet == DEVICE_OK);
+   }
    nRet = SetAllowedValues("Trigger", vTriggerModes);
-      assert(nRet == DEVICE_OK);
+   assert(nRet == DEVICE_OK);
    nRet = SetProperty("Trigger", strCurrentTriggerMode.c_str());
-      assert(nRet == DEVICE_OK);
+   assert(nRet == DEVICE_OK);
 
    //Set EM Gain mode
    if(caps.ulEMGainCapability&AC_EMGAIN_REAL12)
    {
       ret = SetEMAdvanced(1);
-      if (ret != DRV_SUCCESS)
+      if (ret != DRV_SUCCESS) {
+         LogMessage("Could not set EM Advanced");
          return ret;
-      if (ret != DRV_SUCCESS)
+      }
+      ret = SetEMGainMode(3);
+      if (ret != DRV_SUCCESS){
+         LogMessage("Could not set EM Gain mode 3");
          return ret;
+      }
    } 
    else if(caps.ulEMGainCapability&AC_EMGAIN_LINEAR12)
    { 
       ret = SetEMAdvanced(1);
-      if (ret != DRV_SUCCESS)
+      if (ret != DRV_SUCCESS){
+         LogMessage("Could not set EM Advanced");
          return ret;
+      }
       ret = SetEMGainMode(2);  //mode 0: 0-255; 1: 0-4095; 2: Linear; 3: real
-      if (ret != DRV_SUCCESS)
+      if (ret != DRV_SUCCESS) {
+         LogMessage("Could not set EM Gain mode 2");
          return ret;
+      }
    }
    else if(caps.ulEMGainCapability&AC_EMGAIN_12BIT)
    {
@@ -659,8 +673,10 @@ int AndorCamera::Initialize()
       if (ret != DRV_SUCCESS)
          return ret;
       ret = SetEMGainMode(1);  //mode 0: 0-255; 1: 0-4095; 2: Linear; 3: real
-      if (ret != DRV_SUCCESS)
+      if (ret != DRV_SUCCESS) {
+         LogMessage("Could not set EM Gain mode 1");
          return ret;
+      }
    }
    else if(caps.ulEMGainCapability&AC_EMGAIN_8BIT)
    {
