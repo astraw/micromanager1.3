@@ -440,10 +440,8 @@ void Universal::suspend()
       //while (! thd_->IsSuspended());
       thd_->Stop();
       thd_->wait();
-      pl_exp_stop_cont(hPVCAM_, CCS_HALT); //Circular buffer only
-      LOG_CAM_ERROR;
-      pl_exp_finish_seq(hPVCAM_, circBuffer_, 0);
-      LOG_CAM_ERROR;
+      LOG_IF_CAM_ERROR(pl_exp_stop_cont(hPVCAM_, CCS_HALT)); //Circular buffer only
+      LOG_IF_CAM_ERROR(pl_exp_finish_seq(hPVCAM_, circBuffer_, 0));
    } 
 }
 
@@ -566,21 +564,19 @@ int Universal::OnUniversalProperty(MM::PropertyBase* pProp, MM::ActionType eAct,
       uns16 dataType;
       if (!pl_get_param_safe(hPVCAM_, param_set[index].id, ATTR_TYPE, &dataType) || (dataType != TYPE_ENUM)) 
       {
-         LOG_CAM_ERROR;
          long ldata;
          pProp->Get(ldata);
 
-         if (!SetLongParam_PvCam_safe(hPVCAM_, (long)param_set[index].id, (uns32) ldata))
-            return pl_error_code();
+         RETURN_CAM_ERROR_IF_CAM_ERROR(
+            SetLongParam_PvCam_safe(hPVCAM_, (long)param_set[index].id, (uns32) ldata));
 
       } else {
          std::string mnemonic;
          pProp->Get(mnemonic);
          uns32 ldata = param_set[index].enumMap[mnemonic];
 
-         if (!SetLongParam_PvCam_safe(hPVCAM_, (long)param_set[index].id, (uns32) ldata))
-            return pl_error_code();
-
+         RETURN_CAM_ERROR_IF_CAM_ERROR(
+            SetLongParam_PvCam_safe(hPVCAM_, (long)param_set[index].id, (uns32) ldata));
       }
    }
    else if (eAct == MM::BeforeGet)
@@ -593,7 +589,6 @@ int Universal::OnUniversalProperty(MM::PropertyBase* pProp, MM::ActionType eAct,
       uns16 dataType;
       if (!pl_get_param_safe(hPVCAM_, param_set[index].id, ATTR_TYPE, &dataType) || (dataType != TYPE_ENUM)) 
       {
-         LOG_CAM_ERROR;
          pProp->Set(ldata);
       } else {
          char enumStr[100];
@@ -1773,7 +1768,7 @@ int Universal::PushImage()
          GetImageBytesPerPixel());;
    }
 
-   LOG_MM_ERROR(nRet);
+   LOG_IF_MM_ERROR(nRet);
 
    return nRet;
 }
@@ -1864,7 +1859,7 @@ void Universal::LogCamError(
          CDeviceUtils::CopyLimitedString(msg, "Unknown");
       }
       ostringstream os;
-      os << "PVCAM API error: "<<endl;
+      os << "PVCAM API error: "<< msg <<endl;
       os << strMessage; 
       os << strLocation<<endl;
       LogMessage(os.str(), bDebugonly);
@@ -1887,7 +1882,7 @@ void Universal::LogMMError(
          CDeviceUtils::CopyLimitedString(strText, "Unknown");
       }
       ostringstream os;
-      os << "MM API error: "<<endl;
+      os << "MM API error: "<< strText <<endl;
       os << strMessage; 
       os << strLocation<<endl;
       LogMessage(os.str(), bDebugonly);
