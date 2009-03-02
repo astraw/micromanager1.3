@@ -229,8 +229,16 @@ int CPCOCam::OnBinning(MM::PropertyBase* pProp, MM::ActionType eAct)
       m_nVBin = bin;
       m_nRoiXMin = 1;
       m_nRoiYMin = 1;
-      m_nRoiXMax = roiXMaxFull_ / m_nHBin;
-      m_nRoiYMax = roiYMaxFull_ / m_nVBin;
+      if(m_pCamera->iCamClass == 2)
+      {
+        m_nRoiXMax = roiXMaxFull_ / (m_nHBin + 1);
+        m_nRoiYMax = roiYMaxFull_ / (m_nVBin + 1);
+      }
+      else
+      {
+        m_nRoiXMax = roiXMaxFull_ / m_nHBin;
+        m_nRoiYMax = roiYMaxFull_ / m_nVBin;
+      }
 
       nErr = SetupCamera();
       if(nErr != 0)
@@ -527,12 +535,13 @@ int CPCOCam::Initialize()
    if (nRet != DEVICE_OK)
       return nRet;
 
-   // Gain
+/* Actually there is no gain.
+// Gain
    pAct = new CPropertyAction (this, &CPCOCam::OnGain);
    nRet = CreateProperty(MM::g_Keyword_Gain, "1", MM::Integer, false, pAct);
    if (nRet != DEVICE_OK)
       return nRet;
-
+*/
    // Exposure
    pAct = new CPropertyAction (this, &CPCOCam::OnExposure);
    nRet = CreateProperty(MM::g_Keyword_Exposure, "10", MM::Float, false, pAct);
