@@ -882,6 +882,12 @@ int CPCOCam::StopSequenceAcquisition()
    return DEVICE_OK;
 }
 
+int CPCOCam::StoppedByThread()
+{
+  sequenceRunning_ = false;
+  return DEVICE_OK;
+}
+
 bool CPCOCam::IsCapturing()
 {
    return sequenceRunning_;
@@ -907,23 +913,26 @@ int CPCOCam::InsertImage()
 int CPCOCam::SequenceThread::svc()
 {
    long count(0);
+   int err = 0;
    while (!stop_ && count < numImages_)
    {
       int ret = camera_->SnapImage();
       if (ret != DEVICE_OK)
       {
-         camera_->StopSequenceAcquisition();
-         return 1;
+        err = 1;
+        break;
       }
 
       ret = camera_->InsertImage();
       if (ret != DEVICE_OK)
       {
-         camera_->StopSequenceAcquisition();
-         return 1;
+        err = 1;
+        break;
       }
       CDeviceUtils::SleepMs(20);
       count++;
    }
-   return 0;
+
+   camera_->StoppedByThread();
+   return err;
 }
