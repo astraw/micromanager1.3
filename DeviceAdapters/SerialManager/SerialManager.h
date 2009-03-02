@@ -87,6 +87,8 @@ public:
 
 private:
    std::string portName_;
+   std::string portNameWinAPI_;
+
    bool initialized_;
    bool busy_;
    CSerial* port_;
@@ -98,6 +100,9 @@ private:
 
    std::string stopBits_;
    std::string parity_;
+
+
+
 };
 
 class SerialManager

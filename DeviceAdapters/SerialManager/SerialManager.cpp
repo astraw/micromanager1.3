@@ -105,9 +105,11 @@ MODULE_API void InitializeModuleData()
 
    if (g_PortList.size() == 0 || stale) {
       char portName[16];
-      for (int i=0; i<16; i++) {
+      char portNameWinAPI[16];
+      for (int i=1; i<=256; i++) {
          sprintf(portName, "COM%d", i);
-         if (CSerial::EPortAvailable == CSerial::CheckPort(portName)){
+         sprintf(portNameWinAPI, "\\\\.\\%s",portName);
+         if (CSerial::EPortAvailable == CSerial::CheckPort(portNameWinAPI)){
             g_PortList.push_back(portName);
          }
       }
@@ -205,6 +207,9 @@ SerialPort::SerialPort(const char* portName) :
 {
    port_ = new CSerial();
    portName_ = portName;
+   portNameWinAPI_ = "\\\\.\\";
+   portNameWinAPI_ += portName;
+
 
    InitializeDefaultErrorMessages();
 
@@ -291,7 +296,7 @@ int SerialPort::Open()
    assert(port_);
 
    long lastError;
-   lastError = port_->Open(portName_.c_str(), 0, 0, false);
+   lastError = port_->Open(portNameWinAPI_.c_str(), 0, 0, false);
 	if (lastError != ERROR_SUCCESS)
 		return ERR_OPEN_FAILED;
 
@@ -670,3 +675,4 @@ int SerialPort::OnDelayBetweenCharsMs(MM::PropertyBase* pProp, MM::ActionType eA
 
    return DEVICE_OK;
 }
+
