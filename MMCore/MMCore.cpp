@@ -57,7 +57,6 @@
 #pragma warning(default : 4312 4244)
 #endif
 
-
 #include "CoreUtils.h"
 #include "MMCore.h"
 #include "../MMDevice/DeviceUtils.h"
@@ -1486,6 +1485,13 @@ void CMMCore::startSequenceAcquisition(long numImages, double intervalMs, bool s
 {
    if (camera_)
    {
+      if(camera_->IsCapturing())
+      {
+         throw CMMError(getCoreErrorText(
+            MMERR_NotAllowedDuringSequenceAcquisition).c_str()
+            ,MMERR_NotAllowedDuringSequenceAcquisition);
+      }
+
       if (!cbuf_->Initialize(camera_->GetNumberOfChannels(), 1, camera_->GetImageWidth(), camera_->GetImageHeight(), camera_->GetImageBytesPerPixel()))
       {
          logError(getDeviceName(camera_).c_str(), getCoreErrorText(MMERR_CircularBufferFailedToInitialize).c_str());
@@ -1507,11 +1513,21 @@ void CMMCore::startSequenceAcquisition(long numImages, double intervalMs, bool s
 /**
  * Starts the continuous camera sequence acquisition.
  * This command does not block the calling thread for the duration of the acquisition.
+ * Note: The max length of the sequence is not infinite: 2,147,483,647 frames. (it takes ~40 years when intervalMS==1ms) 
  */
 void CMMCore::startContinuousSequenceAcquisition(double intervalMs) throw (CMMError)
 {
+   startSequenceAcquisition(LONG_MAX, intervalMs, false);
+/*
    if (camera_)
    {
+      if(camera_->IsCapturing())
+      {
+         throw CMMError(getCoreErrorText(
+            MMERR_NotAllowedDuringSequenceAcquisition).c_str()
+            ,MMERR_NotAllowedDuringSequenceAcquisition);
+      }
+
       if (!cbuf_->Initialize(camera_->GetNumberOfChannels(), 1, camera_->GetImageWidth(), camera_->GetImageHeight(), camera_->GetImageBytesPerPixel()))
       {
          logError(getDeviceName(camera_).c_str(), getCoreErrorText(MMERR_CircularBufferFailedToInitialize).c_str());
@@ -1528,6 +1544,7 @@ void CMMCore::startContinuousSequenceAcquisition(double intervalMs) throw (CMMEr
       throw CMMError(getCoreErrorText(MMERR_CameraNotAvailable).c_str(), MMERR_CameraNotAvailable);
    }
    CORE_DEBUG("Sequence acquisition started.");
+*/
 }
 
 /**
