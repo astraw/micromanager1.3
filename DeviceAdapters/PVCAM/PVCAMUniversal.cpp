@@ -223,6 +223,7 @@ int Universal::OnBinning(MM::PropertyBase* pProp, MM::ActionType eAct)
       binSize_ = bin;
       ClearROI(); // reset region of interest
       int nRet;
+      singleFrameModeReady_=false;
       if (capturing)      
          nRet = resume(); 
       else
@@ -267,7 +268,7 @@ int Universal::OnExposure(MM::PropertyBase* pProp, MM::ActionType eAct)
    }
    else if (eAct == MM::AfterSet)
    {
-
+      singleFrameModeReady_=false;
       suspend();
       double exp;
       pProp->Get(exp);
@@ -282,6 +283,7 @@ int Universal::OnExposure(MM::PropertyBase* pProp, MM::ActionType eAct)
 int Universal::OnPixelType(MM::PropertyBase* pProp, MM::ActionType /*eAct*/)
 {  
 
+   singleFrameModeReady_=false;
 
    int16 bitDepth;
    RETURN_DEVICE_ERR_IF_CAM_ERROR(
@@ -306,6 +308,7 @@ int Universal::OnReadoutRate(MM::PropertyBase* pProp, MM::ActionType eAct)
 
    if (eAct == MM::AfterSet)
    {
+      singleFrameModeReady_=false;
       long gain;
       GetLongParam_PvCam_safe(hPVCAM_, PARAM_GAIN_INDEX, &gain);
 
@@ -355,6 +358,7 @@ int Universal::OnReadoutPort(MM::PropertyBase* pProp, MM::ActionType eAct)
 
    if (eAct == MM::AfterSet)
    {
+      singleFrameModeReady_=false;
       string par;
       pProp->Get(par);
       int port;
@@ -409,6 +413,7 @@ int Universal::OnGain(MM::PropertyBase* pProp, MM::ActionType eAct)
 
    if (eAct == MM::AfterSet)
    {
+      singleFrameModeReady_=false;
       long gain;
       pProp->Get(gain);
       if (!SetLongParam_PvCam_safe(hPVCAM_, PARAM_GAIN_INDEX, gain))
@@ -475,6 +480,7 @@ int Universal::OnMultiplierGain(MM::PropertyBase* pProp, MM::ActionType eAct)
 
    if (eAct == MM::AfterSet)
    {
+      singleFrameModeReady_=false;
       long gain;
       pProp->Get(gain);
 
@@ -561,6 +567,7 @@ int Universal::OnUniversalProperty(MM::PropertyBase* pProp, MM::ActionType eAct,
 
    if (eAct == MM::AfterSet)
    {
+      singleFrameModeReady_=false;
       uns16 dataType;
       if (!pl_get_param_safe(hPVCAM_, param_set[index].id, ATTR_TYPE, &dataType) || (dataType != TYPE_ENUM)) 
       {
@@ -849,8 +856,8 @@ int Universal::Initialize()
          CPropertyActionEx *pAct = new CPropertyActionEx(this, &Universal::OnUniversalProperty, (long)i);
          uint16_t dataType;
          rs_bool plResult = pl_get_param_safe(hPVCAM_, param_set[i].id, ATTR_TYPE, &dataType);
+         LOG_IF_CAM_ERROR(plResult);
          if (!plResult || (dataType != TYPE_ENUM)) {
-            LOG_CAM_ERROR;
             nRet = CreateProperty(param_set[i].name, buf, MM::Integer, AccessType == ACC_READ_ONLY, pAct);
             RETURN_IF_MM_ERROR(nRet);
 
@@ -1421,7 +1428,6 @@ std::string Universal::GetPortName(long portId)
    int32 enumIndex;
    if (!GetEnumParam_PvCam((uns32)PARAM_READOUT_PORT, (uns32)portId, portName, enumIndex))
    {
-      LOG_CAM_ERROR;
       LogMessage("Error in GetEnumParam in GetPortName");
    }
    switch (enumIndex)
@@ -1693,8 +1699,7 @@ void Universal::OnThreadExiting() throw ()
       LOG_IF_CAM_ERROR(
          pl_exp_finish_seq(hPVCAM_, circBuffer_, 0));
    } catch (...) {
-      LogMessage(g_Msg_EXCEPTION_IN_ON_THREAD_EXITING, false);
-      LOG_CAM_ERROR;
+      LOG_MESSAGE(std::string(g_Msg_EXCEPTION_IN_ON_THREAD_EXITING));
    }
    CCameraBase<Universal>::OnThreadExiting();
 }
