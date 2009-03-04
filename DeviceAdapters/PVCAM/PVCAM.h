@@ -260,6 +260,8 @@ private:
    int SetGainLimits();
    void Universal::suspend();
    int Universal::resume();
+   bool WaitForExposureDone()throw();
+
 
    //helpers
    void LogCamError(
@@ -304,7 +306,11 @@ private:
    MMThreadLock imgLock_;
    bool noSupportForStreaming_;
    bool snappingSingleFrame_;
+   MMThreadLock snappingSingleFrame_Lock_;
    bool singleFrameModeReady_;
+   MMThreadLock singleFrameModeReady_Lock_;
+   MM::MMTime exposureStartTime_;
+   bool use_pl_exp_check_status_;
 
 };
 

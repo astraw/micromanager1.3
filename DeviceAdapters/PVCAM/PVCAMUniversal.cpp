@@ -104,6 +104,13 @@ std::string IntToString(int i)throw()
    return s;
 };
 
+std::string DoubleToString(double d)throw()
+{
+   std::string s;
+   try{ ostringstream os; os<<d; s=os.str();}catch(...){};
+   return s;
+};
+
 #define LOG_MESSAGE(strMsg) \
 {\
    strMsg += std::string(__FILE__) + std::string(" Line ") + IntToString(__LINE__);\
@@ -121,8 +128,18 @@ std::string IntToString(int i)throw()
    LogCamError(" ", strMsg);\
 }
 
+#define LOG_CAM_ERROR_DESCRIPTION(strMsg) \
+{\
+   strMsg += std::string(__FILE__) + std::string(" Line ") + IntToString(__LINE__);\
+   LogCamError(" ", strMsg);\
+}
+
 #define LOG_IF_CAM_ERROR(bResult)\
    if(!bResult){LOG_CAM_ERROR}
+
+//std::string strMsg
+#define LOG_DESCRIPTION_IF_CAM_ERROR(bResult, strMsg)\
+   if(!bResult){LOG_CAM_ERROR_DESCRIPTION(strMsg)}
 
 #define RETURN_IF_CAM_ERROR(bResult) \
    if(!bResult){LOG_CAM_ERROR; return;}
@@ -168,8 +185,9 @@ stopOnOverflow_(true),
 noSupportForStreaming_(true),
 restart_(false),
 snappingSingleFrame_(false),
-singleFrameModeReady_(false)
-
+singleFrameModeReady_(false),
+exposureStartTime_(0.0),
+use_pl_exp_check_status_(true)
 {
    // ACE::init();
    InitializeDefaultErrorMessages();
@@ -844,19 +862,19 @@ int Universal::Initialize()
 
       bool getLongSuccess = GetLongParam_PvCam_safe(hPVCAM_, param_set[i].id, &ldata);
 
+      rs_bool plResult;
 
-      //should it return?
-      LOG_IF_CAM_ERROR(
-         pl_get_param_safe( hPVCAM_, param_set[i].id, ATTR_ACCESS, &AccessType));
-      LOG_IF_CAM_ERROR(
-         pl_get_param_safe( hPVCAM_, param_set[i].id, ATTR_AVAIL, &bAvail));
+      plResult = pl_get_param_safe( hPVCAM_, param_set[i].id, ATTR_ACCESS, &AccessType);
+         LOG_DESCRIPTION_IF_CAM_ERROR(plResult, std::string(param_set[i].name));
+      plResult = pl_get_param_safe( hPVCAM_, param_set[i].id, ATTR_AVAIL, &bAvail);
+         LOG_DESCRIPTION_IF_CAM_ERROR(plResult, std::string(param_set[i].name));
       if ( (AccessType != ACC_ERROR) && bAvail && getLongSuccess && versionTest) 
       {
          snprintf(buf, BUFSIZE, "%ld", ldata);
          CPropertyActionEx *pAct = new CPropertyActionEx(this, &Universal::OnUniversalProperty, (long)i);
          uint16_t dataType;
-         rs_bool plResult = pl_get_param_safe(hPVCAM_, param_set[i].id, ATTR_TYPE, &dataType);
-         LOG_IF_CAM_ERROR(plResult);
+         plResult = pl_get_param_safe(hPVCAM_, param_set[i].id, ATTR_TYPE, &dataType);
+            LOG_DESCRIPTION_IF_CAM_ERROR(plResult, std::string(param_set[i].name));
          if (!plResult || (dataType != TYPE_ENUM)) {
             nRet = CreateProperty(param_set[i].name, buf, MM::Integer, AccessType == ACC_READ_ONLY, pAct);
             RETURN_IF_MM_ERROR(nRet);
@@ -962,6 +980,111 @@ bool Universal::Busy()
 //                   This command blocks the calling thread
 //                   until the image is fully captured.
 // Return type     : int 
+
+int Universal::SnapImage()
+{
+   int nRet = DEVICE_ERR;
+
+   //calls of GetImage will be locked until SnapImage returns
+   //!!! ToDo: enable after testing 
+   //MMThreadGuard(this->snappingSingleFrame_Lock_);
+
+   if(snappingSingleFrame_)
+   {
+      LOG_MESSAGE(std::string("Warning: Entering SnapImage while GetImage has not been done for previous frame"));
+   };
+
+   if (!bufferOK_)
+      return ERR_INVALID_BUFFER;
+
+   if(!singleFrameModeReady_)
+   {
+
+      LOG_IF_CAM_ERROR(pl_exp_stop_cont(hPVCAM_, CCS_HALT));
+      LOG_IF_CAM_ERROR(pl_exp_finish_seq(hPVCAM_, circBuffer_, 0));
+
+      nRet = ResizeImageBufferSingle();
+      RETURN_IF_MM_ERROR(nRet);
+   }
+
+   //Call of ResizeImageBufferSingle() will be locked 
+   //until SnapImage returns (== until the exposure is done)
+   //!!! ToDo: enable after testing 
+   //MMThreadGuard(this->singleFrameModeReady_Lock_);
+
+   void* pixBuffer = const_cast<unsigned char*> (img_.GetPixels());
+   RETURN_DEVICE_ERR_IF_CAM_ERROR(pl_exp_start_seq(hPVCAM_, pixBuffer));
+   exposureStartTime_ = GetCurrentMMTime();
+   snappingSingleFrame_=true;
+
+
+   if(WaitForExposureDone())
+   { 
+      nRet = DEVICE_OK;
+   }
+   else
+   {
+      //Exposure was not done correctly. if application nevertheless 
+      //tries to get (wrong) image by calling GetImage, the error will be reported
+      snappingSingleFrame_=false;
+   }
+
+   return nRet;
+}
+
+bool Universal::WaitForExposureDone()throw()
+{
+   bool bRet=false;
+   rs_bool rsbRet=0;
+
+   const double exposure_time_safe_gap=50.0; //milliseconds 
+   double exposure_time_safe = (exposure_ + exposure_time_safe_gap) * 1000.0;
+
+   try
+   {
+      int16 status;
+      uns32 not_needed;
+
+      if(use_pl_exp_check_status_)
+      {
+         //Check if "pl_exp_check_status" can really be used with current camera HW
+         do {
+            rsbRet = pl_exp_check_status(hPVCAM_, &status, &not_needed);
+            LOG_IF_CAM_ERROR(rsbRet);
+         } while (rsbRet && (status == EXPOSURE_IN_PROGRESS));
+
+         MM::MMTime actual_interval = GetCurrentMMTime() - exposureStartTime_;
+         if( actual_interval.getUsec() < exposure_ * 1000.0 )
+         {
+            //As we are hear we could not get the camera status correctly 
+            //from whatever reason
+            use_pl_exp_check_status_=false;
+            ostringstream os;
+            os<<"PVCAM pl_exp_check_status(): time: " << actual_interval.getUsec();
+            os<<"status: "<<status<<"\n";
+            LogMessage(os.str(), false);
+         }
+      }
+      //use_pl_exp_check_status_ can be set to false at previous step
+      if(!use_pl_exp_check_status_)
+      {
+         do {
+            CDeviceUtils::SleepMs(2);
+         } while ( (GetCurrentMMTime() - exposureStartTime_).getUsec() < exposure_time_safe );
+      }
+      bRet=true;
+   }
+   catch(...)
+   {
+      LOG_MESSAGE(std::string("Unknown exception while waiting for exposure done"));
+   }
+   return bRet;
+}
+
+
+
+
+/* On some cameras this implementation variant returns befor the exposure is done
 int Universal::SnapImage()
 {
    int16 status;
@@ -989,7 +1112,7 @@ int Universal::SnapImage()
 
    void* pixBuffer = const_cast<unsigned char*> (img_.GetPixels());
    RETURN_DEVICE_ERR_IF_CAM_ERROR(pl_exp_start_seq(hPVCAM_, pixBuffer));
-
+   exposureStartTime_ = GetCurrentMMTime();
    //ToDo: multithreading
    snappingSingleFrame_=true;
 
@@ -1013,21 +1136,22 @@ int Universal::SnapImage()
       } while (ret && (status == EXPOSURE_IN_PROGRESS));
       if (!ret)
       {
-         snappingSingleFrame_=true;
+         snappingSingleFrame_=false;
          return pl_error_code();   
       }
    }
 
    return DEVICE_OK;
 }
-
-
-
+*/
 
 const unsigned char* Universal::GetImageBuffer()
 {  
    int16 status;
    uns32 not_needed;
+
+   //!!! ToDo: enable after testing 
+   //MMThreadGuard(this->snappingSingleFrame_Lock_);
 
    if(!snappingSingleFrame_)
    {
@@ -1040,22 +1164,20 @@ const unsigned char* Universal::GetImageBuffer()
    while(pl_exp_check_status(hPVCAM_, &status, &not_needed) && 
       (status != READOUT_COMPLETE && status != READOUT_FAILED) );
 
-   snappingSingleFrame_=false;
-
-   // Check Error Codes
+   // ToDo: Check all Error Codes
    if(status == READOUT_FAILED)
    {
       LOG_MESSAGE(std::string("PVCAM: status == READOUT_FAILED"));
-      // return pl_error_code();
       return 0;
    }
 
    if (!pl_exp_finish_seq(hPVCAM_, pixBuffer, 0))
    {
       LOG_CAM_ERROR;
-      // return pl_error_code();
       return 0;
    }
+
+   snappingSingleFrame_=false;
 
    return (unsigned char*) pixBuffer;
 }
@@ -1786,7 +1908,6 @@ rs_bool Universal::pl_get_param_safe(int16 hcam, uns32 param_id,
    rs_bool ret;
    suspend();
    ret = pl_get_param (hcam, param_id, param_attribute, param_value);
-   LOG_IF_CAM_ERROR(ret);
    resume();
    return ret;
 }
@@ -1798,7 +1919,6 @@ rs_bool Universal::pl_set_param_safe(int16 hcam, uns32 param_id, void_ptr param_
    suspend();
 
    ret = pl_set_param (hcam, param_id, param_value);
-   LOG_IF_CAM_ERROR(ret);
    resume();
    return ret;
 }
@@ -1809,7 +1929,6 @@ bool Universal::GetLongParam_PvCam_safe(int16 handle, uns32 pvcam_cmd, long *val
    bool ret;
    suspend();
    ret = GetLongParam_PvCam(handle, pvcam_cmd, value);
-   LOG_IF_CAM_ERROR(ret);
    resume();
    return ret;
 }
@@ -1819,7 +1938,6 @@ bool Universal::SetLongParam_PvCam_safe(int16 handle, uns32 pvcam_cmd, long valu
    bool ret;
    suspend();
    ret = SetLongParam_PvCam(handle, pvcam_cmd, value);
-   LOG_IF_CAM_ERROR(ret);
    resume();
    return ret;
 }
@@ -1832,7 +1950,6 @@ rs_bool Universal::pl_get_enum_param_safe (int16 hcam, uns32 param_id, uns32 ind
    rs_bool ret;
    suspend();
    ret = pl_get_enum_param(hcam, param_id, index, value, desc, length);
-   LOG_IF_CAM_ERROR(ret);
    resume();
    return ret;
 }
@@ -1843,7 +1960,6 @@ rs_bool Universal::pl_enum_str_length_safe (int16 hcam, uns32 param_id, uns32 in
    rs_bool ret;
    suspend();
    ret = pl_enum_str_length(hcam, param_id, index, length);
-   LOG_IF_CAM_ERROR(ret);
    resume();
    return ret;
 }
@@ -1864,9 +1980,9 @@ void Universal::LogCamError(
          CDeviceUtils::CopyLimitedString(msg, "Unknown");
       }
       ostringstream os;
-      os << "PVCAM API error: "<< msg <<endl;
+      os << "PVCAM API error: "<< msg <<"\n";
       os << strMessage; 
-      os << strLocation<<endl;
+      os << strLocation<<"\n";
       LogMessage(os.str(), bDebugonly);
    }
    catch(...){}
@@ -1887,9 +2003,9 @@ void Universal::LogMMError(
          CDeviceUtils::CopyLimitedString(strText, "Unknown");
       }
       ostringstream os;
-      os << "MM API error: "<< strText <<endl;
+      os << "MM API error: "<< strText <<"\n";
       os << strMessage; 
-      os << strLocation<<endl;
+      os << strLocation<<"\n";
       LogMessage(os.str(), bDebugonly);
    }
    catch(...){}
