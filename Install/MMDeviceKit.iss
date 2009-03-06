@@ -1,12 +1,12 @@
 [Setup]
 OutputDir=C:\projects\micromanager1.3\Install\Output
 OutputBaseFilename=MMDeviceKit-win-31-00
-DefaultDirName=C:/Program Files/Micro-Manager1.3/MMDeviceKit-win-31_00
+DefaultDirName=C:/Program Files/Micro-Manager-1.3/MMDeviceKit-win-31_00
 VersionInfoVersion=31
 VersionInfoCompany=micro-manager.org
 VersionInfoCopyright=University of California San Francisco
 AppCopyright=Unviersity of California San Francisco
-AppName=Micro-Manager1.3 DeviceKit
+AppName=Micro-Manager-1.3 DeviceKit
 AppVerName=DeviceKit for API version 31
 ShowLanguageDialog=yes
 DisableDirPage=true
