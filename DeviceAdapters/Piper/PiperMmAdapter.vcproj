@@ -157,7 +157,7 @@
 				AdditionalLibraryDirectories=""
 				UACExecutionLevel="1"
 				ModuleDefinitionFile=".\PiperMmAdapter.def"
-				GenerateDebugInformation="true"
+				GenerateDebugInformation="false"
 				SubSystem="2"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
