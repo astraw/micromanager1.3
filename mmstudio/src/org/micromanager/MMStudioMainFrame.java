@@ -459,7 +459,7 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 				SpringLayout.NORTH, getContentPane());
 		springLayout_.putConstraint(SpringLayout.NORTH, textFieldExp_, 21,
 				SpringLayout.NORTH, getContentPane());
-		springLayout_.putConstraint(SpringLayout.EAST, textFieldExp_, 275,
+		springLayout_.putConstraint(SpringLayout.EAST, textFieldExp_, 276,
 				SpringLayout.WEST, getContentPane());
 		springLayout_.putConstraint(SpringLayout.WEST, textFieldExp_, 203,
 				SpringLayout.WEST, getContentPane());
@@ -1328,7 +1328,7 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 				SpringLayout.SOUTH, getContentPane());
 		springLayout_.putConstraint(SpringLayout.NORTH, contrastPanel_, 176,
 				SpringLayout.NORTH, getContentPane());
-		springLayout_.putConstraint(SpringLayout.EAST, contrastPanel_, -4,
+		springLayout_.putConstraint(SpringLayout.EAST, contrastPanel_, -5,
 				SpringLayout.EAST, getContentPane());
 		springLayout_.putConstraint(SpringLayout.WEST, contrastPanel_, 7,
 				SpringLayout.WEST, getContentPane());
@@ -1441,16 +1441,14 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 			}
 		});
 		addGroupButton_.setToolTipText("Add new group of presets");
-		if (System.getProperty("os.name").indexOf("Mac OS X") != -1)
-			addGroupButton_.setIcon(SwingResourceManager
-					.getIcon(MMStudioMainFrame.class,
-							"/org/micromanager/icons/plus.png"));
-		else
-			addGroupButton_.setText("+");
+		addGroupButton_.setIcon(SwingResourceManager
+				.getIcon(MMStudioMainFrame.class,
+						"/org/micromanager/icons/plus.png"));
+
 		getContentPane().add(addGroupButton_);
-		springLayout_.putConstraint(SpringLayout.EAST, addGroupButton_, 337,
+		springLayout_.putConstraint(SpringLayout.EAST, addGroupButton_, 322,
 				SpringLayout.WEST, getContentPane());
-		springLayout_.putConstraint(SpringLayout.WEST, addGroupButton_, 295,
+		springLayout_.putConstraint(SpringLayout.WEST, addGroupButton_, 280,
 				SpringLayout.WEST, getContentPane());
 		springLayout_.putConstraint(SpringLayout.SOUTH, addGroupButton_, 173,
 				SpringLayout.NORTH, getContentPane());
@@ -1468,20 +1466,18 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 			}
 		});
 		removeGroupButton_.setToolTipText("Remove selected group of presets");
-		if (System.getProperty("os.name").indexOf("Mac OS X") != -1)
-			removeGroupButton_.setIcon(SwingResourceManager.getIcon(
-					MMStudioMainFrame.class,
-					"/org/micromanager/icons/minus.png"));
-		else
-			removeGroupButton_.setText("-");
+		removeGroupButton_.setIcon(SwingResourceManager.getIcon(
+				MMStudioMainFrame.class,
+				"/org/micromanager/icons/minus.png"));
+
 		getContentPane().add(removeGroupButton_);
 		springLayout_.putConstraint(SpringLayout.SOUTH, removeGroupButton_,
 				173, SpringLayout.NORTH, getContentPane());
 		springLayout_.putConstraint(SpringLayout.NORTH, removeGroupButton_,
 				155, SpringLayout.NORTH, getContentPane());
-		springLayout_.putConstraint(SpringLayout.EAST, removeGroupButton_, 382,
+		springLayout_.putConstraint(SpringLayout.EAST, removeGroupButton_, 367,
 				SpringLayout.WEST, getContentPane());
-		springLayout_.putConstraint(SpringLayout.WEST, removeGroupButton_, 340,
+		springLayout_.putConstraint(SpringLayout.WEST, removeGroupButton_, 325,
 				SpringLayout.WEST, getContentPane());
 
 		final JButton editPreset_ = new JButton();
@@ -1497,10 +1493,10 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 		editPreset_.setToolTipText("Edit selected preset");
 		editPreset_.setText("Edit");
 		getContentPane().add(editPreset_);
-		springLayout_.putConstraint(SpringLayout.EAST, editPreset_, -2,
-				SpringLayout.EAST, getContentPane());
-		springLayout_.putConstraint(SpringLayout.WEST, editPreset_, -72,
-				SpringLayout.EAST, getContentPane());
+		springLayout_.putConstraint(SpringLayout.EAST, editPreset_, -1,
+				SpringLayout.EAST, configPad_);
+		springLayout_.putConstraint(SpringLayout.WEST, editPreset_, -70,
+				SpringLayout.EAST, editPreset_);
 		springLayout_.putConstraint(SpringLayout.SOUTH, configPad_, 0,
 				SpringLayout.NORTH, editPreset_);
 		springLayout_.putConstraint(SpringLayout.NORTH, configPad_, 21,
@@ -1508,33 +1504,6 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 		springLayout_.putConstraint(SpringLayout.SOUTH, editPreset_, 173,
 				SpringLayout.NORTH, getContentPane());
 		springLayout_.putConstraint(SpringLayout.NORTH, editPreset_, 155,
-				SpringLayout.NORTH, getContentPane());
-
-		final JButton addPresetButton_ = new JButton();
-		addPresetButton_.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-				if (configPad_.addPreset()) {
-					configChanged_ = true;
-					updateGUI(true);
-					setConfigSaveButtonStatus(configChanged_);
-				}
-			}
-		});
-		addPresetButton_.setToolTipText("Add preset");
-		if (System.getProperty("os.name").indexOf("Mac OS X") != -1)
-			addPresetButton_.setIcon(SwingResourceManager
-					.getIcon(MMStudioMainFrame.class,
-							"/org/micromanager/icons/plus.png"));
-		else
-			addPresetButton_.setText("+");
-		getContentPane().add(addPresetButton_);
-		springLayout_.putConstraint(SpringLayout.EAST, addPresetButton_, -114,
-				SpringLayout.EAST, getContentPane());
-		springLayout_.putConstraint(SpringLayout.WEST, addPresetButton_, -156,
-				SpringLayout.EAST, getContentPane());
-		springLayout_.putConstraint(SpringLayout.SOUTH, addPresetButton_, 173,
-				SpringLayout.NORTH, getContentPane());
-		springLayout_.putConstraint(SpringLayout.NORTH, addPresetButton_, 155,
 				SpringLayout.NORTH, getContentPane());
 
 		final JButton removePresetButton_ = new JButton();
@@ -1548,21 +1517,46 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 			}
 		});
 		removePresetButton_.setToolTipText("Remove currently selected preset");
-		if (System.getProperty("os.name").indexOf("Mac OS X") != -1)
-			removePresetButton_.setIcon(SwingResourceManager.getIcon(
-					MMStudioMainFrame.class,
-					"/org/micromanager/icons/minus.png"));
-		else
-			removePresetButton_.setText("-");
+		removePresetButton_.setIcon(SwingResourceManager.getIcon(
+				MMStudioMainFrame.class,
+				"/org/micromanager/icons/minus.png"));
+
 		getContentPane().add(removePresetButton_);
 		springLayout_.putConstraint(SpringLayout.EAST, removePresetButton_,
-				-72, SpringLayout.EAST, getContentPane());
+				-3, SpringLayout.WEST, editPreset_);
 		springLayout_.putConstraint(SpringLayout.WEST, removePresetButton_,
-				-114, SpringLayout.EAST, getContentPane());
+				-42, SpringLayout.EAST, removePresetButton_);
 		springLayout_.putConstraint(SpringLayout.SOUTH, removePresetButton_,
 				173, SpringLayout.NORTH, getContentPane());
 		springLayout_.putConstraint(SpringLayout.NORTH, removePresetButton_,
 				155, SpringLayout.NORTH, getContentPane());
+		
+		final JButton addPresetButton_ = new JButton();
+		addPresetButton_.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				if (configPad_.addPreset()) {
+					configChanged_ = true;
+					updateGUI(true);
+					setConfigSaveButtonStatus(configChanged_);
+				}
+			}
+		});
+		addPresetButton_.setToolTipText("Add preset");
+		addPresetButton_.setIcon(SwingResourceManager
+				.getIcon(MMStudioMainFrame.class,
+						"/org/micromanager/icons/plus.png"));
+
+		getContentPane().add(addPresetButton_);
+		springLayout_.putConstraint(SpringLayout.EAST, addPresetButton_, -3,
+				SpringLayout.WEST, removePresetButton_);
+		springLayout_.putConstraint(SpringLayout.WEST, addPresetButton_, -42,
+				SpringLayout.EAST, addPresetButton_);
+		springLayout_.putConstraint(SpringLayout.SOUTH, addPresetButton_, 173,
+				SpringLayout.NORTH, getContentPane());
+		springLayout_.putConstraint(SpringLayout.NORTH, addPresetButton_, 155,
+				SpringLayout.NORTH, getContentPane());
+
+
 
 		saveConfigButton_ = new JButton();
 		saveConfigButton_.addActionListener(new ActionListener() {

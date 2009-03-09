@@ -233,11 +233,11 @@ public class ContrastPanel extends JPanel implements ImageController {
 				SpringLayout.EAST, stretchCheckBox_);
 		springLayout.putConstraint(SpringLayout.EAST, stretchCheckBox_, -5,
 				SpringLayout.WEST, histogramPanel_);
-		springLayout.putConstraint(SpringLayout.WEST, stretchCheckBox_, 5,
+		springLayout.putConstraint(SpringLayout.WEST, stretchCheckBox_, 1,
 				SpringLayout.WEST, this);
-		springLayout.putConstraint(SpringLayout.SOUTH, stretchCheckBox_, 145,
+		springLayout.putConstraint(SpringLayout.SOUTH, stretchCheckBox_, 147,
 				SpringLayout.NORTH, this);
-		springLayout.putConstraint(SpringLayout.NORTH, stretchCheckBox_, 120,
+		springLayout.putConstraint(SpringLayout.NORTH, stretchCheckBox_, 122,
 				SpringLayout.NORTH, this);
 
 		modeComboBox_ = new JComboBox();
@@ -280,7 +280,7 @@ public class ContrastPanel extends JPanel implements ImageController {
 				SpringLayout.NORTH, minField_);
 		springLayout.putConstraint(SpringLayout.EAST, logHistCheckBox_, 74,
 				SpringLayout.WEST, this);
-		springLayout.putConstraint(SpringLayout.WEST, logHistCheckBox_, 3,
+		springLayout.putConstraint(SpringLayout.WEST, logHistCheckBox_, 1,
 				SpringLayout.WEST, this);
 		//
 	}
