@@ -143,6 +143,7 @@ CPCOCam::CPCOCam() :
    m_pCamera = NULL;
    m_nTimesLen = MMSENSICAM_MAX_STRLEN;
    m_pCamera = new CCamera();
+   m_bDemoMode = FALSE;
 
    InitializeDefaultErrorMessages();
    sthd_ = new SequenceThread(this);
@@ -211,6 +212,8 @@ int CPCOCam::OnBinning(MM::PropertyBase* pProp, MM::ActionType eAct)
   int nMode;
   int nErr;
 
+  if(m_bDemoMode)
+    return DEVICE_OK;
   nErr = 0;
   if (eAct == MM::AfterSet)
   {
@@ -265,6 +268,13 @@ int CPCOCam::SetupCamera()
   unsigned int uiMode;
   int nErr;
 
+  if(m_bDemoMode)
+  {
+    nErr = ResizeImageBuffer();
+    if (nErr != 0)
+      return nErr;
+    return DEVICE_OK;
+  }
   nErr = m_pCamera->StopCam();
   if (nErr != 0)
     return nErr;
@@ -363,9 +373,22 @@ int CPCOCam::Initialize()
    if(nErr != PCO_NOERROR)
      nErr = m_pCamera->PreInitPcCam(0, 0, 0);
    if (nErr != 0)
-      return nErr;
+   {
+     if(::MessageBox(::GetForegroundWindow(), "No camera found! Switch to demo?", "pco generic device adapter", MB_YESNO) == IDYES)
+     {
+       m_pCamera->SetDemoMode(TRUE, 1280, 1024, FALSE, FALSE,
+                          12, 0);
+       nErr = m_pCamera->PreInitSen(0, 0, 0);
+       sprintf_s(m_pCamera->szCamName, 20, "SensiCam demo");
 
-   nErr = m_pCamera->Init(FALSE);
+       m_bDemoMode = TRUE;
+     }
+     if (nErr != 0)
+       return nErr;
+   }
+
+   if(!m_bDemoMode)
+     nErr = m_pCamera->Init(FALSE);
    if (nErr != 0)
       return nErr;
 
@@ -379,6 +402,8 @@ int CPCOCam::Initialize()
    m_nTimesLen = MMSENSICAM_MAX_STRLEN;
    m_dExposure = 10;
    m_nCameraType = m_pCamera->GetCamType();
+   if(m_bDemoMode)
+     m_nCameraType = 7;
 
    if(m_pCamera->iCamClass == 3)
    {
@@ -509,6 +534,11 @@ int CPCOCam::Initialize()
 
    m_nRoiXMin = m_nRoiYMin = 1;
    m_pCamera->GetMaximumROI(&m_nRoiXMax, &m_nRoiYMax);
+   if(m_bDemoMode)
+   {
+     m_nRoiXMax = 1280;
+     m_nRoiYMax = 1024;
+   }
 
    // establish full frame limits
    roiXMaxFull_ = m_nRoiXMax;
@@ -575,7 +605,8 @@ int CPCOCam::Shutdown()
 
   if(m_pCamera != NULL)
   {
-    m_pCamera->StopCam();
+    if(!m_bDemoMode)
+      m_pCamera->StopCam();
     m_pCamera->CloseCam();
     delete(m_pCamera);
     m_pCamera = NULL;
@@ -596,6 +627,8 @@ int CPCOCam::SnapImage()
 //  struct cam_values val;
   int nErr;
 
+  if(m_bDemoMode)
+    return DEVICE_OK;
   m_pCamera->ResetEvWait();
   nErr = m_pCamera->WaitForImage();
 
@@ -739,6 +772,8 @@ int CPCOCam::SetROI(unsigned uX, unsigned uY, unsigned uXSize, unsigned uYSize)
 
   if(m_pCamera->iCamClass == 2)
     return DEVICE_OK;
+  if(m_bDemoMode)
+    return DEVICE_OK;
 
   nErr = m_pCamera->getsettings(&m_nMode, &m_nTrig, &m_nRoiXMin, &m_nRoiXMax, &m_nRoiYMin, &m_nRoiYMax,
 		&m_nHBin, &m_nVBin, m_pszTimes, &m_iGain, &m_iOffset, &m_uiFlags);
@@ -773,7 +808,13 @@ int CPCOCam::SetROI(unsigned uX, unsigned uY, unsigned uXSize, unsigned uYSize)
 int CPCOCam::GetROI(unsigned& uX, unsigned& uY, unsigned& uXSize, unsigned& uYSize)
 {
   int nErr;
-     
+  if(m_bDemoMode)
+  {
+    uXSize = uX = 1280;
+    uYSize = uY = 1024;
+
+    return DEVICE_OK;
+  }  
   nErr = m_pCamera->getsettings(&m_nMode, &m_nTrig, &m_nRoiXMin, &m_nRoiXMax, &m_nRoiYMin, &m_nRoiYMax,
 	&m_nHBin, &m_nVBin, m_pszTimes, &m_iGain, &m_iOffset, &m_uiFlags);
 
@@ -802,6 +843,9 @@ int CPCOCam::ClearROI()
 {
    int nErr;
    
+  if(m_bDemoMode)
+    return DEVICE_OK;
+
    m_nRoiXMin = 1;
    m_nRoiYMin = 1;
    m_nRoiXMax = roiXMaxFull_;
@@ -841,16 +885,23 @@ int CPCOCam::ResizeImageBuffer()
   int as;
 
 	int nErr;
-  
-  nErr = m_pCamera->getccdsize(&as, &nWidth, &nHeight);
-  nWidth = m_pCamera->GetXRes();
-  nHeight = m_pCamera->GetYRes();
-	if (nErr != 0)
-	{
-//    CLOSEBOARD(&m_hCamera);
-		return nErr;
-	}
-  m_pCamera->ReloadSize();
+  if(m_bDemoMode)
+  {
+    nWidth = 1280;
+    nHeight = 1024;
+  }
+  else
+  {
+    nErr = m_pCamera->getccdsize(&as, &nWidth, &nHeight);
+    nWidth = m_pCamera->GetXRes();
+    nHeight = m_pCamera->GetYRes();
+	  if (nErr != 0)
+	  {
+  //    CLOSEBOARD(&m_hCamera);
+		  return nErr;
+	  }
+    m_pCamera->ReloadSize();
+  }
 
 	if(!(pixelDepth_ == 1 || pixelDepth_ == 2 || pixelDepth_ == 4))
     return -1;

@@ -164,6 +164,7 @@ private:
    CCamera *m_pCamera;
    int m_bufnr;
    WORD *m_pic;
+   bool m_bDemoMode;
 
    double m_dExposure; 
    bool m_bBusy;
