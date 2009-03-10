@@ -29,6 +29,13 @@ Name: desktopicon; Description: {cm:CreateDesktopIcon}; GroupDescription: {cm:Ad
 
 [Files]
 ; device libraries
+Source: micro-manager\redist\x86\Microsoft.VC90.CRT\msvcm90.dll ; DestDir: {app}; Flags: ignoreversion
+Source: micro-manager\redist\x86\Microsoft.VC90.CRT\msvcp90.dll ; DestDir: {app}; Flags: ignoreversion
+Source: micro-manager\redist\x86\Microsoft.VC90.CRT\msvcr90.dll ; DestDir: {app}; Flags: ignoreversion
+Source: micro-manager\redist\x86\Microsoft.VC90.MFC\mfc90.dll ; DestDir: {app}; Flags: ignoreversion
+Source: micro-manager\redist\x86\Microsoft.VC90.MFC\mfc90u.dll ; DestDir: {app}; Flags: ignoreversion
+Source: micro-manager\redist\x86\Microsoft.VC90.MFC\mfcm90.dll ; DestDir: {app}; Flags: ignoreversion
+Source: micro-manager\redist\x86\Microsoft.VC90.MFC\mfcm90u.dll ; DestDir: {app}; Flags: ignoreversion
 Source: micro-manager\ace.dll; DestDir: {app}; Flags: ignoreversion
 Source: micro-manager\ATMCD32D.dll; DestDir: {app}; Flags: ignoreversion
 Source: micro-manager\inpout32.dll; DestDir: {app}; Flags: ignoreversion
@@ -96,6 +103,7 @@ Source: micro-manager\scripts\ManualAcq.bsh; DestDir: {app}\scripts; Flags: only
 ; configuration files
 Source: micro-manager\MMConfig_demo.cfg; DestDir: {app}; Flags: ignoreversion
 Source: micro-manager\MMConfig_demoRGB.cfg; DestDir: {app}; Flags: ignoreversion
+Source: micro-manager\MMConfig_StanfordPhotonics.cfg; DestDir: {app}; Flags: ignoreversion
 Source: micro-manager\MMDeviceList.txt; DestDir: {app}; Flags: ignoreversion
 Source: micro-manager\MMStartup.bsh; DestDir: {app}; Flags: onlyifdoesntexist
 
