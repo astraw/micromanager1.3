@@ -26,6 +26,15 @@
 //
 package org.micromanager.utils;
 
+import ij.ImagePlus;
+import ij.WindowManager;
+import ij.io.FileSaver;
+import ij.measure.Calibration;
+import ij.process.ByteProcessor;
+import ij.process.ColorProcessor;
+import ij.process.ImageProcessor;
+import ij.process.ShortProcessor;
+
 import java.awt.Color;
 import java.awt.Panel;
 import java.awt.Point;
@@ -34,32 +43,20 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.awt.event.WindowListener;
 import java.awt.image.ColorModel;
 import java.util.concurrent.locks.Lock;
 import java.util.prefs.Preferences;
 
 import javax.swing.AbstractButton;
 import javax.swing.JButton;
-import javax.swing.JOptionPane;
+
+import mmcorej.CMMCore;
 
 import org.micromanager.MMStudioMainFrame;
 import org.micromanager.image5d.Image5D;
 import org.micromanager.image5d.Image5DWindow;
 
 import com.swtdesigner.SwingResourceManager;
-
-import ij.ImagePlus;
-import ij.ImageStack;
-import ij.WindowManager;
-import ij.gui.ImageWindow;
-import ij.io.FileSaver;
-import ij.measure.Calibration;
-import ij.process.ByteProcessor;
-import ij.process.ColorProcessor;
-import ij.process.ImageProcessor;
-import ij.process.ShortProcessor;
-import mmcorej.CMMCore;
 
 /**
  * ImageJ compatible image window. Derived from the original ImageJ class.

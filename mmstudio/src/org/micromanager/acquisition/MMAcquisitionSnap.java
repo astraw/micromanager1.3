@@ -21,14 +21,9 @@
 
 package org.micromanager.acquisition;
 
-import ij.ImagePlus;
-import ij.ImageStack;
-import ij.process.ImageProcessor;
-
 import mmcorej.CMMCore;
 
 import org.micromanager.MMStudioMainFrame;
-import org.micromanager.acquisition.MMAcquisition;
 import org.micromanager.image5d.Image5D;
 import org.micromanager.image5d.Image5DWindow;
 import org.micromanager.image5d.Image5DWindowSnap;

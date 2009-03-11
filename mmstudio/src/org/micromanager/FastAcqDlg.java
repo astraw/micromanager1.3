@@ -48,11 +48,11 @@ import javax.swing.border.LineBorder;
 import mmcorej.CMMCore;
 import mmcorej.MMCoreJ;
 
+import org.micromanager.api.DeviceControlGUI;
 import org.micromanager.fastacq.DiskStreamingThread;
 import org.micromanager.fastacq.DisplayTimerTask;
 import org.micromanager.fastacq.GUIStatus;
 import org.micromanager.fastacq.StatusTimerTask;
-import org.micromanager.api.DeviceControlGUI;
 import org.micromanager.utils.GUIColors;
 import org.micromanager.utils.MMLogger;
 import org.micromanager.utils.MemoryUtils;

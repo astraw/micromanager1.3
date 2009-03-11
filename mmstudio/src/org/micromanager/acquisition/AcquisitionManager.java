@@ -3,8 +3,6 @@ package org.micromanager.acquisition;
 import java.util.Enumeration;
 import java.util.Hashtable;
 
-import mmcorej.CMMCore;
-
 import org.micromanager.MMStudioMainFrame;
 import org.micromanager.utils.MMScriptException;
 

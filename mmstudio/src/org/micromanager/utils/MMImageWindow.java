@@ -23,30 +23,7 @@
 //
 package org.micromanager.utils;
 
-import java.awt.Color;
-import java.awt.Panel;
-import java.awt.Point;
-import java.awt.Rectangle;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
-import java.awt.event.WindowListener;
-import java.awt.image.ColorModel;
-import java.util.concurrent.locks.Lock;
-import java.util.logging.Level;
-import java.util.prefs.Preferences;
-
-import javax.swing.AbstractButton;
-import javax.swing.JButton;
-import javax.swing.JOptionPane;
-
-import org.micromanager.MMStudioMainFrame;
-
-import com.swtdesigner.SwingResourceManager;
-
 import ij.ImagePlus;
-import ij.WindowManager;
 import ij.gui.ImageCanvas;
 import ij.gui.ImageWindow;
 import ij.io.FileSaver;
@@ -55,7 +32,28 @@ import ij.process.ByteProcessor;
 import ij.process.ColorProcessor;
 import ij.process.ImageProcessor;
 import ij.process.ShortProcessor;
+
+import java.awt.Color;
+import java.awt.Panel;
+import java.awt.Point;
+import java.awt.Rectangle;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.awt.image.ColorModel;
+import java.util.concurrent.locks.Lock;
+import java.util.logging.Level;
+import java.util.prefs.Preferences;
+
+import javax.swing.AbstractButton;
+import javax.swing.JButton;
+
 import mmcorej.CMMCore;
+
+import org.micromanager.MMStudioMainFrame;
+
+import com.swtdesigner.SwingResourceManager;
 
 /**
  * ImageJ compatible image window. Derived from the original ImageJ class.

@@ -39,6 +39,7 @@ import javax.swing.JTextArea;
 import javax.swing.WindowConstants;
 import javax.swing.border.BevelBorder;
 import javax.swing.border.LineBorder;
+
 import com.swtdesigner.SwingResourceManager;
 
 /**

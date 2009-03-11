@@ -47,7 +47,6 @@ import javax.swing.BoxLayout;
 import javax.swing.InputMap;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
-import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -75,7 +74,6 @@ import mmcorej.CMMCore;
 
 import org.jeditsyntax.JEditTextArea;
 import org.jeditsyntax.JavaTokenMarker;
-import org.micromanager.api.AcquisitionEngine;
 import org.micromanager.api.ScriptInterface;
 import org.micromanager.api.ScriptingEngine;
 import org.micromanager.api.ScriptingGUI;

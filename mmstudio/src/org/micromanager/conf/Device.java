@@ -28,10 +28,10 @@ import java.util.ArrayList;
 import java.util.Hashtable;
 
 import mmcorej.CMMCore;
+import mmcorej.DeviceType;
 import mmcorej.LongVector;
 import mmcorej.MMCoreJ;
 import mmcorej.StrVector;
-import mmcorej.DeviceType;
 
 /**
  * Data structure describing a general MM device.

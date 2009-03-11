@@ -30,7 +30,6 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-
 import java.util.prefs.Preferences;
 
 import javax.swing.JButton;
@@ -45,12 +44,9 @@ import mmcorej.CMMCore;
 import mmcorej.Configuration;
 
 import org.micromanager.api.DeviceControlGUI;
-import org.micromanager.utils.GUIColors;
-import org.micromanager.utils.MMDialog;
 import org.micromanager.utils.Calibration;
 import org.micromanager.utils.CalibrationList;
-
-import com.swtdesigner.SwingResourceManager;
+import org.micromanager.utils.MMDialog;
 
 public class CalibrationListDlg extends MMDialog {
    private static final long serialVersionUID = 1L;

@@ -19,15 +19,18 @@
 
 package org.micromanager.navigation;
 
-import ij.ImagePlus;
 import ij.WindowManager;
+import ij.gui.ImageCanvas;
 import ij.gui.ImageWindow;
+
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+
 import javax.swing.JOptionPane;
-import mmcorej.MMCoreJ;
-import ij.gui.*;
+
 import mmcorej.CMMCore;
+import mmcorej.MMCoreJ;
+
 import org.micromanager.utils.MMLogger;
 
 /**

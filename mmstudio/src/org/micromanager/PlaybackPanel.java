@@ -34,7 +34,9 @@ import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JTextField;
 import javax.swing.JToggleButton;
+
 import org.micromanager.image5d.Image5DWindow;
+
 import com.swtdesigner.SwingResourceManager;
 
 /**

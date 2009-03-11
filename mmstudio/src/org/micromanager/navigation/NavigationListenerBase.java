@@ -3,12 +3,10 @@
  */
 package org.micromanager.navigation;
 
-import ij.ImagePlus;
-import ij.WindowManager;
-import ij.gui.ImageCanvas;
 import ij.gui.ImageWindow;
-import ij.gui.Toolbar;
+
 import javax.swing.JOptionPane;
+
 import mmcorej.CMMCore;
 import mmcorej.MMCoreJ;
 

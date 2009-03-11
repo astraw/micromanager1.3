@@ -27,8 +27,8 @@ package org.micromanager.conf;
 import java.util.ArrayList;
 import java.util.prefs.Preferences;
 
-import javax.swing.JScrollPane;
 import javax.swing.JOptionPane;
+import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
 import javax.swing.table.TableColumn;

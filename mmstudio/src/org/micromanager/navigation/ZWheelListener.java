@@ -21,12 +21,15 @@
 
 package org.micromanager.navigation;
 
-import ij.*;
-import ij.gui.*;
+import ij.WindowManager;
+import ij.gui.ImageCanvas;
+import ij.gui.ImageWindow;
+
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
 
 import javax.swing.JOptionPane;
+
 import mmcorej.CMMCore;
 
 /**

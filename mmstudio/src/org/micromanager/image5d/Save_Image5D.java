@@ -5,14 +5,22 @@ package org.micromanager.image5d;
  * Severely copied from ij.io.FileSaver. FileSaver is not used or inherited, because 
  * detailed changes to the dialog and behaviour are planned. */
 
-import java.io.*;
-import java.awt.image.*;
-
-
-import ij.*;
-import ij.io.*;
+import ij.IJ;
+import ij.ImagePlus;
+import ij.WindowManager;
+import ij.io.FileInfo;
+import ij.io.FileSaver;
+import ij.io.SaveDialog;
+import ij.io.TiffEncoder;
 import ij.measure.Calibration;
 import ij.plugin.PlugIn;
+
+import java.awt.image.ColorModel;
+import java.io.BufferedOutputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
 
 public class Save_Image5D implements PlugIn {
     

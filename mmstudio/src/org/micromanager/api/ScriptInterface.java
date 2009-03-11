@@ -26,11 +26,11 @@ package org.micromanager.api;
 import java.awt.Color;
 import java.awt.geom.Point2D;
 
+import mmcorej.CMMCore;
+
 import org.micromanager.metadata.WellAcquisitionData;
 import org.micromanager.navigation.PositionList;
 import org.micromanager.utils.MMScriptException;
-
-import mmcorej.CMMCore;
 /**
  * Interface to execute commands in the main panel.
  * All functions throw MMScriptException (TBD)

@@ -1,7 +1,7 @@
 package org.json;
 
-import java.util.Iterator;
 import java.io.StringWriter;
+import java.util.Iterator;
 
 /**
  * Test class. This file is not formally a member of the org.json library.

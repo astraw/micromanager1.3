@@ -1,17 +1,32 @@
 package org.micromanager.image5d;
 
-import java.awt.*;
-import java.awt.image.*;
-import java.lang.reflect.Array;
-
-
-import ij.*;
-import ij.gui.*;
-import ij.io.*;
+import ij.IJ;
+import ij.ImageJ;
+import ij.ImagePlus;
+import ij.ImageStack;
+import ij.WindowManager;
+import ij.gui.ImageWindow;
+import ij.gui.Roi;
+import ij.io.FileInfo;
 import ij.macro.Interpreter;
-import ij.measure.*;
-import ij.process.*;
-import ij.plugin.filter.*;
+import ij.measure.Calibration;
+import ij.plugin.filter.PlugInFilter;
+import ij.process.ByteProcessor;
+import ij.process.ColorProcessor;
+import ij.process.FloatProcessor;
+import ij.process.ImageProcessor;
+import ij.process.ShortProcessor;
+
+import java.awt.Color;
+import java.awt.Image;
+import java.awt.Rectangle;
+import java.awt.Toolkit;
+import java.awt.image.ColorModel;
+import java.awt.image.DirectColorModel;
+import java.awt.image.IndexColorModel;
+import java.awt.image.MemoryImageSource;
+import java.awt.image.PixelGrabber;
+import java.lang.reflect.Array;
 
 /*
  * Created on 26.03.2005

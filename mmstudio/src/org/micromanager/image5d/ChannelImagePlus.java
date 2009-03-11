@@ -1,13 +1,13 @@
 package org.micromanager.image5d;
 
-import java.awt.Rectangle;
-
 import ij.IJ;
 import ij.ImagePlus;
 import ij.gui.PlotWindow;
 import ij.gui.Roi;
 import ij.measure.Calibration;
 import ij.process.ImageProcessor;
+
+import java.awt.Rectangle;
 
 public class ChannelImagePlus extends ImagePlus {
 

@@ -1,8 +1,12 @@
 package org.micromanager.image5d;
 
-import java.awt.*;
+import ij.gui.ImageLayout;
 
-import ij.gui.*;
+import java.awt.Component;
+import java.awt.Container;
+import java.awt.Dimension;
+import java.awt.Insets;
+import java.awt.LayoutManager2;
 
 /** Extended ImageLayout: compatible with two scrollbars for z and t below the image
  * and a channelControl panel to the right of the image. 

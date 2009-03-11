@@ -22,8 +22,6 @@
 
 package org.micromanager.image5d;
 
-import ij.ImagePlus;
-
 import java.awt.Scrollbar;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -32,9 +30,6 @@ import javax.swing.JButton;
 
 import org.micromanager.PlaybackPanel;
 import org.micromanager.acquisition.MMAcquisitionSnap;
-import org.micromanager.image5d.Image5DWindow;
-import org.micromanager.image5d.Image5D;
-import org.micromanager.utils.MMScriptException;
 
 import com.swtdesigner.SwingResourceManager;
 

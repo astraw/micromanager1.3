@@ -31,9 +31,9 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.prefs.Preferences;
-import java.text.NumberFormat;
 
 import javax.swing.AbstractCellEditor;
 import javax.swing.JButton;

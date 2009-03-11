@@ -24,6 +24,7 @@
 package org.micromanager.metadata;
 
 import java.text.DecimalFormat;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 

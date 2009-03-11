@@ -26,12 +26,12 @@ package org.micromanager.conf;
 
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.util.Vector;
 import java.util.prefs.Preferences;
-import java.awt.event.KeyEvent;
 
 import javax.swing.InputMap;
 import javax.swing.JCheckBox;

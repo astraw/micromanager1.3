@@ -42,6 +42,7 @@ import javax.swing.JTextField;
 import javax.swing.border.LineBorder;
 
 import org.micromanager.utils.CfgFileFilter;
+
 import com.swtdesigner.SwingResourceManager;
 
 /**

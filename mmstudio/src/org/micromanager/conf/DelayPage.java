@@ -25,6 +25,7 @@ package org.micromanager.conf;
 
 import java.util.ArrayList;
 import java.util.prefs.Preferences;
+
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.table.AbstractTableModel;

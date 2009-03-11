@@ -6,13 +6,17 @@ package org.micromanager.image5d;
 
 //import i5d.Image5D;
 //import i5d.gui.ChannelControl;
+import ij.IJ;
+import ij.ImagePlus;
+import ij.WindowManager;
+import ij.gui.GenericDialog;
+import ij.plugin.PlugIn;
+import ij.plugin.ZProjector;
+import ij.process.ColorProcessor;
+import ij.process.TypeConverter;
+
 import org.micromanager.metadata.AcquisitionData;
 import org.micromanager.metadata.MMAcqDataException;
-
-import ij.*;
-import ij.gui.*;
-import ij.plugin.*;
-import ij.process.*;
 
 public class Z_Project implements PlugIn {
 

@@ -57,9 +57,9 @@ import org.micromanager.image5d.Image5DWindow;
 import org.micromanager.metadata.AcquisitionData;
 import org.micromanager.metadata.ImagePropertyKeys;
 import org.micromanager.metadata.MMAcqDataException;
+import org.micromanager.utils.Annotator;
 import org.micromanager.utils.GUIColors;
 import org.micromanager.utils.MMDialog;
-import org.micromanager.utils.Annotator;
 
 import com.swtdesigner.SwingResourceManager;
 

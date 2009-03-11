@@ -22,10 +22,20 @@
 // CVS:          $Id$
 //
 package org.micromanager.graph;
-import java.awt.*;
-import javax.swing.*;
-import java.awt.geom.*;
-import java.text.*;
+import java.awt.BasicStroke;
+import java.awt.Color;
+import java.awt.Font;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.Paint;
+import java.awt.Rectangle;
+import java.awt.Stroke;
+import java.awt.geom.GeneralPath;
+import java.awt.geom.Line2D;
+import java.awt.geom.Point2D;
+import java.text.DecimalFormat;
+
+import javax.swing.JPanel;
 
 /**
  * XY graph view. 

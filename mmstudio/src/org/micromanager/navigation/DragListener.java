@@ -21,12 +21,19 @@
 
 package org.micromanager.navigation;
 
-import ij.*;
-import ij.gui.*;
-import java.awt.*;
-import java.awt.event.*;
+import ij.ImagePlus;
+import ij.WindowManager;
+import ij.gui.ImageCanvas;
+import ij.gui.ImageWindow;
+import ij.gui.Toolbar;
+
+import java.awt.Event;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
 
 import javax.swing.JOptionPane;
+
 import mmcorej.CMMCore;
 import mmcorej.MMCoreJ;
 

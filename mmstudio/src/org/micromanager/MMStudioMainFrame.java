@@ -32,9 +32,6 @@ import ij.gui.ImageCanvas;
 import ij.gui.ImageWindow;
 import ij.gui.Line;
 import ij.gui.Roi;
-import ij.measure.Calibration;
-import ij.process.ByteProcessor;
-import ij.process.ColorProcessor;
 import ij.process.ImageProcessor;
 import ij.process.ImageStatistics;
 import ij.process.ShortProcessor;
@@ -43,7 +40,6 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Insets;
-import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -51,7 +47,6 @@ import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.awt.event.WindowListener;
 import java.awt.geom.Point2D;
 import java.awt.image.ColorModel;
 import java.io.File;
@@ -85,8 +80,6 @@ import mmcorej.DeviceType;
 import mmcorej.MMCoreJ;
 import mmcorej.MMEventCallback;
 import mmcorej.Metadata;
-import mmcorej.MetadataSingleTag;
-import mmcorej.MetadataTag;
 import mmcorej.StrVector;
 
 import org.micromanager.acquisition.AcquisitionManager;
@@ -125,8 +118,8 @@ import org.micromanager.metadata.SummaryKeys;
 import org.micromanager.metadata.WellAcquisitionData;
 import org.micromanager.navigation.CenterAndDragListener;
 import org.micromanager.navigation.PositionList;
-import org.micromanager.navigation.ZWheelListener;
 import org.micromanager.navigation.XYZKeyListener;
+import org.micromanager.navigation.ZWheelListener;
 import org.micromanager.utils.CfgFileFilter;
 import org.micromanager.utils.ContrastSettings;
 import org.micromanager.utils.GUIColors;
@@ -135,7 +128,6 @@ import org.micromanager.utils.LargeMessageDlg;
 import org.micromanager.utils.MMImageWindow;
 import org.micromanager.utils.MMLogger;
 import org.micromanager.utils.MMScriptException;
-import org.micromanager.utils.MMSnapshotWindow;
 import org.micromanager.utils.ProgressBar;
 import org.micromanager.utils.TextUtils;
 import org.micromanager.utils.WaitDialog;
@@ -2609,14 +2601,16 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 						.getG_Keyword_Binning());
 				GUIUtils.setComboSelection(comboBinning_, binSize);
 
+				/*
 				long bitDepth = 8;
-				if (imageWin_ != null) {
+			    if (imageWin_ != null) {
 					long hsz = imageWin_.getRawHistogramSize();
 					bitDepth = (long) Math.log(hsz);
 				}
 
-				// bitDepth = core_.getImageBitDepth();
-				// !!! contrastPanel_.setPixelBitDepth((int) bitDepth, false);
+				bitDepth = core_.getImageBitDepth();
+				!!! contrastPanel_.setPixelBitDepth((int) bitDepth, false);
+				*/
 			}
 
 			if (!timer_.isRunning()) {

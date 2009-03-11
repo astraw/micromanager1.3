@@ -9,6 +9,7 @@ import ij.gui.StackWindow;
 import ij.macro.Interpreter;
 import ij.measure.Calibration;
 
+import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Insets;
 import java.awt.Scrollbar;
@@ -18,32 +19,21 @@ import java.awt.event.ActionListener;
 import java.awt.event.AdjustmentEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.awt.Color;
 import java.awt.image.ColorModel;
 import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.util.prefs.Preferences;
 
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.Timer;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-import org.micromanager.MMAcquisitionEngineMT;
 import org.micromanager.PlaybackPanel;
+import org.micromanager.api.AcquisitionEngine;
 import org.micromanager.metadata.AcquisitionData;
 import org.micromanager.metadata.DisplaySettings;
 import org.micromanager.metadata.ImageKey;
-import org.micromanager.metadata.ImagePropertyKeys;
-import org.micromanager.metadata.MetadataDlg;
 import org.micromanager.metadata.MMAcqDataException;
-import org.micromanager.metadata.SaveProgressCallback;
-
-import org.micromanager.metadata.SummaryKeys;
-import org.micromanager.api.AcquisitionEngine;
+import org.micromanager.metadata.MetadataDlg;
 import org.micromanager.utils.ChannelSpec;
 import org.micromanager.utils.ProgressBar;
 
