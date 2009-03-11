@@ -681,6 +681,11 @@ public class ScriptPanel extends MMFrame implements MouseListener, ScriptingGUI 
       if (scriptFile_ != null && !model_.HasScriptAlready(scriptFile_)) {
          addScriptToModel(scriptFile_);
       }
+      else if (scriptFile_ == null && ! scriptPaneSaved_) {
+         if (!promptToSave()) 
+            return;
+         addScriptToModel(scriptFile_);
+      }
       else
       {
          // check for changes and offer to save if needed
@@ -886,6 +891,7 @@ public class ScriptPanel extends MMFrame implements MouseListener, ScriptingGUI 
       scriptPaneSaved_ = true;
       scriptFile_ = null;
       this.setTitle("");
+      scriptPane_.requestFocusInWindow();
    }
 
    /*
