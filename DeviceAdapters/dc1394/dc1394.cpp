@@ -1515,6 +1515,59 @@ int Cdc1394::StartSequenceAcquisition(long numImages, double interval_ms)
    return DEVICE_OK;
 }
 
+int Cdc1394::StartSequenceAcquisition(double interval_ms)
+{
+   if (acquiring_)
+      return ERR_BUSY_ACQUIRING;
+
+   logMsg_.clear();
+   logMsg_ << "Starting continuous sequence acquisition: at " << interval_ms << " ms" << endl;
+   LogMessage(logMsg_.str().c_str());
+
+   imageCounter_ = 0;
+   sequenceLength_ = LONG_MAX;
+
+   double actualIntervalMs = max(GetExposure(), interval_ms);
+   acqThread_->SetInterval(actualIntervalMs);
+   SetProperty(MM::g_Keyword_ActualInterval_ms, CDeviceUtils::ConvertToString(actualIntervalMs));
+
+   ResizeImageBuffer();
+
+   int ret = GetCoreCallback()->PrepareForAcq(this);
+   if (ret != DEVICE_OK)
+      return ret;
+
+   GetBytesPerPixel();
+
+   acqThread_->SetLength(sequenceLength_);
+
+   // TODO: check trigger mode, etc..
+
+   // emtpy the buffer to ensure we'll get fresh images
+   dc1394video_frame_t *frame2;
+   bool endFound = false;
+   long nrFrames = 0;
+   while (!endFound) {
+      nrFrames++;
+      err = dc1394_capture_dequeue(camera,DC1394_CAPTURE_POLICY_POLL, &frame2);
+      if (frame2 && err==DC1394_SUCCESS)
+      {
+         dc1394_capture_enqueue(camera, frame2);
+      } else
+         endFound=true;
+   }
+
+
+   printf("%ld Frames discarded\n", nrFrames);
+   acquiring_ = true;
+   acqThread_->Start();
+
+
+   LogMessage("Acquisition thread started");
+
+   return DEVICE_OK;
+}
+
 /**
  * Stops acquisition
  */

@@ -112,6 +112,7 @@ public:
 
    // high-speed interface
    int StartSequenceAcquisition(long numImages, double interval_ms);
+   int StartSequenceAcquisition(double interval_ms);
    int StopSequenceAcquisition();
    int PushImage(dc1394video_frame_t *myframe);
 
