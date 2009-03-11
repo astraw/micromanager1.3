@@ -146,9 +146,20 @@ public class ScriptPanel extends MMFrame implements MouseListener, ScriptingGUI 
          }
       }
 
+      public Boolean HasScriptAlready(File f) {
+         Boolean preExisting = false;
+         for (File scriptFile:scriptFileArray_) {
+            if (scriptFile.getAbsolutePath().equals(f.getAbsolutePath()))
+                  preExisting=true;
+         }
+         return preExisting;
+      }
+      
       public void AddScript(File f) {
-         scriptFileArray_.add(f);
-         lastModArray_.add(f.lastModified());
+         if (false == HasScriptAlready(f)) {
+            scriptFileArray_.add(f);
+            lastModArray_.add(f.lastModified());
+         }
       }
 
       public void GetCell(File f, int[] cellAddress)
@@ -667,40 +678,50 @@ public class ScriptPanel extends MMFrame implements MouseListener, ScriptingGUI 
     * Lets the user select a script file to add to the shortcut table
     */
    private void addScript() {
-      // check for changes and offer to save if needed
-      if (!promptToSave()) 
-         return;
-
-      File curFile;
-
-      JFileChooser fc = new JFileChooser();
-      fc.addChoosableFileFilter(new ScriptFileFilter());
-
-      String scriptListDir = prefs_.get(SCRIPT_FILE, null);
-      if (scriptListDir != null) {
-         fc.setSelectedFile(new File(scriptListDir));
+      if (scriptFile_ != null && !model_.HasScriptAlready(scriptFile_)) {
+         addScriptToModel(scriptFile_);
       }
+      else
+      {
+         // check for changes and offer to save if needed
+         if (!promptToSave()) 
+            return;
 
-      // int retval = fc.showOpenDialog(this);
-      int retval = fc.showDialog(this, "New/Open");
-      if (retval == JFileChooser.APPROVE_OPTION) {
-         curFile = fc.getSelectedFile();
-         try {
-            scriptListDir = curFile.getParent();
-            prefs_.put(SCRIPT_DIRECTORY, scriptListDir);
-            prefs_.put(SCRIPT_FILE, curFile.getAbsolutePath());
-            // only creates a new file when a file with this name does not exist
-            curFile.createNewFile();
-         } catch (Exception e) {
-            handleException (e);
-         } finally {
-            model_.AddScript(curFile);
-            model_.fireTableDataChanged();
-            int[] cellAddress = new int[2];
-            model_.GetCell(curFile, cellAddress);
-            scriptTable_.changeSelection(cellAddress[0], cellAddress[1], false, false);
+         File curFile;
+
+         JFileChooser fc = new JFileChooser();
+         fc.addChoosableFileFilter(new ScriptFileFilter());
+
+         String scriptListDir = prefs_.get(SCRIPT_FILE, null);
+         if (scriptListDir != null) {
+            fc.setSelectedFile(new File(scriptListDir));
+         }
+
+         // int retval = fc.showOpenDialog(this);
+         int retval = fc.showDialog(this, "New/Open");
+         if (retval == JFileChooser.APPROVE_OPTION) {
+            curFile = fc.getSelectedFile();
+            try {
+               scriptListDir = curFile.getParent();
+               prefs_.put(SCRIPT_DIRECTORY, scriptListDir);
+               prefs_.put(SCRIPT_FILE, curFile.getAbsolutePath());
+               // only creates a new file when a file with this name does not exist
+               curFile.createNewFile();
+            } catch (Exception e) {
+               handleException (e);
+            } finally {
+               addScriptToModel(curFile);
+            }
          }
       }
+   }
+   
+   private void addScriptToModel(File curFile) {
+      model_.AddScript(curFile);
+      model_.fireTableDataChanged();
+      int[] cellAddress = new int[2];
+      model_.GetCell(curFile, cellAddress);
+      scriptTable_.changeSelection(cellAddress[0], cellAddress[1], false, false);
    }
 
    /**
@@ -716,6 +737,7 @@ public class ScriptPanel extends MMFrame implements MouseListener, ScriptingGUI 
       scriptPane_.setText("");
       scriptPaneSaved_ = true;
       this.setTitle("");
+      scriptFile_ = null;
    }
 
    /**
