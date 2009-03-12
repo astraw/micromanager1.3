@@ -93,6 +93,16 @@ public class PropertyCellEditor extends AbstractCellEditor implements TableCellE
 	         for (int i=0; i<il.length; i++) 
 	            combo_.removeItemListener(il[i]);
 	         combo_.removeAllItems();
+
+	         // When the user clicks the label and goes into editing mode,
+	         // the first item selected is #0. Because of a bug in JDK,
+	         // ActionListeners aren't thrown if #0 is selected (because the
+	         // selection hasn't changed). So we need to manual set the item
+	         // value beforehand, which will be overridden if a different item
+	         // is chosen.
+	         if (item_.value_.equals(""))
+	        	 item_.value_ = item_.allowedValues_[0];
+	         
 	         for (int i=0; i<item_.allowedValues_.length; i++){
 	            combo_.addItem(item_.allowedValues_[i]);
 	         }
@@ -101,14 +111,16 @@ public class PropertyCellEditor extends AbstractCellEditor implements TableCellE
 	         // end editing on selection change
 	         combo_.addActionListener(new ActionListener() {
 	            public void actionPerformed(ActionEvent e) {
-	               fireEditingStopped();
+		           fireEditingStopped();
+		           item_.value_ = combo_.getSelectedItem().toString();
+
 	            }
 	         });
 	         // end editing on selection change
 	         combo_.addItemListener(new ItemListener() {
 	            public void itemStateChanged(ItemEvent e) {
-	               fireEditingStopped();
-	               item_.value_ = combo_.getSelectedItem().toString();
+		               fireEditingStopped();
+		               item_.value_ = combo_.getSelectedItem().toString();
 	            }
 	         });
 	                    

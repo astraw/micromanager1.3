@@ -59,7 +59,7 @@ public class PropertyCellRenderer extends DefaultTableCellRenderer {
       } else if (colIndex == 1) {
          lab.setText((String) (value));
          lab.setHorizontalAlignment(JLabel.LEFT);
-      } else if (colIndex == 2){
+      } else if (colIndex == 2) {
          lab.setText((String) (value));
          lab.setHorizontalAlignment(JLabel.LEFT);
       } else {
