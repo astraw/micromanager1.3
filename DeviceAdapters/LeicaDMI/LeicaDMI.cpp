@@ -108,6 +108,7 @@ const char* g_LeicaFilterWheel = "FilterWheel";
 const char* g_LeicaTLPolarizer = "TLPolarizer";
 const char* g_LeicaDICTurret = "DIC Turret";
 const char* g_LeicaCondensorTurret = "Condensor";
+const char* g_LeicaTransmittedLight = "Transmitted Light";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -129,6 +130,7 @@ MODULE_API void InitializeModuleData()
    AddAvailableDeviceName(g_LeicaTLPolarizer, "Transmitted light Polarizer");
    AddAvailableDeviceName(g_LeicaDICTurret, "DIC Turret");
    AddAvailableDeviceName(g_LeicaCondensorTurret, "Condensor Turret");
+   AddAvailableDeviceName(g_LeicaTransmittedLight,"Transmitted Light");
 }
 using namespace std;
 
@@ -171,6 +173,8 @@ MODULE_API MM::Device* CreateDevice(const char* deviceName)
 	   return new DICTurret();
    else if (strcmp(deviceName, g_LeicaCondensorTurret) == 0)
 	   return new CondensorTurret();
+   else if (strcmp(deviceName, g_LeicaTransmittedLight) == 0)
+	   return new TransmittedLight();
 
    return 0;
 }
@@ -2315,4 +2319,170 @@ int CondensorTurret::OnState(MM::PropertyBase* pProp, MM::ActionType eAct)
          return ERR_INVALID_TURRET_POSITION;
    }
    return DEVICE_OK;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Transmitted Light
+///////////////////////////////////////////////////////////////////////////////
+TransmittedLight::TransmittedLight():   
+initialized_ (false),
+state_(0)
+{
+   InitializeDefaultErrorMessages();
+
+   SetErrorText(ERR_SCOPE_NOT_ACTIVE, "Leica Scope is not initialized.  It is needed for the Transmitted Light module to work");
+   SetErrorText(ERR_MODULE_NOT_FOUND, "This device is not installed in this Leica microscope");
+}
+
+TransmittedLight::~TransmittedLight ()
+{
+   Shutdown();
+}
+
+void TransmittedLight::GetName(char* name) const
+{
+   assert(name_.length() < CDeviceUtils::GetMaxStringLength());
+   CDeviceUtils::CopyLimitedString(name, name_.c_str());
+}
+
+int TransmittedLight::Initialize()
+{
+	if (!g_ScopeInterface.portInitialized_)
+      return ERR_SCOPE_NOT_ACTIVE;
+
+   int ret = DEVICE_OK;
+   if (!g_ScopeInterface.IsInitialized())
+      ret = g_ScopeInterface.Initialize(*this, *GetCoreCallback());
+   if (ret != DEVICE_OK)
+      return ret;
+   
+   // check if this shutter exists:
+   if (!g_ScopeModel.IsDeviceAvailable(g_Lamp))
+      return ERR_MODULE_NOT_FOUND;
+
+   // Name
+   ret = CreateProperty(MM::g_Keyword_Name, name_.c_str(), MM::String, true);
+   if (DEVICE_OK != ret)
+      return ret;
+
+   // Description
+   ret = CreateProperty(MM::g_Keyword_Description, description_.c_str(), MM::String, true);
+   if (DEVICE_OK != ret)
+      return ret;
+
+   // Check current state of shutter:
+   ret = GetOpen(state_);
+   if (DEVICE_OK != ret)
+      return ret;
+
+   // State
+   CPropertyAction* pAct = new CPropertyAction (this, &TransmittedLight::OnState);
+   if (state_)
+      ret = CreateProperty(MM::g_Keyword_State, "1", MM::Integer, false, pAct); 
+   else
+      ret = CreateProperty(MM::g_Keyword_State, "0", MM::Integer, false, pAct); 
+
+   if (ret != DEVICE_OK) 
+      return ret; 
+
+   AddAllowedValue(MM::g_Keyword_State, "0"); // Closed
+   AddAllowedValue(MM::g_Keyword_State, "1"); // Open
+
+   //Label
+
+   ret = UpdateStatus();
+   if (ret != DEVICE_OK) 
+      return ret; 
+
+   initialized_ = true;
+
+   return DEVICE_OK;
+}
+
+int TransmittedLight::Shutdown()
+{
+   if (initialized_)
+   {
+      initialized_ = false;
+   }
+   return DEVICE_OK;
+}
+
+bool TransmittedLight::Busy()
+{
+   bool busy;
+   int ret = g_ScopeModel.TransmittedLight_.GetBusy(busy);
+   if (ret != DEVICE_OK)  // This is bad and should not happen
+      return false;
+
+   return busy;
+}
+
+int TransmittedLight::OnState(MM::PropertyBase *pProp, MM::ActionType eAct)
+{
+   if (eAct == MM::BeforeGet)
+   {
+      // return pos as we know it
+      GetOpen(state_);
+      if (state_)
+         pProp->Set(1L);
+      else
+         pProp->Set(0L);
+   }
+   else if (eAct == MM::AfterSet)
+   {
+      long pos;
+      pProp->Get(pos);
+      if (pos==1)
+      {
+		 state_ = true;
+         return this->SetOpen(true);
+	
+      }
+      else
+      {
+		  state_ = false;
+         return this->SetOpen(false);
+      }
+   }
+	return DEVICE_OK;
+}
+
+int TransmittedLight::SetOpen(bool open)
+{
+   int position;
+   if (open)
+      position = 1;
+   else
+      position = 0;
+
+   int ret = g_ScopeInterface.SetTransmittedLightShutterPosition(*this, *GetCoreCallback(), position);
+   if (ret != DEVICE_OK)
+      return ret;
+
+   state_ = open;
+
+   return DEVICE_OK;
+}
+
+int TransmittedLight::GetOpen(bool &open)
+{
+
+   int position;
+   int ret = g_ScopeModel.TransmittedLight_.GetPosition(position);
+   if (ret != DEVICE_OK)
+      return ret;
+
+   if (position == 0)
+      open = false;
+   else if (position == 1)
+      open = true;
+   else
+      return ERR_UNEXPECTED_ANSWER;
+
+   return DEVICE_OK;
+}
+
+int TransmittedLight::Fire(double)
+{   return DEVICE_UNSUPPORTED_COMMAND;  
 }

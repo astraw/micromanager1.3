@@ -66,6 +66,8 @@ class LeicaScopeInterface
       int GetDICTurretInfo(MM::Device& device, MM::Core& core);
       int GetMagChangerInfo(MM::Device& device, MM::Core& core);
       int GetDriveParameters(MM::Device& device, MM::Core& core, int deviceID);
+	  int GetTransmittedLightState(MM::Device& device, MM::Core& core, int & position);
+	  int GetTransmittedLightShutterPosition(MM::Device& device, MM::Core& core, int & position);
      
       // commands to set individual components
       int SetMethod(MM::Device& device, MM::Core& core, int position);
@@ -85,6 +87,8 @@ class LeicaScopeInterface
       int SetTLPolarizerPosition(MM::Device& device, MM::Core& core, int position);
       int SetDICPrismTurretPosition(MM::Device& device, MM::Core& core, int position);
       int SetDICPrismFinePosition(MM::Device& device, MM::Core& core, int position);
+	  int SetTransmittedLightState(MM::Device& device, MM::Core& core, int position);
+	  int SetTransmittedLightShutterPosition(MM::Device& device, MM::Core& core, int position);
 
       LeicaMonitoringThread* monitoringThread_;
       LeicaDMIModel* scopeModel_;

@@ -396,4 +396,39 @@ private:
    std::string description_;
 };
 
+// The incident light a.k.a the flourecense lamp is being derived
+// from the shutter base. This is to make sure that for cases
+// where there is no bright field shutter the flouroscent lamp
+// can be switched off and on so that one can mix the bright-field
+// and flourecense imaging in the same acquisition protocol
+// -- Prashanth 26th Feb 2009
+
+class TransmittedLight: public CShutterBase<TransmittedLight>
+{
+public:
+	TransmittedLight();
+	~TransmittedLight();
+
+   int Initialize();
+   int Shutdown();
+
+   void GetName (char* pszName) const;
+   bool Busy();
+
+   // Shutter API
+   int SetOpen (bool open = true);
+   int GetOpen(bool& open);
+   int Fire(double deltaT);
+
+   // action interface
+   int OnState(MM::PropertyBase* pProp, MM::ActionType eAct);
+
+private:
+   bool initialized_;
+   std::string name_;
+   std::string description_;
+   bool state_;
+
+};
+
 #endif // _LeicaDMI_H_

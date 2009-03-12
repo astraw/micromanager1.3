@@ -264,6 +264,7 @@ public:
    LeicaDeviceModel method_;   
    LeicaDeviceModel TLShutter_;
    LeicaDeviceModel ILShutter_;
+   LeicaDeviceModel TransmittedLight_;
    LeicaILTurretModel ILTurret_;
    LeicaCondensorModel Condensor_;
    LeicaObjectiveTurretModel ObjectiveTurret_;

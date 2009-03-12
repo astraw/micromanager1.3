@@ -1534,7 +1534,73 @@ int LeicaScopeInterface::ClearPort(MM::Device& device, MM::Core& core)
    return DEVICE_OK;
 } 
 
+/*
+ * Sets and gets the incident light states
+ */
+int LeicaScopeInterface::SetTransmittedLightState(MM::Device& device, MM::Core& core, int position)
+{	if(position == 1 || position == 0)
+	{
+		int pos = 0;
+		// If you want the light on, get the values 
+		// from the scope model, else just enter 0
+		if(pos == 1)
+		{
+			scopeModel_->TransmittedLight_.GetPosition(pos);
+		}
+		int ret = SetTransmittedLightShutterPosition(device,core,pos);
+		if(ret != DEVICE_OK)
+			return ret;
+		return DEVICE_OK;		
+	}
+	return DEVICE_UNKNOWN_POSITION;
+}
 
+int LeicaScopeInterface::GetTransmittedLightState(MM::Device& device, MM::Core& core, int & position)
+{
+	int value = -1;
+	int ret = GetTransmittedLightShutterPosition(device,core,value);
+	if(ret == DEVICE_OK)
+	{
+		if(value == -1)
+		{
+			return DEVICE_ERR;
+		}
+		else
+		if(value == 0)
+		{
+			position = 0;
+		}
+		else
+		{
+			position = 1;
+		}
+	}
+	else 
+	{
+		return ret;
+	}
+	return DEVICE_OK;
+}
+
+int LeicaScopeInterface::SetTransmittedLightShutterPosition(MM::Device &device, MM::Core &core, int position)
+{
+	if(position > 255 || position < 0)
+	{
+		return DEVICE_UNKNOWN_POSITION;
+	}
+	std::stringstream os;
+	os<<g_Lamp<<"020"<<" "<<position;
+	int ret = core.SetSerialCommand(&device, port_.c_str(), os.str().c_str(), "\r");
+	if(ret != DEVICE_OK)
+		return ret;	
+	return DEVICE_OK;
+}
+
+int LeicaScopeInterface::GetTransmittedLightShutterPosition(MM::Device &device, MM::Core &core, int & position)
+{
+	position = scopeModel_->TransmittedLight_.GetPosition(position);
+	return DEVICE_OK;
+}
 /*
  * Thread that continuously monitors messages from the Leica scope and inserts them into a model of the microscope
  */
@@ -2016,6 +2082,14 @@ int LeicaMonitoringThread::svc()
                         scopeModel_->dicTurret_.SetBusy(false);
                         break;
                      }
+					 case (77) : // Transmission Lamp State, put other lamp stuff here too
+					 {
+						 int pos;
+						 os>>pos;
+						 scopeModel_->TransmittedLight_.SetPosition(pos);
+						 scopeModel_->TransmittedLight_.SetBusy(false);
+						 break;
+					 }
                      break;
                   }
               }
