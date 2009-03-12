@@ -85,34 +85,35 @@ public class PropertyCellEditor extends AbstractCellEditor implements TableCellE
             });
 
             return text_;
+         } else {    
+	         ActionListener[] l = combo_.getActionListeners();
+	         for (int i=0; i<l.length; i++) 
+	            combo_.removeActionListener(l[i]);
+	         ItemListener[] il = combo_.getItemListeners();
+	         for (int i=0; i<il.length; i++) 
+	            combo_.removeItemListener(il[i]);
+	         combo_.removeAllItems();
+	         for (int i=0; i<item_.allowedValues_.length; i++){
+	            combo_.addItem(item_.allowedValues_[i]);
+	         }
+	         combo_.setSelectedItem(item_.value_);
+	         
+	         // end editing on selection change
+	         combo_.addActionListener(new ActionListener() {
+	            public void actionPerformed(ActionEvent e) {
+	               fireEditingStopped();
+	            }
+	         });
+	         // end editing on selection change
+	         combo_.addItemListener(new ItemListener() {
+	            public void itemStateChanged(ItemEvent e) {
+	               fireEditingStopped();
+	               item_.value_ = combo_.getSelectedItem().toString();
+	            }
+	         });
+	                    
+	         return combo_;
          }
-      
-         ActionListener[] l = combo_.getActionListeners();
-         for (int i=0; i<l.length; i++) 
-            combo_.removeActionListener(l[i]);
-         ItemListener[] il = combo_.getItemListeners();
-         for (int i=0; i<il.length; i++) 
-            combo_.removeItemListener(il[i]);
-         combo_.removeAllItems();
-         for (int i=0; i<item_.allowedValues_.length; i++){
-            combo_.addItem(item_.allowedValues_[i]);
-         }
-         combo_.setSelectedItem(item_.value_);
-         
-         // end editing on selection change
-         combo_.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-               fireEditingStopped();
-            }
-         });
-         // end editing on selection change
-         combo_.addItemListener(new ItemListener() {
-            public void itemStateChanged(ItemEvent e) {
-               fireEditingStopped();
-            }
-         });
-                    
-         return combo_;
       }
       return null;
    }
