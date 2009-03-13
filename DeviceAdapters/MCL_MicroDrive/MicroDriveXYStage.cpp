@@ -308,6 +308,27 @@ int MicroDriveXYStage::GetLimits(double& /*xMin*/, double& /*xMax*/, double& /*y
 	return DEVICE_UNSUPPORTED_COMMAND;
 }
 
+int MicroDriveXYStage::GetLimitsUm(double&, double&, double&, double&)
+{
+	return DEVICE_UNSUPPORTED_COMMAND;
+}
+
+int MicroDriveXYStage::GetStepLimits(long&, long&, long&, long&)
+{
+	return DEVICE_UNSUPPORTED_COMMAND;
+}
+
+double MicroDriveXYStage::GetStepSizeXUm()
+{
+   return stepSize_mm_/1000.0;
+}
+
+double MicroDriveXYStage::GetStepSizeYUm()
+{
+   return stepSize_mm_/1000.0;
+}
+
+
 int MicroDriveXYStage::Calibrate()
 {
 	int err;

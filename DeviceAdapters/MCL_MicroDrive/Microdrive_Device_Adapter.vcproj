@@ -136,6 +136,7 @@
 				GenerateDebugInformation="false"
 				OptimizeReferences="0"
 				EnableCOMDATFolding="0"
+				LinkTimeCodeGeneration="0"
 				RandomizedBaseAddress="1"
 				DataExecutionPrevention="0"
 				TargetMachine="1"
@@ -160,6 +161,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
+				CommandLine="copy &quot;$(TargetPath)&quot; ..\..\bin"
 			/>
 		</Configuration>
 	</Configurations>

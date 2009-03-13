@@ -43,6 +43,11 @@ public:
    virtual int GetLimits(double& lower, double& upper);
    virtual int GetLimits(double& xMin, double& xMax, double& yMin, double& yMax);
 
+   int GetLimitsUm(double& xMin, double& xMax, double& yMin, double& yMax);
+   int GetStepLimits(long& xMin, long& xMax, long& yMin, long& yMax);
+   double GetStepSizeXUm();
+   double GetStepSizeYUm();
+
    // Action interface
    int OnPositionXmm(MM::PropertyBase* pProp, MM::ActionType eAct);
    int OnPositionYmm(MM::PropertyBase* pProp, MM::ActionType eAct);
