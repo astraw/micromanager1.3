@@ -46,6 +46,10 @@ public:
     virtual int Stop();
     virtual int SetOrigin();
     virtual int GetLimits(double& xMin, double& xMax, double& yMin, double& yMax);
+    int GetLimitsUm(double& xMin, double& xMax, double& yMin, double& yMax);
+    int GetStepLimits(long& xMin, long& xMax, long& yMin, long& yMax);
+    double GetStepSizeXUm();
+    double GetStepSizeYUm();
 	int getHandle(){  return MCLhandle_;}
 
 	// Action interface
@@ -65,7 +69,7 @@ private:
 	bool initialized_;
 	int MCLhandle_;
 	double stepSize_um_;
-	double xMin_;
+   double xMin_;
 	double xMax_;
 	double yMin_;
 	double yMax_;

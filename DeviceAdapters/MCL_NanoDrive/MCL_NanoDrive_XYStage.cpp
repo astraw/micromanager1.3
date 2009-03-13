@@ -536,6 +536,41 @@ int MCL_NanoDrive_XYStage::GetLimits(double& xMin, double& xMax, double& yMin, d
 	return DEVICE_OK;
 } 
 
+
+int MCL_NanoDrive_XYStage::GetLimitsUm(double& xMin, double& xMax, double& yMin, double& yMax)
+{
+
+	xMin = xMin_;
+	xMax = xMax_;
+	yMin = yMin_;
+	yMax = yMax_;
+
+	return DEVICE_OK;
+} 
+
+int MCL_NanoDrive_XYStage::GetStepLimits(long& xMin, long& xMax, long& yMin, long& yMax)
+{
+   xMin = (long) (xMin_ / stepSize_um_);
+   xMax = (long) (xMax_ / stepSize_um_);
+   yMin = (long) (yMin_ / stepSize_um_);
+   yMax = (long) (yMax_ / stepSize_um_);
+
+	return DEVICE_OK;
+}
+
+double MCL_NanoDrive_XYStage::GetStepSizeXUm()
+{
+   return stepSize_um_;
+}
+
+double MCL_NanoDrive_XYStage::GetStepSizeYUm()
+{
+   return stepSize_um_;
+}
+
+
+
+
 //////////////////////
 ///ActionHandlers
 //////////////////////
