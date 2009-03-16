@@ -1986,7 +1986,7 @@ int CHamamatsu::StartSequenceAcquisition(long numImages, double interval_ms, boo
 
    frameCount_ = 0;
    lastImage_ = 0;
-   long hamBufSize = 100;
+   long hamBufSize = 30;
 
    ostringstream os;
    os << "Started sequence acquisition: " << numImages << " at " << interval_ms << " ms" << endl;
