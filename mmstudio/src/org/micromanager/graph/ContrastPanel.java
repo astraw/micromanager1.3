@@ -244,7 +244,7 @@ public class ContrastPanel extends JPanel implements ImageController {
 		modeComboBox_.setFont(new Font("", Font.PLAIN, 10));
 		modeComboBox_.addActionListener(new ActionListener() {
 			public void actionPerformed(final ActionEvent e) {
-				setIntensityMode();
+				setIntensityMode(modeComboBox_.getSelectedIndex()-1);
 				update();
 			}
 		});
@@ -285,47 +285,40 @@ public class ContrastPanel extends JPanel implements ImageController {
 		//
 	}
 
-	// !!! this method is obsolete
-	/*
-	 * private void setPixelBitDepth(int depth, boolean forceDepth) { //
-	 * histogram for 32bits is not supported in this implementation if(depth >=
-	 * 32) depth = 8; numLevels_ = 1 << depth; maxIntensity_ = numLevels_ - 1;
-	 * binSize_ = (maxIntensity_ + 1)/ HIST_BINS;
-	 * 
-	 * // override histogram depth based on the selected mode if (!forceDepth &&
-	 * modeComboBox_.getSelectedIndex() > 0) {
-	 * setIntensityMode(modeComboBox_.getSelectedIndex()-1); }
-	 * 
-	 * if (forceDepth) { // update the mode display to camera-aouto
-	 * modeComboBox_.setSelectedIndex(0); } }
-	 */
-	private void setIntensityMode() {
-		int mode = modeComboBox_.getSelectedIndex();
+   private void setPixelBitDepth(int depth, boolean forceDepth) 
+   { 
+	   // histogram for 32bits is not supported in this implementation 
+      if(depth >= 32)
+	      depth = 8; 
+      numLevels_ = 1 << depth; 
+      maxIntensity_ = numLevels_ - 1;
+	   binSize_ = (maxIntensity_ + 1)/ HIST_BINS;
+	  
+	   // override histogram depth based on the selected mode 
+	   if (!forceDepth && modeComboBox_.getSelectedIndex() > 0) {
+         setIntensityMode(modeComboBox_.getSelectedIndex()-1); 
+      }
+	  
+	   if (forceDepth) { // update the mode display to camera-auto
+	       modeComboBox_.setSelectedIndex(0); 
+       } 
+   }
+	 
+	private void setIntensityMode(int mode) {
 		switch (mode) {
-		case 0: {
+		case 0: 
 			maxIntensity_ = 255;
-			if (image_ != null) {
-				if (image_.getProcessor() != null) {
-					if (image_.getProcessor() instanceof ShortProcessor) {
-						maxIntensity_ = 65535;
-					}
-				}
-			}
-		}
 			break;
 		case 1:
-			maxIntensity_ = 255;
-			break;
-		case 2:
 			maxIntensity_ = 1023;
 			break;
-		case 3:
+		case 2:
 			maxIntensity_ = 4095;
 			break;
-		case 4:
+		case 3:
 			maxIntensity_ = 16383;
 			break;
-		case 5:
+		case 4:
 			maxIntensity_ = 65535;
 			break;
 		default:
@@ -427,7 +420,7 @@ public class ContrastPanel extends JPanel implements ImageController {
 	public void setImagePlus(ImagePlus ip, ContrastSettings cs8bit,
 			ContrastSettings cs16bit) {
 		image_ = ip;
-		setIntensityMode();
+		setIntensityMode(modeComboBox_.getSelectedIndex()-1);
 		update();
 	}
 
