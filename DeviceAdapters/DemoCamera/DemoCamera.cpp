@@ -76,6 +76,12 @@ BOOL APIENTRY DllMain( HANDLE /*hModule*/,
 // Exported MMDevice API
 ///////////////////////////////////////////////////////////////////////////////
 
+/**
+ * List all suppoerted hardware devices here
+ * Do not discover devices at runtime.  To avoid warnings about missing DLLs, Micro-Manager
+ * maintains a list of supported device (MMDeviceList.txt).  This list is generated using 
+ * information supplied by this function, so runtime discovery will create problems.
+ */
 MODULE_API void InitializeModuleData()
 {
    AddAvailableDeviceName(g_CameraDeviceName, "Demo camera");
@@ -177,10 +183,11 @@ MODULE_API void DeleteDevice(MM::Device* pDevice)
 * perform most of the initialization in the Initialize() method.
 */
 CDemoCamera::CDemoCamera() :
-CCameraBase<CDemoCamera> (),
-initialized_(false),
-readoutUs_(0.0),
-scanMode_(1)
+   CCameraBase<CDemoCamera> (),
+   initialized_(false),
+   readoutUs_(0.0),
+   scanMode_(1),
+   bitDepth_(8)
 {
    // call the base class method to set-up default error codes/messages
    InitializeDefaultErrorMessages();
@@ -263,6 +270,21 @@ int CDemoCamera::Initialize()
    pixelTypeValues.push_back(g_PixelType_8bit);
    pixelTypeValues.push_back(g_PixelType_16bit);
    nRet = SetAllowedValues(MM::g_Keyword_PixelType, pixelTypeValues);
+   if (nRet != DEVICE_OK)
+      return nRet;
+
+   // Bit depth
+   pAct = new CPropertyAction (this, &CDemoCamera::OnBitDepth);
+   nRet = CreateProperty("BitDepth", "8", MM::Integer, false, pAct);
+   assert(nRet == DEVICE_OK);
+
+   vector<string> bitDepths;
+   bitDepths.push_back("8");
+   bitDepths.push_back("10");
+   bitDepths.push_back("12");
+   bitDepths.push_back("14");
+   bitDepths.push_back("16");
+   nRet = SetAllowedValues("BitDepth", bitDepths);
    if (nRet != DEVICE_OK)
       return nRet;
 
@@ -401,7 +423,7 @@ unsigned CDemoCamera::GetImageBytesPerPixel() const
 */
 unsigned CDemoCamera::GetBitDepth() const
 {
-   return 8 * GetImageBytesPerPixel();
+   return bitDepth_;
 }
 
 /**
@@ -588,6 +610,7 @@ int CDemoCamera::OnPixelType(MM::PropertyBase* pProp, MM::ActionType eAct)
          if (pixelType.compare(g_PixelType_8bit) == 0)
          {
             img_.Resize(img_.Width(), img_.Height(), 1);
+            bitDepth_ = 8;
             ret=DEVICE_OK;
          }
          else if (pixelType.compare(g_PixelType_16bit) == 0)
@@ -602,15 +625,76 @@ int CDemoCamera::OnPixelType(MM::PropertyBase* pProp, MM::ActionType eAct)
             pProp->Set(g_PixelType_8bit);
             ret = ERR_UNKNOWN_MODE;
          }
-      }break;
+      } break;
    case MM::BeforeGet:
       {
+         long bytesPerPixel = GetImageBytesPerPixel();
+         pProp->Set(bytesPerPixel);
          ret=DEVICE_OK;
       }break;
    }
    return ret; 
 }
 
+/**
+* Handles "BitDepth" property.
+*/
+int CDemoCamera::OnBitDepth(MM::PropertyBase* pProp, MM::ActionType eAct)
+{
+   int ret = DEVICE_ERR;
+   switch(eAct)
+   {
+   case MM::AfterSet:
+      {
+         if(IsCapturing())
+            return DEVICE_CAMERA_BUSY_ACQUIRING;
+
+         long bitDepth;
+         pProp->Get(bitDepth);
+
+         switch (bitDepth) {
+            case 8:
+               img_.Resize(img_.Width(), img_.Height(), 1);
+               bitDepth_ = 8;
+               ret=DEVICE_OK;
+            break;
+            case 10:
+               img_.Resize(img_.Width(), img_.Height(), 2);
+               bitDepth_ = 10;
+               ret=DEVICE_OK;
+            break;
+            case 12:
+               img_.Resize(img_.Width(), img_.Height(), 2);
+               bitDepth_ = 12;
+               ret=DEVICE_OK;
+            break;
+            case 14:
+               img_.Resize(img_.Width(), img_.Height(), 2);
+               bitDepth_ = 14;
+               ret=DEVICE_OK;
+            break;
+            case 16:
+               img_.Resize(img_.Width(), img_.Height(), 2);
+               bitDepth_ = 16;
+               ret=DEVICE_OK;
+            break;
+            default: 
+               // on error switch to default pixel type
+               img_.Resize(img_.Width(), img_.Height(), 1);
+               pProp->Set((long)8);
+               bitDepth_ = 8;
+               ret = ERR_UNKNOWN_MODE;
+            break;
+         }
+      } break;
+   case MM::BeforeGet:
+      {
+         pProp->Set((long)bitDepth_);
+         ret=DEVICE_OK;
+      }break;
+   }
+   return ret; 
+}
 /**
 * Handles "ReadoutTime" property.
 */
@@ -692,6 +776,9 @@ void CDemoCamera::GenerateSyntheticImage(ImgBuffer& img, double exp)
    const double dAmp = exp;
    const double cLinePhaseInc = 2.0 * cPi / 4.0 / img.Height();
 
+
+   long maxValue = 1 << bitDepth_;
+
    unsigned j, k;
    if (img.Depth() == 1)
    {
@@ -709,15 +796,15 @@ void CDemoCamera::GenerateSyntheticImage(ImgBuffer& img, double exp)
    }
    else if (img.Depth() == 2)
    {
-      double pedestal = USHRT_MAX/2 * exp / 100.0;
-      double dAmp16 = dAmp * USHRT_MAX/255.0; // scale to behave like 8-bit
+      double pedestal = maxValue/2 * exp / 100.0;
+      double dAmp16 = dAmp * maxValue/255.0; // scale to behave like 8-bit
       unsigned short* pBuf = (unsigned short*) const_cast<unsigned char*>(img.GetPixels());
       for (j=0; j<img.Height(); j++)
       {
          for (k=0; k<img.Width(); k++)
          {
             long lIndex = img.Width()*j + k;
-            *(pBuf + lIndex) = (unsigned short) min((double)USHRT_MAX, pedestal + dAmp16 * sin(dPhase + dLinePhase + (2.0 * cPi * k) / lPeriod));
+            *(pBuf + lIndex) = (unsigned short) min((double)maxValue, pedestal + dAmp16 * sin(dPhase + dLinePhase + (2.0 * cPi * k) / lPeriod));
          }
          dLinePhase += cLinePhaseInc;
       }         
