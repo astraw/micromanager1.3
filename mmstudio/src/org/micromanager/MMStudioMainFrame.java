@@ -2601,7 +2601,6 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 						.getG_Keyword_Binning());
 				GUIUtils.setComboSelection(comboBinning_, binSize);
 
-				/*
 				long bitDepth = 8;
 			    if (imageWin_ != null) {
 					long hsz = imageWin_.getRawHistogramSize();
@@ -2609,8 +2608,7 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 				}
 
 				bitDepth = core_.getImageBitDepth();
-				!!! contrastPanel_.setPixelBitDepth((int) bitDepth, false);
-				*/
+				contrastPanel_.setPixelBitDepth((int) bitDepth, false);
 			}
 
 			if (!timer_.isRunning()) {
