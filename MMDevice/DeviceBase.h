@@ -129,14 +129,14 @@ public:
    }
 
    /**
-   * Returns device delay used for synhcronization by the calling code.
+   * Returns device delay used for synchronization by the calling code.
    * Delay of 0 means that the device should be synchronized by polling with the
    * Busy() method.
    */
    double GetDelayMs() const {return delayMs_;}
 
    /**
-   * Returns the device delay used for synhcronization by the calling code.
+   * Returns the device delay used for synchronization by the calling code.
    * Delay of 0 means that the device should be synchronized by polling with the
    * Busy() method.
    */
@@ -149,7 +149,7 @@ public:
 
    /**
    * Signals if the device responds to different delay settings.
-   * Deault device behavior is to ignore delays and use busy signals instead.
+   * Default device behavior is to ignore delays and use busy signals instead.
    */
    bool UsesDelay() {return usesDelay_;}
 
