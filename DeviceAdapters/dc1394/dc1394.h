@@ -111,7 +111,7 @@ public:
    int OnMode(MM::PropertyBase* pProp, MM::ActionType eAct);
 
    // high-speed interface
-   int StartSequenceAcquisition(long numImages, double interval_ms);
+   int StartSequenceAcquisition(long numImages, double interval_ms, bool stopOnOverflow);
    int StartSequenceAcquisition(double interval_ms);
    int StopSequenceAcquisition();
    int PushImage(dc1394video_frame_t *myframe);

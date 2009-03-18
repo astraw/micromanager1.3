@@ -1449,7 +1449,7 @@ void Cdc1394::setFrameRateMap()
 /**
  * Starts continuous acquisition.
  */
-int Cdc1394::StartSequenceAcquisition(long numImages, double interval_ms)
+int Cdc1394::StartSequenceAcquisition(long numImages, double interval_ms, bool /*stopOnOverflow*/)
 {
    
    // If we're using the camera in some other way, stop that
