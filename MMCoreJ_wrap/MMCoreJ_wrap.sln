@@ -142,6 +142,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LeicaDMI", "..\DeviceAdapte
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SimpleAF", "..\DeviceAdapters\SimpleAF\SimpleAF.vcproj", "{1812A891-ADE6-4291-B52B-5ED2C4B23A13}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PrecisExcite", "..\DeviceAdapters\PrecisExcite\PrecisExcite.vcproj", "{DCAF2299-3620-40FB-9E55-62A860FD67F2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -336,6 +338,10 @@ Global
 		{1812A891-ADE6-4291-B52B-5ED2C4B23A13}.Debug|Win32.Build.0 = Debug|Win32
 		{1812A891-ADE6-4291-B52B-5ED2C4B23A13}.Release|Win32.ActiveCfg = Release|Win32
 		{1812A891-ADE6-4291-B52B-5ED2C4B23A13}.Release|Win32.Build.0 = Release|Win32
+		{DCAF2299-3620-40FB-9E55-62A860FD67F2}.Debug|Win32.ActiveCfg = Debug|Win32
+		{DCAF2299-3620-40FB-9E55-62A860FD67F2}.Debug|Win32.Build.0 = Debug|Win32
+		{DCAF2299-3620-40FB-9E55-62A860FD67F2}.Release|Win32.ActiveCfg = Release|Win32
+		{DCAF2299-3620-40FB-9E55-62A860FD67F2}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
