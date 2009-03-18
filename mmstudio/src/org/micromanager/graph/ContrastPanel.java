@@ -285,7 +285,7 @@ public class ContrastPanel extends JPanel implements ImageController {
 		//
 	}
 
-   private void setPixelBitDepth(int depth, boolean forceDepth) 
+   public void setPixelBitDepth(int depth, boolean forceDepth) 
    { 
 	   // histogram for 32bits is not supported in this implementation 
       if(depth >= 32)
