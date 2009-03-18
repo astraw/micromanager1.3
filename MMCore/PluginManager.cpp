@@ -541,6 +541,14 @@ vector<long> CPluginManager::GetAvailableDeviceTypes(const char* moduleName) thr
       assert(hGetDeviceName);
       
       unsigned numDev = hGetNumberOfDevices();
+
+      
+	  if(0 >= numDev)
+	  {
+		  //no devices available from this module
+         throw(CMMError(moduleName,MMERR_NoDevice));
+	  }
+
       for (unsigned i=0; i<numDev; i++)
       {
          char deviceName[MM::MaxStrLength];
