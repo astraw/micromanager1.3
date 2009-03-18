@@ -276,6 +276,7 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 		try {
 			UIManager.setLookAndFeel(UIManager
 					.getCrossPlatformLookAndFeelClassName());
+//			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 			MMStudioMainFrame frame = new MMStudioMainFrame(false);
 			frame.setVisible(true);
 			frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
@@ -927,7 +928,7 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 		});
 		calibrationMenuItem.setText("Pixel Size Calibration...");
 		toolsMenu.add(calibrationMenuItem);
-
+		
 		final JMenuItem loadSystemConfigMenuItem = new JMenuItem();
 		toolsMenu.add(loadSystemConfigMenuItem);
 		loadSystemConfigMenuItem.addActionListener(new ActionListener() {
