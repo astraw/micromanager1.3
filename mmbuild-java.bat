@@ -1,3 +1,8 @@
+
+cd "\projects\micromanager1.3\"
+
+ECHO Building Java components...
+
 cd autofocus
 call \projects\3rdparty\apache-ant-1.6.5\bin\ant -buildfile build.xml cleanAutofocus compileAutofocus buildAutofocus 
 cd ..
