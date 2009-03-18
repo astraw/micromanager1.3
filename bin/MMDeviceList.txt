@@ -66,6 +66,7 @@ LeicaDMI,MagnificationChanger,Tube Lens (magnification changer),14
 LeicaDMI,TLPolarizer,Transmitted light Polarizer,4
 LeicaDMI,DIC Turret,DIC Turret,4
 LeicaDMI,Condensor,Condensor Turret,4
+LeicaDMI,Transmitted Light,Transmitted Light,3
 Ludl,LudlController,Ludl Controller,8
 Ludl,LudlShutter,Ludl Shutter,3
 Ludl,LudlWheel,Ludl Filter Wheel,4
@@ -125,6 +126,7 @@ Piper,SPI Cameras,Stanford Photonics cameras,2
 PI_GCS,PIZStage,PI GCS Z-stage,5
 pco,pco_camera,PCO generic camera adapter,2
 Polychrome5000,AgilentPolychrome5000,Agilent Polychrome 5000,3
+PrecisExcite,PrecisExcite,PrecisExcite,3
 Prior,Shutter-1,Pro Scan shutter 1,3
 Prior,Shutter-2,Pro Scan shutter 2,3
 Prior,Shutter-3,Pro Scan shutter 3,3
