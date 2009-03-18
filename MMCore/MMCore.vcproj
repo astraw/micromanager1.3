@@ -67,6 +67,7 @@
 			<Tool
 				Name="VCLibrarianTool"
 				OutputFile="$(OutDir)/MMCore.lib"
+				AdditionalLibraryDirectories="\projects\3rdparty\ACE_wrappers_5.5\lib"
 			/>
 			<Tool
 				Name="VCALinkTool"

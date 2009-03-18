@@ -1369,7 +1369,7 @@ bool CMMCore::getAutoShutter()
 }
 
 /**
- * Opens or closes the default shutter.
+ * Opens or closes the currently selected shutter.
  */
 void CMMCore::setShutterOpen(bool state) throw (CMMError)
 {
@@ -1392,7 +1392,7 @@ void CMMCore::setShutterOpen(bool state) throw (CMMError)
 }
 
 /**
- * Return the default shutter state.
+ * Return the state of the currently selected shutter.
  */
 bool CMMCore::getShutterOpen() throw (CMMError)
 {
