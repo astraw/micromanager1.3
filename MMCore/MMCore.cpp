@@ -1513,12 +1513,9 @@ void CMMCore::startSequenceAcquisition(long numImages, double intervalMs, bool s
 /**
  * Starts the continuous camera sequence acquisition.
  * This command does not block the calling thread for the duration of the acquisition.
- * Note: The max length of the sequence is not infinite: 2,147,483,647 frames. (it takes ~40 years when intervalMS==1ms) 
  */
 void CMMCore::startContinuousSequenceAcquisition(double intervalMs) throw (CMMError)
 {
-   startSequenceAcquisition(LONG_MAX, intervalMs, false);
-/*
    if (camera_)
    {
       if(camera_->IsCapturing())
@@ -1544,7 +1541,6 @@ void CMMCore::startContinuousSequenceAcquisition(double intervalMs) throw (CMMEr
       throw CMMError(getCoreErrorText(MMERR_CameraNotAvailable).c_str(), MMERR_CameraNotAvailable);
    }
    CORE_DEBUG("Sequence acquisition started.");
-*/
 }
 
 /**
