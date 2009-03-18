@@ -142,6 +142,7 @@
 		<copy file="${BinRoot}/mmgr_dal_PCO_Camera.dll" todir="${InstallRoot}" />
 		<copy file="${BinRoot}/mmgr_dal_Piper.dll" todir="${InstallRoot}" />
 		<copy file="${BinRoot}/mmgr_dal_Prior.dll" todir="${InstallRoot}" />
+		<copy file="${BinRoot}/mmgr_dal_PrecisExcite.dll" todir="${InstallRoot}" />
 		<copy file="${BinRoot}/mmgr_dal_DTOpenLayer.dll" todir="${InstallRoot}" />
 		<copy file="${BinRoot}/mmgr_dal_SpectralLMM5.dll" todir="${InstallRoot}" />
 		<copy file="${BinRoot}/mmgr_dal_Andor.dll" todir="${InstallRoot}" />
