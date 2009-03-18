@@ -379,38 +379,65 @@ int SerialPort::SetCommand(const char* command, const char* term)
 
    // send characters one by one to accomodate for slow devices
    unsigned long written = 0;
-   for (unsigned i=0; i<sendText.length(); i++)
+   long lastError;
+
+/*   MM::MMTime beginWriteTime;
+   MM::MMTime beginWriteTime0 = GetCurrentMMTime();
+   MM::MMTime totalWriteTime[32];
+   */
+
+   if (transmitCharWaitMs_==0)
    {
-      unsigned long one = 0;
-
-      long lastError;
-      const MM::MMTime maxTime (5, 0);
-      MM::MMTime startTime (GetCurrentMMTime());
-      int retryCounter = 0;
-      do
-      {
-         lastError = port_->Write(sendText.c_str() + written, 1, &one);
-         Sleep((DWORD)transmitCharWaitMs_);
-         if (retryCounter > 0)
-            LogMessage("Retrying serial Write command!");
-         retryCounter++;
-      }
-      while (lastError != ERROR_SUCCESS && ((GetCurrentMMTime() - startTime) < maxTime));
-
-	   if (lastError != ERROR_SUCCESS)
+      lastError = port_->Write(sendText.c_str(), sendText.length(), (DWORD *) &written);
+      if (lastError != ERROR_SUCCESS)
       {
          LogMessage("TRANSMIT_FAILED error occured!");
-		   return ERR_TRANSMIT_FAILED;
+	      return ERR_TRANSMIT_FAILED;
       }
-
-      assert (one == 1);
-      written++;
    }
+   else
+   {
+      for (unsigned i=0; i<sendText.length(); i++)
+      {
+         
+         unsigned long one = 0;
+
+
+         const MM::MMTime maxTime (5, 0);
+         MM::MMTime startTime (GetCurrentMMTime());
+         int retryCounter = 0;
+         do
+         {
+            lastError = port_->Write(sendText.c_str() + written, 1, &one);
+            Sleep((DWORD)transmitCharWaitMs_);         
+            if (retryCounter > 0)
+               LogMessage("Retrying serial Write command!");
+            retryCounter++;
+         }
+         while (lastError != ERROR_SUCCESS && ((GetCurrentMMTime() - startTime) < maxTime));
+         
+	      if (lastError != ERROR_SUCCESS)
+         {
+            LogMessage("TRANSMIT_FAILED error occured!");
+		      return ERR_TRANSMIT_FAILED;
+         }
+         
+         assert (one == 1);
+         written++;
+         
+      }
+   }
+
+//   MM::MMTime totalWriteTimeAll = GetCurrentMMTime()-beginWriteTime0;
+   
+
+   
 
    assert(written == sendText.length());
    ostringstream logMsg;                                                     
    logMsg << "Serial port " << portName_ << " wrote: " << sendText;
    this->LogMessage(logMsg.str().c_str(), true);
+
    return DEVICE_OK;
 }
 
@@ -507,9 +534,11 @@ int SerialPort::GetAnswer(char* answer, unsigned bufLen, const char* term)
          *termPos = '\0';
          logMsg << " Port: " << portName_ << "." << "Read: " << answer;       
          this->LogMessage(logMsg.str().c_str(), true);
+         MM::MMTime totalTime = GetCurrentMMTime() - startTime;
          return DEVICE_OK;
       }
    }
+
 
    LogMessage("TERM_TIMEOUT error occured!");
    return ERR_TERM_TIMEOUT;
@@ -555,8 +584,18 @@ int SerialPort::Read(unsigned char* buf, unsigned long bufLen, unsigned long& ch
    }
 
    for (unsigned long i=0; i<charsRead; i++)
+      if (buf[i]==10)
+         logMsg << "\\n";
+      else
+         logMsg << buf[i];
+
+   logMsg << " [";
+
+   for (unsigned long i=0; i<charsRead; i++)
       logMsg << (int) *(buf + i) << " ";
-   logMsg << endl;
+
+   logMsg << "]" << endl;
+
    if (charsRead > 0)
       LogMessage(logMsg.str().c_str(), true);
 

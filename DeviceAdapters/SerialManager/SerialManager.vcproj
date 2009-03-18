@@ -4,6 +4,7 @@
 	Version="9.00"
 	Name="SerialManager"
 	ProjectGUID="{2EF7ACDC-F742-4CB6-B301-A242F52BE5C3}"
+	RootNamespace="SerialManager"
 	Keyword="Win32Proj"
 	TargetFrameworkVersion="131072"
 	>
@@ -66,6 +67,7 @@
 				Name="VCLinkerTool"
 				OutputFile="$(OutDir)/mmgr_dal_SerialManager.dll"
 				LinkIncremental="2"
+				AdditionalLibraryDirectories="C:\projects\3rdparty\ACE_wrappers_5.5\lib"
 				GenerateDebugInformation="true"
 				ProgramDatabaseFile="$(OutDir)/SerialManager.pdb"
 				SubSystem="2"
