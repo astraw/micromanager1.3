@@ -458,9 +458,9 @@ void Controller::Illuminate()
    if (state_==0)
    {
       if (triggerMode_ == OFF || triggerMode_ == FOLLOW_PULSE)
-         msg << "SQZ" << carriage_return << "C" << channelLetters_[currentChannel_] << "F";
+         msg << "SQX" << carriage_return << "C" << channelLetters_[currentChannel_] << "F" << carriage_return << "AZ";
       else
-         msg << "SQZ";
+         msg << "SQX" << "AZ";
    }
    else if (state_==1)
    {
