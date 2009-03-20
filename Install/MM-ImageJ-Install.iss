@@ -85,21 +85,23 @@ Source: micro-manager\mmgr_dal_ZeissCAN.dll; DestDir: {app}; Flags: ignoreversio
 Source: micro-manager\mmgr_dal_ZeissCAN29.dll; DestDir: {app}; Flags: ignoreversion
 
 ; drivers
-Source: micro-manager\drivers\K8055_libusb.inf; DestDir: {app}\drivers; Flags: ignoreversion
-Source: micro-manager\drivers\K8055_libusb.cat; DestDir: {app}\drivers; Flags: ignoreversion
-Source: micro-manager\drivers\K8061_libusb.cat; DestDir: {app}\drivers; Flags: ignoreversion
-Source: micro-manager\drivers\K8061_libusb.inf; DestDir: {app}\drivers; Flags: ignoreversion
-Source: micro-manager\drivers\libusb0.dll; DestDir: {app}\drivers; Flags: ignoreversion
-Source: micro-manager\drivers\libusb0.sys; DestDir: {app}\drivers; Flags: ignoreversion
+Source: micro-manager\drivers\*; DestDir: {app}\drivers; Flags: ignoreversion
+;Source: micro-manager\drivers\K8055_libusb.inf; DestDir: {app}\drivers; Flags: ignoreversion
+;Source: micro-manager\drivers\K8055_libusb.cat; DestDir: {app}\drivers; Flags: ignoreversion
+;Source: micro-manager\drivers\K8061_libusb.cat; DestDir: {app}\drivers; Flags: ignoreversion
+;Source: micro-manager\drivers\K8061_libusb.inf; DestDir: {app}\drivers; Flags: ignoreversion
+;Source: micro-manager\drivers\libusb0.dll; DestDir: {app}\drivers; Flags: ignoreversion
+;Source: micro-manager\drivers\libusb0.sys; DestDir: {app}\drivers; Flags: ignoreversion
 
 ; beanshell scripts
-Source: micro-manager\scripts\sdemo1.bsh; DestDir: {app}\scripts; Flags: onlyifdoesntexist
-Source: micro-manager\scripts\sdemo2.bsh; DestDir: {app}\scripts; Flags: onlyifdoesntexist
-Source: micro-manager\scripts\setZoom.bsh; DestDir: {app}\scripts; Flags: onlyifdoesntexist
-Source: micro-manager\scripts\camera_test.bsh; DestDir: {app}\scripts; Flags: onlyifdoesntexist
-Source: micro-manager\scripts\image_snap_example.bsh; DestDir: {app}\scripts; Flags: onlyifdoesntexist
-Source: micro-manager\scripts\AutoExpose.bsh; DestDir: {app}\scripts; Flags: onlyifdoesntexist
-Source: micro-manager\scripts\ManualAcq.bsh; DestDir: {app}\scripts; Flags: onlyifdoesntexist
+Source: ..\scripts\*; DestDir: {app}\scripts; Flags: ignoreversion
+;Source: ..\scripts\sdemo1.bsh; DestDir: {app}\scripts; Flags: onlyifdoesntexist
+;Source: ..\scripts\sdemo2.bsh; DestDir: {app}\scripts; Flags: onlyifdoesntexist
+;Source: ..\scripts\setZoom.bsh; DestDir: {app}\scripts; Flags: onlyifdoesntexist
+;Source: ..\scripts\camera_test.bsh; DestDir: {app}\scripts; Flags: onlyifdoesntexist
+;Source: ..\scripts\image_snap_example.bsh; DestDir: {app}\scripts; Flags: onlyifdoesntexist
+;Source: ..\scripts\AutoExpose.bsh; DestDir: {app}\scripts; Flags: onlyifdoesntexist
+;Source: ..\scripts\ManualAcq.bsh; DestDir: {app}\scripts; Flags: onlyifdoesntexist
 
 ; configuration files
 Source: micro-manager\MMConfig_demo.cfg; DestDir: {app}; Flags: ignoreversion
