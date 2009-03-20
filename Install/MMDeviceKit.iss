@@ -1,7 +1,7 @@
 [Setup]
 OutputDir=C:\projects\micromanager1.3\Install\Output
-OutputBaseFilename=MMDeviceKit-win-31-00
-DefaultDirName=C:/Program Files/Micro-Manager-1.3/MMDeviceKit-win-31_00
+OutputBaseFilename=MMDeviceKit-win-31-01
+DefaultDirName=C:/Program Files/Micro-Manager-1.3/MMDeviceKit-win-31-01
 VersionInfoVersion=31
 VersionInfoCompany=micro-manager.org
 VersionInfoCopyright=University of California San Francisco
@@ -9,7 +9,7 @@ AppCopyright=Unviersity of California San Francisco
 AppName=Micro-Manager-1.3 DeviceKit
 AppVerName=DeviceKit for API version 31
 ShowLanguageDialog=yes
-DisableDirPage=true
+DisableDirPage=false
 
 [Files]
 ; driver files
@@ -55,6 +55,7 @@ Source: ..\bin\ACEd.dll; DestDir: {app}\bin
 ; MMCore files
 Source: ..\MMCore\MMCore.h; DestDir: {app}\MMCore
 Source: ..\MMCore\PluginManager.h; DestDir: {app}\MMCore
+Source: ..\MMCore\Configuration.h; DestDir: {app}\MMCore
 Source: ..\MMCore\Error.h; DestDir: {app}\MMCore
 Source: ..\MMCore\ErrorCodes.h; DestDir: {app}\MMCore
 Source: ..\MMCore\license.txt; DestDir: {app}\MMCore
