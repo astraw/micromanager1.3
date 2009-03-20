@@ -73,6 +73,7 @@ public class ConfigGroupPad extends JScrollPane{
    Preferences prefs_;
    private String COLUMN_WIDTH = "group_col_width";
    private MMStudioMainFrame gui_;
+   private NumberFormat form_;
 
    /**
     * Property descriptor, representing MMCore data
@@ -98,6 +99,7 @@ public class ConfigGroupPad extends JScrollPane{
    
    public ConfigGroupPad() {
       super();
+      form_ = NumberFormat.getInstance();
       Preferences root = Preferences.userNodeForPackage(this.getClass());
       prefs_ = root.node(root.absolutePath() + "/PresetPad");
       channels_ = new ArrayList<ChannelSpec>();
@@ -324,11 +326,10 @@ public class ConfigGroupPad extends JScrollPane{
             		  parentGUI_.enableLiveMode(false);
             	  
                   if (item.singleProp) {
-                     NumberFormat form = NumberFormat.getInstance();
                      if (item.hasLimits && item.isInt) {
-                        core_.setProperty(item.device, item.propName, new Integer (form.parse((String)value).intValue()).toString());
+                        core_.setProperty(item.device, item.propName, new Integer (form_.parse((String)value).intValue()).toString());
                      } else if (item.hasLimits && !item.isInt) {
-                        core_.setProperty(item.device, item.propName, new Double (form.parse((String)value).doubleValue()).toString());
+                        core_.setProperty(item.device, item.propName, new Double (form_.parse((String)value).doubleValue()).toString());
                      } else  {
                         core_.setProperty(item.device, item.propName, value.toString());
                      }
@@ -581,10 +582,8 @@ public class ConfigGroupPad extends JScrollPane{
                      slider_.setLimits((int)item_.lowerLimit, (int)item_.upperLimit);
                   else {
                      slider_.setLimits(item_.lowerLimit, item_.upperLimit);
-                     // TODO: should be global
-                     NumberFormat form = NumberFormat.getInstance();
                      try {
-                        value = form.format(Double.parseDouble((String)value));
+                        value = form_.format(Double.parseDouble((String)value));
                      } catch (Exception e) {
                         // TODO: something
                      }
@@ -669,9 +668,8 @@ public class ConfigGroupPad extends JScrollPane{
                if (item_.isInt)
                   slider.setLimits((int)item_.lowerLimit, (int)item_.upperLimit);
                else {
-                  NumberFormat form = NumberFormat.getInstance();
                   try {
-                     value = form.format(Double.parseDouble((String) value));
+                     value = form_.format(Double.parseDouble((String) value));
                   } catch (Exception e) {
                      // TODO: something
                   }

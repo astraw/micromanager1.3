@@ -54,6 +54,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.prefs.Preferences;
+import java.text.NumberFormat;
 
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -216,6 +217,9 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 	// applications settings
 	private Preferences mainPrefs_;
 
+   // NumberFormat
+   private NumberFormat numberFormat_;
+
 	// MMcore
 	private CMMCore core_;
 	private AcquisitionEngine engine_;
@@ -297,6 +301,8 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 
 		plugins_ = new ArrayList<PluginItem>();
 
+      numberFormat_ = NumberFormat.getInstance();
+ 
 		runsAsPlugin_ = pluginStatus;
 		setIconImage(SwingResourceManager.getImage(MMStudioMainFrame.class,
 				"icons/microscope.gif"));
@@ -1616,8 +1622,7 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 
    private void setExposure()  {
       try {
-         core_.setExposure(Double.parseDouble(textFieldExp_
-               .getText()));
+         core_.setExposure(numberFormat_.parse((String)textFieldExp_.getText()).doubleValue());
          // Display interval for Live Mode changes as well
          interval_ = 33.0;
          if (core_.getExposure() > 33.0)
@@ -2453,7 +2458,7 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 
 			String expStr = textFieldExp_.getText();
 			if (expStr.length() > 0) {
-				core_.setExposure(Double.parseDouble(expStr));
+            core_.setExposure(numberFormat_.parse(expStr).doubleValue());
 				updateImage();
 			} else
 				handleError("Exposure field is empty!");
@@ -2596,7 +2601,8 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 			// camera settings
 			if (isCameraAvailable()) {
 				double exp = core_.getExposure();
-				textFieldExp_.setText(Double.toString(exp));
+				textFieldExp_.setText(numberFormat_.format(exp));
+				//textFieldExp_.setText(Double.toString(exp));
 				// textFieldGain_.setText(core_.getProperty(cameraLabel_,
 				// MMCoreJ.getG_Keyword_Gain()));
 				String binSize = core_.getProperty(cameraLabel_, MMCoreJ

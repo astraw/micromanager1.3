@@ -801,7 +801,8 @@ public class AcqControlDlg extends JDialog implements PropertyChangeListener {
       timeUnitCombo_ = new JComboBox();
       timeUnitCombo_.addActionListener(new ActionListener() {
          public void actionPerformed(final ActionEvent e) {
-            interval_.setText(Double.toString(convertMsToTime(acqEng_.getFrameIntervalMs(), timeUnitCombo_.getSelectedIndex())));
+            //interval_.setText(Double.toString(convertMsToTime(acqEng_.getFrameIntervalMs(), timeUnitCombo_.getSelectedIndex())));
+            interval_.setText(numberFormat_.format(convertMsToTime(acqEng_.getFrameIntervalMs(), timeUnitCombo_.getSelectedIndex())));
          }
       });
       timeUnitCombo_.setModel(new DefaultComboBoxModel(new String[] {"ms", "s", "min"}));
@@ -1608,7 +1609,7 @@ public class AcqControlDlg extends JDialog implements PropertyChangeListener {
 
       tablePane_.setViewportView(table_);
       double intervalMs = acqEng_.getFrameIntervalMs();
-      interval_.setText(Double.toString(convertMsToTime(intervalMs, timeUnitCombo_.getSelectedIndex())));
+      interval_.setText(numberFormat_.format(convertMsToTime(intervalMs, timeUnitCombo_.getSelectedIndex())));
       zBottom_.setText(Double.toString(acqEng_.getSliceZBottomUm()));
       zTop_.setText(Double.toString(acqEng_.getZTopUm()));
       zStep_.setText(Double.toString(acqEng_.getSliceZStepUm()));
