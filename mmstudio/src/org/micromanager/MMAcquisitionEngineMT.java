@@ -604,14 +604,18 @@ public class MMAcquisitionEngineMT implements AcquisitionEngine {
       comment_ = txt;
    }
 
-   /**
+   /**	
     * Get first available config group
     */
    public String getFirstConfigGroup() {
       if (core_ == null)
          return new String("");
-
-      return core_.getAvailableConfigGroups().get(0);
+      
+      StrVector groups = core_.getAvailableConfigGroups();
+      if (!groups.isEmpty())
+    	  return groups.get(0);
+      
+      return new String("");
    }
 
    /**

@@ -556,6 +556,8 @@ public class AcqControlDlg extends JDialog implements PropertyChangeListener {
    public AcqControlDlg(AcquisitionEngine acqEng, Preferences prefs, DeviceControlGUI gui) {
       super();
 
+      numberFormat_ = NumberFormat.getNumberInstance();
+      
       prefs_ = prefs;
       gui_ = gui;
       guiColors_ = new GUIColors();
@@ -731,7 +733,6 @@ public class AcqControlDlg extends JDialog implements PropertyChangeListener {
       intervalLabel.setBounds(7, 49, 43, 14);
       getContentPane().add(intervalLabel);
 
-      numberFormat_ = NumberFormat.getNumberInstance();
       interval_ = new JFormattedTextField(numberFormat_);
       interval_.setFont(new Font("Arial", Font.PLAIN, 10));
       interval_.setBounds(81, 47, 52, 21);
