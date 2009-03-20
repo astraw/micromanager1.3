@@ -19,5 +19,5 @@ if BUILD_USBMANAGER
    USBMANAGER = USBManager 
 endif
 
-SUBDIRS =  AOTF Andor Arduino ASIFW1000 ASIStage DTOpenLayer DemoCamera DemoRGBCamera DemoStreamingCamera SerialManager SerialManagerUNIX LeicaDMI Ludl LudlLow PI PI_GCS Prior ParallelPort Pecon PrecisExcite Sensicam ZeissCAN ZeissCAN29 Vincent Conix $(HAMAMATSU) $(PVCAM) $(QCAM) NikonTE2000 K8055 K8061 $(NIDAQ) $(USBMANAGER) Nikon SpectralLMM5 SutterLambda Utilities $(DC1394) Yokogawa
+SUBDIRS =  AOTF Andor Arduino ASIFW1000 ASIStage ASIWPTR DTOpenLayer DemoCamera DemoRGBCamera DemoStreamingCamera SerialManager SerialManagerUNIX LeicaDMI Ludl LudlLow PI PI_GCS Prior ParallelPort Pecon PrecisExcite Sensicam ZeissCAN ZeissCAN29 Vincent Conix $(HAMAMATSU) $(PVCAM) $(QCAM) NikonTE2000 K8055 K8061 $(NIDAQ) $(USBMANAGER) Nikon SpectralLMM5 SutterLambda Utilities $(DC1394) Yokogawa
 
