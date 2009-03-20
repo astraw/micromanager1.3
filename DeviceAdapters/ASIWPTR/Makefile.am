@@ -5,6 +5,6 @@ libmmgr_dal_ASIWPTR_la_LIBADD = ../../MMDevice/.libs/libMMDevice.a
 libmmgr_dal_ASIWPTR_la_LDFLAGS = -module
 
 install:
-	cp .libs/libmmgr_dal_ASIPWTR.so $(DEVICEADAPTERPATH)/libmmgr_dal_ASIWPTR$(MMSUFFIX)
+	cp .libs/libmmgr_dal_ASIWPTR.so $(DEVICEADAPTERPATH)/libmmgr_dal_ASIWPTR$(MMSUFFIX)
 
 EXTRA_DIST = ASIWPTR.vcproj license.txt
