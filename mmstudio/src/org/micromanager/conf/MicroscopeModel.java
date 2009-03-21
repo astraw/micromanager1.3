@@ -64,6 +64,7 @@ public class MicroscopeModel {
    
    public static boolean generateDeviceListFile() {
       CMMCore core = new CMMCore();
+      core.enableDebugLog(true);
       StrVector libs = getDeviceLibraries(core);
       ArrayList<Device> devs = new ArrayList<Device>();
             
