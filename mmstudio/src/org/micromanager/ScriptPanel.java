@@ -35,6 +35,7 @@ import java.awt.event.MouseListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -318,6 +319,20 @@ public class ScriptPanel extends MMFrame implements MouseListener, ScriptingGUI 
 	   cons_ = new JConsole();
 	   beanshellREPLint_ = new Interpreter(cons_);
 	   new Thread(beanshellREPLint_).start();
+	   
+	   try {
+         beanshellREPLint_.source("scripts/mm_beanshell_startup.bsh");
+      } catch (FileNotFoundException e) {
+         // TODO Auto-generated catch block
+         e.printStackTrace();
+      } catch (IOException e) {
+         // TODO Auto-generated catch block
+         e.printStackTrace();
+      } catch (EvalError e) {
+         // TODO Auto-generated catch block
+         e.printStackTrace();
+      }
+	   
 	   
 	   // Create convenience function "inspect(...)" from JOI "Inspector.inspect(...)":
 	   //int1.eval("import org.pf.joi.Inspector; inspect(x) { return Inspector.inspect(x); }");
