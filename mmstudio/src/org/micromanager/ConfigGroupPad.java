@@ -30,7 +30,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.prefs.Preferences;
 
@@ -57,6 +56,7 @@ import mmcorej.StrVector;
 import org.micromanager.api.DeviceControlGUI;
 import org.micromanager.utils.ChannelSpec;
 import org.micromanager.utils.ContrastSettings;
+import org.micromanager.utils.NumberUtils;
 
 /**
  * Preset panel.
@@ -73,7 +73,6 @@ public class ConfigGroupPad extends JScrollPane{
    Preferences prefs_;
    private String COLUMN_WIDTH = "group_col_width";
    private MMStudioMainFrame gui_;
-   private NumberFormat form_;
 
    /**
     * Property descriptor, representing MMCore data
@@ -99,7 +98,6 @@ public class ConfigGroupPad extends JScrollPane{
    
    public ConfigGroupPad() {
       super();
-      form_ = NumberFormat.getInstance();
       Preferences root = Preferences.userNodeForPackage(this.getClass());
       prefs_ = root.node(root.absolutePath() + "/PresetPad");
       channels_ = new ArrayList<ChannelSpec>();
@@ -327,9 +325,9 @@ public class ConfigGroupPad extends JScrollPane{
             	  
                   if (item.singleProp) {
                      if (item.hasLimits && item.isInt) {
-                        core_.setProperty(item.device, item.propName, new Integer (form_.parse((String)value).intValue()).toString());
+                        core_.setProperty(item.device, item.propName, new Integer (NumberUtils.StringToInt((String)value)).toString());
                      } else if (item.hasLimits && !item.isInt) {
-                        core_.setProperty(item.device, item.propName, new Double (form_.parse((String)value).doubleValue()).toString());
+                        core_.setProperty(item.device, item.propName, new Double (NumberUtils.StringToDouble((String)value)).toString());
                      } else  {
                         core_.setProperty(item.device, item.propName, value.toString());
                      }
@@ -583,7 +581,7 @@ public class ConfigGroupPad extends JScrollPane{
                   else {
                      slider_.setLimits(item_.lowerLimit, item_.upperLimit);
                      try {
-                        value = form_.format(Double.parseDouble((String)value));
+                        value = NumberUtils.NumberToString(Double.parseDouble((String)value));
                      } catch (Exception e) {
                         // TODO: something
                      }
@@ -669,7 +667,7 @@ public class ConfigGroupPad extends JScrollPane{
                   slider.setLimits((int)item_.lowerLimit, (int)item_.upperLimit);
                else {
                   try {
-                     value = form_.format(Double.parseDouble((String) value));
+                     value = NumberUtils.NumberToString(Double.parseDouble((String) value));
                   } catch (Exception e) {
                      // TODO: something
                   }

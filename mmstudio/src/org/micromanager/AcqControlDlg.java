@@ -40,11 +40,11 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.DecimalFormat;
-import java.text.NumberFormat;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.Iterator;
+import java.text.NumberFormat;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
 
@@ -92,6 +92,7 @@ import org.micromanager.utils.ColorRenderer;
 import org.micromanager.utils.ContrastSettings;
 import org.micromanager.utils.GUIColors;
 import org.micromanager.utils.MMException;
+import org.micromanager.utils.NumberUtils;
 import org.micromanager.utils.PositionMode;
 import org.micromanager.utils.SliceMode;
 
@@ -121,7 +122,6 @@ public class AcqControlDlg extends JDialog implements PropertyChangeListener {
    private JTextArea summaryTextArea_;
    private JComboBox timeUnitCombo_;
    private JFormattedTextField interval_;
-   private NumberFormat numberFormat_;
    private JFormattedTextField zStep_;
    private JFormattedTextField zTop_;
    private JFormattedTextField zBottom_;
@@ -145,6 +145,8 @@ public class AcqControlDlg extends JDialog implements PropertyChangeListener {
    
    private DeviceControlGUI gui_;
    private GUIColors guiColors_;
+
+   private NumberFormat numberFormat_;
 
    // persistent properties (app settings)
    private static final String ACQ_CONTROL_X = "x";
@@ -461,7 +463,6 @@ public class AcqControlDlg extends JDialog implements PropertyChangeListener {
       // This method is called when editing is completed.
       // It must return the new value to be stored in the cell.
       public Object getCellEditorValue() {
-         NumberFormat form  = NumberFormat.getInstance();
          // TODO: if content of column does not match type we get an exception
          try {
             if (editCol_ == 0) {
@@ -469,9 +470,9 @@ public class AcqControlDlg extends JDialog implements PropertyChangeListener {
                channel_.color_ = new Color (colorPrefs_.getInt("Color_" + acqEng_.getChannelGroup() + "_" + combo_.getSelectedItem(), Color.white.getRGB())); 
                return combo_.getSelectedItem();
             } else if (editCol_ == 1 || editCol_ == 2)
-               return new Double(form.parse(text_.getText()).doubleValue());
+               return new Double(NumberUtils.StringToDouble(text_.getText()));
             else if (editCol_ == 3) {
-               return new Integer(form.parse(text_.getText()).intValue());
+               return new Integer(NumberUtils.StringToInt(text_.getText()));
             } else if (editCol_ == 4) {
                Color c = colorLabel_.getBackground();
                return c;
@@ -516,9 +517,9 @@ public class AcqControlDlg extends JDialog implements PropertyChangeListener {
          if (colIndex == 0)
             setText(channel.config_);
          else if (colIndex == 1)
-            setText(Double.toString(channel.exposure_));
+            setText(NumberUtils.NumberToString(channel.exposure_));
          else if (colIndex == 2)
-            setText(Double.toString(channel.zOffset_));
+            setText(NumberUtils.NumberToString(channel.zOffset_));
          else if (colIndex == 3) {
             setText(Integer.toString(channel.skipFactorFrame_));
          } else if (colIndex == 4) {
@@ -555,8 +556,6 @@ public class AcqControlDlg extends JDialog implements PropertyChangeListener {
     */
    public AcqControlDlg(AcquisitionEngine acqEng, Preferences prefs, DeviceControlGUI gui) {
       super();
-
-      numberFormat_ = NumberFormat.getNumberInstance();
       
       prefs_ = prefs;
       gui_ = gui;
@@ -567,6 +566,8 @@ public class AcqControlDlg extends JDialog implements PropertyChangeListener {
       colorPrefs_ = root.node(root.absolutePath() + "/" + COLOR_SETTINGS_NODE);
 
       setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
+
+      numberFormat_ = NumberFormat.getNumberInstance();
 
       addWindowListener(new WindowAdapter() {
          public void windowClosing(final WindowEvent e) {
@@ -706,21 +707,21 @@ public class AcqControlDlg extends JDialog implements PropertyChangeListener {
       downButton.setBounds(405, 363, 93, 22);
       getContentPane().add(downButton);
 
-      zBottom_ = new JFormattedTextField();
+      zBottom_ = new JFormattedTextField(numberFormat_);
       zBottom_.setFont(new Font("Arial", Font.PLAIN, 10));
       zBottom_.setBounds(84, 156, 54, 21);
       zBottom_.setValue(new Double(1.0));
       zBottom_.addPropertyChangeListener("value", this); 
       getContentPane().add(zBottom_);
 
-      zTop_ = new JFormattedTextField();
+      zTop_ = new JFormattedTextField(numberFormat_);
       zTop_.setFont(new Font("Arial", Font.PLAIN, 10));
       zTop_.setBounds(84, 180, 54, 21);
       zTop_.setValue(new Double(1.0));
       zTop_.addPropertyChangeListener("value", this); 
       getContentPane().add(zTop_);
 
-      zStep_ = new JFormattedTextField();
+      zStep_ = new JFormattedTextField(numberFormat_);
       zStep_.setFont(new Font("Arial", Font.PLAIN, 10));
       zStep_.setBounds(84, 204, 54, 21);
       zStep_.setValue(new Double(1.0));
@@ -802,8 +803,7 @@ public class AcqControlDlg extends JDialog implements PropertyChangeListener {
       timeUnitCombo_ = new JComboBox();
       timeUnitCombo_.addActionListener(new ActionListener() {
          public void actionPerformed(final ActionEvent e) {
-            //interval_.setText(Double.toString(convertMsToTime(acqEng_.getFrameIntervalMs(), timeUnitCombo_.getSelectedIndex())));
-            interval_.setText(numberFormat_.format(convertMsToTime(acqEng_.getFrameIntervalMs(), timeUnitCombo_.getSelectedIndex())));
+            interval_.setText(NumberUtils.NumberToString(convertMsToTime(acqEng_.getFrameIntervalMs(), timeUnitCombo_.getSelectedIndex())));
          }
       });
       timeUnitCombo_.setModel(new DefaultComboBoxModel(new String[] {"ms", "s", "min"}));
@@ -979,10 +979,12 @@ public class AcqControlDlg extends JDialog implements PropertyChangeListener {
       separator_3.setBounds(5, 130, 215, 5);
       getContentPane().add(separator_3);
 
-      String groups[] = acqEng_.getAvailableGroups();
-      channelGroupCombo_ = new JComboBox(groups);
+      //String groups[] = acqEng_.getAvailableGroups();
+      //channelGroupCombo_ = new JComboBox(groups);
+      channelGroupCombo_ = new JComboBox();
       channelGroupCombo_.setFont(new Font("", Font.PLAIN, 10));
-      channelGroupCombo_.setSelectedItem(acqEng_.getChannelGroup());
+      updateGroupsCombo();
+      //channelGroupCombo_.setSelectedItem(acqEng_.getChannelGroup());
 
       channelGroupCombo_.addActionListener(new ActionListener() {
          public void actionPerformed(ActionEvent arg0) {
@@ -1086,8 +1088,6 @@ public class AcqControlDlg extends JDialog implements PropertyChangeListener {
       singleWindowCheckBox_.setEnabled(false);
       singleWindowCheckBox_.setBounds(344, 400, 200, 21);
       getContentPane().add(singleWindowCheckBox_);
-      
-      
       
       afCheckBox_ = new JCheckBox();
       afCheckBox_.addActionListener(new ActionListener() {
@@ -1382,7 +1382,7 @@ public class AcqControlDlg extends JDialog implements PropertyChangeListener {
 
    protected void setTopPosition() {
       double z = acqEng_.getCurrentZPos();
-      zTop_.setText(Double.toString(z));
+      zTop_.setText(NumberUtils.NumberToString(z));
       applySettings();
       // update summary
       summaryTextArea_.setText(acqEng_.getVerboseSummary());     
@@ -1391,7 +1391,7 @@ public class AcqControlDlg extends JDialog implements PropertyChangeListener {
 
    protected void setBottomPosition() {
       double z = acqEng_.getCurrentZPos();
-      zBottom_.setText(Double.toString(z));
+      zBottom_.setText(NumberUtils.NumberToString(z));
       applySettings();
       // update summary
       summaryTextArea_.setText(acqEng_.getVerboseSummary());     
@@ -1611,9 +1611,9 @@ public class AcqControlDlg extends JDialog implements PropertyChangeListener {
       tablePane_.setViewportView(table_);
       double intervalMs = acqEng_.getFrameIntervalMs();
       interval_.setText(numberFormat_.format(convertMsToTime(intervalMs, timeUnitCombo_.getSelectedIndex())));
-      zBottom_.setText(Double.toString(acqEng_.getSliceZBottomUm()));
-      zTop_.setText(Double.toString(acqEng_.getZTopUm()));
-      zStep_.setText(Double.toString(acqEng_.getSliceZStepUm()));
+      zBottom_.setText(NumberUtils.NumberToString(acqEng_.getSliceZBottomUm()));
+      zTop_.setText(NumberUtils.NumberToString(acqEng_.getZTopUm()));
+      zStep_.setText(NumberUtils.NumberToString(acqEng_.getSliceZStepUm()));
       useSliceSettingsCheckBox_.setSelected(acqEng_.isZSliceSettingEnabled());
       multiPosCheckBox_.setSelected(acqEng_.isMultiPositionEnabled());
       enableZSliceControls(acqEng_.isZSliceSettingEnabled());
@@ -1636,22 +1636,21 @@ public class AcqControlDlg extends JDialog implements PropertyChangeListener {
       if (ae != null)
          ae.stopCellEditing();
 
-      NumberFormat form  = NumberFormat.getInstance();
       //double zStep = Double.parseDouble(zStep_.getText());
       try {
-         double zStep = form.parse(zStep_.getText()).doubleValue();
+         double zStep = NumberUtils.StringToDouble(zStep_.getText());
          if (Math.abs(zStep) < acqEng_.getMinZStepUm()) {
             zStep = acqEng_.getMinZStepUm();
-            zStep_.setText(Double.toString(zStep));
+            zStep_.setText(NumberUtils.NumberToString(zStep));
          }
-         acqEng_.setSlices(form.parse(zBottom_.getText()).doubleValue(), form.parse(zTop_.getText()).doubleValue(), zStep, zVals_ == 0 ? false : true);
+         acqEng_.setSlices(NumberUtils.StringToDouble(zBottom_.getText()), NumberUtils.StringToDouble(zTop_.getText()), zStep, zVals_ == 0 ? false : true);
          acqEng_.enableZSliceSetting(useSliceSettingsCheckBox_.isSelected());
          acqEng_.enableMultiPosition(multiPosCheckBox_.isSelected());
          acqEng_.setSliceMode(((SliceMode)sliceModeCombo_.getSelectedItem()).getID());
          acqEng_.setPositionMode(((PositionMode)posModeCombo_.getSelectedItem()).getID());
          acqEng_.setChannels(((ChannelTableModel)table_.getModel()).getChannels());
-         acqEng_.setFrames(form.parse(numFrames_.getValue().toString()).intValue(),
-            convertTimeToMs(form.parse(interval_.getText()).doubleValue(), timeUnitCombo_.getSelectedIndex()));
+         acqEng_.setFrames(NumberUtils.StringToInt(numFrames_.getValue().toString()),
+            convertTimeToMs(NumberUtils.StringToDouble(interval_.getText()), timeUnitCombo_.getSelectedIndex()) );
       } catch (ParseException p) {
          handleException (p);
          // TODO: throw error

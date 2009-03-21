@@ -38,7 +38,6 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.prefs.Preferences;
 
@@ -66,6 +65,7 @@ import mmcorej.StrVector;
 
 import org.micromanager.api.DeviceControlGUI;
 import org.micromanager.utils.MMFrame;
+import org.micromanager.utils.NumberUtils;
 import org.micromanager.utils.ShowFlags;
 
 import com.swtdesigner.SwingResourceManager;
@@ -378,11 +378,10 @@ public class PropertyEditor extends MMFrame {
          PropertyItem item = propList_.get(row);
          if (col == 1) {
             try {
-               NumberFormat form = NumberFormat.getInstance();
                if (item.hasRange && item.isInt) {
-                  core_.setProperty(item.device, item.name, new Integer (form.parse((String)value).intValue()).toString());
+                  core_.setProperty(item.device, item.name, new Integer (NumberUtils.StringToInt((String)value)).toString());
                } else if (item.hasRange && !item.isInt) {
-                  core_.setProperty(item.device, item.name, new Double (form.parse((String)value).doubleValue()).toString());
+                  core_.setProperty(item.device, item.name, new Double (NumberUtils.StringToDouble((String)value)).toString());
                } else  {
                   core_.setProperty(item.device, item.name, value.toString());
                }
@@ -562,9 +561,8 @@ public class PropertyEditor extends MMFrame {
                      slider_.setLimits((int)item_.lowerLimit, (int)item_.upperLimit);
                   else {
                      slider_.setLimits(item_.lowerLimit, item_.upperLimit);
-                     NumberFormat form = NumberFormat.getInstance();
                      try {
-                        value = form.format(Double.parseDouble((String)value));
+                        value = NumberUtils.NumberToString(Double.parseDouble((String)value));
                      } catch (Exception e) {
                         // TODO: Something
                      }
@@ -653,9 +651,8 @@ public class PropertyEditor extends MMFrame {
             if (item_.hasRange) {
                SliderPanel slider = new SliderPanel();
                slider.setLimits(item_.lowerLimit, item_.upperLimit);
-               NumberFormat form = NumberFormat.getInstance();
                try {
-                  value = form.format(Double.parseDouble((String)value));
+                  value = NumberUtils.NumberToString(Double.parseDouble((String)value));
                } catch (Exception e) {
                   // TODO: something
                }

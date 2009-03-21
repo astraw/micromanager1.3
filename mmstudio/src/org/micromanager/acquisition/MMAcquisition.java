@@ -175,6 +175,7 @@ public class MMAcquisition {
          // TODO Auto-generated catch block
          e.printStackTrace();
       }
+      acqData_ = null;
    }
 
    public boolean isInitialized() {

@@ -29,7 +29,6 @@ import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
-import java.text.NumberFormat;
 import java.text.ParseException;
 
 import javax.swing.JOptionPane;
@@ -39,6 +38,8 @@ import javax.swing.JTextField;
 import javax.swing.SpringLayout;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+
+import org.micromanager.utils.NumberUtils;
 
 public class SliderPanel extends JPanel {
    private static final long serialVersionUID = -6039226355990936685L;
@@ -87,16 +88,15 @@ public class SliderPanel extends JPanel {
 	}
 
 	public void setText(String txt) {
-      NumberFormat form = NumberFormat.getInstance();
       try {
          if (integer_) {
-            int val = enforceLimits(new Integer(form.parse(txt).intValue()));
+            int val = enforceLimits(NumberUtils.StringToInt(txt));
             slider_.setValue((int)(val + 0.5));
-            textField_.setText(form.format(val));
+            textField_.setText(NumberUtils.NumberToString(val));
          } else {
-            double val = enforceLimits(new Double(form.parse(txt).doubleValue()));
+            double val = enforceLimits(NumberUtils.StringToDouble(txt));
             slider_.setValue((int)((val - lowerLimit_)/factor_ + 0.5));
-            textField_.setText(form.format(val));
+            textField_.setText(NumberUtils.NumberToString(val));
          }
 		} catch (ParseException p) {
          handleException (p);
@@ -132,26 +132,24 @@ public class SliderPanel extends JPanel {
 	}
 
 	private void onSliderMove() {
-      NumberFormat form = NumberFormat.getInstance();
 		double value = 0.0;
 		if (integer_) {
 			value = slider_.getValue();
-	      textField_.setText(form.format((int)(value)));
+	      textField_.setText(NumberUtils.NumberToString((int)(value)));
 		} else { 
 			value = slider_.getValue() * factor_ + lowerLimit_;
-		   textField_.setText(form.format(value));
+		   textField_.setText(NumberUtils.NumberToString(value));
 		}	
 	}
 
 	protected void onEditChange() {
-      NumberFormat form = NumberFormat.getInstance();
 		int sliderPos;
       try {
          if (integer_) {
-            sliderPos = enforceLimits(new Integer(form.parse(textField_.getText()).intValue()));
+            sliderPos = enforceLimits(NumberUtils.StringToInt(textField_.getText()));
             slider_.setValue((int)(sliderPos + 0.5));
          } else {
-            double val = enforceLimits(new Double(form.parse(textField_.getText()).doubleValue()));
+            double val = enforceLimits(NumberUtils.StringToDouble(textField_.getText()));
             sliderPos = (int)((val - lowerLimit_)/factor_ + 0.5);
             slider_.setValue(sliderPos);
          }

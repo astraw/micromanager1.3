@@ -54,7 +54,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.prefs.Preferences;
-import java.text.NumberFormat;
 
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -129,6 +128,7 @@ import org.micromanager.utils.LargeMessageDlg;
 import org.micromanager.utils.MMImageWindow;
 import org.micromanager.utils.MMLogger;
 import org.micromanager.utils.MMScriptException;
+import org.micromanager.utils.NumberUtils;
 import org.micromanager.utils.ProgressBar;
 import org.micromanager.utils.TextUtils;
 import org.micromanager.utils.WaitDialog;
@@ -217,9 +217,6 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 	// applications settings
 	private Preferences mainPrefs_;
 
-   // NumberFormat
-   private NumberFormat numberFormat_;
-
 	// MMcore
 	private CMMCore core_;
 	private AcquisitionEngine engine_;
@@ -301,8 +298,6 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 
 		plugins_ = new ArrayList<PluginItem>();
 
-      numberFormat_ = NumberFormat.getInstance();
- 
 		runsAsPlugin_ = pluginStatus;
 		setIconImage(SwingResourceManager.getImage(MMStudioMainFrame.class,
 				"icons/microscope.gif"));
@@ -1622,11 +1617,16 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 
    private void setExposure()  {
       try {
-         core_.setExposure(numberFormat_.parse((String)textFieldExp_.getText()).doubleValue());
+         core_.setExposure(NumberUtils.StringToDouble((String)textFieldExp_.getText()));
+
+         // Display the new exposure time
+         double exposure = core_.getExposure();
+         textFieldExp_.setText(NumberUtils.NumberToString(exposure));
+
          // Display interval for Live Mode changes as well
          interval_ = 33.0;
-         if (core_.getExposure() > 33.0)
-            interval_ = core_.getExposure();
+         if (exposure > 33.0)
+            interval_ = exposure;
          timer_.setDelay((int)interval_);
       } catch (Exception exp) {
          handleException(exp);
@@ -2443,9 +2443,6 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 	private void doSnap() {
 		try {
 			if (!isImageWindowOpen())
-				//if (null == createImageWindow())
-			//		handleError("Image window open failed");
-
 					imageWin_ = createImageWindow();
           
 			imageWin_.toFront();
@@ -2458,7 +2455,7 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 
 			String expStr = textFieldExp_.getText();
 			if (expStr.length() > 0) {
-            core_.setExposure(numberFormat_.parse(expStr).doubleValue());
+            core_.setExposure(NumberUtils.StringToDouble(expStr));
 				updateImage();
 			} else
 				handleError("Exposure field is empty!");
@@ -2601,10 +2598,7 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 			// camera settings
 			if (isCameraAvailable()) {
 				double exp = core_.getExposure();
-				textFieldExp_.setText(numberFormat_.format(exp));
-				//textFieldExp_.setText(Double.toString(exp));
-				// textFieldGain_.setText(core_.getProperty(cameraLabel_,
-				// MMCoreJ.getG_Keyword_Gain()));
+				textFieldExp_.setText(NumberUtils.NumberToString(exp));
 				String binSize = core_.getProperty(cameraLabel_, MMCoreJ
 						.getG_Keyword_Binning());
 				GUIUtils.setComboSelection(comboBinning_, binSize);
@@ -3313,7 +3307,7 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 				acqName = "Snap" + snapCount_;
 			Boolean newSnap = false;
 			// gui.closeAllAcquisitions();
-			core_.setExposure(Double.parseDouble(textFieldExp_.getText()));
+			core_.setExposure(NumberUtils.StringToDouble(textFieldExp_.getText()));
 			long width = core_.getImageWidth();
 			long height = core_.getImageHeight();
 			long depth = core_.getBytesPerPixel();

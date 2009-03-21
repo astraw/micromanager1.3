@@ -38,7 +38,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.prefs.Preferences;
 
@@ -70,6 +69,7 @@ import mmcorej.StrVector;
 
 import org.micromanager.api.DeviceControlGUI;
 import org.micromanager.utils.MMDialog;
+import org.micromanager.utils.NumberUtils;
 import org.micromanager.utils.ShowFlags;
 
 /**
@@ -455,11 +455,10 @@ public class GroupEditor extends MMDialog {
          PropertyItem item = propList_.get(row);
          if (col == 1) {
             try {
-               NumberFormat form = NumberFormat.getInstance();
                if (item.hasRange && item.isInt) {
-                  core_.setProperty(item.device, item.name, new Integer (form.parse((String)value).intValue()).toString());
+                  core_.setProperty(item.device, item.name, new Integer (NumberUtils.StringToInt((String)value)).toString());
                } else if (item.hasRange && !item.isInt) {
-                  core_.setProperty(item.device, item.name, new Double (form.parse((String)value).doubleValue()).toString());
+                  core_.setProperty(item.device, item.name, new Double (NumberUtils.StringToDouble((String)value)).toString());
                } else  {
                   core_.setProperty(item.device, item.name, value.toString());
                }

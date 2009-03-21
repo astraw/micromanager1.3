@@ -128,6 +128,7 @@ MMJ_.jar:  \
 	$(srcdir)/src/org/micromanager/utils/MMImageWindow.java \
 	$(srcdir)/src/org/micromanager/utils/MMLogger.java \
 	$(srcdir)/src/org/micromanager/utils/MMScriptException.java \
+	$(srcdir)/src/org/micromanager/utils/NumberUtils.java \
 	$(srcdir)/src/org/micromanager/utils/ShowFlags.java \
 	$(srcdir)/src/org/micromanager/utils/WaitDialog.java \
 	$(srcdir)/src/org/micromanager/utils/CalibrationList.java \
