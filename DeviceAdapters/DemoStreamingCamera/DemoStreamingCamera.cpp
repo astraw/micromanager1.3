@@ -852,6 +852,7 @@ int DemoStreamingCamera::StartSequenceAcquisition(long numImages, double interva
    ostringstream os;
    os << "Started camera streaming with an interval of " << interval_ms << " ms, for " << numImages << " images.\n";
    printf("%s", os.str().c_str());
+   LogMessage(os.str().c_str(), true);
    if (IsCapturing())
       return ERR_BUSY_ACQIRING;
 
