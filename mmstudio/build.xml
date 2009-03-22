@@ -149,6 +149,7 @@
 		<copy file="${BinRoot}/mmgr_dal_QCam.dll" todir="${InstallRoot}" />
 		<copy file="${BinRoot}/mmgr_dal_ASIStage.dll" todir="${InstallRoot}" />
 		<copy file="${BinRoot}/mmgr_dal_ASIFW1000.dll" todir="${InstallRoot}" />
+		<copy file="${BinRoot}/mmgr_dal_ASIwptr.dll" todir="${InstallRoot}" />
 		<copy file="${BinRoot}/mmgr_dal_Yokogawa.dll" todir="${InstallRoot}" />
 		<copy file="${BinRoot}/mmgr_dal_USBManager.dll" todir="${InstallRoot}" />
 		<copy file="${BinRoot}/mmgr_dal_K8055.dll" todir="${InstallRoot}" />

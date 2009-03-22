@@ -47,6 +47,7 @@ Source: micro-manager\mmgr_dal_AOTF.dll; DestDir: {app}; Flags: ignoreversion
 Source: micro-manager\mmgr_dal_Arduino.dll; DestDir: {app}; Flags: ignoreversion
 Source: micro-manager\mmgr_dal_ASIFW1000.dll; DestDir: {app}; Flags: ignoreversion
 Source: micro-manager\mmgr_dal_ASIStage.dll; DestDir: {app}; Flags: ignoreversion
+Source: micro-manager\mmgr_dal_ASIwptr.dll; DestDir: {app}; Flags: ignoreversion
 Source: micro-manager\mmgr_dal_Conix.dll; DestDir: {app}; Flags: ignoreversion
 Source: micro-manager\mmgr_dal_CSUX.dll; DestDir: {app}; Flags: ignoreversion
 Source: micro-manager\mmgr_dal_DemoCamera.dll; DestDir: {app}; Flags: ignoreversion
@@ -86,27 +87,12 @@ Source: micro-manager\mmgr_dal_ZeissCAN29.dll; DestDir: {app}; Flags: ignorevers
 
 ; drivers
 Source: micro-manager\drivers\*; DestDir: {app}\drivers; Flags: ignoreversion
-;Source: micro-manager\drivers\K8055_libusb.inf; DestDir: {app}\drivers; Flags: ignoreversion
-;Source: micro-manager\drivers\K8055_libusb.cat; DestDir: {app}\drivers; Flags: ignoreversion
-;Source: micro-manager\drivers\K8061_libusb.cat; DestDir: {app}\drivers; Flags: ignoreversion
-;Source: micro-manager\drivers\K8061_libusb.inf; DestDir: {app}\drivers; Flags: ignoreversion
-;Source: micro-manager\drivers\libusb0.dll; DestDir: {app}\drivers; Flags: ignoreversion
-;Source: micro-manager\drivers\libusb0.sys; DestDir: {app}\drivers; Flags: ignoreversion
 
 ; beanshell scripts
 Source: ..\scripts\*; DestDir: {app}\scripts; Flags: ignoreversion
-;Source: ..\scripts\sdemo1.bsh; DestDir: {app}\scripts; Flags: onlyifdoesntexist
-;Source: ..\scripts\sdemo2.bsh; DestDir: {app}\scripts; Flags: onlyifdoesntexist
-;Source: ..\scripts\setZoom.bsh; DestDir: {app}\scripts; Flags: onlyifdoesntexist
-;Source: ..\scripts\camera_test.bsh; DestDir: {app}\scripts; Flags: onlyifdoesntexist
-;Source: ..\scripts\image_snap_example.bsh; DestDir: {app}\scripts; Flags: onlyifdoesntexist
-;Source: ..\scripts\AutoExpose.bsh; DestDir: {app}\scripts; Flags: onlyifdoesntexist
-;Source: ..\scripts\ManualAcq.bsh; DestDir: {app}\scripts; Flags: onlyifdoesntexist
 
 ; configuration files
 Source: micro-manager\MMConfig_demo.cfg; DestDir: {app}; Flags: ignoreversion
-Source: micro-manager\MMConfig_demoRGB.cfg; DestDir: {app}; Flags: ignoreversion
-Source: micro-manager\MMConfig_StanfordPhotonics.cfg; DestDir: {app}; Flags: ignoreversion
 Source: micro-manager\MMDeviceList.txt; DestDir: {app}; Flags: ignoreversion
 Source: micro-manager\MMStartup.bsh; DestDir: {app}; Flags: onlyifdoesntexist
 
