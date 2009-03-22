@@ -310,6 +310,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\MMDevice\DeviceBase.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\MMDevice\MMDevice.h"
+				>
+			</File>
+			<File
 				RelativePath=".\resource.h"
 				>
 			</File>
