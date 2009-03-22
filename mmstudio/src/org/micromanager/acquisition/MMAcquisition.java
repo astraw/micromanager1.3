@@ -4,6 +4,8 @@ import ij.ImagePlus;
 
 import java.awt.Color;
 
+import org.json.JSONObject;
+
 import org.micromanager.image5d.ChannelCalibration;
 import org.micromanager.image5d.ChannelControl;
 import org.micromanager.image5d.ChannelDisplayProperties;
@@ -75,6 +77,18 @@ public class MMAcquisition {
 	   return depth_;
    }
    
+   public int getFrames() {
+      return numFrames_;
+   }
+
+   public int getChannels() {
+      return numChannels_;
+   }
+
+   public int getSlices() {
+      return numSlices_;
+   }
+
    public void setDimensions(int frames, int channels, int slices) throws MMScriptException {
       if (initialized_)
          throw new MMScriptException("Can't change dimensions - the acquisition is already initialized");
@@ -271,6 +285,14 @@ public class MMAcquisition {
       }
    }
 
+   public void setSystemState(int frame, int channel, int slice, JSONObject state) throws MMScriptException {
+      try {
+         acqData_.setSystemState(frame, channel, slice, state);
+      } catch (MMAcqDataException e) {
+         throw new MMScriptException(e);
+      }
+   }
+   
    
    public String getProperty(int frame, int channel, int slice, String propName
 	         ) throws MMScriptException {

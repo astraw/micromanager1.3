@@ -82,6 +82,8 @@ import mmcorej.MMEventCallback;
 import mmcorej.Metadata;
 import mmcorej.StrVector;
 
+import org.json.JSONObject;
+
 import org.micromanager.acquisition.AcquisitionManager;
 import org.micromanager.acquisition.MMAcquisition;
 import org.micromanager.acquisition.MMAcquisitionSnap;
@@ -115,11 +117,13 @@ import org.micromanager.metadata.AcquisitionData;
 import org.micromanager.metadata.DisplaySettings;
 import org.micromanager.metadata.MMAcqDataException;
 import org.micromanager.metadata.SummaryKeys;
+import org.micromanager.metadata.ImagePropertyKeys;
 import org.micromanager.metadata.WellAcquisitionData;
 import org.micromanager.navigation.CenterAndDragListener;
 import org.micromanager.navigation.PositionList;
 import org.micromanager.navigation.XYZKeyListener;
 import org.micromanager.navigation.ZWheelListener;
+import org.micromanager.utils.Annotator;
 import org.micromanager.utils.CfgFileFilter;
 import org.micromanager.utils.ContrastSettings;
 import org.micromanager.utils.GUIColors;
@@ -3269,7 +3273,6 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 				core_.getLastImageMD(0, 0, md);
 			} else {
 				core_.snapImage();
-				// ToDo: get metadata of the snapped image
 				long channels = core_.getNumberOfChannels();
 				if (channels == 1)
 					img = core_.getImage();
@@ -3291,6 +3294,13 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 			}
 
 			acq.insertImage(img, frame, channel, slice);
+         // Insert exposure in metadata
+         acq.setProperty(frame, channel, slice, ImagePropertyKeys.EXPOSURE_MS, NumberUtils.NumberToString(core_.getExposure()));
+         // generate list with system state
+         JSONObject state = Annotator.generateJSONMetadata(core_.getSystemStateCache());
+         // and insert into metadata
+         acq.setSystemState(frame, channel, slice, state);
+
 
 		} catch (Exception e) {
 			handleException(e);
@@ -3306,7 +3316,7 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 			if (acqName == null)
 				acqName = "Snap" + snapCount_;
 			Boolean newSnap = false;
-			// gui.closeAllAcquisitions();
+
 			core_.setExposure(NumberUtils.StringToDouble(textFieldExp_.getText()));
 			long width = core_.getImageWidth();
 			long height = core_.getImageHeight();
@@ -3335,6 +3345,12 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 
 			acq = (MMAcquisitionSnap) acqMgr_.getAcquisition(acqName);
 			acq.appendImage(img);
+         // add exposure to metadata
+         acq.setProperty(acq.getFrames() - 1, acq.getChannels() - 1, acq.getSlices() - 1, ImagePropertyKeys.EXPOSURE_MS, NumberUtils.NumberToString(core_.getExposure()));
+         // generate list with system state
+         JSONObject state = Annotator.generateJSONMetadata(core_.getSystemStateCache());
+         // and insert into metadata
+         acq.setSystemState(acq.getFrames() - 1, acq.getChannels() - 1, acq.getSlices() - 1, state);
 
 			if (liveRunning)
 				enableLiveMode(true);
