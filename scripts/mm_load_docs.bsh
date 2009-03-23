@@ -3,7 +3,7 @@
 // Arthur Edelstein, UCSF, 2009
 
 import bsh.ClassIdentifier;
-import org.micromanager.utils.BareBonesBrowserLaunch;
+import ij.plugin.BrowserLauncher;
 
 
 
@@ -41,7 +41,6 @@ doc(Object o) {
 doc_className(String className) {
 	print(className);
 	String [] sunAPIpkgs = {"java","javax","org.ietf","org.omg","org.w3c","org.xml"};
-	bbbl = new BareBonesBrowserLaunch();
 
 	boolean sunAPI = false;
 	boolean ijAPI = false;
@@ -60,7 +59,7 @@ doc_className(String className) {
 	if (className.startsWith("mmcorej.CMMCore"))
 		theUrl = "http://micro-manager.org/content/doc/CMMCore.html";
 
-	bbbl.openURL(theUrl);
+	BrowserLauncher.openURL(theUrl);
 }
 
 update();
