@@ -5,8 +5,11 @@ MMJ_.jar:  \
 	$(srcdir)/src/DeviceListBuilder.java \
 	$(srcdir)/src/MMImage5DReaderPlugin_.java \
 	$(srcdir)/src/org/micromanager/AcqControlDlg.java \
-	$(srcdir)/src/org/micromanager/FastAcqDlg.java \
+	$(srcdir)/src/org/micromanager/CalibrationListDlg.java \
+	$(srcdir)/src/org/micromanager/CalibrationEditor.java \
 	$(srcdir)/src/org/micromanager/ConfigGroupPad.java \
+	$(srcdir)/src/org/micromanager/CoreAutoFocus.java \
+	$(srcdir)/src/org/micromanager/FastAcqDlg.java \
 	$(srcdir)/src/org/micromanager/GroupEditor.java \
 	$(srcdir)/src/org/micromanager/MMAboutDlg.java \
 	$(srcdir)/src/org/micromanager/MMAcquisitionEngineMT.java \
@@ -23,8 +26,6 @@ MMJ_.jar:  \
 	$(srcdir)/src/org/micromanager/SliderPanel.java \
 	$(srcdir)/src/org/micromanager/SplitView.java \
 	$(srcdir)/src/org/micromanager/TileCreatorDlg.java \
-	$(srcdir)/src/org/micromanager/CalibrationListDlg.java \
-	$(srcdir)/src/org/micromanager/CalibrationEditor.java \
 	$(srcdir)/src/org/micromanager/license.txt \
 	$(srcdir)/src/org/micromanager/acquisition/MMAcquisition.java \
 	$(srcdir)/src/org/micromanager/acquisition/AcquisitionManager.java \
