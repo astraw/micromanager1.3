@@ -1,0 +1,66 @@
+// BeanShell javadoc finding script for Micro-Manager.
+// This script is called from mm_beanshell_startup.bsh
+// Arthur Edelstein, UCSF, 2009
+
+import bsh.ClassIdentifier;
+import org.micromanager.utils.BareBonesBrowserLaunch;
+
+
+
+getClassName(bsh.ClassIdentifier o) {
+	return getClassName(o,this.caller.namespace);
+}
+
+getClassName(Object o) {
+	return getClassName(o,this.caller.namespace);
+}
+
+getClassName(bsh.ClassIdentifier o, namespace) {
+	return namespace.identifierToClass(o).getName();
+}
+
+getClassName(Object o, namespace) {
+	if (o instanceof String)
+		return namespace.getClass((String) o).getName();
+	else if (o instanceof Class)
+		return o.getName();
+	else
+		return o.getClass().getName();
+}
+
+doc(bsh.ClassIdentifier o) {
+	className = getClassName(o,this.caller.namespace);
+	doc_className(className);
+}
+
+doc(Object o) {
+	className = getClassName(o,this.caller.namespace);
+	doc_className(className);
+}
+
+doc_className(String className) {
+	print(className);
+	String [] sunAPIpkgs = {"java","javax","org.ietf","org.omg","org.w3c","org.xml"};
+	bbbl = new BareBonesBrowserLaunch();
+
+	boolean sunAPI = false;
+	boolean ijAPI = false;
+	for (sunAPIpkg : sunAPIpkgs) {
+		sunAPI = sunAPI || className.startsWith(sunAPIpkg + ".");
+		}
+	
+	if (sunAPI)	
+		theUrl = "http://java.sun.com/javase/6/docs/api/" + className.replace(".","/") + ".html";
+	if (className.startsWith("ij.")) // ImageJ API
+		theUrl = "http://rsb.info.nih.gov/ij/developer/api/" + className.replace(".","/") + ".html";
+	if (className.startsWith("bsh.")) // Beanshell API
+		theUrl = "http://odelacot.homelinux.org/doc/bsh-doc/api/" + className.replace(".","/") + ".html";
+	if (className.startsWith("org.micromanager")) // Micro-Manager API
+		theUrl = "http://micro-manager.org/content/doc/mmstudio/"  + className.replace(".","/") + ".html";
+	if (className.startsWith("mmcorej.CMMCore"))
+		theUrl = "http://micro-manager.org/content/doc/CMMCore.html";
+
+	bbbl.openURL(theUrl);
+}
+
+update();

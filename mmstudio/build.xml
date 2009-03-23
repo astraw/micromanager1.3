@@ -188,6 +188,7 @@
       <copy file="${ScriptsRoot}/config_test.bsh" todir="${ScriptsInstall}" />
       <copy file="${ScriptsRoot}/AutoExpose.bsh" todir="${ScriptsInstall}" />
       <copy file="${ScriptsRoot}/mm_beanshell_startup.bsh" todir="${ScriptsInstall}" />
+      <copy file="${ScriptsRoot}/mm_load_docs.bsh" todir="${ScriptsInstall}" />
 
       <copy file="${DriversRoot}/K8055_libusb.inf" todir="${DriversInstall}" />
       <copy file="${DriversRoot}/K8055_libusb.cat" todir="${DriversInstall}" />

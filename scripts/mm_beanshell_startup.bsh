@@ -57,3 +57,5 @@ void update(String x, bsh.NameSpace ns) {
 		}
 	}
 }
+
+source("scripts/mm_load_docs.bsh");
