@@ -280,9 +280,9 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 	 */
 	public static void main(String args[]) {
 		try {
-			UIManager.setLookAndFeel(UIManager
-					.getCrossPlatformLookAndFeelClassName());
-//			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+//			UIManager.setLookAndFeel(UIManager
+//					.getCrossPlatformLookAndFeelClassName());
+			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 			MMStudioMainFrame frame = new MMStudioMainFrame(false);
 			frame.setVisible(true);
 			frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
@@ -2545,7 +2545,7 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 			for (int i = 0; i < plugins_.size(); i++) {
 				final JMenuItem newMenuItem = new JMenuItem();
 				newMenuItem.addActionListener(new ActionListener() {
-					public void actionPerformed(final ActionEvent e) {
+				   public void actionPerformed(final ActionEvent e) {
 						System.out.println("Plugin command: "
 								+ e.getActionCommand());
 						// find the coresponding plugin
@@ -2572,22 +2572,54 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 		helpMenu.setText("Help");
 		menuBar_.add(helpMenu);
 
+		final JMenuItem usersGuideMenuItem = new JMenuItem();
+		usersGuideMenuItem.addActionListener(new ActionListener() {
+		   public void actionPerformed(ActionEvent e) {
+		      try {
+		         ij.plugin.BrowserLauncher.openURL("http://micro-manager.org/documentation.php?object=Userguide");
+		      } catch (IOException e1) {
+		         // TODO Auto-generated catch block
+		         e1.printStackTrace();
+		      }
+		   }
+		});
+		usersGuideMenuItem.setText("User's guide...");
+		helpMenu.add(usersGuideMenuItem);
+
+
+		final JMenuItem configGuideMenuItem = new JMenuItem();
+		configGuideMenuItem.addActionListener(new ActionListener() {
+		   public void actionPerformed(ActionEvent e) {
+		      try {
+		         ij.plugin.BrowserLauncher.openURL("http://micro-manager.org/documentation.php?object=Configguide");
+		      } catch (IOException e1) {
+		         // TODO Auto-generated catch block
+		         e1.printStackTrace();
+		      }
+		   }
+		});
+		configGuideMenuItem.setText("Configuration guide...");
+		helpMenu.add(configGuideMenuItem);
+
+
 		final JMenuItem aboutMenuItem = new JMenuItem();
 		aboutMenuItem.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				MMAboutDlg dlg = new MMAboutDlg();
-				String versionInfo = "MM Studio version: " + VERSION;
-				versionInfo += "\n" + core_.getVersionInfo();
-				versionInfo += "\n" + core_.getAPIVersionInfo();
-				versionInfo += "\nUser: " + core_.getUserId();
-				versionInfo += "\nHost: " + core_.getHostName();
+		   public void actionPerformed(ActionEvent e) {
+		      MMAboutDlg dlg = new MMAboutDlg();
+		      String versionInfo = "MM Studio version: " + VERSION;
+		      versionInfo += "\n" + core_.getVersionInfo();
+		      versionInfo += "\n" + core_.getAPIVersionInfo();
+		      versionInfo += "\nUser: " + core_.getUserId();
+		      versionInfo += "\nHost: " + core_.getHostName();
 
-				dlg.setVersionInfo(versionInfo);
-				dlg.setVisible(true);
-			}
+		      dlg.setVersionInfo(versionInfo);
+		      dlg.setVisible(true);
+		   }
 		});
 		aboutMenuItem.setText("About...");
 		helpMenu.add(aboutMenuItem);
+       
+       
 	}
 
 	public void updateGUI(boolean updateConfigPadStructure) {

@@ -115,7 +115,6 @@ MMJ_.jar:  \
 	$(srcdir)/src/org/micromanager/script/MMScriptFrame.java \
 	$(srcdir)/src/org/micromanager/script/MMScriptView.java \
 	$(srcdir)/src/org/micromanager/script/ScriptPanelMessageWindow.java \
-	$(srcdir)/src/org/micromanager/utils/BareBonesBrowserLaunch.java \
 	$(srcdir)/src/org/micromanager/utils/CfgFileFilter.java \
 	$(srcdir)/src/org/micromanager/utils/ChannelSpec.java \
 	$(srcdir)/src/org/micromanager/utils/ColorEditor.java \
