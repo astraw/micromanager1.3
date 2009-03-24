@@ -58,4 +58,5 @@ void update(String x, bsh.NameSpace ns) {
 	}
 }
 
-source("scripts/mm_load_docs.bsh");
+source("scripts/mm_load_docs.bsh"); // Generates command "doc(object);"
+source("scripts/mm_inspector.bsh"); // Generates command "inspect(object);"

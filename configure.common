@@ -148,6 +148,18 @@ if test "$IMAGEJDIR" != "no" ; then
    fi
 
    #----------------------------------------------------------------
+   # Find swingx.jar in ImageJ plugins directory
+   #----------------------------------------------------------------
+   AC_MSG_CHECKING(for swingx jar file in ImageJ plugins directory)
+   if test -r "$IJPATH/plugins/swingx-0.9.5.jar" ; then
+      SWINGXJARPATH="$IJPATH/plugins/swingx-0.9.5.jar"
+      AC_MSG_RESULT($SWINGXJARPATH)
+   fi
+   if test "$SWINGXJARPATH" = "" ; then
+      AC_MSG_ERROR([not found, Use the without-imagej directove to build without ImageJ GUI, or download swingx and copy to $IJPATH/plugins])
+   fi
+
+   #----------------------------------------------------------------
    # .so-directory
    #----------------------------------------------------------------
    if test -z "$DEVICEADAPTERPATH"; then

@@ -48,14 +48,16 @@ doc_className(String className) {
 		sunAPI = sunAPI || className.startsWith(sunAPIpkg + ".");
 		}
 	
+	suffix = className.replace(".","/") + ".html";
+
 	if (sunAPI)	
-		theUrl = "http://java.sun.com/javase/6/docs/api/" + className.replace(".","/") + ".html";
+		theUrl = "http://java.sun.com/javase/6/docs/api/" + suffix;
 	if (className.startsWith("ij.")) // ImageJ API
-		theUrl = "http://rsb.info.nih.gov/ij/developer/api/" + className.replace(".","/") + ".html";
+		theUrl = "http://rsb.info.nih.gov/ij/developer/api/" + suffix;
 	if (className.startsWith("bsh.")) // Beanshell API
-		theUrl = "http://odelacot.homelinux.org/doc/bsh-doc/api/" + className.replace(".","/") + ".html";
+		theUrl = "http://odelacot.homelinux.org/doc/bsh-doc/api/" + suffix;
 	if (className.startsWith("org.micromanager")) // Micro-Manager API
-		theUrl = "http://micro-manager.org/content/doc/mmstudio/"  + className.replace(".","/") + ".html";
+		theUrl = "http://micro-manager.org/content/doc/mmstudio/" + suffix;
 	if (className.startsWith("mmcorej.CMMCore"))
 		theUrl = "http://micro-manager.org/content/doc/CMMCore.html";
 

@@ -20,6 +20,7 @@
 	<property name="MMPluginDir" value="${ImageJPath}/plugins/Micro-Manager"/>
 	<property name="IJ" value="../classext/ij.jar"/>
 	<property name="beanshell" value="../classext/bsh-2.0b4.jar"/>
+	<property name="swingx" value="../classext/swingx-0.9.5.jar"/>
 	<property name="MMCoreJ" value="../bin/MMCoreJ.jar"/>
 	<property name="MMPluginDir-inst" value="${InstallRoot}/plugins/Micro-Manager"/>
 	<property name="BinRoot" value="../bin"/>
@@ -32,12 +33,14 @@
 		<pathelement location="${MMPluginDir}/MMJ_.jar"/>
 		<pathelement location="${MMPluginDir}/MMCoreJ.jar"/>
 		<pathelement location="${MMPluginDir}/bsh-2.0b4.jar"/>
+		<pathelement location="${MMPluginDir}/swingx-0.9.5.jar"/>
 		<pathelement location="${IJ}"/>
 	</path>
 
 	<path id="project.class.path">
 		<pathelement location="${IJ}" />
 		<pathelement location="${beanshell}" />
+		<pathelement location="${swingx}" />
 		<pathelement location="${MMCoreJ}" />
 		<pathelement location="${MMPluginDir}/MMJ_.jar"/>
 	</path>
@@ -65,6 +68,7 @@
 		<mkdir dir="${MMPluginDir}" />
 		<copy file="MMJ_.jar" todir="${MMPluginDir}" />
 		<copy file="${beanshell}" todir="${MMPluginDir}" />
+		<copy file="${swingx}" todir="${MMPluginDir}" />
 		<copy file="${MMCoreJ}" todir="${MMPluginDir}" />
 	</target>
 
@@ -110,6 +114,7 @@
 		<copy file="${ImageJPath}/ImageJ.exe" todir="${InstallRoot}" />
 		<copy file="MMJ_.jar" todir="${MMPluginDir-inst}" />
 		<copy file="${beanshell}" todir="${MMPluginDir-inst}" />
+		<copy file="${swingx}" todir="${MMPluginDir-inst}" />
 		<copy file="${MMCoreJ}" todir="${MMPluginDir-inst}" />
 		<copy file="${BinRoot}/MMCoreJ_wrap.dll" todir="${InstallRoot}" />
 		<copy file="${BinRoot}/MMConfig_demo.cfg" todir="${InstallRoot}" />
@@ -189,6 +194,7 @@
       <copy file="${ScriptsRoot}/AutoExpose.bsh" todir="${ScriptsInstall}" />
       <copy file="${ScriptsRoot}/mm_beanshell_startup.bsh" todir="${ScriptsInstall}" />
       <copy file="${ScriptsRoot}/mm_load_docs.bsh" todir="${ScriptsInstall}" />
+      <copy file="${ScriptsRoot}/mm_inspector.bsh" todir="${ScriptsInstall}" />
 
       <copy file="${DriversRoot}/K8055_libusb.inf" todir="${DriversInstall}" />
       <copy file="${DriversRoot}/K8055_libusb.cat" todir="${DriversInstall}" />

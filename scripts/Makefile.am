@@ -11,6 +11,7 @@ install:
 	cp manualAcq.bsh $(IJPATH)/scripts/
 	cp mm_beanshell_startup.bsh $(IJPATH)/scripts/
 	cp mm_load_docs.bsh $(IJPATH)/scripts/
+	cp mm_inspector.bsh $(IJPATH)/scripts/
 	cp sdemo1.bsh $(IJPATH)/scripts/
 	cp sdemo2.bsh $(IJPATH)/scripts/
 	cp setZoom.bsh $(IJPATH)/scripts/
