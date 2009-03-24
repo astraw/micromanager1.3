@@ -954,7 +954,7 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 						updateChannelCombos();
 					}
 				});
-		saveConfigurationPresetsMenuItem.setText("Save Configuration Presets");
+		saveConfigurationPresetsMenuItem.setText("Save Configuration Presets...");
 		toolsMenu.add(saveConfigurationPresetsMenuItem);
 
 		final JMenuItem optionsMenuItem = new JMenuItem();
@@ -2583,7 +2583,7 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 		      }
 		   }
 		});
-		usersGuideMenuItem.setText("User's guide...");
+		usersGuideMenuItem.setText("User's Guide...");
 		helpMenu.add(usersGuideMenuItem);
 
 
@@ -2598,7 +2598,7 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 		      }
 		   }
 		});
-		configGuideMenuItem.setText("Configuration guide...");
+		configGuideMenuItem.setText("Configuration Guide...");
 		helpMenu.add(configGuideMenuItem);
 
 
