@@ -280,9 +280,9 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 	 */
 	public static void main(String args[]) {
 		try {
-//			UIManager.setLookAndFeel(UIManager
-//					.getCrossPlatformLookAndFeelClassName());
-			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+			UIManager.setLookAndFeel(UIManager
+					.getCrossPlatformLookAndFeelClassName());
+//			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 			MMStudioMainFrame frame = new MMStudioMainFrame(false);
 			frame.setVisible(true);
 			frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
@@ -812,7 +812,7 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 
 			}
 		});
-		scriptPanelMenuItem.setText("Script Panel");
+		scriptPanelMenuItem.setText("Script Panel...");
 
 		final JMenuItem propertyEditorMenuItem = new JMenuItem();
 		toolsMenu.add(propertyEditorMenuItem);
