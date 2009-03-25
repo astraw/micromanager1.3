@@ -44,6 +44,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
+				AdditionalIncludeDirectories="\projects\3rdparty\Microsoft\VisualC++\atlmfc\include"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;MODULE_EXPORTS;_LIGHT"
 				MinimalRebuild="true"
 				ExceptionHandling="2"
