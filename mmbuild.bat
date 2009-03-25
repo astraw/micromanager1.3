@@ -1,5 +1,5 @@
 ECHO building native libraries...
-cd "C:\Program Files\Microsoft Visual Studio 9.0\VC\"
+cd "\Program Files\Microsoft Visual Studio 9.0\VC\"
 call vcvarsall.bat
  
 cd "\projects\micromanager1.3\"

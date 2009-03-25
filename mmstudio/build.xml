@@ -7,7 +7,7 @@
 	<property name="InstallerName" value="MMSetup_1_3_xx"/>
 
 	<!-- Specify the system path to the ImageJ root directory -->
-	<property name="ImageJPath" value="C:/Program Files/ImageJ"/>
+	<property name="ImageJPath" value="/Program Files/ImageJ"/>
 	<property name="InstallRoot" value="../Install/micro-manager"/>
 	<property name="InstallScripts" value="../Install"/>
 	<property name="NativeRoot" value="../MMCoreJ_wrap"/>
