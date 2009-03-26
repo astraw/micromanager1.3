@@ -1044,7 +1044,7 @@ int ABSCamera::OnBinning(MM::PropertyBase* pProp, MM::ActionType eAct)
     }
 
     if ( binning == 1 ) resolutionReturn.dwBin = XY_BIN_NONE;
-    if ( binning == 2 ) resolutionReturn.dwBin = XY_BIN_2X;
+    if ( binning == 2 ) resolutionReturn.dwBin = X_BIN_2X;
     if ( binning == 3 ) resolutionReturn.dwBin = XY_BIN_3X;
     if ( binning == 4 ) resolutionReturn.dwBin = XY_BIN_4X;
     if ( binning == 5 ) resolutionReturn.dwBin = XY_BIN_5X;
@@ -1058,13 +1058,23 @@ int ABSCamera::OnBinning(MM::PropertyBase* pProp, MM::ActionType eAct)
     {
         resolutionReturn.wOffsetX = 0;
         resolutionReturn.wOffsetY = 0;
+    } 
+    /*
+    // This does not seem to fix the binning problem
+    else {
+       resolutionReturn.wOffsetX /= (i16) binning;
+       resolutionReturn.wOffsetY /= (i16) binning;
     }
+
+    resolutionReturn.wSizeX /= (u16) binning;
+    resolutionReturn.wSizeY /= (u16) binning;
+    */
 
     // must be at least the same (Skip may be higher than bin but not contrary
     resolutionReturn.dwSkip = resolutionReturn.dwBin;
 
     // try to keep the current exposure, each time the resolution is changed...
-    resolutionReturn.bKeepExposure = 1;
+    resolutionReturn.bKeepExposure = (u08) 1;
 
     // use CamUSB_SetCameraResolution => to update the ROI for Skip and binning
     dwRC = GET_RC(CamUSB_SetCameraResolution( resolutionReturn.wOffsetX,
@@ -1073,7 +1083,7 @@ int ABSCamera::OnBinning(MM::PropertyBase* pProp, MM::ActionType eAct)
                                               resolutionReturn.wSizeY,
                                               resolutionReturn.dwSkip,
                                               resolutionReturn.dwBin,
-                                              resolutionReturn.bKeepExposure,
+                                              TRUE,
                                               this->deviceNumber),
                                               this->deviceNumber);
 
@@ -1301,7 +1311,7 @@ int ABSCamera::SetCameraFunction( unsigned __int64 CamFuncID, void* functionPara
   return DEVICE_OK;
 }
 
-int ABSCamera::StartSequenceAcquisition(long /*numImages*/, double /*interval_ms*/, bool /*stopOnOverflow*/)
-{
-  return DEVICE_UNSUPPORTED_COMMAND;
-}
+//int ABSCamera::StartSequenceAcquisition(long /*numImages*/, double /*interval_ms*/, bool /*stopOnOverflow*/)
+//{
+//  return DEVICE_UNSUPPORTED_COMMAND;
+//}

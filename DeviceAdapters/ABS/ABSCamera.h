@@ -61,7 +61,7 @@ public:
    int GetBinning() const;
    int SetBinning(int binSize);
 
-   int StartSequenceAcquisition(long /*numImages*/, double /*interval_ms*/, bool /*stopOnOverflow*/);
+   //int StartSequenceAcquisition(long /*numImages*/, double /*interval_ms*/, bool /*stopOnOverflow*/);
    
    // action interface
    // ----------------
