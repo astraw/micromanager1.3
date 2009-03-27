@@ -9,7 +9,6 @@
 	<!-- Specify the system path to the ImageJ root directory -->
 	<property name="ImageJPath" value="/Program Files/ImageJ"/>
 	<property name="InstallRoot" value="../Install/micro-manager"/>
-	<property name="InstallScripts" value="../Install"/>
 	<property name="NativeRoot" value="../MMCoreJ_wrap"/>
         <property name="ScriptsRoot" value="../scripts"/>
         <property name="ScriptsInstall" value="../Install/micro-manager/scripts"/>
@@ -208,9 +207,16 @@
 
 	</target>
 
+
+	<target name="makeDeviceList" description="Run DeviceListBuilder to generate MMDeviceList.txt">
+		<exec dir="${InstallRoot}" executable="java">
+			<arg line="-cp plugins\Micro-Manager\MMJ_.jar;plugins\Micro-Manager\MMCoreJ.jar DeviceListBuilder "/>
+		</exec>
+	</target>
+
 	<target name="packInstaller" description="Create installation package">
 		<exec dir="${InstallRoot}" executable="/projects/3rdparty/Inno_Setup_5/iscc.exe">
-			<arg line="/F${InstallerName} ${InstallScripts}/MM-ImageJ-Install.iss"/>
+			<arg line="/F${InstallerName} ../MM-ImageJ-Install.iss"/>
 		</exec>
 	</target>
 
