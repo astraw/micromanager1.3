@@ -105,7 +105,7 @@ int main(int argc, char* argv[])
  */
 void TestDemoDevices(CMMCore& core)
 {
-   const char* XYStageName = "XYStage";
+   const char* XYStageName = "XY";
    const char* wheelName = "Emission";
 
    // Example 1: move filter wheel to state(position) 3
