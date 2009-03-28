@@ -4,7 +4,7 @@
 // SUBSYSTEM:     DeviceAdapters
 //-----------------------------------------------------------------------------
 // DESCRIPTION:   PrecisExcite controller adapter
-// COPYRIGHT:     University of California, San Francisco, 2006
+// COPYRIGHT:     University of California, San Francisco, 2009
 // LICENSE:       This file is distributed under the BSD license.
 //                License text is included with the source distribution.
 //
@@ -54,8 +54,7 @@ public:
   
    void GetName(char* pszName) const;
    bool Busy();
-   unsigned long GetNumberOfChannels()const {return numChan_;}
-
+   
    // action interface
    // ----------------
    int OnAddress(MM::PropertyBase* pProp, MM::ActionType eAct);
@@ -84,7 +83,6 @@ private:
    int error_;
 
    bool initialized_;
-   unsigned numChan_;
    std::string name_;
    std::string port_;
    char currentChannelLetter_;
@@ -97,7 +95,6 @@ private:
    long armState_;
    TriggerType triggerMode_;
 
-   unsigned speed_;
    bool busy_;
    double answerTimeoutMs_;
    vector<char> channelLetters_;

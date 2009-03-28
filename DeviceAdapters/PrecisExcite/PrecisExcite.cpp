@@ -53,7 +53,7 @@ const char * line_feed = "\n";
 ///////////////////////////////////////////////////////////////////////////////
 MODULE_API void InitializeModuleData()
 {
-   AddAvailableDeviceName(g_ControllerName, "PrecisExcite");
+   AddAvailableDeviceName(g_ControllerName, "PrecisExcite LED illuminator");
    
 }
 
@@ -85,9 +85,7 @@ Controller::Controller(const char* name) :
    initialized_(false), 
    intensity_(0),
    state_(0),
-   numChan_(6), 
    name_(name), 
-   speed_(3), 
    busy_(false),
    error_(0)
 
@@ -160,8 +158,9 @@ int Controller::Initialize()
 
 void Controller::ReadGreeting()
 {
-   for (int i=1;i<=6;i++)
+   do {
       ReceiveOneLine();
+   } while (! buf_string_.empty());
 }
 
 void Controller::ReadChannelLabels()
@@ -181,7 +180,7 @@ void Controller::ReadChannelLabels()
    for (unsigned int i=0;i<buf_tokens_.size();i++)
    {
       if (buf_tokens_[i].substr(0,3).compare("LAM")==0) {
-         channelLetters_.push_back(buf_tokens_[i][4]);
+         channelLetters_.push_back(buf_tokens_[i][4]); // Read 4th character
          string label = buf_tokens_[i].substr(6);
          StripString(label);
          channelLabels_.push_back(label);
@@ -517,7 +516,7 @@ void Controller::GetState(long &state)
       Send("C?");
       long stateTmp = 0;
 
-      for (int i=1;i<=4;i++)
+      for (int i=1;i<=channelLetters_.size();i++)
       {
          ReceiveOneLine();
 
