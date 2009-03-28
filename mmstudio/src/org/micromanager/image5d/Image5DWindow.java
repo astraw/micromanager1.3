@@ -32,6 +32,7 @@ import org.micromanager.api.AcquisitionEngine;
 import org.micromanager.metadata.AcquisitionData;
 import org.micromanager.metadata.DisplaySettings;
 import org.micromanager.metadata.ImageKey;
+import org.micromanager.metadata.ImagePropertyKeys;
 import org.micromanager.metadata.MMAcqDataException;
 import org.micromanager.metadata.MetadataDlg;
 import org.micromanager.utils.ChannelSpec;
@@ -518,6 +519,7 @@ public class Image5DWindow extends StackWindow {
             if (e.getSource()==Scrollbars[i])
                positions[i] = Scrollbars[i].getValue();
          }
+
          notify();
       }
    }
@@ -590,6 +592,18 @@ public class Image5DWindow extends StackWindow {
          s += "; ";
       }    	
       
+      // Pixel Size display in header
+      try {
+         double pixSizeUm = Double.parseDouble(acqData_.getImageValue(i5d.getCurrentFrame()-1, i5d.getCurrentChannel()-1, i5d.getCurrentSlice()-1, ImagePropertyKeys.X_UM));
+         //cal = getImagePlus().getCalibration();
+         if (pixSizeUm > 0) {
+            cal.setUnit("um");
+            cal.pixelWidth = pixSizeUm;
+            cal.pixelHeight = pixSizeUm;
+         }
+         img5.setCalibration(cal);
+      } catch (Exception ex) {}
+
       // x/y size
       if (cal.pixelWidth!=1.0 || cal.pixelHeight!=1.0)
          s += IJ.d2s(imp.getWidth()*cal.pixelWidth,2) + "x" + IJ.d2s(imp.getHeight()*cal.pixelHeight,2)
@@ -626,11 +640,12 @@ public class Image5DWindow extends StackWindow {
          s += "; " + size + "K";
       g.drawString(s, 5, insets.top+TEXT_GAP);
       
-      // micro-manager - metadata display
+      // micro-manager - madata display
       if (metaDlg_ != null) {
          metaDlg_.displayImageData(i5d.getCurrentFrame()-1, i5d.getCurrentChannel()-1, i5d.getCurrentSlice()-1);
       }
       
+
       if (pb_ != null && acqData_ != null)
          pb_.setImageInfo(ImageKey.getImageInfo(acqData_, i5d.getCurrentFrame()-1, i5d.getCurrentChannel()-1, i5d.getCurrentSlice()-1));
    }

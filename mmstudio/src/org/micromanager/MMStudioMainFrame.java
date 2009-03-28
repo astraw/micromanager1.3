@@ -3328,6 +3328,12 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 			acq.insertImage(img, frame, channel, slice);
          // Insert exposure in metadata
          acq.setProperty(frame, channel, slice, ImagePropertyKeys.EXPOSURE_MS, NumberUtils.NumberToString(core_.getExposure()));
+         // Add pixel size calibration
+         double pixSizeUm = core_.getPixelSizeUm();
+         if (pixSizeUm > 0) {
+            acq.setProperty(frame, channel, slice, ImagePropertyKeys.X_UM, NumberUtils.NumberToString(pixSizeUm));
+            acq.setProperty(frame, channel, slice, ImagePropertyKeys.Y_UM, NumberUtils.NumberToString(pixSizeUm));
+         }
          // generate list with system state
          JSONObject state = Annotator.generateJSONMetadata(core_.getSystemStateCache());
          // and insert into metadata
@@ -3379,6 +3385,12 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 			acq.appendImage(img);
          // add exposure to metadata
          acq.setProperty(acq.getFrames() - 1, acq.getChannels() - 1, acq.getSlices() - 1, ImagePropertyKeys.EXPOSURE_MS, NumberUtils.NumberToString(core_.getExposure()));
+         // Add pixel size calibration
+         double pixSizeUm = core_.getPixelSizeUm();
+         if (pixSizeUm > 0) {
+            acq.setProperty(acq.getFrames() - 1, acq.getChannels() - 1, acq.getSlices() - 1, ImagePropertyKeys.X_UM, NumberUtils.NumberToString(pixSizeUm));
+            acq.setProperty(acq.getFrames() - 1, acq.getChannels() - 1, acq.getSlices() - 1, ImagePropertyKeys.Y_UM, NumberUtils.NumberToString(pixSizeUm));
+         }
          // generate list with system state
          JSONObject state = Annotator.generateJSONMetadata(core_.getSystemStateCache());
          // and insert into metadata

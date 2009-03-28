@@ -311,4 +311,6 @@ public class MMAcquisition {
    public boolean hasActiveImage5D() {
 	   return ! (this.imgWin_ == null);
    }
+
 }
+
