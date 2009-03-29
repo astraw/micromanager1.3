@@ -282,7 +282,7 @@ public class MMAcquisitionEngineMT implements AcquisitionEngine {
       }
       public void run() {
          i5dWin_.close();
-         i5dWin_ = null;
+         cleanup();
       }
    }
 
@@ -897,7 +897,8 @@ public class MMAcquisitionEngineMT implements AcquisitionEngine {
 //         Image5DWindow parentWnd = (useMultiplePositions_ && posMode_ == PositionMode.TIME_LAPSE) ? i5dWin_[posIdx] : i5dWin_[0];
          Image5DWindow parentWnd = (!singleWindow_ && useMultiplePositions_ && posMode_ == PositionMode.TIME_LAPSE) ? i5dWin_[posIdx] : i5dWin_[0];
          if (e.getMessage().length() > 0)
-            JOptionPane.showMessageDialog(parentWnd, e.getMessage());     
+            JOptionPane.showMessageDialog(parentWnd, e.getMessage()); 
+         cleanup();
          return;
       }  catch (OutOfMemoryError e) {
          stop(true);
@@ -907,6 +908,7 @@ public class MMAcquisitionEngineMT implements AcquisitionEngine {
          Image5DWindow parentWnd = (!singleWindow_ && useMultiplePositions_ && posMode_ == PositionMode.TIME_LAPSE) ? i5dWin_[posIdx] : i5dWin_[0];
          JOptionPane.showMessageDialog(parentWnd, e.getMessage() + "\nOut of memory - acquistion stopped.\n" +
          "In the future you can try to increase the amount of memory available to the Java VM (ImageJ).");     
+         cleanup();
          return;       
       } catch (IOException e) {
          stop(true);
@@ -915,6 +917,7 @@ public class MMAcquisitionEngineMT implements AcquisitionEngine {
 //!!!    Image5DWindow parentWnd = (useMultiplePositions_ && posMode_ == PositionMode.TIME_LAPSE) ? i5dWin_[posIdx] : i5dWin_[0];
          Image5DWindow parentWnd = (!singleWindow_ && useMultiplePositions_ && posMode_ == PositionMode.TIME_LAPSE) ? i5dWin_[posIdx] : i5dWin_[0];
          JOptionPane.showMessageDialog(parentWnd, e.getMessage()); 
+         cleanup();
          return;
       } catch (JSONException e) {
          stop(true);
@@ -922,8 +925,8 @@ public class MMAcquisitionEngineMT implements AcquisitionEngine {
          acqFinished_ = true;
 //!!!         Image5DWindow parentWnd = (useMultiplePositions_ && posMode_ == PositionMode.TIME_LAPSE) ? i5dWin_[posIdx] : i5dWin_[0];
          Image5DWindow parentWnd = (!singleWindow_ && useMultiplePositions_ && posMode_ == PositionMode.TIME_LAPSE) ? i5dWin_[posIdx] : i5dWin_[0];
-
          JOptionPane.showMessageDialog(parentWnd, e.getMessage()); 
+         cleanup();
          return;
       } catch (Exception e) {
          e.printStackTrace();
@@ -935,6 +938,7 @@ public class MMAcquisitionEngineMT implements AcquisitionEngine {
          if (e.getMessage().length() > 0) {
             JOptionPane.showMessageDialog(parentWnd, e.getMessage()); 
          }
+         cleanup();
          return;
       }
 
@@ -1005,7 +1009,7 @@ public class MMAcquisitionEngineMT implements AcquisitionEngine {
          // return to initial state
          restoreSystem();
          acqFinished_ = true;
-
+         cleanup();
          return;
       }
    }
@@ -1179,11 +1183,16 @@ public class MMAcquisitionEngineMT implements AcquisitionEngine {
       acqFinished_ = true;
       if (multiFieldThread_ != null)
          multiFieldThread_.interrupt();
-      // if (i5dWin_ != null) {
-      //    i5dWin_.dispose();
-      // }
+      cleanup();
    }
 
+   private void cleanup () {
+	   i5dWin_ = null;
+	   img5d_ = null;
+	   acqData_ = null;
+	   well_ = null;
+   }
+   
    public double getCurrentZPos() {
       if (isFocusStageAvailable()) {
          double z = 0.0;
@@ -1638,7 +1647,13 @@ public class MMAcquisitionEngineMT implements AcquisitionEngine {
          long freeBytes = MemoryUtils.freeMemory();
          long requiredBytes = ((long)numSlices * channels_.size() + 10) * (width * height * depth);
          MMLogger.getLogger().info("Remaining memory " + freeBytes + " bytes. Required: " + requiredBytes);
-         if (freeBytes <  requiredBytes) {
+         int tries = 0;
+         while (freeBytes <  requiredBytes && tries <5) {
+        	 System.gc();
+             freeBytes = MemoryUtils.freeMemory();
+             tries++;
+         }
+         if (freeBytes < requiredBytes) {
             throw new OutOfMemoryError("Remaining memory " + FMT2.format(freeBytes/1048576.0) +
                   " MB. Required for the next step: " + FMT2.format(requiredBytes/1048576.0) + " MB");
          }
