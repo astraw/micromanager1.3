@@ -274,6 +274,7 @@ public class MMAcquisitionEngineMT implements AcquisitionEngine {
    /**
     * Threadsafe image5d window shutdown.
     */
+   @SuppressWarnings("unused")
    private class DisposeI5d implements Runnable {
       private Image5DWindow i5dWin_;
 
@@ -1006,6 +1007,11 @@ public class MMAcquisitionEngineMT implements AcquisitionEngine {
             i5dWin_[0].setTitle("Acquisition (completed) " + enddate);
          }
 
+         if (singleWindow_) {
+            String statusLine = "Acquisition Completed";
+            parentGUI_.displayStatusLine(statusLine);
+         }
+         
          // return to initial state
          restoreSystem();
          acqFinished_ = true;
@@ -1168,7 +1174,7 @@ public class MMAcquisitionEngineMT implements AcquisitionEngine {
       int waitMs= 0;
       int interval = 100;
       while (!core_.isContinuousFocusLocked() && waitMs < 3000) {
-         Thread.currentThread().sleep(interval);
+		 Thread.sleep(interval);
          waitMs += interval;
       }
    }
@@ -1187,6 +1193,8 @@ public class MMAcquisitionEngineMT implements AcquisitionEngine {
    }
 
    private void cleanup () {
+      if (singleWindow_ && i5dWin_ != null && i5dWin_[0] != null)
+         i5dWin_[0].close();
 	   i5dWin_ = null;
 	   img5d_ = null;
 	   acqData_ = null;
@@ -1383,7 +1391,8 @@ public class MMAcquisitionEngineMT implements AcquisitionEngine {
       pixelAspect_ = 1.0; // TODO: obtain from core
 
 //!!! 
-      if( singleWindow_ && posIndex > 0) return;
+      if( singleWindow_ && posIndex > 0) 
+         return;
       
       int type;
       if (imgDepth_ == 1)
@@ -1426,7 +1435,7 @@ public class MMAcquisitionEngineMT implements AcquisitionEngine {
       int n = (singleWindow_)?1:img5d_.length;
       for (int i=0; i < n ; i++) 
       {
-    	  int actualFrames = singleFrame_ ? 1 : numFrames_;
+         int actualFrames = singleFrame_ ? 1 : numFrames_;
          boolean newWindow = false;
          if (!(useMultiplePositions_ && posMode_ == PositionMode.MULTI_FIELD) || posIndex == 0) {
             if (posMode_ == PositionMode.MULTI_FIELD) {
@@ -1471,12 +1480,14 @@ public class MMAcquisitionEngineMT implements AcquisitionEngine {
          }
 
          // pop-up 5d image window
-         if (newWindow || i5dWin_[i] == null)
+         if (singleWindow_ && i5dWin_[i] == null)
+            i5dWin_[i] = new Image5DWindow(img5d_[i], false);
+         else if (newWindow || i5dWin_[i] == null)
             i5dWin_[i] = new Image5DWindow(img5d_[i]);
 
 //!!!         
-         if (singleWindow_ && i5dWin_[i] != null)
-        	 i5dWin_[i].setVisible(false);
+         //if (singleWindow_ && i5dWin_[i] != null)
+        	 //  i5dWin_[i].setVisible(false);
          
 
          // set the desired display mode.  This needs to be called after opening the Window
@@ -1494,7 +1505,7 @@ public class MMAcquisitionEngineMT implements AcquisitionEngine {
          i5dWin_[i].setMMChannelData(cs);
          i5dWin_[i].setLocation(xWindowPos + i*30, yWindowPos + i*30);
 
-         if (i==0) {
+         if (i==0 && !singleWindow_) {
             // add listener to the IJ window to detect when it closes
             // (use only the first window in the multi-pos case)
             WindowListener wndCloser = new WindowAdapter() {
@@ -1584,7 +1595,7 @@ public class MMAcquisitionEngineMT implements AcquisitionEngine {
       }
 
       // apply z-offsets
-      GregorianCalendar cldAcq = new GregorianCalendar();
+      // GregorianCalendar cldAcq = new GregorianCalendar();
       double exposureMs = cs.exposure_;
       Object img;
       boolean focusSwitchedOff = false;
@@ -1608,21 +1619,23 @@ public class MMAcquisitionEngineMT implements AcquisitionEngine {
          // snap and retrieve pixels
          core_.snapImage();
          img = core_.getImage();
-//!!!
-         if (img != null && singleWindow_)
-         {
-        	 String statusLine = String.format("Frame %d Channel %s Slice %d Pos %d ",
+
+         if (img != null && singleWindow_) {
+        	   String statusLine = String.format("Frame %d Channel %s Slice %d Pos %d ",
         			 frameCount_, cs.config_, sliceIdx, posIndexNormalized);
-        	 parentGUI_.displayImageWithStatusLine(img,statusLine);
+        	   parentGUI_.displayImageWithStatusLine(img,statusLine);
          }
+
          // Restore autofocus lock if we had switched it off 
          if (focusSwitchedOff) {
             core_.enableContinuousFocus(true);
             waitForFocusLock();
          }
+         
       } catch (Exception e) {
          throw new MMException(e.getMessage());
       }
+      
       long width = core_.getImageWidth();
       long height = core_.getImageHeight();
       long depth = core_.getBytesPerPixel();
@@ -1649,9 +1662,9 @@ public class MMAcquisitionEngineMT implements AcquisitionEngine {
          MMLogger.getLogger().info("Remaining memory " + freeBytes + " bytes. Required: " + requiredBytes);
          int tries = 0;
          while (freeBytes <  requiredBytes && tries <5) {
-        	 System.gc();
-             freeBytes = MemoryUtils.freeMemory();
-             tries++;
+        	   System.gc();
+            freeBytes = MemoryUtils.freeMemory();
+            tries++;
          }
          if (freeBytes < requiredBytes) {
             throw new OutOfMemoryError("Remaining memory " + FMT2.format(freeBytes/1048576.0) +

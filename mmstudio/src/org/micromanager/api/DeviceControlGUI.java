@@ -36,6 +36,7 @@ public interface DeviceControlGUI {
    public boolean updateImage();
    public boolean displayImage(Object pixels);
    public boolean displayImageWithStatusLine(Object pixels, String statusLine);   
+   public void displayStatusLine(String statusLine);
    public boolean okToAcquire();
    public void stopAllActivity();
    public boolean getLiveMode();

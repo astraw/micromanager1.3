@@ -347,14 +347,13 @@ public class MMImageWindow extends ImageWindow {
 	}
 
 	public long getImageWindowByteLength() {
-		long imgWinByteLength;
 		ImageProcessor ip = getImagePlus().getProcessor();
 		int w = ip.getWidth();
 		int h = ip.getHeight();
 		int bitDepth = getImagePlus().getBitDepth();
 		// ImageWindow returns bitdepth 24 when Image processor type is Color
 		bitDepth = bitDepth == 24 ? 32 : bitDepth;
-		return imgWinByteLength = w * h * bitDepth / 8;
+		return  w * h * bitDepth / 8;
 	}
 
 	public long imageByteLenth(Object pixels) throws IllegalArgumentException {
@@ -375,14 +374,13 @@ public class MMImageWindow extends ImageWindow {
 
 	public boolean windowNeedsResizing() {
 		long channels = core_.getNumberOfChannels();
-		long bpp = core_.getBytesPerPixel();
 		ImageProcessor ip = getImagePlus().getProcessor();
 		int w = ip.getWidth();
 		int h = ip.getHeight();
 		int bitDepth = getImagePlus().getBitDepth();
+		
 		// ImageWindow returns bitdepth 24 when Image processor type is Color
 		bitDepth = bitDepth == 24 ? 32 : bitDepth;
-		long imgWinByteLength = w * h * bitDepth / 8;
 
 		// warn the user if image dimensions do not match the current window
 		boolean ret = w != core_.getImageWidth() || h != core_.getImageHeight()
@@ -424,9 +422,8 @@ public class MMImageWindow extends ImageWindow {
 			throw (new RuntimeException("Image bytelenth does not much"));
 		}
 		ImagePlus ip = getImagePlus();
-		if(null != ip)
-		{
-			ip.setTitle(title_+": "+statusLine);
+		if(null != ip) {
+         ip.setTitle(title_ + ": " + statusLine);
 			ImageProcessor ipr = ip.getProcessor();
 			if(null != ipr){
 				ipr.setPixels(img);
@@ -444,6 +441,13 @@ public class MMImageWindow extends ImageWindow {
 		}
 	}
 	
+	public void displayStatusLine(String statusLine) {
+	   ImagePlus ip = getImagePlus();
+	   if (ip != null) {
+	      ip.setTitle(title_ + ": " + statusLine);
+	      ip.updateAndDraw();
+	   }
+	}
 	
 //!!!	// public
 /*

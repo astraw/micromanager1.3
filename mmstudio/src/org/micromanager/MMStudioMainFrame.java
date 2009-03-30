@@ -48,7 +48,6 @@ import java.awt.event.FocusEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.geom.Point2D;
-import java.awt.image.ColorModel;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -189,7 +188,6 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 	private JToggleButton toggleButtonShutter_;
 
 	private GUIColors guiColors_;
-	private ColorModel currentColorModel_;
 
 	private GraphFrame profileWin_;
 	private PropertyEditor propertyBrowser_;
@@ -241,7 +239,6 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 	private AcquisitionManager acqMgr_;
 	private static MMImageWindow imageWin_;
 	private int snapCount_ = -1;
-	private double lastImageTimeMs_=0;
 	private boolean liveModeSuspended_;
 	
 	public static MMImageWindow getLiveWin() {
@@ -2360,7 +2357,6 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 			}
 
 			long channels = core_.getNumberOfChannels();
-			long bpp = core_.getBytesPerPixel();
 
 			if (imageWin_.windowNeedsResizing()) {
 				createImageWindow();
@@ -2432,6 +2428,18 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 		return true;
 	}
 
+   public void displayStatusLine(String statusLine) {
+      try {
+         if (isImageWindowOpen() )
+            imageWin_.displayStatusLine(statusLine);
+      } catch (Exception e) {
+         handleException(e);
+         e.printStackTrace();
+         return;
+      }
+   }
+
+ 	
 	private boolean isCurrentImageFormatSupported() {
 		boolean ret = false;
 		long channels = core_.getNumberOfChannels();

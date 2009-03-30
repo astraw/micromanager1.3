@@ -93,13 +93,33 @@ public class Image5DWindow extends StackWindow {
       this(imp, new Image5DCanvas(imp));
    }
 
-   
+
+   /**
+    * @param imp
+    * @param visible
+    */
+   public Image5DWindow(Image5D imp, boolean visible) {
+      this(imp, new Image5DCanvas(imp), visible);
+   }
+
    /**
     * @param imp
     * @param ic
     */
    public Image5DWindow(Image5D imp, Image5DCanvas ic) {
+      this(imp, ic, true);
+   }
+   
+   /**
+    * @param imp
+    * @param ic
+    * @param visible
+    */
+   public Image5DWindow(Image5D imp, Image5DCanvas ic, boolean visible) {
       super(imp, ic);
+            
+      if (!visible)
+         setVisible(false);
       
       i5d = imp;
       
@@ -111,7 +131,7 @@ public class Image5DWindow extends StackWindow {
       positions = new int[nDimensions];
       
       // Remove all components and then add them with the Image5DLayout layoutmanager.
-  	  remove(sliceSelector);
+  	   remove(sliceSelector);
       remove(ic);
       
       setLayout(new Image5DLayout(ic));
@@ -123,11 +143,8 @@ public class Image5DWindow extends StackWindow {
       channelControl = new ChannelControl(this);
       add(channelControl, Image5DLayout.CHANNEL_SELECTOR);
       
-
-      
       addHorizontalScrollbars(imp);
       
-
       // >>>>>>>>>>>>>>>>>>>>>>>>>>> Micro-Manager >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
       // add button panel
       pb_ = createPlaybackPanel();
@@ -214,6 +231,7 @@ public class Image5DWindow extends StackWindow {
       }			
       
       sliceSelector = Scrollbars[3];
+
       
       pack();
       isInitialized = true;	

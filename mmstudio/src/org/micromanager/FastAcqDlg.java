@@ -119,7 +119,6 @@ public class FastAcqDlg extends JDialog implements GUIStatus {
          }
 
          public void windowClosed(WindowEvent arg0) {
-            //saveSettings();
             if (statusTimer_ != null)
                statusTimer_.cancel();
             if (dispTimer_ != null)
