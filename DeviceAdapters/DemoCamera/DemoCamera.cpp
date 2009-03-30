@@ -943,10 +943,7 @@ int CDemoFilterWheel::OnState(MM::PropertyBase* pProp, MM::ActionType eAct)
          pProp->Set(position_); // revert
          return ERR_UNKNOWN_POSITION;
       }
-      if (gateOpen_)
-         printf("Gate was Open\n");
-      else
-         printf("Gate was Closed\n");
+
       position_ = pos;
    }
 
