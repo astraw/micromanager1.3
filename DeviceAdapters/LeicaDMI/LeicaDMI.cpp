@@ -218,12 +218,9 @@ LeicaScope::LeicaScope() :
 
 LeicaScope::~LeicaScope() 
 {
-   printf ("In LeicaScope destructor\n");
    if (g_ScopeInterface.monitoringThread_ != 0) {
       g_ScopeInterface.monitoringThread_->Stop();
-   printf ("Stopping monitoringThread\n");
       g_ScopeInterface.monitoringThread_->wait();
-   printf ("Thread stopped\n");
       delete g_ScopeInterface.monitoringThread_;
       g_ScopeInterface.monitoringThread_ = 0;
    }
