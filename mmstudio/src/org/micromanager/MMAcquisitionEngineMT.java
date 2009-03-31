@@ -894,52 +894,35 @@ public class MMAcquisitionEngineMT implements AcquisitionEngine {
          stop(true);
          restoreSystem();
          acqFinished_ = true;
-//!!!
-//         Image5DWindow parentWnd = (useMultiplePositions_ && posMode_ == PositionMode.TIME_LAPSE) ? i5dWin_[posIdx] : i5dWin_[0];
-         Image5DWindow parentWnd = (!singleWindow_ && useMultiplePositions_ && posMode_ == PositionMode.TIME_LAPSE) ? i5dWin_[posIdx] : i5dWin_[0];
          if (e.getMessage().length() > 0)
-            JOptionPane.showMessageDialog(parentWnd, e.getMessage()); 
-         cleanup();
+            JOptionPane.showMessageDialog(null, e.getMessage()); 
          return;
       }  catch (OutOfMemoryError e) {
          stop(true);
          restoreSystem();
          acqFinished_ = true;
-//!!!         Image5DWindow parentWnd = (useMultiplePositions_ && posMode_ == PositionMode.TIME_LAPSE) ? i5dWin_[posIdx] : i5dWin_[0];
-         Image5DWindow parentWnd = (!singleWindow_ && useMultiplePositions_ && posMode_ == PositionMode.TIME_LAPSE) ? i5dWin_[posIdx] : i5dWin_[0];
-         JOptionPane.showMessageDialog(parentWnd, e.getMessage() + "\nOut of memory - acquistion stopped.\n" +
+         JOptionPane.showMessageDialog(null, e.getMessage() + "\nOut of memory - acquistion stopped.\n" +
          "In the future you can try to increase the amount of memory available to the Java VM (ImageJ).");     
-         cleanup();
          return;       
       } catch (IOException e) {
          stop(true);
          restoreSystem();
          acqFinished_ = true;
-//!!!    Image5DWindow parentWnd = (useMultiplePositions_ && posMode_ == PositionMode.TIME_LAPSE) ? i5dWin_[posIdx] : i5dWin_[0];
-         Image5DWindow parentWnd = (!singleWindow_ && useMultiplePositions_ && posMode_ == PositionMode.TIME_LAPSE) ? i5dWin_[posIdx] : i5dWin_[0];
-         JOptionPane.showMessageDialog(parentWnd, e.getMessage()); 
-         cleanup();
+         JOptionPane.showMessageDialog(null, e.getMessage()); 
          return;
       } catch (JSONException e) {
          stop(true);
          restoreSystem();
          acqFinished_ = true;
-//!!!         Image5DWindow parentWnd = (useMultiplePositions_ && posMode_ == PositionMode.TIME_LAPSE) ? i5dWin_[posIdx] : i5dWin_[0];
-         Image5DWindow parentWnd = (!singleWindow_ && useMultiplePositions_ && posMode_ == PositionMode.TIME_LAPSE) ? i5dWin_[posIdx] : i5dWin_[0];
-         JOptionPane.showMessageDialog(parentWnd, e.getMessage()); 
-         cleanup();
+         JOptionPane.showMessageDialog(null, e.getMessage()); 
          return;
       } catch (Exception e) {
          e.printStackTrace();
          stop(true);
          restoreSystem();
          acqFinished_ = true;
-//!!!         Image5DWindow parentWnd = (useMultiplePositions_ && posMode_ == PositionMode.TIME_LAPSE) ? i5dWin_[posIdx] : i5dWin_[0];
-         Image5DWindow parentWnd = (!singleWindow_ && useMultiplePositions_ && posMode_ == PositionMode.TIME_LAPSE) ? i5dWin_[posIdx] : i5dWin_[0];
-         if (e.getMessage().length() > 0) {
-            JOptionPane.showMessageDialog(parentWnd, e.getMessage()); 
-         }
-         cleanup();
+         if (e.getMessage().length() > 0) 
+            JOptionPane.showMessageDialog(null, e.getMessage()); 
          return;
       }
 
@@ -1149,6 +1132,7 @@ public class MMAcquisitionEngineMT implements AcquisitionEngine {
             i5dWin_[i].setPlaybackFrames(frameCount_);
          }
       }
+      cleanup();
    }
 
    public boolean isAcquisitionRunning() {
