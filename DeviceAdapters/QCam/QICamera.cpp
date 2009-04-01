@@ -38,6 +38,8 @@
 #include <math.h>
 #include <sstream>
 #include <algorithm>
+//#include <iostream>
+
 using namespace std;
 
 #define			PRINT_FUNCTION_NAMES			1
@@ -101,35 +103,30 @@ void QCAMAPI PreviewCallback
 
 #ifdef __APPLE_CC__
 #include <sys/time.h>
-struct timespec* FillInTimespec (struct timespec * time, unsigned long long inNanoseconds)
+
+timespec* QICamera::FillInTimespec (timespec * time, unsigned long long inNanoseconds)
 {
    struct				timeval currSysTime;
    int64_t				nanosecs, secs;
    const int64_t		NANOSEC_PER_SEC = 1000000000;
-   const int64_t		NANOSEC_PEC_USEC = 1000;
+   const int64_t		NANOSEC_PER_USEC = 1000;
 
    // get the current system time
    gettimeofday(&currSysTime, NULL);
 
-   // figure out how many seconds and nanoseconds to add to the current time
-   nanosecs = inNanoseconds;
-   if (nanosecs >= NANOSEC_PER_SEC)
-   {
-      secs = currSysTime.tv_sec + (inNanoseconds / NANOSEC_PER_SEC);      
-   }
-   else
-   {
-      secs = currSysTime.tv_sec;
-   }
-
-   nanosecs = (currSysTime.tv_usec * NANOSEC_PEC_USEC) + (inNanoseconds % NANOSEC_PER_SEC);
+   // figure out how many nanoseconds and then seconds to add to the current time
+   nanosecs = (currSysTime.tv_usec * NANOSEC_PER_USEC) + inNanoseconds;      
+   secs = currSysTime.tv_sec + (nanosecs / NANOSEC_PER_SEC);  // Add the billion's place to seconds      
+   nanosecs %= NANOSEC_PER_SEC;                               // Remove billions from nanoseconds
 
    // fill in the structure with absolute time values
-   time->tv_nsec = (long)nanosecs;
-   time->tv_sec = (long)secs;
-
+   time->tv_nsec = (long) nanosecs;
+   time->tv_sec = (long) secs;
+   // cout << "currSysTime.tv_sec" << currSysTime.tv_sec << ", currSysTime.tv_usec" << currSysTime.tv_usec << endl;  
+   // cout << "sec="<< time->tv_sec << ", nsec=" << time->tv_nsec << endl;
    return time;
 }
+
 #endif
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -231,6 +228,7 @@ QICamera::~QICamera()
 #ifdef WIN32
    CloseHandle(m_waitCondition);
 #elif __APPLE_CC__
+   pthread_mutex_lock(&m_waitMutex);
    pthread_cond_signal(&m_waitCondition);
    pthread_mutex_destroy(&m_waitMutex);
    pthread_cond_destroy(&m_waitCondition);
@@ -873,7 +871,9 @@ void QICamera::ExposureDone()
 #ifdef WIN32
    SetEvent(m_waitCondition);
 #elif __APPLE_CC__
+   pthread_mutex_lock(&m_waitMutex);   
    pthread_cond_signal(&m_waitCondition);
+   pthread_mutex_unlock(&m_waitMutex);
 #endif
 }
 
@@ -1343,7 +1343,7 @@ int QICamera::SnapImage()
 * Required by the MM::Camera API.
 * The calling program will assume the size of the buffer based on the values
 * obtained from GetImageBufferSize(), which in turn should be consistent with
-* values returned by GetImageWidth(), GetImageHight() and GetImageBytesPerPixel().
+* values returned by GetImageWidth(), GetImageHeight() and GetImageBytesPerPixel().
 * The calling program allso assumes that camera never changes the size of
 * the pixel buffer on its own. In other words, the buffer can change only if
 * appropriate properties are set (such as binning, pixel type, etc.)
@@ -2333,19 +2333,24 @@ int QICamera::WaitForFrameCaptured()
       return DEVICE_ERR;
    }
 #elif __APPLE_CC__
-   timespec		timeoutSpec;
+   timespec	timeoutSpec;
    int				err;
 
    FillInTimespec(&timeoutSpec, timeoutNS);
 
+   // cout << timeoutSpec.tv_sec << " " << timeoutSpec.tv_nsec << endl;
    // wait for the condition or a timeout
-   err = pthread_cond_timedwait(&m_waitCondition, &m_waitMutex, &timeoutSpec);
+   err = pthread_mutex_lock(&m_waitMutex);
+   if (err != 0)
+      return DEVICE_ERR;
+
+   err = pthread_cond_timedwait(&m_waitCondition, &m_waitMutex, &timeoutSpec);   
    if (err == ETIMEDOUT)
    {
       return DEVICE_ERR;
    }
    else if (err != 0)
-   {
+   {   
       return DEVICE_ERR;
    }
 
@@ -2354,9 +2359,13 @@ int QICamera::WaitForFrameCaptured()
    {
       return DEVICE_ERR;
    }
+   
+
+   
 #endif
    return DEVICE_OK;
 }
+
 
 
 /**
@@ -2366,6 +2375,7 @@ int QICamera::WaitForFrameCaptured()
 */
 void QICamera::PushSequenceImage()
 {
+
    int ret = DEVICE_OK;
 
 #ifdef PRINT_FUNCTION_NAMES

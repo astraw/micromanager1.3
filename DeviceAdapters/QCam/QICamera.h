@@ -181,6 +181,8 @@ private:
    // error 
    int ReportError(std::string message, int err);
    int CheckForError(int err) const;
+   timespec* FillInTimespec (timespec * time, unsigned long long inNanoseconds);
+
 
 private:
    ImgBuffer			m_snappedImageBuffer;
@@ -202,5 +204,7 @@ private:
 #endif
 
 };
+
+
 
 #endif //_QICAMERA_H_
