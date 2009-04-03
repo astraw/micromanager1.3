@@ -148,7 +148,7 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 		ScriptInterface {
 
 	private static final String MICRO_MANAGER_TITLE = "Micro-Manager 1.3";
-	private static final String VERSION = "1.3.34";
+	private static final String VERSION = "1.3.36";
 	private static final long serialVersionUID = 3556500289598574541L;
 
 	private static final String MAIN_FRAME_X = "x";
@@ -277,9 +277,9 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 	 */
 	public static void main(String args[]) {
 		try {
-			UIManager.setLookAndFeel(UIManager
-					.getCrossPlatformLookAndFeelClassName());
-//			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+//			UIManager.setLookAndFeel(UIManager
+//					.getCrossPlatformLookAndFeelClassName());
+			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 			MMStudioMainFrame frame = new MMStudioMainFrame(false);
 			frame.setVisible(true);
 			frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
