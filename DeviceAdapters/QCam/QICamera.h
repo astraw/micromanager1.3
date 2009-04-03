@@ -181,8 +181,10 @@ private:
    // error 
    int ReportError(std::string message, int err);
    int CheckForError(int err) const;
-   timespec* FillInTimespec (timespec * time, unsigned long long inNanoseconds);
 
+#ifdef __APPLE_CC__
+   timespec* FillInTimespec (timespec * time, unsigned long long inNanoseconds);
+#endif // __APPLE_CC__
 
 private:
    ImgBuffer			m_snappedImageBuffer;
