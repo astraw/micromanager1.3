@@ -441,6 +441,7 @@ public class Image5DWindow extends StackWindow {
       File f;
       
       do {         
+         saveFile = true;
          int retVal = fc.showSaveDialog(this);
          if (retVal == JFileChooser.APPROVE_OPTION) {
             f = fc.getSelectedFile();
@@ -448,7 +449,7 @@ public class Image5DWindow extends StackWindow {
             // check if file already exists
             if( f.exists() ) { 
                JOptionPane.showMessageDialog( this,
-                     "Owriting existing data is not allowed: " + f.getName());
+                     f.getName() + " already exists. Existing data can not be overwritten.");
                saveFile = false;
             }
          }
@@ -456,7 +457,6 @@ public class Image5DWindow extends StackWindow {
             return;
       } while (saveFile == false);
       
-      //String acqSavePath = "";
       final ProgressBar progressBar = new ProgressBar ("Saving File...", 0, acqData_.getNumberOfFrames());
       try {
          acqSavePath_ = f.getAbsolutePath();       
@@ -474,6 +474,7 @@ public class Image5DWindow extends StackWindow {
             progressBar.setProgress(i);
          }
          acqData_.saveMetadata();
+         setTitle(f.getName());
       } catch (MMAcqDataException e) {
          JOptionPane.showMessageDialog(this, e.getMessage());
       } finally {
