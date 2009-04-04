@@ -107,6 +107,7 @@ public class MMAcquisitionEngineMT implements AcquisitionEngine {
    private double pixelSize_um_;
    private double pixelAspect_;
 
+   private String fileSeparator_;
    protected String channelGroup_;
    protected String cameraConfig_ = "";
    protected Configuration oldChannelState_;
@@ -288,7 +289,7 @@ public class MMAcquisitionEngineMT implements AcquisitionEngine {
    }
 
    /**
-    * Multi-threaded acquition engine.
+    * Multi-threaded acquisition engine.
     */
    public MMAcquisitionEngineMT() {
 
@@ -310,7 +311,13 @@ public class MMAcquisitionEngineMT implements AcquisitionEngine {
       channelGroup_ = new String(ChannelSpec.DEFAULT_CHANNEL_GROUP);
       posList_ = new PositionList();
       autofocusPlugin_ = new CoreAutofocus();
+ 
+      // fileSeparator_ is used for display in Window title 
+      fileSeparator_ = System.getProperty("file.separator");
+      if (fileSeparator_ == null)
+         fileSeparator_ = "/";
    }
+
 
    @SuppressWarnings("unchecked")
    public String installAutofocusPlugin(String className) {
@@ -932,11 +939,12 @@ public class MMAcquisitionEngineMT implements AcquisitionEngine {
          try {
             // contrast settings
             for (int i=0; i<channels_.size(); i++) {
-//!!!
+
             	int index=(null!=img5d_[posIndexNormalized])
             		?posIndexNormalized
             		:0;
-               ChannelDisplayProperties cdp = img5d_[index].getChannelDisplayProperties(i+1);               
+               
+               ChannelDisplayProperties cdp = img5d_[index].getChannelDisplayProperties(i+1);
                DisplaySettings ds = new DisplaySettings();
                ds.min = cdp.getMinValue();
                ds.max = cdp.getMaxValue();
@@ -948,11 +956,11 @@ public class MMAcquisitionEngineMT implements AcquisitionEngine {
             e.printStackTrace();
          }
       }
-//!!! 
-      if(null != i5dWin_[posIndexNormalized])
-      {
-    	  i5dWin_[posIndexNormalized].startCountdown((long)frameIntervalMs_ - (GregorianCalendar.getInstance().getTimeInMillis() - cldStart.getTimeInMillis()), numFrames_ - frameCount_);
+
+      if (i5dWin_[posIndexNormalized] != null) {
+    	   i5dWin_[posIndexNormalized].startCountdown((long)frameIntervalMs_ - (GregorianCalendar.getInstance().getTimeInMillis() - cldStart.getTimeInMillis()), numFrames_ - frameCount_);
       }
+
       try {
          acqData_[posIndexNormalized].setDimensions(frameCount_+1, channels_.size(), useSliceSetting_ ? sliceDeltaZ_.length : 1);
       } catch (MMAcqDataException e) {
@@ -970,35 +978,24 @@ public class MMAcquisitionEngineMT implements AcquisitionEngine {
 
       // check the termination criterion
       if(frameCount_ >= numFrames_) {
+         System.out.println("Stopping acquisition");
          // acquisition finished
          stop(false);
-
-         // adjust the title
-         Date enddate = GregorianCalendar.getInstance().getTime();
-         if (useMultiplePositions_) {
-            if (posMode_ == PositionMode.TIME_LAPSE) {
-               for (int pp=0; pp<i5dWin_.length; pp++){
-            	  if(null != i5dWin_[pp])
-            	  { 
-            		  i5dWin_[pp].setTitle("Acquisition "  + posList_.getPosition(pp).getLabel() + "(completed)" + enddate);
-            	  }
-               }
-            } else {
-               i5dWin_[0].setTitle("Acquisition (completed) " + posList_.getPosition(posIdx).getLabel() + enddate);
-            }
-         } else {
-            i5dWin_[0].setTitle("Acquisition (completed) " + enddate);
-         }
 
          if (singleWindow_) {
             String statusLine = "Acquisition Completed";
             parentGUI_.displayStatusLine(statusLine);
+         } else {
+            // TODO: since stop sets i5dWin_ to null, the following has no effect!
+            // adjust the title
+            setImageNames(posIdx, " (completed) ");
          }
          
          // return to initial state
          restoreSystem();
          acqFinished_ = true;
-         cleanup();
+         if (posMode_ != PositionMode.MULTI_FIELD) 
+            cleanup();
          return;
       }
    }
@@ -1122,17 +1119,19 @@ public class MMAcquisitionEngineMT implements AcquisitionEngine {
 
          if (i5dWin_[i] != null) {
             i5dWin_[i].stopCountdown();
-            if (useMultiplePositions_)
-               i5dWin_[i].setTitle("Acquisition "  + posList_.getPosition(i).getLabel() + "(finished)");
+            Date enddate = GregorianCalendar.getInstance().getTime();
+            if (useMultiplePositions_ && (well_ != null))
+               i5dWin_[i].setTitle(well_.getLabel() + fileSeparator_ + posList_.getPosition(i).getLabel() + " (finished) " + enddate);
             else
-               i5dWin_[i].setTitle("Acquisition (finished)");
+               i5dWin_[i].setTitle(acqData_[i].getName() + " (finished) " + enddate);
             i5dWin_[i].setAcquisitionData(acqData_[i]);
             i5dWin_[i].setActive(false);
             i5dWin_[i].setAcquitionEngine(null); // disengage from the acquisition
             i5dWin_[i].setPlaybackFrames(frameCount_);
          }
       }
-      cleanup();
+      if ((posMode_ != PositionMode.MULTI_FIELD) || (posCount_ >= posList_.getNumberOfPositions())) 
+         cleanup();
    }
 
    public boolean isAcquisitionRunning() {
@@ -1177,6 +1176,7 @@ public class MMAcquisitionEngineMT implements AcquisitionEngine {
    }
 
    private void cleanup () {
+      System.out.println("Cleaning up");
       if (singleWindow_ && i5dWin_ != null && i5dWin_[0] != null)
          i5dWin_[0].close();
 	   i5dWin_ = null;
@@ -1494,10 +1494,13 @@ public class MMAcquisitionEngineMT implements AcquisitionEngine {
             // (use only the first window in the multi-pos case)
             WindowListener wndCloser = new WindowAdapter() {
                public void windowClosing(WindowEvent e) {
-                  Rectangle r = i5dWin_[0].getBounds();
-                  // record the position of the IJ window
-                  xWindowPos = r.x;
-                  yWindowPos = r.y;
+                  // TODO: this does not work anymore since i5dWin_ will be null at this point
+                  if (i5dWin_ != null) {
+                     Rectangle r = i5dWin_[0].getBounds();
+                     // record the position of the IJ window
+                     xWindowPos = r.x;
+                     yWindowPos = r.y;
+                  }
                }
             };      
 
@@ -1506,21 +1509,32 @@ public class MMAcquisitionEngineMT implements AcquisitionEngine {
 
          // hook up with the acquisition engine
          i5dWin_[i].setAcquitionEngine(this);
-         GregorianCalendar cld = new GregorianCalendar();
-         if (useMultiplePositions_) {
-            if (posMode_ == PositionMode.TIME_LAPSE)
-               // time-lapse
-               i5dWin_[i].setTitle("Acquisition " + posList_.getPosition(i).getLabel() + " (started)" + cld.getTime());
-            else
-               // multi-field
-               i5dWin_[i].setTitle("Acquisition " + posList_.getPosition(posIndex).getLabel() + " (started)" + cld.getTime());
-         } else
-            // single position
-            i5dWin_[i].setTitle("Acquisition (started)" + cld.getTime());
 
          i5dWin_[i].setActive(true);
       }
    }
+
+   private void setImageNames(int posIndex, String comment) {
+      if (singleWindow_)
+         return;
+
+      GregorianCalendar cld = new GregorianCalendar();
+      if (i5dWin_ != null && acqData_ != null) {
+         for (int i = 0; i < i5dWin_.length; i++) {
+            if (useMultiplePositions_ && well_ != null) {
+               if (posMode_ == PositionMode.TIME_LAPSE)
+                  // time-lapse
+                  i5dWin_[i].setTitle(well_.getLabel() + fileSeparator_ + posList_.getPosition(i).getLabel() + comment + cld.getTime());
+               else
+                  // multi-field
+                  i5dWin_[i].setTitle(well_.getLabel() + fileSeparator_ +  posList_.getPosition(posIndex).getLabel() + comment + cld.getTime());
+            } else
+               // single position
+               i5dWin_[i].setTitle(acqData_[i].getName() + comment + cld.getTime());
+         }
+      }
+   }
+
 
    public int getPositionMode() {
       return posMode_;
@@ -1631,10 +1645,12 @@ public class MMAcquisitionEngineMT implements AcquisitionEngine {
             if (posIdx == 0) {
                setupImage5d(posIdx);
                acquisitionSetup(posIdx);
+               setImageNames(posIdx, " (started) ");
             }
          } else {
             setupImage5d(posIdx);
             acquisitionSetup(posIdx);
+            setImageNames(posIdx, " (started) ");
          }
       }
 

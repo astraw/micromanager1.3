@@ -268,6 +268,7 @@ public class AcquisitionData {
       return ad;
    }
 
+
    /**
     * Creates the new acquisition data set.
     * If the object was already pointing to another data set, it
@@ -334,36 +335,34 @@ public class AcquisitionData {
 	      if (autoName)
 	         actualName = generateRootName(name, path);
 	
-          basePath_ = path + "/" + actualName;
+         basePath_ = path + "/" + actualName;
 	      
-	      File outDir = new File(basePath_);
-	      if (!outDir.mkdirs())
+         File outDir = new File(basePath_);
+         if (!outDir.mkdirs())
 	         throw new MMAcqDataException("Unable to create directory: " + basePath_ + ". It already exists.");
 	      
-	      name_ = actualName;
+         name_ = actualName;
 
-    	  inmemory_ = false;
-          images_ = null;
+     	   inmemory_ = false;
+         images_ = null;
 
-          // write initial metadata
-          writeMetadata();
+         // write initial metadata
+         writeMetadata();
       } else {
-    	  inmemory_ = true;
-          images_ = new Hashtable<String, ImageProcessor>();
-          basePath_ = null;
-          name_ = "in-memory";
-
+         inmemory_ = true;
+         images_ = new Hashtable<String, ImageProcessor>();
+         basePath_ = null;
+         name_ = "in-memory";
       }
-      
-
    }
+
+
    /**
     * Creates a new in-memory acquisition data set.
     * If the object was already pointing to another data set, it
     * will be simply disconnected from it - no data will be lost.
     * @throws MMAcqDataException
     */
-   
    public void createNew() throws MMAcqDataException {
 	   createNew("in-memory",null,false);
    }
