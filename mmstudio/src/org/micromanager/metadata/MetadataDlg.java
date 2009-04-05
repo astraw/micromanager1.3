@@ -51,6 +51,8 @@ import org.json.JSONObject;
 import org.micromanager.image5d.ChannelDisplayProperties;
 import org.micromanager.image5d.Image5DWindow;
 import org.micromanager.utils.MMDialog;
+import org.micromanager.utils.MMLogger;
+
 
 /**
  * Creates a dialog displaying the Micro-Manager metadata.  Allows editing of Comment field and will save changes, including changes to channel contrast settings and colors
@@ -203,7 +205,7 @@ public class MetadataDlg extends MMDialog {
       msgTextArea_.setText("");
       try {
 //         JSONObject summaryData = acqData_.getSummaryMetadata();
-//         channels_ = acqData_.getNumberOfChannels();
+         channels_ = acqData_.getNumberOfChannels();
 //         summaryArea_.setText(summaryData.toString(3));
                   
          String sumKeys[] = acqData_.getSummaryKeys();
