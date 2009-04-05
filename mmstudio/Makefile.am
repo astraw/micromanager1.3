@@ -120,6 +120,7 @@ MMJ_.jar:  \
 	$(srcdir)/src/org/micromanager/utils/ColorEditor.java \
 	$(srcdir)/src/org/micromanager/utils/ColorRenderer.java \
 	$(srcdir)/src/org/micromanager/utils/ContrastSettings.java \
+	$(srcdir)/src/org/micromanager/utils/DisplayMode.java \
 	$(srcdir)/src/org/micromanager/utils/GUIUtils.java \
 	$(srcdir)/src/org/micromanager/utils/GUIColors.java \
 	$(srcdir)/src/org/micromanager/utils/LUTDialog.java \

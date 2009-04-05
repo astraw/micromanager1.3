@@ -229,12 +229,10 @@ public class MMAcquisitionEngineMT implements AcquisitionEngine {
                e1.printStackTrace();
             }
             startAcquisition();
-            System.out.println("DBG: MFT started");
 
             // wait until acquisition is done
             while (isAcquisitionRunning() || !acqFinished_) {
                try {
-                  System.out.println("DBG: Waiting");
                   Thread.sleep(1000);
                } catch (InterruptedException e) {
                   return;
@@ -978,7 +976,6 @@ public class MMAcquisitionEngineMT implements AcquisitionEngine {
 
       // check the termination criterion
       if(frameCount_ >= numFrames_) {
-         System.out.println("Stopping acquisition");
          // acquisition finished
          stop(false);
 
@@ -1176,7 +1173,7 @@ public class MMAcquisitionEngineMT implements AcquisitionEngine {
    }
 
    private void cleanup () {
-      System.out.println("Cleaning up");
+      MMLogger.getLogger().info("cleaning up acquisition engine");
       if (singleWindow_ && i5dWin_ != null && i5dWin_[0] != null)
          i5dWin_[0].close();
 	   i5dWin_ = null;
@@ -1231,11 +1228,35 @@ public class MMAcquisitionEngineMT implements AcquisitionEngine {
       return saveFiles_;
    }
 
+   // depreciated
    public void setSingleFrame(boolean singleFrame) {
       singleFrame_ = singleFrame;
    }
+   //
+   // depreciated
    public void setSingleWindow(boolean singleWindow) {
 	  singleWindow_ = singleWindow;
+   }
+
+   public void setDisplayMode(int mode) {
+      if (mode == 0) {
+         singleFrame_ = false;
+         singleWindow_ = false;
+      } else if (mode == 1) {
+         singleFrame_ = true;
+         singleWindow_ = false;
+      } else if (mode == 2) {
+         singleFrame_ = false;
+         singleWindow_ = true;
+      }
+   }
+
+   public int getDisplayMode() {
+      if (singleFrame_)
+         return 1;
+      if (singleWindow_)
+         return 2;
+      return 0;
    }
 
    public void setParameterPreferences(Preferences prefs) {
@@ -1293,10 +1314,8 @@ public class MMAcquisitionEngineMT implements AcquisitionEngine {
       }
 
       for (int i=0; i<i5dWin_.length; i++) {
-//!!!         ImageProcessor ip = i5dWin_[i].getImagePlus().getProcessor();
-    	 int index = (null != i5dWin_[i])?i:0;
-    	 
-    	 ImageProcessor ip = i5dWin_[index].getImagePlus().getProcessor();         
+    	   int index = (null != i5dWin_[i])?i:0;
+    	   ImageProcessor ip = i5dWin_[index].getImagePlus().getProcessor();         
          int imgDepth = 0;
          if (ip instanceof ByteProcessor)
             imgDepth = 1;
@@ -1389,14 +1408,6 @@ public class MMAcquisitionEngineMT implements AcquisitionEngine {
       // create a new Image5D object
       int numSlices = useSliceSetting_ ? sliceDeltaZ_.length : 1;
 
-      // TODO: was this necessary to avoid memory leaks?
-//      if (i5dWin_ != null) {
-//         for (int i=0; i<i5dWin_.length; i++) {
-//            i5dWin_[i] = null;
-//            img5d_[i] = null;
-//         }
-//      }
-
       if (useMultiplePositions_ && posMode_ == PositionMode.TIME_LAPSE) {
          img5d_ = new Image5D[posList_.getNumberOfPositions()]; 
          i5dWin_ = new Image5DWindow[posList_.getNumberOfPositions()];
@@ -1469,10 +1480,6 @@ public class MMAcquisitionEngineMT implements AcquisitionEngine {
          else if (newWindow || i5dWin_[i] == null)
             i5dWin_[i] = new Image5DWindow(img5d_[i]);
 
-//!!!         
-         //if (singleWindow_ && i5dWin_[i] != null)
-        	 //  i5dWin_[i].setVisible(false);
-         
 
          // set the desired display mode.  This needs to be called after opening the Window
          // Note that OVERLAY mode is much slower than others, so show a single channel in a fast mode
@@ -1720,7 +1727,6 @@ public class MMAcquisitionEngineMT implements AcquisitionEngine {
 
       acqData_[posIndexNormalized].insertImageMetadata(frameCount_, channelIdx, sliceIdx);
       acqData_[posIndexNormalized].setImageValue(frameCount_, channelIdx, sliceIdx, ImagePropertyKeys.EXPOSURE_MS, exposureMs);
-      System.out.println("Exposure = " + exposureMs);
       acqData_[posIndexNormalized].setImageValue(frameCount_, channelIdx, sliceIdx, ImagePropertyKeys.Z_UM, zCur);
       if (useMultiplePositions_) {
          acqData_[posIndexNormalized].setImageValue(frameCount_, channelIdx, sliceIdx, ImagePropertyKeys.X_UM, posList_.getPosition(posIdx).getX());

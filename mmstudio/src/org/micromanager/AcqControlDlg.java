@@ -90,6 +90,7 @@ import org.micromanager.utils.ChannelSpec;
 import org.micromanager.utils.ColorEditor;
 import org.micromanager.utils.ColorRenderer;
 import org.micromanager.utils.ContrastSettings;
+import org.micromanager.utils.DisplayMode;
 import org.micromanager.utils.GUIColors;
 import org.micromanager.utils.MMException;
 import org.micromanager.utils.NumberUtils;
@@ -141,6 +142,7 @@ public class AcqControlDlg extends JDialog implements PropertyChangeListener {
    private JCheckBox continuousFocusOffForXYMoveCheckBox_;
    private JCheckBox continuousFocusOffForZMoveCheckBox_;
    private JCheckBox saveFilesCheckBox_;
+   private JComboBox displayModeCombo_;
    private JCheckBox useSliceSettingsCheckBox_;
    
    private DeviceControlGUI gui_;
@@ -182,11 +184,12 @@ public class AcqControlDlg extends JDialog implements PropertyChangeListener {
    private static final String ACQ_FOCUS_OFF_XYMOVE = "acqContinuousFocusOffForXYMove";
    private static final String ACQ_FOCUS_OFF_ZMOVE = "acqContinuousFocusOffForZMove";
    private static final String ACQ_SAVE_FILES = "acqSaveFiles";
-   private static final String ACQ_SINGLE_FRAME = "singleFrame";
+   private static final String ACQ_DISPLAY_MODE = "acqDisplayMode";
+   //private static final String ACQ_SINGLE_FRAME = "singleFrame";
    private static final String ACQ_AF_ENABLE = "autofocus_enabled";
    private static final String ACQ_COLUMN_WIDTH = "column_width";
    private static final String ACQ_COLUMN_ORDER = "column_order";
-   private static final String ACQ_SINGLE_WINDOW = "singleWindow";
+   //private static final String ACQ_SINGLE_WINDOW = "singleWindow";
    private static final int ACQ_DEFAULT_COLUMN_WIDTH = 77;
    private JCheckBox multiPosCheckBox_;
    private JCheckBox singleFrameCheckBox_;
@@ -703,7 +706,7 @@ public class AcqControlDlg extends JDialog implements PropertyChangeListener {
             }
          }
       });
-      downButton.setText("Dn");
+      downButton.setText("Down");
       downButton.setBounds(405, 363, 93, 22);
       getContentPane().add(downButton);
 
@@ -755,7 +758,7 @@ public class AcqControlDlg extends JDialog implements PropertyChangeListener {
       getContentPane().add(closeButton);
 
       final JButton acquireButton = new JButton();
-      acquireButton.setFont(new Font("Arial", Font.BOLD, 11));
+      acquireButton.setFont(new Font("Arial", Font.BOLD, 10));
       acquireButton.addActionListener(new ActionListener() {
          public void actionPerformed(ActionEvent e) {
             AbstractCellEditor ae = (AbstractCellEditor)table_.getCellEditor();
@@ -979,12 +982,9 @@ public class AcqControlDlg extends JDialog implements PropertyChangeListener {
       separator_3.setBounds(5, 130, 215, 5);
       getContentPane().add(separator_3);
 
-      //String groups[] = acqEng_.getAvailableGroups();
-      //channelGroupCombo_ = new JComboBox(groups);
       channelGroupCombo_ = new JComboBox();
       channelGroupCombo_.setFont(new Font("", Font.PLAIN, 10));
       updateGroupsCombo();
-      //channelGroupCombo_.setSelectedItem(acqEng_.getChannelGroup());
 
       channelGroupCombo_.addActionListener(new ActionListener() {
          public void actionPerformed(ActionEvent arg0) {
@@ -1016,6 +1016,7 @@ public class AcqControlDlg extends JDialog implements PropertyChangeListener {
       posModeCombo_ = new JComboBox();
       posModeCombo_.setFont(new Font("", Font.PLAIN, 10));
       posModeCombo_.setBounds(230, 19, 151, 22);
+      posModeCombo_.setEnabled(false);
       getContentPane().add(posModeCombo_);
       posModeCombo_.addItem(new PositionMode(PositionMode.MULTI_FIELD));
       posModeCombo_.addItem(new PositionMode(PositionMode.TIME_LAPSE));
@@ -1047,17 +1048,11 @@ public class AcqControlDlg extends JDialog implements PropertyChangeListener {
       saveFilesCheckBox_ = new JCheckBox();
       saveFilesCheckBox_.addActionListener(new ActionListener() {
          public void actionPerformed(final ActionEvent e) {
-            if (saveFilesCheckBox_.isSelected())
-            {
-               singleFrameCheckBox_.setEnabled(true);
-               singleWindowCheckBox_.setEnabled(true);
-            }
-            else
-            {
-               singleFrameCheckBox_.setSelected(false);
-               singleFrameCheckBox_.setEnabled(false);
-               singleWindowCheckBox_.setSelected(false);
-               singleWindowCheckBox_.setEnabled(false);
+            if (saveFilesCheckBox_.isSelected()) {
+               displayModeCombo_.setEnabled(true);
+            } else {
+               displayModeCombo_.setSelectedIndex(0);
+               displayModeCombo_.setEnabled(false);
             }
          }
       });
@@ -1066,7 +1061,22 @@ public class AcqControlDlg extends JDialog implements PropertyChangeListener {
       saveFilesCheckBox_.setBounds(6, 400, 190, 21);
       getContentPane().add(saveFilesCheckBox_);
       
+      final JLabel displayMode = new JLabel();
+      displayMode.setFont(new Font("Arial", Font.BOLD, 10));
+      displayMode.setText("Display:");
+      displayMode.setBounds(220, 404, 100, 14);
+      getContentPane().add(displayMode);
+
+      displayModeCombo_ = new JComboBox();
+      displayModeCombo_.setFont(new Font("", Font.PLAIN, 10));
+      displayModeCombo_.setBounds(270, 400, 150, 21);
+      displayModeCombo_.addItem(new DisplayMode(DisplayMode.ALL));
+      displayModeCombo_.addItem(new DisplayMode(DisplayMode.LAST_FRAME));
+      displayModeCombo_.addItem(new DisplayMode(DisplayMode.SINGLE_WINDOW));
+      displayModeCombo_.setEnabled(false);
+      getContentPane().add(displayModeCombo_);
       
+      /*
       singleFrameCheckBox_ = new JCheckBox();
       singleFrameCheckBox_.addActionListener(new ActionListener() {
          public void actionPerformed(ActionEvent e) {
@@ -1088,6 +1098,7 @@ public class AcqControlDlg extends JDialog implements PropertyChangeListener {
       singleWindowCheckBox_.setEnabled(false);
       singleWindowCheckBox_.setBounds(344, 400, 200, 21);
       getContentPane().add(singleWindowCheckBox_);
+      */
       
       afCheckBox_ = new JCheckBox();
       afCheckBox_.addActionListener(new ActionListener() {
@@ -1110,6 +1121,11 @@ public class AcqControlDlg extends JDialog implements PropertyChangeListener {
       // add update event listeners
       multiPosCheckBox_.addActionListener(new ActionListener() {
          public void actionPerformed(ActionEvent arg0) {
+            applySettings();
+         }
+      });
+      displayModeCombo_.addActionListener(new ActionListener() {
+         public void actionPerformed(ActionEvent e) {
             applySettings();
          }
       });
@@ -1226,19 +1242,19 @@ public class AcqControlDlg extends JDialog implements PropertyChangeListener {
       continuousFocusOffForXYMoveCheckBox_.setSelected(acqPrefs_.getBoolean(ACQ_FOCUS_OFF_XYMOVE, false));
       continuousFocusOffForZMoveCheckBox_.setSelected(acqPrefs_.getBoolean(ACQ_FOCUS_OFF_ZMOVE, false));
       saveFilesCheckBox_.setSelected(acqPrefs_.getBoolean(ACQ_SAVE_FILES, false));
-      singleFrameCheckBox_.setSelected(acqPrefs_.getBoolean(ACQ_SINGLE_FRAME, false));
-      singleWindowCheckBox_.setSelected(acqPrefs_.getBoolean(ACQ_SINGLE_WINDOW, false));
+      //singleFrameCheckBox_.setSelected(acqPrefs_.getBoolean(ACQ_SINGLE_FRAME, false));
+      //singleWindowCheckBox_.setSelected(acqPrefs_.getBoolean(ACQ_SINGLE_WINDOW, false));
       if (saveFilesCheckBox_.isSelected())
       {
-          singleFrameCheckBox_.setEnabled(true);
-          singleWindowCheckBox_.setEnabled(true);
+         displayModeCombo_.setEnabled(true);
       }
       else
       {
-         singleFrameCheckBox_.setEnabled(false);
-         singleFrameCheckBox_.setSelected(false);
-         singleWindowCheckBox_.setEnabled(false);
-         singleWindowCheckBox_.setSelected(false);
+         displayModeCombo_.setEnabled(false);
+         //singleFrameCheckBox_.setEnabled(false);
+         //singleFrameCheckBox_.setSelected(false);
+         //singleWindowCheckBox_.setEnabled(false);
+         //singleWindowCheckBox_.setSelected(false);
       }
       nameField_.setText(acqPrefs_.get(ACQ_DIR_NAME, "Untitled"));
       String os_name = System.getProperty("os.name","");
@@ -1248,6 +1264,7 @@ public class AcqControlDlg extends JDialog implements PropertyChangeListener {
          rootField_.setText(acqPrefs_.get(ACQ_ROOT_NAME, "AcquisitionData"));
       
       acqEng_.setSliceMode(acqPrefs_.getInt(ACQ_SLICE_MODE, acqEng_.getSliceMode()));
+      acqEng_.setDisplayMode(acqPrefs_.getInt(ACQ_DISPLAY_MODE, acqEng_.getDisplayMode()));
       acqEng_.setPositionMode(acqPrefs_.getInt(ACQ_POSITION_MODE, acqEng_.getPositionMode()));
       acqEng_.enableAutoFocus(acqPrefs_.getBoolean(ACQ_AF_ENABLE, acqEng_.isAutoFocusEnabled()));
       if (acqEng_.isMultiPositionEnabled())
@@ -1315,12 +1332,13 @@ public class AcqControlDlg extends JDialog implements PropertyChangeListener {
       acqPrefs_.putBoolean(ACQ_FOCUS_OFF_XYMOVE, continuousFocusOffForXYMoveCheckBox_.isSelected());
       acqPrefs_.putBoolean(ACQ_FOCUS_OFF_ZMOVE, continuousFocusOffForZMoveCheckBox_.isSelected());
       acqPrefs_.putBoolean(ACQ_SAVE_FILES, saveFilesCheckBox_.isSelected());
-      acqPrefs_.putBoolean(ACQ_SINGLE_FRAME, singleFrameCheckBox_.isSelected());
-      acqPrefs_.putBoolean(ACQ_SINGLE_WINDOW, singleWindowCheckBox_.isSelected());
+      //acqPrefs_.putBoolean(ACQ_SINGLE_FRAME, singleFrameCheckBox_.isSelected());
+      //acqPrefs_.putBoolean(ACQ_SINGLE_WINDOW, singleWindowCheckBox_.isSelected());
       acqPrefs_.put(ACQ_DIR_NAME, nameField_.getText());
       acqPrefs_.put(ACQ_ROOT_NAME, rootField_.getText());
       
       acqPrefs_.putInt(ACQ_SLICE_MODE, acqEng_.getSliceMode());
+      acqPrefs_.putInt(ACQ_DISPLAY_MODE, acqEng_.getDisplayMode());
       acqPrefs_.putInt(ACQ_POSITION_MODE, acqEng_.getPositionMode());
       acqPrefs_.putBoolean(ACQ_AF_ENABLE, acqEng_.isAutoFocusEnabled());
 
@@ -1620,6 +1638,7 @@ public class AcqControlDlg extends JDialog implements PropertyChangeListener {
       model_.fireTableStructureChanged();
       channelGroupCombo_.setSelectedItem(acqEng_.getChannelGroup());
       sliceModeCombo_.setSelectedIndex(acqEng_.getSliceMode());
+      displayModeCombo_.setSelectedIndex(acqEng_.getDisplayMode());
       posModeCombo_.setSelectedIndex(acqEng_.getPositionMode());
       
       numFrames_.setValue(new Integer(acqEng_.getNumFrames()));
@@ -1647,6 +1666,7 @@ public class AcqControlDlg extends JDialog implements PropertyChangeListener {
          acqEng_.enableZSliceSetting(useSliceSettingsCheckBox_.isSelected());
          acqEng_.enableMultiPosition(multiPosCheckBox_.isSelected());
          acqEng_.setSliceMode(((SliceMode)sliceModeCombo_.getSelectedItem()).getID());
+         acqEng_.setDisplayMode(((DisplayMode)displayModeCombo_.getSelectedItem()).getID());
          acqEng_.setPositionMode(((PositionMode)posModeCombo_.getSelectedItem()).getID());
          acqEng_.setChannels(((ChannelTableModel)table_.getModel()).getChannels());
          acqEng_.setFrames(NumberUtils.StringToInt(numFrames_.getValue().toString()),
@@ -1659,8 +1679,8 @@ public class AcqControlDlg extends JDialog implements PropertyChangeListener {
       acqEng_.setContinuousFocusOffForXYMove(continuousFocusOffForXYMoveCheckBox_.isSelected());
       acqEng_.setContinuousFocusOffForZMove(continuousFocusOffForZMoveCheckBox_.isSelected());
       acqEng_.setSaveFiles(saveFilesCheckBox_.isSelected());
-      acqEng_.setSingleFrame(singleFrameCheckBox_.isSelected());
-      acqEng_.setSingleWindow(singleWindowCheckBox_.isSelected());
+      //acqEng_.setSingleFrame(singleFrameCheckBox_.isSelected());
+      //acqEng_.setSingleWindow(singleWindowCheckBox_.isSelected());
       acqEng_.setDirName(nameField_.getText());
       acqEng_.setRootName(rootField_.getText());
 

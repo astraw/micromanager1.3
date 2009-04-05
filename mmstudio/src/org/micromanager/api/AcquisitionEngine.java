@@ -192,9 +192,13 @@ public interface AcquisitionEngine {
    public boolean addChannel(String name, double exp, double offset, ContrastSettings s8, ContrastSettings s16, int skip, Color c);
    public void setSaveFiles(boolean selected);
    public boolean getSaveFiles();
+   // depreciated:
    public void setSingleFrame(boolean selected);
+   // depreciated:
    public void setSingleWindow(boolean selected);
+   public void setDisplayMode(int mode);
    public int getSliceMode();
+   public int getDisplayMode();
    public void setSliceMode(int mode);
    public int getPositionMode();
    public void setPositionMode(int mode);
