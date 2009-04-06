@@ -98,6 +98,8 @@ private:
    MM::MMTime readoutStartTime_;
    long scanMode_;
    int bitDepth_;
+   unsigned roiX_;
+   unsigned roiY_;
 
    void GenerateSyntheticImage(ImgBuffer& img, double exp);
    int ResizeImageBuffer();

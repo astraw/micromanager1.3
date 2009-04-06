@@ -187,7 +187,9 @@ CDemoCamera::CDemoCamera() :
    initialized_(false),
    readoutUs_(0.0),
    scanMode_(1),
-   bitDepth_(8)
+   bitDepth_(8),
+   roiX_(0),
+   roiY_(0)
 {
    // call the base class method to set-up default error codes/messages
    InitializeDefaultErrorMessages();
@@ -449,15 +451,22 @@ long CDemoCamera::GetImageBufferSize() const
 * @param xSize - width
 * @param ySize - height
 */
-int CDemoCamera::SetROI(unsigned /*x*/, unsigned /*y*/, unsigned xSize, unsigned ySize)
+int CDemoCamera::SetROI(unsigned x, unsigned y, unsigned xSize, unsigned ySize)
 {
    if (xSize == 0 && ySize == 0)
+   {
       // effectively clear ROI
       ResizeImageBuffer();
+      roiX_ = 0;
+      roiY_ = 0;
+   }
    else
+   {
       // apply ROI
       img_.Resize(xSize, ySize);
-
+      roiX_ = x;
+      roiY_ = y;
+   }
    return DEVICE_OK;
 }
 
@@ -467,8 +476,8 @@ int CDemoCamera::SetROI(unsigned /*x*/, unsigned /*y*/, unsigned xSize, unsigned
 */
 int CDemoCamera::GetROI(unsigned& x, unsigned& y, unsigned& xSize, unsigned& ySize)
 {
-   x = 0;
-   y = 0;
+   x = roiX_;
+   y = roiY_;
 
    xSize = img_.Width();
    ySize = img_.Height();
@@ -483,6 +492,9 @@ int CDemoCamera::GetROI(unsigned& x, unsigned& y, unsigned& xSize, unsigned& ySi
 int CDemoCamera::ClearROI()
 {
    ResizeImageBuffer();
+   roiX_ = 0;
+   roiY_ = 0;
+      
    return DEVICE_OK;
 }
 
