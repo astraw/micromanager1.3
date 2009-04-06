@@ -20,9 +20,6 @@
 //                CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
 //                INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES.
 //
-// NOTE:          Cascade class is obsolete and remain here only
-//                for backward compatibility purposes. For modifications and
-//                extensions use Universal class. N.A. 01/17/2007
 //                Micromax compatible adapter is moved to PVCAMPI project, N.A. 10/2007
 //
 // CVS:           $Id$
@@ -96,75 +93,6 @@ typedef struct
    SMap indexMap;
    TMap enumMap;
 } SParam;
-
-// forward declarations
-//class AcqSequenceThread;
-
-//////////////////////////////////////////////////////////////////////////////
-// Implementation of the MMDevice and MMCamera interfaces
-// for Cascade camera
-//
-class Cascade : public CCameraBase<Cascade>
-{
-public:
-   static Cascade* GetInstance();
-   ~Cascade();
-   
-   // MMDevice API
-   int Initialize();
-   int Shutdown();
-   void GetName(char* pszName) const;
-   bool Busy() {return busy_;}
-   bool GetErrorText(int errorCode, char* text) const;
-   
-   // MMCamera API
-   int SnapImage();
-   const unsigned char* GetImageBuffer();
-   unsigned GetImageWidth() const {return img_.Width();}
-   unsigned GetImageHeight() const {return img_.Height();}
-   unsigned GetImageBytesPerPixel() const {return img_.Depth();} 
-   long GetImageBufferSize() const {return img_.Width() * img_.Height() * GetImageBytesPerPixel();}
-   unsigned GetBitDepth() const;
-   int GetBinning() const;
-   int SetBinning(int binSize);
-   double GetExposure() const;
-   void SetExposure(double dExp);
-   int SetROI(unsigned x, unsigned y, unsigned xSize, unsigned ySize); 
-   int GetROI(unsigned& x, unsigned& y, unsigned& xSize, unsigned& ySize);
-   int ClearROI();
-
-   // action interface
-   int OnBinning(MM::PropertyBase* pProp, MM::ActionType eAct);
-   int OnExposure(MM::PropertyBase* pProp, MM::ActionType eAct);
-   int OnPixelType(MM::PropertyBase* pProp, MM::ActionType eAct);
-   int OnScanMode(MM::PropertyBase* pProp, MM::ActionType eAct);
-   int OnGain(MM::PropertyBase* pProp, MM::ActionType eAct);
-   int OnMultiplierGain(MM::PropertyBase* pProp, MM::ActionType eAct);
-   int OnReadoutRate(MM::PropertyBase* pProp, MM::ActionType eAct);
-   int OnReadoutPort(MM::PropertyBase* pProp, MM::ActionType eAct);
-   int OnOffset(MM::PropertyBase* pProp, MM::ActionType eAct);
-   int OnTemperature(MM::PropertyBase* pProp, MM::ActionType eAct);
-
-private:
-   Cascade();
-   Cascade(Cascade&) {}
-
-   ROI roi_;
-
-   int ResizeImageBuffer();
-   int x_, y_, width_, height_, xBin_, yBin_, bin_;
-
-   static Cascade* instance_;
-   static unsigned refCount_;
-   ImgBuffer img_;
-   bool initialized_;
-   bool busy_;
-   short hPVCAM_; // handle to the driver
-   double exposure_;
-   unsigned binSize_;
-   bool bufferOK_;
-
-};
 
 
 //////////////////////////////////////////////////////////////////////////////
