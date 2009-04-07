@@ -4,7 +4,6 @@
 
 print("\n Shutter tests --------------------------------------------------------------------------");
 
-
 print("\n Name of shutter");
 shutter = testCmd("mmc.getShutterDevice();");
 

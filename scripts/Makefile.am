@@ -16,6 +16,8 @@ install:
 	cp mm_test_camera.bsh $(IJPATH)/scripts/
 	cp mm_test_properties.bsh $(IJPATH)/scripts/
 	cp mm_test_shutter.bsh $(IJPATH)/scripts/
+	cp mm_test_xystage.bsh $(IJPATH)/scripts/
+	cp mm_test_zstage.bsh $(IJPATH)/scripts/
 	cp sdemo1.bsh $(IJPATH)/scripts/
 	cp sdemo2.bsh $(IJPATH)/scripts/
 	cp setZoom.bsh $(IJPATH)/scripts/

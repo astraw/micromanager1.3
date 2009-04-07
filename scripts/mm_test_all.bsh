@@ -36,46 +36,67 @@ getROI() {
 	return roiRect;
 }
 
+checkSafe() {
+	history = bsh.console.history;
+	lastLine = history.lastElement();
+	while(history.lastElement() == lastLine) {
+		mmc.sleep(10);
+	}
+	return history.lastElement().contentEquals("safe;");
+}
+
+
+test(testNames) {
+
+	gui.clearMessageWindow();	
+
+	print("\nMICRO-MANAGER BEANSHELL AUTOMATED TESTS");
+	
+	print("  " + System.getProperty("os.name") + " | v. " +
+		System.getProperty("os.version") + " | arch. " +
+		System.getProperty("os.arch"));
+	
+	print("  Java v. " + System.getProperty("java.version"));
+	print("  Classpath: " + System.getProperty("java.class.path"));
+	print("");
+	
+	mmc.sleep(200); // Prevent overlap
+	
+	testCmd("mmc.getVersionInfo();");
+	testCmd("mmc.getUserId();");
+	testCmd("mmc.getHostName();");
+	testCmd("mmc.getAPIVersionInfo();");
+	testCmd("mmc.getSystemState();");
+	print(" Micro-Manager Version " + gui.VERSION);
+
+	// Run desired tests:
+
+	nameList = testNames.split(",");
+	for (name:nameList) {
+		filename = "scripts/mm_test_" + name + ".bsh";
+		print("\n\nRunning " + filename);
+		source(filename);
+	}
+
+	print("\n\n\nDone with all tests!");
+
+	JFileChooser fc = new JFileChooser();
+	fc.setSelectedFile(new File("mm_bsh_test_results.txt"));
+	result = fc.showSaveDialog(bsh.console);
+	
+	if (0==result) {
+		txt = bsh.console.text.getText();
+		print("\nSaving to " + fc.selectedFile);
+		fc.selectedFile.createNewFile();
+		bw = new BufferedWriter(new FileWriter(fc.selectedFile));
+		bw.write(txt);
+		bw.close();
+		fc = null;
+	}
+}
+
+
 update();
 
-// Run tests: -------------------------------------------------------------------
-
-gui.clearMessageWindow();
-
-print("\nMICRO-MANAGER BEANSHELL AUTOMATED TESTS");
-
-print("  " + System.getProperty("os.name") + " | v. " +
-	System.getProperty("os.version") + " | arch. " +
-	System.getProperty("os.arch"));
-
-print("  Java v. " + System.getProperty("java.version"));
-print("  Classpath: " + System.getProperty("java.class.path"));
-print("");
-
-mmc.sleep(200); // Prevent overlap
-
-testCmd("mmc.getVersionInfo();");
-testCmd("mmc.getUserId();");
-testCmd("mmc.getHostName();");
-testCmd("mmc.getAPIVersionInfo();");
-testCmd("mmc.getSystemState();");
-print(" Micro-Manager Version " + gui.VERSION);
-
-cd("scripts");
-source("mm_test_properties.bsh");
-source("mm_test_camera.bsh");
-source("mm_test_shutter.bsh");
-cd("..");
-
-print("\n\n\nDone with all tests!");
-
-JFileChooser fc = new JFileChooser();
-fc.setSelectedFile(new File("mm_bsh_test_results.txt"));
-fc.showSaveDialog(bsh.console);
-txt = bsh.console.text.getText();
-print("\nSaving to " + fc.selectedFile);
-fc.selectedFile.createNewFile();
-bw = new BufferedWriter(new FileWriter(fc.selectedFile));
-bw.write(txt);
-bw.close();
-fc = null;
+print("\nEnter desired tests. Be careful about moving parts that might collide!");
+print("e.g.: test(\"properties,camera,shutter,xystage,zstage\");");

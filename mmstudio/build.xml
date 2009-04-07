@@ -198,6 +198,8 @@
       <copy file="${ScriptsRoot}/mm_test_camera.bsh" todir="${ScriptsInstall}" />
       <copy file="${ScriptsRoot}/mm_test_properties.bsh" todir="${ScriptsInstall}" />
       <copy file="${ScriptsRoot}/mm_test_shutter.bsh" todir="${ScriptsInstall}" />
+      <copy file="${ScriptsRoot}/mm_test_xystage.bsh" todir="${ScriptsInstall}" />
+      <copy file="${ScriptsRoot}/mm_test_zstage.bsh" todir="${ScriptsInstall}" />
       <copy file="${DriversRoot}/K8055_libusb.inf" todir="${DriversInstall}" />
       <copy file="${DriversRoot}/K8055_libusb.cat" todir="${DriversInstall}" />
       <copy file="${DriversRoot}/K8061_libusb.inf" todir="${DriversInstall}" />
