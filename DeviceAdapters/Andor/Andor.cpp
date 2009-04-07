@@ -77,38 +77,39 @@ const char* g_FanMode_Off = "Off";
 const char* g_CoolerMode_FanOffAtShutdown = "Fan off at shutdown";
 const char* g_CoolerMode_FanOnAtShutdown = "Fan on at shutdown";
 
-const char* g_FrameTransferProp = "FrameTransfer";
+//const char* g_FrameTransferProp = "FrameTransfer";
 const char* g_FrameTransferOn = "On";
 const char* g_FrameTransferOff = "Off";
-const char* g_OutputAmplifier = "Output_Amplifier";
+const char* g_OutputAmplifier = "Output Amplifier";
 const char* g_OutputAmplifier_EM = "Standard EMCCD gain register";
 const char* g_OutputAmplifier_Conventional = "Conventional CCD register";
 
-const char* g_ADChannel = "AD_Converter";
-const char* g_ADChannel_14Bit = "14bit";
-const char* g_ADChannel_16Bit = "16bit";
+const char* g_ADChannel = "A/D Channel";
+
+const char* g_EMGain = "EM Gain -";
+const char* g_EMGainValue = "EM Gain - Value";
+const char* g_CameraInformation = "1. Camera Information : | Type | Model | Serial No. |";
+const char* g_CycleTime = "Acquisition cycle time (ms)";
+
 
 
 // singleton instance
 AndorCamera* AndorCamera::instance_ = 0;
-unsigned AndorCamera::refCount_ = 0;
+unsigned int AndorCamera::refCount_ = 0;
 
 // Windows dll entry routine
 BOOL APIENTRY DllMain( HANDLE /*hModule*/, 
                        DWORD  ul_reason_for_call, 
-                       LPVOID /*lpReserved*/
-					 )
-{
-	switch (ul_reason_for_call)
-	{
-	case DLL_PROCESS_ATTACH:
-   break;
-	case DLL_THREAD_ATTACH:
-	case DLL_THREAD_DETACH:
-	case DLL_PROCESS_DETACH:
-	break;
+                       LPVOID /*lpReserved*/ ) {
+  switch (ul_reason_for_call) {
+	  case DLL_PROCESS_ATTACH:
+      break;
+	  case DLL_THREAD_ATTACH:
+	  case DLL_THREAD_DETACH:
+	  case DLL_PROCESS_DETACH:
+	    break;
 	}
-    return TRUE;
+  return TRUE;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -117,7 +118,7 @@ BOOL APIENTRY DllMain( HANDLE /*hModule*/,
 
 MODULE_API void InitializeModuleData()
 {
-   AddAvailableDeviceName(g_AndorName, "Generic Andor Camera Adapter");
+  AddAvailableDeviceName(g_AndorName, "Generic Andor Camera Adapter");
 
 }
 
@@ -125,37 +126,40 @@ char deviceName[64]; // jizhen 05.16.2007
 
 MODULE_API void DeleteDevice(MM::Device* pDevice)
 {
-   // jizhen 05.16.2007
-   //char* deviceName = new char[128]; // will crash the stack if put the variable here! 
-   pDevice->GetName( deviceName);
-   if ( strcmp(deviceName, g_AndorName) == 0) 
-   {
-	   AndorCamera::ReleaseInstance((AndorCamera*) pDevice);
-   } 
-   else 
-   // eof jizhen
-	   delete pDevice;
+  // jizhen 05.16.2007
+  //char* deviceName = new char[128]; // will crash the stack if put the variable here! 
+  pDevice->GetName( deviceName);
+  if ( strcmp(deviceName, g_AndorName) == 0) {
+	  AndorCamera::ReleaseInstance((AndorCamera*) pDevice);
+  } 
+  else { 
+    // eof jizhen
+	  delete pDevice;
+  }
 }
 
 MODULE_API MM::Device* CreateDevice(const char* deviceName)
 {
-   if (deviceName == 0)
-      return 0;
+  if (deviceName == 0) {
+    return 0;
+  }
 
-   string strName(deviceName);
+  string strName(deviceName);
    
-   if (strcmp(deviceName, g_AndorName) == 0)
-      return AndorCamera::GetInstance();
-   else if (strcmp(deviceName, g_IxonName) == 0)
-      return AndorCamera::GetInstance();
+  if (strcmp(deviceName, g_AndorName) == 0) {
+    return AndorCamera::GetInstance();
+  }
+  else if (strcmp(deviceName, g_IxonName) == 0) {
+    return AndorCamera::GetInstance();
+  }
 
    
-   return 0;
+  return 0;
 }
 
 void AndorCamera::ReleaseInstance(AndorCamera * andorCam) {
 
-	unsigned int refC = andorCam->DeReference();
+  unsigned int refC = andorCam->DeReference();
 	if ( refC <=0 ) 
 	{
 		delete andorCam;
@@ -167,106 +171,110 @@ void AndorCamera::ReleaseInstance(AndorCamera * andorCam) {
 // AndorCamera constructor/destructor
 
 AndorCamera::AndorCamera() :
-   initialized_(false),
-   busy_(false),
-   snapInProgress_(false),
-   binSize_(1),
-   expMs_(0.0),
-   driverDir_(""),
-   fullFrameBuffer_(0),
-   fullFrameX_(0),
-   fullFrameY_(0),
-   EmCCDGainLow_(0),
-   EmCCDGainHigh_(0),
-   EMSwitch_(true),
-   minTemp_(0),
-   ThermoSteady_(0),
-   lSnapImageCnt_(0),
-   currentGain_(-1),
-   ReadoutTime_(50),
-   ADChannelIndex_(0),
-   acquiring_(false),
-   imageCounter_(0),
-   sequenceLength_(0),
-   OutputAmplifierIndex_(0),
-   HSSpeedIdx_(0),
-   bSoftwareTriggerSupported(0),
-   maxTemp_(0),
-   CurrentCameraID_(-1),
-   pImgBuffer_(0),
-   currentExpMS_(0.0),
-   bFrameTransfer_(0),
-   stopOnOverflow_(true),
-   iCurrentTriggerMode(INTERNAL),
-   strCurrentTriggerMode("")
-{
-   InitializeDefaultErrorMessages();
+  initialized_(false),
+  busy_(false),
+  snapInProgress_(false),
+  binSize_(1),
+  expMs_(0.0),
+  driverDir_(""),
+  fullFrameBuffer_(0),
+  fullFrameX_(0),
+  fullFrameY_(0),
+  EmCCDGainLow_(0),
+  EmCCDGainHigh_(0),
+  EMSwitch_(true),
+  minTemp_(0),
+  ThermoSteady_(0),
+  lSnapImageCnt_(0),
+  currentGain_(-1),
+  ReadoutTime_(50),
+  ADChannelIndex_(0),
+  acquiring_(false),
+  imageCounter_(0),
+  sequenceLength_(0),
+  OutputAmplifierIndex_(0),
+  HSSpeedIdx_(0),
+  bSoftwareTriggerSupported(0),
+  maxTemp_(0),
+  CurrentCameraID_(-1),
+  pImgBuffer_(0),
+  currentExpMS_(0.0),
+  bFrameTransfer_(0),
+  stopOnOverflow_(true),
+  iCurrentTriggerMode(INTERNAL),
+  strCurrentTriggerMode(""),
+  ui_swVersion(0)
+{ 
+  InitializeDefaultErrorMessages();
 
+  // add custom messages
+  SetErrorText(ERR_BUSY_ACQUIRING, "Camera Busy.  Stop camera activity first.");
+  SetErrorText(ERR_NO_AVAIL_AMPS, "No available amplifiers.");
+  SetErrorText(ERR_TRIGGER_NOT_SUPPORTED, "Trigger Not supported.");
+  SetErrorText(ERR_INVALID_VSPEED, "Invalid Vertical Shift Speed.");
+  SetErrorText(ERR_INVALID_PREAMPGAIN, "Invalid Pre-Amp Gain.");
 
+  seqThread_ = new AcqSequenceThread(this);
 
-   // add custom messages
-   SetErrorText(ERR_BUSY_ACQUIRING, "Camera Busy.  Stop camera activity first.");
+  // Pre-initialization properties
+  // -----------------------------
 
-   seqThread_ = new AcqSequenceThread(this);
+  // Driver location property removed.  atmcd32d.dll should be in the working directory
 
-   // Pre-initialization properties
-   // -----------------------------
-
-   // Driver location property removed.  atmcd32d.dll should be in the working directory
-
-   hAndorDll = 0;
-   fpGetKeepCleanTime = 0;
-   fpGetReadOutTime = 0;
-   if(hAndorDll == 0)
-      hAndorDll = ::GetModuleHandle("atmcd32d.dll");
-   if(hAndorDll!=NULL)
-   {
-      fpGetKeepCleanTime = (FPGetKeepCleanTime)GetProcAddress(hAndorDll, "GetKeepCleanTime");
-      fpGetReadOutTime = (FPGetReadOutTime)GetProcAddress(hAndorDll, "GetReadOutTime");
-   }
+  hAndorDll = 0;
+  fpGetKeepCleanTime = 0;
+  fpGetReadOutTime = 0;
+  if(hAndorDll == 0)
+  hAndorDll = ::GetModuleHandle("atmcd32d.dll");
+  if(hAndorDll!=NULL)
+  {
+    fpGetKeepCleanTime = (FPGetKeepCleanTime)GetProcAddress(hAndorDll, "GetKeepCleanTime");
+    fpGetReadOutTime = (FPGetReadOutTime)GetProcAddress(hAndorDll, "GetReadOutTime");
+  }
 
 }
 
 AndorCamera::~AndorCamera()
 {
-   delete seqThread_;
+  delete seqThread_;
    
-   refCount_--;
-   if (refCount_ == 0)
-   {
-      // release resources
-	if (initialized_)
-	{
+  refCount_--;
+  if (refCount_ == 0) {
+    // release resources
+	  if (initialized_) {
     	SetToIdle();
-        int ShutterMode = 2;  //0: auto, 1: open, 2: close
-        SetShutter(1, ShutterMode, 20,20);//0, 0);
-	}
+      int ShutterMode = 2;  //0: auto, 1: open, 2: close
+      SetShutter(1, ShutterMode, 20,20);//0, 0);
+	  }
 
 	
-	if (initialized_)
-        CoolerOFF();  //Daigang 24-may-2007 turn off the cooler at shutdown
+    if (initialized_ && mb_canSetTemp) {
+      CoolerOFF();  //Daigang 24-may-2007 turn off the cooler at shutdown
+    }
 
-      if (initialized_)
-         Shutdown();
+    if (initialized_) {
+      Shutdown();
+    }
       // clear the instance pointer
-      instance_ = 0;
-   }
+    instance_ = 0;
+  }
 }
 
 AndorCamera* AndorCamera::GetInstance()
 {
-   if (!instance_)
-      instance_ = new AndorCamera();
+  if (!instance_) {
+    instance_ = new AndorCamera();
+  }
 
-   refCount_++;
-   return instance_;
+  refCount_++;
+  return instance_;
 }
 
 // jizhen 05.16.2007
-unsigned AndorCamera::DeReference()
+unsigned int AndorCamera::DeReference()
 {
-   refCount_--;
-   return refCount_;
+  refCount_--;
+  return refCount_;
 }
 // eof jizhen
 
@@ -279,77 +287,72 @@ unsigned AndorCamera::DeReference()
 */
 int AndorCamera::GetListOfAvailableCameras()
 {
-   unsigned ret;
+  unsigned int ret;
+  vCameraType.clear();
+  NumberOfAvailableCameras_ = 0;
+  ret = GetAvailableCameras(&NumberOfAvailableCameras_);
+  if (ret != DRV_SUCCESS) {
+     return ret;
+  }
+  if(NumberOfAvailableCameras_ == 0) {
+	  return ERR_CAMERA_DOES_NOT_EXIST;
+  }
 
-   NumberOfAvailableCameras_ = 0;
-   ret = GetAvailableCameras(&NumberOfAvailableCameras_);
-   if (ret != DRV_SUCCESS)
-      return ret;
-   if(NumberOfAvailableCameras_ == 0)
-	   return ERR_CAMERA_DOES_NOT_EXIST;
+  long CameraID;
+  int UnknownCameraIndex = 0;
+  NumberOfWorkableCameras_ = 0;
+  cameraName_.clear();
+  cameraID_.clear();
+  for(int i=0;i<NumberOfAvailableCameras_; i++) {
+    ret = GetCameraHandle(i, &CameraID);
+    if( ret ==DRV_SUCCESS ) {
+      ret = SetCurrentCamera(CameraID);
+      if( ret ==DRV_SUCCESS ) {
+		    ret=::Initialize(const_cast<char*>(driverDir_.c_str()));
+        if( ret!=DRV_SUCCESS && ret != DRV_ERROR_FILELOAD ) {
+          ret = ShutDown();
+        }
+      }
+		  if( ret == DRV_SUCCESS) {
+        NumberOfWorkableCameras_++;
+        std::string anStr;
+        char chars[255];
+        ret = GetHeadModel(chars);
+        if( ret!=DRV_SUCCESS ) {
+          anStr = "UnknownModel";
+        }
+        else {
+          anStr = chars;
 
-   long CameraID;
-   int UnknownCameraIndex = 0;
-   NumberOfWorkableCameras_ = 0;
-   cameraName_.clear();
-   cameraID_.clear();
-   for(int i=0;i<NumberOfAvailableCameras_; i++)
-   {
-     ret = GetCameraHandle(i, &CameraID);
-     if( ret ==DRV_SUCCESS )
-     {
-       ret = SetCurrentCamera(CameraID);
-       if( ret ==DRV_SUCCESS )
-	   {
-		   ret=::Initialize(const_cast<char*>(driverDir_.c_str()));
-         if( ret!=DRV_SUCCESS && ret != DRV_ERROR_FILELOAD )
-         {
-           ret = ShutDown();
-		 }
-		 if( ret == DRV_SUCCESS)
-		 {
-           NumberOfWorkableCameras_++;
-           std::string anStr;
-           char chars[255];
-           ret = GetHeadModel(chars);
-           if( ret!=DRV_SUCCESS )
-           {
-             anStr = "UnknownModel";
-           }
-           else
-           {
-             anStr = chars;
-           }
-           int id;
-           ret = GetCameraSerialNumber(&id);
-           if( ret!=DRV_SUCCESS )
-           {
-             UnknownCameraIndex ++;
-             id = UnknownCameraIndex;
-           }
-           sprintf(chars, "%d", id);
+        }
+        int id;
+        ret = GetCameraSerialNumber(&id);
+        if( ret!=DRV_SUCCESS ) {
+          UnknownCameraIndex ++;
+          id = UnknownCameraIndex;
+        }
+        sprintf(chars, "%d", id);
 
-		   anStr = anStr + " " + chars;
-		   cameraName_.push_back(anStr);
-		   cameraID_.push_back((int)CameraID);
-          
-         
-           //if there is only one camera, don't shutdown
-           if( NumberOfAvailableCameras_ > 1 )
-           {
-             ret = ShutDown();
-           }
-		   else
-		   {
-			 CurrentCameraID_ = CameraID;
-		   }
-		 }
-	   }
-     }
-   }
+        std::string camType = getCameraType();
+        vCameraType.push_back(camType);
+		    anStr = "| " + camType + " | " + anStr + " | " + chars + " |";
+		    cameraName_.push_back(anStr);
+		    cameraID_.push_back((int)CameraID);   
+      }   
+      //if there is only one camera, don't shutdown
+      if( NumberOfAvailableCameras_ > 1 )
+      {
+        ret = ShutDown();
+      }
+		  else
+		  {
+			  CurrentCameraID_ = CameraID;
+		  }
+		}
+  }
 
-   if(NumberOfWorkableCameras_>=1)
-   {
+  if(NumberOfWorkableCameras_>=1)
+  {
        //camera property for multiple camera support
        /*  //removed because list boxes in Property Browser of MM are unable to update their values after switching camera
        CPropertyAction *pAct = new CPropertyAction (this, &AndorCamera::OnCamera);
@@ -357,11 +360,11 @@ int AndorCamera::GetListOfAvailableCameras()
        assert(nRet == DEVICE_OK);
        nRet = SetAllowedValues("Camera", cameraName_);
 	   */
-	   return DRV_SUCCESS;
-   }
-   else
-	   return ERR_CAMERA_DOES_NOT_EXIST;
-
+	  return DRV_SUCCESS;
+  }
+  else {
+	  return ERR_CAMERA_DOES_NOT_EXIST;
+  }
 }
 
 /**
@@ -369,32 +372,36 @@ int AndorCamera::GetListOfAvailableCameras()
  */
 int AndorCamera::OnCamera(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
-   if (eAct == MM::AfterSet)
-   {
+  if (eAct == MM::AfterSet)
+  {
 	  //added to use RTA
 	  SetToIdle();
 
-      string CameraName;
-      pProp->Get(CameraName);
-      for (unsigned i=0; i<cameraName_.size(); ++i)
-         if (cameraName_[i].compare(CameraName) == 0)
-         {
-            int ret = ShutDown(); //shut down the used camera
-			initialized_ = false;
-			CurrentCameraID_ = cameraID_[i];
-			ret = Initialize();
-            if (DEVICE_OK != ret)
-               return ret;
-            else
-               return DEVICE_OK;
-         }
-      assert(!"Unrecognized Camera");
-   }
-   else if (eAct == MM::BeforeGet)
-   {
-   }
-   return DEVICE_OK;
+    string CameraName;
+    pProp->Get(CameraName);
+    for (unsigned i=0; i<cameraName_.size(); ++i) {
+      if (cameraName_[i].compare(CameraName) == 0)
+      {
+        int ret = ShutDown(); //shut down the used camera
+			  initialized_ = false;
+			  CurrentCameraID_ = cameraID_[i];
+			  ret = Initialize();
+        if (DEVICE_OK != ret) {
+          return ret;
+        }
+        else {
+          return DEVICE_OK;
+        }
+      }
+    }
+    assert(!"Unrecognized Camera");
+  }
+  else if (eAct == MM::BeforeGet) {
+    // Empty path
+  }
+  return DEVICE_OK;
 }
+
 /**
  * Camera Name
  */
@@ -530,20 +537,16 @@ int AndorCamera::Initialize()
       }
    }
    CameraName_ = cameraName_[currentCameraIdx];
-   bool isLuca = false;
-   if (CameraName_.substr(0,3).compare("Luc")==0) {
-      isLuca = true;
-      LogMessage("Camera is a Luca");
-   }
+   m_str_camType = vCameraType[currentCameraIdx];
 
-   if(HasProperty(MM::g_Keyword_Name))
+   if(HasProperty(g_CameraInformation))
    {
-      nRet = SetProperty(MM::g_Keyword_Name,cameraName_[currentCameraIdx].c_str());   
+      nRet = SetProperty(g_CameraInformation,cameraName_[currentCameraIdx].c_str());   
    }
    else
    {
       CPropertyAction *pAct = new CPropertyAction (this, &AndorCamera::OnCameraName);
-      nRet = CreateProperty(MM::g_Keyword_Name, cameraName_[currentCameraIdx].c_str(), MM::String, true, pAct);
+      nRet = CreateProperty(g_CameraInformation, cameraName_[currentCameraIdx].c_str(), MM::String, true, pAct);
    }
    assert(nRet == DEVICE_OK);
 
@@ -553,18 +556,6 @@ int AndorCamera::Initialize()
       nRet = CreateProperty(MM::g_Keyword_Description, "Andor camera adapter", MM::String, true);
    }
    assert(nRet == DEVICE_OK);
-
-   // Camera serial number
-   int serialNumber;
-   ret = GetCameraSerialNumber(&serialNumber);
-   if (ret == DRV_SUCCESS) {
-      std::ostringstream sN;
-      sN << serialNumber;
-      nRet = CreateProperty("Serial Number", sN.str().c_str(), MM::String, true);
-      std::ostringstream msg;
-      msg << "Camera Serial Number: " << serialNumber;
-      LogMessage(msg.str().c_str(), false);
-   }
 
    // Get various version numbers
    unsigned int eprom, cofFile, vxdRev, vxdVer, dllRev, dllVer;
@@ -577,6 +568,7 @@ int AndorCamera::Initialize()
       verInfo << "Driver: " << vxdVer << "." << vxdRev << std::endl;
       verInfo << "DLL: " << dllVer << "." << dllRev << std::endl;
       LogMessage(verInfo.str().c_str(), false);
+      ui_swVersion = (100 * dllVer) + dllRev;
    }
 
    // capabilities
@@ -586,123 +578,46 @@ int AndorCamera::Initialize()
    if (ret != DRV_SUCCESS)
       return ret;
 
-   //check iCam feature
-   vTriggerModes.clear();  
-   if(caps.ulTriggerModes & AC_TRIGGERMODE_CONTINUOUS)
-   {
-	   if(iCurrentTriggerMode == SOFTWARE) {
-      ret = SetTriggerMode(10);  //set software trigger. mode 0:internal, 1: ext, 6:ext start, 7:bulb, 10:software
-      if (ret != DRV_SUCCESS)
-	   {
-         ShutDown();
-         LogMessage("Could not set trigger mode");
-         return ret;
-	   }
-		 strCurrentTriggerMode = "Software";
-	   }
-	   vTriggerModes.push_back("Software");
-	   bSoftwareTriggerSupported = true;
+   ret = createTriggerProperty(&caps);
+   if(ret != DRV_SUCCESS) {
+     return ret;
    }
-   if(caps.ulTriggerModes & AC_TRIGGERMODE_EXTERNAL) {
-	   if(iCurrentTriggerMode == EXTERNAL) {
-         ret = SetTriggerMode(1);  //set software trigger. mode 0:internal, 1: ext, 6:ext start, 7:bulb, 10:software
-      if (ret != DRV_SUCCESS)
-	   {
-         ShutDown();
-         LogMessage("Could not set external trigger mode");
-         return ret;
-	   }
-		 strCurrentTriggerMode = "External";
-   }
-	   vTriggerModes.push_back("External");
-   }
-   if(caps.ulTriggerModes & AC_TRIGGERMODE_INTERNAL) {
-	   if(iCurrentTriggerMode == INTERNAL) {
-         ret = SetTriggerMode(0);  //set software trigger. mode 0:internal, 1: ext, 6:ext start, 7:bulb, 10:software
-         if (ret != DRV_SUCCESS)
-   {
-           ShutDown();
-           LogMessage("Could not set software trigger mode");
-           return ret;
-   }
-		 strCurrentTriggerMode = "Internal";
-	   }
-	   vTriggerModes.push_back("Internal");
-   }
-   if(!HasProperty("Trigger"))
-   {
-      CPropertyAction *pAct = new CPropertyAction (this, &AndorCamera::OnSelectTrigger);
-      nRet = CreateProperty("Trigger", "Trigger Mode", MM::String, false, pAct);
-      assert(nRet == DEVICE_OK);
-   }
-   nRet = SetAllowedValues("Trigger", vTriggerModes);
-   assert(nRet == DEVICE_OK);
-   nRet = SetProperty("Trigger", strCurrentTriggerMode.c_str());
-   assert(nRet == DEVICE_OK);
 
    //Set EM Gain mode
-   if(caps.ulEMGainCapability&AC_EMGAIN_REAL12)
-   {
-      ret = SetEMAdvanced(1);
-      if (ret != DRV_SUCCESS) {
-         LogMessage("Could not set EM Advanced");
-         return ret;
-      }
-      ret = SetEMGainMode(3);
-      if (ret != DRV_SUCCESS){
-         LogMessage("Could not set EM Gain mode 3");
-         return ret;
-      }
-   } 
-   else if(caps.ulEMGainCapability&AC_EMGAIN_LINEAR12)
-   { 
-      ret = SetEMAdvanced(1);
-      if (ret != DRV_SUCCESS){
-         LogMessage("Could not set EM Advanced");
-         return ret;
-      }
-      ret = SetEMGainMode(2);  //mode 0: 0-255; 1: 0-4095; 2: Linear; 3: real
-      if (ret != DRV_SUCCESS) {
-         LogMessage("Could not set EM Gain mode 2");
-         return ret;
-      }
-   }
-   else if(caps.ulEMGainCapability&AC_EMGAIN_12BIT)
-   {
-      ret = SetEMAdvanced(1);
-      if (ret != DRV_SUCCESS)
-         return ret;
-      ret = SetEMGainMode(1);  //mode 0: 0-255; 1: 0-4095; 2: Linear; 3: real
-      if (ret != DRV_SUCCESS) {
-         LogMessage("Could not set EM Gain mode 1");
-         return ret;
-      }
-   }
-   else if(caps.ulEMGainCapability&AC_EMGAIN_8BIT)
-   {
-      ret = SetEMGainMode(0);  //mode 0: 0-255; 1: 0-4095; 2: Linear; 3: real
-      if (ret != DRV_SUCCESS)
-         return ret;
+   ret = createGainProperty(&caps);
+   if(ret != DRV_SUCCESS) {
+     return ret;
    }
 
+   mb_canSetTemp = ((caps.ulSetFunctions & AC_SETFUNCTION_TEMPERATURE) == AC_SETFUNCTION_TEMPERATURE);
+   mb_canUseFan  = ((caps.ulFeatures & AC_FEATURES_FANCONTROL) == AC_FEATURES_FANCONTROL);
+
    //Output amplifier
+   
    int numAmplifiers;
+   mapAmps.clear();
+   vAvailAmps.clear();
    ret = GetNumberAmp(&numAmplifiers);
    if (ret != DRV_SUCCESS)
       return ret;
+
+   for(int i = 0; i < numAmplifiers; ++i) {
+     int i_nameLength(21);
+     char * sz_ampName = new char[i_nameLength];
+     GetAmpDesc(i, sz_ampName, i_nameLength);
+     vAvailAmps.push_back(std::string(sz_ampName));
+     mapAmps[std::string(sz_ampName)] = i;
+   }
    if(numAmplifiers > 1)
    {
       if(!HasProperty(g_OutputAmplifier))
       {
          CPropertyAction *pAct = new CPropertyAction (this, &AndorCamera::OnOutputAmplifier);
-         nRet = CreateProperty(g_OutputAmplifier, g_OutputAmplifier_EM, MM::String, false, pAct);
+         nRet = CreateProperty(g_OutputAmplifier, vAvailAmps[0].c_str(), MM::String, false, pAct);
 	   }
-      vector<string> OutputAmplifierValues;
-      OutputAmplifierValues.push_back(g_OutputAmplifier_EM);
-      OutputAmplifierValues.push_back(g_OutputAmplifier_Conventional);
-      nRet = SetAllowedValues(g_OutputAmplifier, OutputAmplifierValues);
+      nRet = SetAllowedValues(g_OutputAmplifier, vAvailAmps);
       assert(nRet == DEVICE_OK);
-	   nRet = SetProperty(g_OutputAmplifier,  OutputAmplifierValues[0].c_str());   
+	   nRet = SetProperty(g_OutputAmplifier,  vAvailAmps[0].c_str());   
       assert(nRet == DEVICE_OK);
       if (nRet != DEVICE_OK)
          return nRet;
@@ -713,22 +628,31 @@ int AndorCamera::Initialize()
    ret = GetNumberADChannels(&numADChannels);
    if (ret != DRV_SUCCESS)
       return ret;
+  
+   vChannels.clear();
+   for(int i = 0; i < numADChannels; ++i) {
+     int depth;
+     ::GetBitDepth(i, &depth);
+     char * buffer = new char[64];
+     sprintf(buffer, "AD %d (%d-bit)",i, depth);
+     std::string temp(buffer);
+     vChannels.push_back(temp);
+     delete [] buffer;
+   }
    if(numADChannels > 1)
    {
+
       if(!HasProperty(g_ADChannel))
       {
          CPropertyAction *pAct = new CPropertyAction (this, &AndorCamera::OnADChannel);
-         nRet = CreateProperty(g_ADChannel, g_ADChannel_14Bit, MM::String, false, pAct);
+         nRet = CreateProperty(g_ADChannel,vChannels[0].c_str() , MM::String, false, pAct);
          assert(nRet == DEVICE_OK);
 	   }
-      vector<string> ADChannelValues;
-      ADChannelValues.push_back(g_ADChannel_14Bit);
-      ADChannelValues.push_back(g_ADChannel_16Bit);
-      nRet = SetAllowedValues(g_ADChannel, ADChannelValues);
+      nRet = SetAllowedValues(g_ADChannel, vChannels);
       assert(nRet == DEVICE_OK);
       if (nRet != DEVICE_OK)
          return nRet;
-	   nRet = SetProperty(g_ADChannel,  ADChannelValues[0].c_str());   
+	   nRet = SetProperty(g_ADChannel,  vChannels[0].c_str());   
       if (nRet != DEVICE_OK)
          return nRet;
    }
@@ -853,27 +777,6 @@ int AndorCamera::Initialize()
    ret = SetShutter(1, ShutterMode, 20,20);//Opened any way because some old AndorCamera has no flag for IsInternalMechanicalShutter
 
 
-   // camera gain
-   if(!HasProperty(MM::g_Keyword_Gain))
-   {
-      pAct = new CPropertyAction (this, &AndorCamera::OnGain);
-      nRet = CreateProperty(MM::g_Keyword_Gain, "0", MM::Integer, false, pAct);
-      assert(nRet == DEVICE_OK);
-   }
-   else
-   {
-	   nRet = SetProperty(MM::g_Keyword_Gain, "0");
-      assert(nRet == DEVICE_OK);
-   }
-
-   if (isLuca) {
-      pAct = new CPropertyAction(this, &AndorCamera::OnEMSwitch);
-      nRet = CreateProperty("EMSwitch", "On", MM::String, false, pAct);
-      assert (nRet == DEVICE_OK);
-      AddAllowedValue("EMSwitch", "On");      
-      AddAllowedValue("EMSwitch", "Off");
-   }
-
    // readout mode
    int numSpeeds;
    ret = GetNumberHSSpeeds(0, 0, &numSpeeds);
@@ -900,7 +803,7 @@ int AndorCamera::Initialize()
 	   if(numSpeeds>1)
          nRet = CreateProperty(MM::g_Keyword_ReadoutMode, readoutModes_[0].c_str(), MM::String, false, pAct);
 	   else
-         nRet = CreateProperty(MM::g_Keyword_ReadoutMode, readoutModes_[0].c_str(), MM::String, true, pAct);
+         nRet = CreateProperty(MM::g_Keyword_ReadoutMode, readoutModes_[0].c_str(), MM::String, false, pAct);
       assert(nRet == DEVICE_OK);
    }
    nRet = SetAllowedValues(MM::g_Keyword_ReadoutMode, readoutModes_);
@@ -1049,27 +952,32 @@ int AndorCamera::Initialize()
    // camera temperature
    // jizhen 05.08.2007
    // temperature range
+   std::string strTips("");
    int minTemp, maxTemp;
-   ret = GetTemperatureRange(&minTemp, &maxTemp);
-   if (ret != DRV_SUCCESS)
-      return ret;
-   minTemp_ = minTemp;
-   maxTemp_ = maxTemp;
-   ostringstream tMin; 
-   ostringstream tMax; 
-   tMin << minTemp;
-   tMax << maxTemp;
+
+   if(mb_canSetTemp) {
+     
+     ret = GetTemperatureRange(&minTemp, &maxTemp);
+     if (ret != DRV_SUCCESS)
+       return ret;
+     minTemp_ = minTemp;
+     maxTemp_ = maxTemp;
+     ostringstream tMin; 
+     ostringstream tMax; 
+     tMin << minTemp;
+     tMax << maxTemp;
 
 
-   //added to show some tips
-   string strTips = "Wait for temperature to stabilize before acquisition.";
-   if(!HasProperty(" Tip1"))
-   {
-      nRet = CreateProperty(" Tip1", strTips.c_str(), MM::String, true);
-   }
-   else
-   {
-	   nRet = SetProperty(" Tip1", strTips.c_str());
+     //added to show some tips
+     strTips = "Wait for temperature to stabilize before acquisition.";
+     if(!HasProperty("CCDTemperature Help"))
+     {
+       nRet = CreateProperty("CCDTemperature Help", strTips.c_str(), MM::String, true);
+     }
+     else
+     {
+	     nRet = SetProperty("CCDTemperature Help", strTips.c_str());
+     }
    }
    assert(nRet == DEVICE_OK);
 
@@ -1102,78 +1010,94 @@ int AndorCamera::Initialize()
    }
    assert(nRet == DEVICE_OK);
 
+  std::string strTempSetPoint;
+  // Temperature Set Point
+  if(mb_canSetTemp) {
+           
+    if(minTemp<-70) {
+	    strTempSetPoint = "-70";
+    }
+    else {
+	    strTempSetPoint = TemperatureRangeMin_; 
+    }
+    if(!HasProperty(MM::g_Keyword_CCDTemperatureSetPoint)) {
+      pAct = new CPropertyAction (this, &AndorCamera::OnTemperatureSetPoint);
+      nRet = CreateProperty(MM::g_Keyword_CCDTemperatureSetPoint, strTempSetPoint.c_str(), MM::Integer, false, pAct);
+      ret = SetPropertyLimits(MM::g_Keyword_CCDTemperatureSetPoint, minTemp_, maxTemp_);
+    }
+    else {
+	    nRet = SetProperty(MM::g_Keyword_CCDTemperatureSetPoint, strTempSetPoint.c_str());
+    }
+    assert(nRet == DEVICE_OK);
+     
 
-   // Temperature Set Point
-   std::string strTempSetPoint;
-   if (!isLuca) {      
-      if(minTemp<-70)
-	      strTempSetPoint = "-70";
-      else
-	      strTempSetPoint = TemperatureRangeMin_; 
-      if(!HasProperty(MM::g_Keyword_CCDTemperatureSetPoint))
-      {
-         pAct = new CPropertyAction (this, &AndorCamera::OnTemperatureSetPoint);
-         nRet = CreateProperty(MM::g_Keyword_CCDTemperatureSetPoint, strTempSetPoint.c_str(), MM::Integer, false, pAct);
-         ret = SetPropertyLimits(MM::g_Keyword_CCDTemperatureSetPoint, minTemp_, maxTemp_);
-      }
-      else
-      {
-	      nRet = SetProperty(MM::g_Keyword_CCDTemperatureSetPoint, strTempSetPoint.c_str());
-      }
-      assert(nRet == DEVICE_OK);
-   }
+     // Cooler  
+    if(!HasProperty("CoolerMode"))
+    {
+      pAct = new CPropertyAction (this, &AndorCamera::OnCooler);
+      nRet = CreateProperty("CoolerMode", g_CoolerMode_FanOffAtShutdown, MM::String, false, pAct); 
+    }
+    assert(nRet == DEVICE_OK);
+    AddAllowedValue(/*Daigang 24-may-2007 "Cooler" */"CoolerMode", g_CoolerMode_FanOffAtShutdown);//"0");  //Daigang 24-may-2007
+    AddAllowedValue(/*Daigang 24-may-2007 "Cooler" */"CoolerMode", g_CoolerMode_FanOnAtShutdown);//"1");  //Daigang 24-may-2007
+    nRet = SetProperty("CoolerMode", g_CoolerMode_FanOffAtShutdown);
+    assert(nRet == DEVICE_OK);
 
-   // Cooler  
-   if (!isLuca) {
-      if(!HasProperty("CoolerMode"))
-      {
-         pAct = new CPropertyAction (this, &AndorCamera::OnCooler);
-         nRet = CreateProperty("CoolerMode", g_CoolerMode_FanOffAtShutdown, MM::String, false, pAct); 
-      }
-     assert(nRet == DEVICE_OK);
-      AddAllowedValue(/*Daigang 24-may-2007 "Cooler" */"CoolerMode", g_CoolerMode_FanOffAtShutdown);//"0");  //Daigang 24-may-2007
-      AddAllowedValue(/*Daigang 24-may-2007 "Cooler" */"CoolerMode", g_CoolerMode_FanOnAtShutdown);//"1");  //Daigang 24-may-2007
-      nRet = SetProperty("CoolerMode", g_CoolerMode_FanOffAtShutdown);
-      assert(nRet == DEVICE_OK);
-   }
+  }
 
    //jizhen 05.16.2007
    // Fan
-   if(!HasProperty("FanMode"))
-   {
-      pAct = new CPropertyAction (this, &AndorCamera::OnFanMode);
-      nRet = CreateProperty("FanMode", /*Daigang 24-may-2007 "0" */g_FanMode_Full, /*Daigang 24-may-2007 MM::Integer */MM::String, false, pAct); 
+   if(mb_canUseFan) {
+     if(!HasProperty("FanMode"))
+     {
+       pAct = new CPropertyAction (this, &AndorCamera::OnFanMode);
+       nRet = CreateProperty("FanMode", /*Daigang 24-may-2007 "0" */g_FanMode_Full, /*Daigang 24-may-2007 MM::Integer */MM::String, false, pAct); 
+     }
+     assert(nRet == DEVICE_OK);
+     AddAllowedValue("FanMode", g_FanMode_Full);// "0"); // high  //Daigang 24-may-2007
+     AddAllowedValue("FanMode", g_FanMode_Low);//"1"); // low  //Daigang 24-may-2007
+     AddAllowedValue("FanMode", g_FanMode_Off);//"2"); // off  //Daigang 24-may-2007
+     nRet = SetProperty("FanMode", g_FanMode_Full);
+     assert(nRet == DEVICE_OK);
    }
-   assert(nRet == DEVICE_OK);
-   AddAllowedValue("FanMode", g_FanMode_Full);// "0"); // high  //Daigang 24-may-2007
-   AddAllowedValue("FanMode", g_FanMode_Low);//"1"); // low  //Daigang 24-may-2007
-   AddAllowedValue("FanMode", g_FanMode_Off);//"2"); // off  //Daigang 24-may-2007
-   nRet = SetProperty("FanMode", g_FanMode_Full);
-   assert(nRet == DEVICE_OK);
    // eof jizhen
 
-   // frame transfer mode
-   if(!HasProperty(g_FrameTransferProp))
-   {
-      pAct = new CPropertyAction (this, &AndorCamera::OnFrameTransfer);
-      nRet = CreateProperty(g_FrameTransferProp, g_FrameTransferOff, MM::String, false, pAct); 
-   }
-   assert(nRet == DEVICE_OK);
-   AddAllowedValue(g_FrameTransferProp, g_FrameTransferOff);
-   AddAllowedValue(g_FrameTransferProp, g_FrameTransferOn);
-   nRet = SetProperty(g_FrameTransferProp, g_FrameTransferOff);
-   assert(nRet == DEVICE_OK);
+    // frame transfer mode
+    if(((caps.ulAcqModes & AC_ACQMODE_FRAMETRANSFER) == AC_ACQMODE_FRAMETRANSFER)
+      || ((caps.ulAcqModes & AC_ACQMODE_OVERLAP) == AC_ACQMODE_OVERLAP)) {
+      
+      if(!HasProperty(m_str_frameTransferProp.c_str()))
+      {
+        if(m_str_camType == "Clara") {
+          m_str_frameTransferProp = "Overlap";
+        }
+        else {
+          m_str_frameTransferProp = "Frame Transfer";
+        }
+        pAct = new CPropertyAction (this, &AndorCamera::OnFrameTransfer);
+        nRet = CreateProperty(m_str_frameTransferProp.c_str(), g_FrameTransferOff, MM::String, false, pAct); 
+      }
+      std::string str_frameTransferTip = m_str_frameTransferProp + " Help";
+      std::string strHelp("Should only turn on ");
+      strHelp.append(m_str_frameTransferProp).append(" if using Burst or Live mode.");
+      nRet = CreateProperty(str_frameTransferTip.c_str(), strHelp.c_str(), MM::String, true);
+      assert(nRet == DEVICE_OK);
+      AddAllowedValue(m_str_frameTransferProp.c_str(), g_FrameTransferOff);
+      AddAllowedValue(m_str_frameTransferProp.c_str(), g_FrameTransferOn);
+      nRet = SetProperty(m_str_frameTransferProp.c_str(), g_FrameTransferOff);
+      assert(nRet == DEVICE_OK);
+    }
 
    // actual interval
    // used by the application to get information on the actual camera interval
-   if(!HasProperty(MM::g_Keyword_ActualInterval_ms))
+   if(!HasProperty(g_CycleTime))
    {
       pAct = new CPropertyAction (this, &AndorCamera::OnActualIntervalMS);
-      nRet = CreateProperty(MM::g_Keyword_ActualInterval_ms, "0.0", MM::Float, false, pAct);
+      nRet = CreateProperty(g_CycleTime, "0.0", MM::Float, true, pAct);
    }
    else
    {
-      nRet = SetProperty(MM::g_Keyword_ActualInterval_ms, "0.0");
+      nRet = SetProperty(g_CycleTime, "0.0");
    }
    assert(nRet == DEVICE_OK);
 
@@ -1244,22 +1168,12 @@ int AndorCamera::Initialize()
       if (nRet != DEVICE_OK)
          return nRet;
    }
-
-   if (!isLuca) {
-     nRet = SetProperty(MM::g_Keyword_CCDTemperatureSetPoint, strTempSetPoint.c_str());
-     if (nRet != DEVICE_OK)
-         return nRet;
-   }
-
-   // EM gain
-   // jizhen 05.08.2007
-   // EMCCDGain range
-   int EmCCDGainLow, EmCCDGainHigh;
-   ret = GetEMGainRange(&EmCCDGainLow, &EmCCDGainHigh);
-   if (ret != DRV_SUCCESS)
-      return ret;
-   EmCCDGainLow_ = EmCCDGainLow;
-   EmCCDGainHigh_ = EmCCDGainHigh;
+  if(mb_canSetTemp) {
+    nRet = SetProperty(MM::g_Keyword_CCDTemperatureSetPoint, strTempSetPoint.c_str());
+    if (nRet != DEVICE_OK) {
+      return nRet;
+    }
+  }
 
 
    nRet = SetProperty(MM::g_Keyword_Exposure, "10.0");
@@ -1269,33 +1183,44 @@ int AndorCamera::Initialize()
    nRet = SetProperty(MM::g_Keyword_ReadoutMode, readoutModes_[0].c_str());
    if (nRet != DEVICE_OK)
       return nRet;
-
-   nRet = SetProperty("FanMode", g_FanMode_Full);
-   if (nRet != DEVICE_OK)
-      return nRet;
-
-   nRet = SetProperty(g_FrameTransferProp, g_FrameTransferOff);
-   if (nRet != DEVICE_OK)
-      return nRet;
-
-   if (!isLuca) {
-     nRet = SetProperty("CoolerMode", g_CoolerMode_FanOffAtShutdown);
+   if(mb_canUseFan) {
+     nRet = SetProperty("FanMode", g_FanMode_Full);
      if (nRet != DEVICE_OK)
-        return nRet;
+       return nRet;
    }
 
-   ret = CoolerON();  //turn on the cooler at startup
-   if (DRV_SUCCESS != ret)
+   if(((caps.ulAcqModes & AC_ACQMODE_FRAMETRANSFER) == AC_ACQMODE_FRAMETRANSFER)
+      || ((caps.ulAcqModes & AC_ACQMODE_OVERLAP) == AC_ACQMODE_OVERLAP)){
+
+     nRet = SetProperty(m_str_frameTransferProp.c_str(), g_FrameTransferOff);
+     if (nRet != DEVICE_OK)
+       return nRet;
+   }
+  if(mb_canSetTemp) {
+    nRet = SetProperty("CoolerMode", g_CoolerMode_FanOffAtShutdown);
+    if (nRet != DEVICE_OK) {
+      return nRet;
+    }
+    ret = CoolerON();  //turn on the cooler at startup
+    if (DRV_SUCCESS != ret) {
       return (int)ret;
+    }
+  }
+   if(HasProperty(g_EMGainValue)) {
+     if(EmCCDGainHigh_>=300)
+     {
+        ret = SetEMAdvanced(1);  //Enable extended range of EMGain
+        if (DRV_SUCCESS != ret)
+           return (int)ret;
+     }
 
-   if(EmCCDGainHigh_>=300)
-   {
-      ret = SetEMAdvanced(1);  //Enable extended range of EMGain
-      if (DRV_SUCCESS != ret)
-         return (int)ret;
+     UpdateEMGainRange();
+     currentGain_ = EmCCDGainLow_;
+     ret = SetEMCCDGain(static_cast<int>(currentGain_));
+     if(ret != DRV_SUCCESS) {
+       return (int)ret;
+     }
    }
-
-   UpdateEMGainRange();
    GetReadoutTime();
 
    nRet = UpdateStatus();
@@ -1321,7 +1246,7 @@ int AndorCamera::Shutdown()
       SetToIdle();
       int ShutterMode = 2;  //0: auto, 1: open, 2: close
       SetShutter(1, ShutterMode, 20,20);//0, 0);
-      CoolerOFF();  //Daigang 24-may-2007 turn off the cooler at shutdown
+      if(mb_canSetTemp) {CoolerOFF();}  //Daigang 24-may-2007 turn off the cooler at shutdown
       ShutDown();
    }
 
@@ -1377,6 +1302,7 @@ int AndorCamera::SnapImage()
       if (ret != DRV_SUCCESS)
          return ret;
    }
+   
    else
    {
      ret = WaitForAcquisition();
@@ -1389,7 +1315,7 @@ int AndorCamera::SnapImage()
    }
    else
    {
-   pImgBuffer_ = GetImageBuffer_();
+     pImgBuffer_ = GetImageBuffer_();
    }
    if(iCurrentTriggerMode == SOFTWARE)
       CDeviceUtils::SleepMs(KeepCleanTime_);
@@ -1484,11 +1410,13 @@ const unsigned char* AndorCamera::GetImageBuffer()
 unsigned char* AndorCamera::GetAcquiredImage() {
 
    assert(fullFrameBuffer_ != 0);
-   unsigned int ret = GetNewData16((WORD*)fullFrameBuffer_, roi_.xSize/binSize_ * roi_.ySize/binSize_);
+   int array_Length = roi_.xSize/binSize_ * roi_.ySize/binSize_;
+
+   unsigned int ret = GetNewData16((WORD*)fullFrameBuffer_, array_Length);
    if(ret != DRV_SUCCESS) {
 	   return 0;
    }
-
+  
    return (unsigned char*)fullFrameBuffer_;
 }
 
@@ -1524,7 +1452,7 @@ long AndorCamera::GetReadoutTime()
    float fExposure, fAccumTime, fKineticTime;
    GetAcquisitionTimings(&fExposure,&fAccumTime,&fKineticTime);
    ActualInterval_ms_ = fKineticTime * 1000.0f;
-   SetProperty(MM::g_Keyword_ActualInterval_ms, CDeviceUtils::ConvertToString(ActualInterval_ms_)); 
+   SetProperty(g_CycleTime, CDeviceUtils::ConvertToString(ActualInterval_ms_)); 
 
 //whenever readout needs update, keepcleantime also needs update
    long KeepCleanTime;
@@ -1776,8 +1704,10 @@ int AndorCamera::OnExposure(MM::PropertyBase* pProp, MM::ActionType eAct)
 
       if (acquiring)
          StartSequenceAcquisition(sequenceLength_ - imageCounter_, intervalMs_, stopOnOverflow_);
-   }
 
+     UpdateHSSpeeds();
+     OnPropertiesChanged();
+   }
    return DEVICE_OK;
 }
 
@@ -1952,11 +1882,16 @@ int AndorCamera::OnEMSwitch(MM::PropertyBase* pProp, MM::ActionType eAct)
       unsigned ret = DRV_SUCCESS;
       if (EMSwitch == "On") {
          ret = SetEMCCDGain((int)currentGain_);
+         UpdateEMGainRange();
          EMSwitch_ = true;
       } else {
          ret = SetEMCCDGain(0);
+         ret = SetPropertyLimits(g_EMGainValue, 0, 0);
          EMSwitch_ = false;
+
       }
+      OnPropertiesChanged();
+
       if (DRV_SUCCESS != ret)
          return (int)ret;
 
@@ -2298,8 +2233,9 @@ int AndorCamera::OnTemperatureSetPoint(MM::PropertyBase* pProp, MM::ActionType e
       ostringstream strTempSetPoint;
       strTempSetPoint<<temp;
       TemperatureSetPoint_ = strTempSetPoint.str();
-
-      UpdateEMGainRange(); 
+      if(HasProperty(g_EMGainValue)) {
+        UpdateEMGainRange();
+      }
 
       if (acquiring)
           StartSequenceAcquisition(sequenceLength_ - imageCounter_, intervalMs_, stopOnOverflow_);
@@ -2399,7 +2335,7 @@ int AndorCamera::OnFanMode(MM::PropertyBase* pProp, MM::ActionType eAct)
       unsigned ret = GetStatus(&status);
       while (status == DRV_ACQUIRING && ret == DRV_SUCCESS)
          ret = GetStatus(&status);
-
+      
       ret = SetFanMode(modeIdx);
       if (ret != DRV_SUCCESS)
          return (int)ret;
@@ -2500,7 +2436,7 @@ void AndorCamera::UpdateEMGainRange()
    if (nRet != DEVICE_OK)
       return;
    */
-   ret = SetPropertyLimits(MM::g_Keyword_Gain, EmCCDGainLow, EmCCDGainHigh);
+   ret = SetPropertyLimits(g_EMGainValue, EmCCDGainLow, EmCCDGainHigh);
    if (ret != DEVICE_OK)
       return;
 
@@ -2570,53 +2506,137 @@ int AndorCamera::OnEMGainRangeMin(MM::PropertyBase* pProp, MM::ActionType eAct)
  */
 int AndorCamera::OnFrameTransfer(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
-   if (eAct == MM::AfterSet)
-   {
-      bool acquiring = acquiring_;
-      if (acquiring)
-         StopSequenceAcquisition();
+  if (eAct == MM::AfterSet)
+  {
+    bool acquiring = acquiring_;
+    if (acquiring) {
+      StopSequenceAcquisition();
+    }
 
-      if (acquiring_)
-         return ERR_BUSY_ACQUIRING;
+    if (acquiring_) {
+      return ERR_BUSY_ACQUIRING;
+    }
 
-      SetToIdle();
+    SetToIdle();
 
-      string mode;
-      pProp->Get(mode);
-      int modeIdx = 0;
-      if (mode.compare(g_FrameTransferOn) == 0)
+    bool bOldFTMode = bFrameTransfer_;
+    string mode;
+    pProp->Get(mode);
+    int modeIdx = 0;
+    if (mode.compare(g_FrameTransferOn) == 0)
 	  {
-         modeIdx = 1;
-		 bFrameTransfer_ = true;
+      modeIdx = 1;
+		  bFrameTransfer_ = true;
 	  }
-      else if (mode.compare(g_FrameTransferOff) == 0)
+    else if (mode.compare(g_FrameTransferOff) == 0)
 	  {
-         modeIdx = 0;
-		 bFrameTransfer_ = false;
+      modeIdx = 0;
+		  bFrameTransfer_ = false;
 	  }
+    else {
+      return DEVICE_INVALID_PROPERTY_VALUE;
+    }
 
-      else
-         return DEVICE_INVALID_PROPERTY_VALUE;
+    // wait for camera to finish acquiring
+    int status = DRV_IDLE;
+    unsigned ret = GetStatus(&status);
+    while (status == DRV_ACQUIRING && ret == DRV_SUCCESS) {
+      ret = GetStatus(&status);
+    }
+    if(bOldFTMode != bFrameTransfer_) {
 
-      // wait for camera to finish acquiring
-      int status = DRV_IDLE;
-      unsigned ret = GetStatus(&status);
-      while (status == DRV_ACQUIRING && ret == DRV_SUCCESS)
-         ret = GetStatus(&status);
+      if(bFrameTransfer_) {
+        /*
+        ret = SetAcquisitionMode(2);
+        if (ret != DRV_SUCCESS) {
+          return ret;
+        }
+        ret = SetNumberAccumulations(1);
+        if (ret != DRV_SUCCESS) {
+          return ret;
+        }
+        ret = SetAccumulationCycleTime(0.0);
+        if (ret != DRV_SUCCESS) {
+          return ret;
+        }SetKineticCycleTime(float time)
+        */
+        ret = SetAcquisitionMode(3);
+        if (ret != DRV_SUCCESS) {
+          return ret;
+        }
+        ret = SetNumberKinetics(1);
+        if (ret != DRV_SUCCESS) {
+          return ret;
+        }
+        ret = SetKineticCycleTime(0.0);
+        if (ret != DRV_SUCCESS) {
+          return ret;
+        }
+
+      }
+      else {
+        ret = SetAcquisitionMode(1);
+        if (ret != DRV_SUCCESS) {
+          return ret;
+        }
+      }
 
       ret = SetFrameTransferMode(modeIdx);
-      if (ret != DRV_SUCCESS)
-         return ret;
+      if (ret != DRV_SUCCESS) {
+        return ret;
+      }
+      int noAmps;
+      ret = ::GetNumberAmp(&noAmps);
+      if (ret != DRV_SUCCESS) {
+        return ret;
+      }
+      
+      ::PrepareAcquisition();
+
+     bool changeAmp(false);
+     if(ui_swVersion > 283) {
+       std::map<std::string, int>::iterator iter, iterLast;
+       iterLast = mapAmps.end();
+       vAvailAmps.clear();
+       for(iter = mapAmps.begin(); iter != iterLast; ++iter) {
+         unsigned int status = IsAmplifierAvailable(iter->second);
+         if(status == DRV_SUCCESS) {
+           vAvailAmps.push_back(iter->first);
+         }
+         else {
+           if(OutputAmplifierIndex_ == iter->second) {
+             changeAmp = true;
+           }
+         }
+       }
+     }
+      SetAllowedValues(g_OutputAmplifier, vAvailAmps);
+      UpdateProperty(g_OutputAmplifier);
+      OnPropertiesChanged();
+      if(changeAmp) {
+        if(vAvailAmps.size() > 0) {
+          OutputAmplifierIndex_ = mapAmps[vAvailAmps[0]];
+          int nRet = SetProperty(g_OutputAmplifier,  vAvailAmps[0].c_str());   
+          assert(nRet == DEVICE_OK);
+          if (nRet != DEVICE_OK) {
+            return nRet;
+          }
+        }
+        else {
+          return ERR_NO_AVAIL_AMPS;
+        }
+      }
+      UpdateHSSpeeds();
 
       if (acquiring)
           StartSequenceAcquisition(sequenceLength_ - imageCounter_, intervalMs_, stopOnOverflow_);
-
-   }
-   else if (eAct == MM::BeforeGet)
-   {
-      // use cached value
-   }
-   return DEVICE_OK;
+    }
+  }
+  else if (eAct == MM::BeforeGet)
+  {
+     // use cached value
+  }
+  return DEVICE_OK;
 }
 
 
@@ -2683,27 +2703,26 @@ int AndorCamera::OnOutputAmplifier(MM::PropertyBase* pProp, MM::ActionType eAct)
 
       string strAmp;
       pProp->Get(strAmp);
-      int AmpIdx = 0;
-      if (strAmp.compare(g_OutputAmplifier_EM) == 0)
-         AmpIdx = 0;
-      else if (strAmp.compare(g_OutputAmplifier_Conventional) == 0)
-         AmpIdx = 1;
-      else
-         return DEVICE_INVALID_PROPERTY_VALUE;
+      if(strAmp.compare(strCurrentAmp) != 0 ) {
+        strCurrentAmp = strAmp;
+	      OutputAmplifierIndex_ = mapAmps[strAmp];
 
-	   OutputAmplifierIndex_ = AmpIdx;
 
-     	UpdateHSSpeeds();
+        unsigned ret = SetOutputAmplifier(OutputAmplifierIndex_);
+        if (ret != DRV_SUCCESS) {
+          return (int)ret;
+        }
 
-      unsigned ret = SetOutputAmplifier(AmpIdx);
-      if (ret != DRV_SUCCESS)
-         return (int)ret;
+        UpdateHSSpeeds();
 
-      if (acquiring)
+        if (acquiring) {
           StartSequenceAcquisition(sequenceLength_ - imageCounter_, intervalMs_, stopOnOverflow_);
+        }
 
-      if (initialized_)
-         return OnPropertiesChanged();
+        if (initialized_) {
+          return OnPropertiesChanged();
+        }
+      }
    }
    else if (eAct == MM::BeforeGet)
    {
@@ -2718,46 +2737,124 @@ int AndorCamera::OnOutputAmplifier(MM::PropertyBase* pProp, MM::ActionType eAct)
  */
 int AndorCamera::OnADChannel(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
-   if (eAct == MM::AfterSet)
-   {
-      bool acquiring = acquiring_;
-      if (acquiring)
-         StopSequenceAcquisition();
+  if (eAct == MM::AfterSet)
+  {
+    bool acquiring = acquiring_;
+    if (acquiring) {
+      StopSequenceAcquisition();
+    }
+    if (acquiring_) {
+      return ERR_BUSY_ACQUIRING;
+    }
 
-      if (acquiring_)
-         return ERR_BUSY_ACQUIRING;
+    SetToIdle();
 
-      SetToIdle();
-
-	   string strADChannel;
-      pProp->Get(strADChannel);
-      int ADChannelIdx = 0;
-      if (strADChannel.compare(g_ADChannel_14Bit) == 0)
-         ADChannelIdx = 0;
-      else if (strADChannel.compare(g_ADChannel_16Bit) == 0)
-         ADChannelIdx = 1;
-      else
-         return DEVICE_INVALID_PROPERTY_VALUE;
+	  string strADChannel;
+    pProp->Get(strADChannel);
+    int ADChannelIdx = 0;
+    if(strCurrentChannel.compare(strADChannel) != 0) {
+      if (strADChannel.compare(vChannels[0]) == 0) {
+        ADChannelIdx = 0;
+      }
+      else if (strADChannel.compare(vChannels[1]) == 0) {
+        ADChannelIdx = 1;
+      }
+      else {
+        return DEVICE_INVALID_PROPERTY_VALUE;
+      }
 
       ADChannelIndex_ = ADChannelIdx;
 
       unsigned int ret = SetADChannel(ADChannelIdx);
-      if (ret != DRV_SUCCESS)
-         return (int)ret;
+      if (ret != DRV_SUCCESS) {
+        return (int)ret;
+      }
 
-	   UpdateHSSpeeds();
+      int numPreAmpGain;
+      ret = GetNumberPreAmpGains(&numPreAmpGain);
+      if (ret != DRV_SUCCESS) {
+        return ret;
+      }
+      char PreAmpGainBuf[10];
+      PreAmpGains_.clear();
+      for (int i=0; i<numPreAmpGain; i++)
+      {
+        float pag;
+        ret = GetPreAmpGain(i, &pag); 
+        if (ret != DRV_SUCCESS) {
+         return ret;
+        }
+        sprintf(PreAmpGainBuf, "%.2f", pag);
+        PreAmpGains_.push_back(PreAmpGainBuf);
+     }
+      std::vector<std::string>::iterator pagIter, pagIterLast;
+      pagIterLast = PreAmpGains_.end();
+      bool resetGain(true);
+      for(pagIter = PreAmpGains_.begin(); pagIter != pagIterLast; ++pagIter) {
+        if(PreAmpGain_.compare(*pagIter) == 0) {
+          resetGain = false;
+          break;
+        }
+      }
+      if(resetGain && PreAmpGains_.size() > 0) {
+        ret = SetPreAmpGain(0);
+        if (ret != DRV_SUCCESS) {
+         return ret;
+        }
+        PreAmpGain_ = PreAmpGains_[0];
+      }
+      if(HasProperty("Pre-Amp-Gain")) {
+        int rc = SetAllowedValues("Pre-Amp-Gain",PreAmpGains_);
+        assert(rc == DEVICE_OK);
+      }
 
-      if (acquiring)
-          StartSequenceAcquisition(sequenceLength_ - imageCounter_, intervalMs_, stopOnOverflow_);
+    bool changeAmp(false);
+     if(ui_swVersion > 283) {
+       std::map<std::string, int>::iterator iter, iterLast;
+       iterLast = mapAmps.end();
+       vAvailAmps.clear();
+       for(iter = mapAmps.begin(); iter != iterLast; ++iter) {
+         unsigned int status = IsAmplifierAvailable(iter->second);
+         if(status == DRV_SUCCESS) {
+           vAvailAmps.push_back(iter->first);
+         }
+         else {
+           if(OutputAmplifierIndex_ == iter->second) {
+             changeAmp = true;
+           }
+         }
+       }
+     }
+      int nRet = SetAllowedValues(g_OutputAmplifier, vAvailAmps);
+      assert(nRet == DEVICE_OK);
+      if(changeAmp) {
+        if(vAvailAmps.size() > 0) {
+          OutputAmplifierIndex_ = mapAmps[vAvailAmps[0]];
+          int nRet = SetProperty(g_OutputAmplifier,  vAvailAmps[0].c_str());   
+          assert(nRet == DEVICE_OK);
+          if (nRet != DEVICE_OK) {
+            return nRet;
+          }
+        }
+        else {
+          return ERR_NO_AVAIL_AMPS;
+        }
+      }
 
+	    UpdateHSSpeeds();
 
-     if (initialized_)
+      if (acquiring) {
+        StartSequenceAcquisition(sequenceLength_ - imageCounter_, intervalMs_, stopOnOverflow_);
+      }
+
+      if (initialized_) {
         return OnPropertiesChanged();
-   }
-   else if (eAct == MM::BeforeGet)
-   {
-   }
-   return DEVICE_OK;
+      }
+    }
+  }
+  else if (eAct == MM::BeforeGet) {
+  }
+  return DEVICE_OK;
 }
 
 //daigang 24-may-2007
@@ -2945,13 +3042,16 @@ int AndorCamera::StartSequenceAcquisition(long numImages, double interval_ms, bo
      SetToIdle();
    }
    LogMessage("Setting Trigger Mode", true);
-   int ret0 = SetTriggerMode(0);  //set software trigger. mode 0:internal, 1: ext, 6:ext start, 7:bulb, 10:software
+   int ret0;
+   if(numImages < LONG_MAX) {
+     ret0 = SetTriggerMode(iCurrentTriggerMode);
+   }
+   else {
+     ret0 = SetTriggerMode(0);  //set software trigger. mode 0:internal, 1: ext, 6:ext start, 7:bulb, 10:software
+   }
    if (ret0 != DRV_SUCCESS)
       return ret0;
 
-   LogMessage("Setting Frame Transfer mode on", true);
-   if(bFrameTransfer_ && (iCurrentTriggerMode == SOFTWARE))
-     ret0 = SetFrameTransferMode(1);  //FT mode might be turned off in SnapImage when Software trigger mode is used. Resume it here
 
    ostringstream os;
    os << "Started sequence acquisition: " << numImages << "images  at " << interval_ms << " ms" << endl;
@@ -2962,6 +3062,11 @@ int AndorCamera::StartSequenceAcquisition(long numImages, double interval_ms, bo
    if (ret != DRV_SUCCESS)
       return ret;
    LogMessage("Set acquisition mode to 5", true);
+
+   LogMessage("Setting Frame Transfer mode on", true);
+   if(bFrameTransfer_ && (iCurrentTriggerMode == SOFTWARE))
+     ret0 = SetFrameTransferMode(1);  //FT mode might be turned off in SnapImage when Software trigger mode is used. Resume it here
+
 
    ret = SetReadMode(4); // image mode
    if (ret != DRV_SUCCESS)
@@ -3005,20 +3110,22 @@ int AndorCamera::StartSequenceAcquisition(long numImages, double interval_ms, bo
 
    // re-apply the frame transfer mode setting
    char ftMode[MM::MaxStrLength];
-   ret = GetProperty(g_FrameTransferProp, ftMode);
-   assert(ret == DEVICE_OK);
-   int modeIdx = 0;
-   if (strcmp(g_FrameTransferOn, ftMode) == 0)
-      modeIdx = 1;
-   else if (strcmp(g_FrameTransferOff, ftMode) == 0)
-      modeIdx = 0;
-   else
-      return DEVICE_INVALID_PROPERTY_VALUE;
-   os.str("");
-   os << "Set Frame transfer mode to " << modeIdx;
-   LogMessage(os.str().c_str(), true);
+   if(HasProperty(m_str_frameTransferProp.c_str())){
+     ret = GetProperty(m_str_frameTransferProp.c_str(), ftMode);
+     assert(ret == DEVICE_OK);
+     int modeIdx = 0;
+     if (strcmp(g_FrameTransferOn, ftMode) == 0)
+       modeIdx = 1;
+     else if (strcmp(g_FrameTransferOff, ftMode) == 0)
+       modeIdx = 0;
+     else
+       return DEVICE_INVALID_PROPERTY_VALUE;
+     os.str("");
+     os << "Set Frame transfer mode to " << modeIdx;
+     LogMessage(os.str().c_str(), true);
 
-   ret = SetFrameTransferMode(modeIdx);
+     ret = SetFrameTransferMode(modeIdx);
+   }
    if (ret != DRV_SUCCESS)
    {
       SetAcquisitionMode(1);
@@ -3035,7 +3142,7 @@ int AndorCamera::StartSequenceAcquisition(long numImages, double interval_ms, bo
 
    float fExposure, fAccumTime, fKineticTime;
    GetAcquisitionTimings(&fExposure,&fAccumTime,&fKineticTime);
-   SetProperty(MM::g_Keyword_ActualInterval_ms, CDeviceUtils::ConvertToString((double)fKineticTime * 1000.0)); 
+   SetProperty(g_CycleTime, CDeviceUtils::ConvertToString((double)fKineticTime * 1000.0)); 
    ActualInterval_ms_ = fKineticTime * 1000.0f;
    os.str("");
    os << "Exposure: " << fExposure << " AcummTime: " << fAccumTime << " KineticTime: " << fKineticTime;
@@ -3167,4 +3274,199 @@ int AndorCamera::PushImage()
                                            GetImageBytesPerPixel());
    } else
       return DEVICE_OK;
+}
+
+std::string AndorCamera::getCameraType() {
+
+  std::string retVal("");
+  AndorCapabilities caps;
+
+  caps.ulSize = sizeof(AndorCapabilities);
+  GetCapabilities(&caps);
+
+	unsigned long camType = caps.ulCameraType;
+	switch(camType) {
+	  case(AC_CAMERATYPE_PDA):
+			retVal = "PDA";
+			break;
+	  case(AC_CAMERATYPE_IXON):
+			retVal = "iXon";
+			break;
+	  case(AC_CAMERATYPE_INGAAS):
+			retVal = "inGaAs";
+			break;
+	  case(AC_CAMERATYPE_ICCD):
+			retVal = "ICCD";
+			break;
+	  case(AC_CAMERATYPE_EMCCD):
+			retVal = "EMICCD";
+			break;
+	  case(AC_CAMERATYPE_CCD):
+			retVal = "CCD";
+			break;
+	  case(AC_CAMERATYPE_ISTAR):
+			retVal = "iStar";
+			break;
+	  case(AC_CAMERATYPE_VIDEO):
+			retVal = "Video";
+			break;
+	  case(AC_CAMERATYPE_IDUS):
+			retVal = "iDus";
+			break;
+	  case(AC_CAMERATYPE_NEWTON):
+			retVal = "Newton";
+			break;
+	  case(AC_CAMERATYPE_SURCAM):
+			retVal = "Surcam";
+			break;
+	  case(AC_CAMERATYPE_USBICCD):
+			retVal = "USB ICCD";
+			break;
+	  case(AC_CAMERATYPE_LUCA):
+			retVal = "Luca";
+			break;
+	  case(AC_CAMERATYPE_RESERVED):
+			retVal = "Reserved";
+			break;
+	  case(AC_CAMERATYPE_IKON):
+			retVal = "iKon";
+			break;
+	  case(AC_CAMERATYPE_IVAC):
+			retVal = "iVac";
+			break;
+	  case(17):  // Should say AC_CAMERATYPE_CLARA but this only defined in versions > 2.83 [01/04/2009]
+ 			retVal = "Clara";
+			break;
+	  case(AC_CAMERATYPE_UNPROGRAMMED):
+			retVal = "Unprogrammed";
+			break;
+		default:
+			retVal = "Unknown";
+			break;
+	}
+  return retVal;
+}
+
+unsigned int AndorCamera::createGainProperty(AndorCapabilities * caps) {
+  
+  unsigned int retVal(DRV_SUCCESS);
+  bEMGainSupported  = ((caps->ulSetFunctions & AC_SETFUNCTION_EMCCDGAIN) == AC_SETFUNCTION_EMCCDGAIN);
+  
+  int state = 0;  // for setting the em gain advanced state
+  int mode  = 0;  // for setting the em gain mode
+
+  if(bEMGainSupported) {
+    if((caps->ulEMGainCapability&AC_EMGAIN_REAL12) == AC_EMGAIN_REAL12)
+    {
+      state = 1;        //Enable access
+      mode = 3;         //Real EM gain
+    } 
+    else if((caps->ulEMGainCapability&AC_EMGAIN_LINEAR12) == AC_EMGAIN_LINEAR12)
+    { 
+      state = 1;        //Enable access
+      mode = 2;         //Linear mode
+    }
+    else if((caps->ulEMGainCapability&AC_EMGAIN_12BIT) ==  AC_EMGAIN_12BIT)
+    {
+      state = 1;        //Enable access
+      mode = 1;         //The EM Gain is controlled by DAC settings in the range 0-4095
+    }
+    else if((caps->ulEMGainCapability&AC_EMGAIN_8BIT) == AC_EMGAIN_8BIT)
+    {
+      state = 0;        //Disable access
+      mode = 0;         //The EM Gain is controlled by DAC settings in the range 0-255. Default mode
+    }
+
+    if(state != 0) {
+      retVal = SetEMAdvanced(state);
+      if(retVal != DRV_SUCCESS) {
+        return retVal;
+      }
+    }
+    retVal = SetEMGainMode(mode);
+    if(retVal != DRV_SUCCESS) {
+      return retVal;
+    }
+
+    int i_gainLow, i_gainHigh;
+    retVal = GetEMGainRange(&i_gainLow, &i_gainHigh);
+    if (retVal != DRV_SUCCESS) {
+      return retVal;
+    }
+
+    if(!HasProperty(g_EMGainValue)) {
+      CPropertyAction *pAct = new CPropertyAction(this, &AndorCamera::OnGain);
+      int nRet = CreateProperty(g_EMGainValue,"0", MM::Integer,false, pAct);
+      assert(nRet == DEVICE_OK);
+      nRet = SetPropertyLimits(g_EMGainValue, 0, i_gainHigh);
+      assert(nRet == DEVICE_OK);
+    }
+  }
+  if(bEMGainSupported) {
+    CPropertyAction *pAct = new CPropertyAction(this, &AndorCamera::OnEMSwitch);
+    int nRet = CreateProperty(g_EMGain, "On", MM::String, false, pAct);
+    assert (nRet == DEVICE_OK);
+    AddAllowedValue(g_EMGain, "On");      
+    AddAllowedValue(g_EMGain, "Off");
+  }
+  return retVal;
+}
+
+unsigned int AndorCamera::createTriggerProperty(AndorCapabilities * caps) {
+
+  vTriggerModes.clear();  
+  unsigned int retVal = DRV_SUCCESS;
+  if(caps->ulTriggerModes & AC_TRIGGERMODE_CONTINUOUS)
+  {
+	   if(iCurrentTriggerMode == SOFTWARE) {
+       retVal = SetTriggerMode(10);  //set software trigger. mode 0:internal, 1: ext, 6:ext start, 7:bulb, 10:software
+       if (retVal != DRV_SUCCESS)
+	     {
+         ShutDown();
+         LogMessage("Could not set trigger mode");
+         return retVal;
+	     }
+		   strCurrentTriggerMode = "Software";
+	  }
+	   vTriggerModes.push_back("Software");
+	   bSoftwareTriggerSupported = true;
+   }
+   if(caps->ulTriggerModes & AC_TRIGGERMODE_EXTERNAL) {
+	   if(iCurrentTriggerMode == EXTERNAL) {
+         retVal = SetTriggerMode(1);  //set software trigger. mode 0:internal, 1: ext, 6:ext start, 7:bulb, 10:software
+      if (retVal != DRV_SUCCESS)
+	   {
+         ShutDown();
+         LogMessage("Could not set external trigger mode");
+         return retVal;
+	   }
+		 strCurrentTriggerMode = "External";
+   }
+	   vTriggerModes.push_back("External");
+   }
+   if(caps->ulTriggerModes & AC_TRIGGERMODE_INTERNAL) {
+	   if(iCurrentTriggerMode == INTERNAL) {
+         retVal = SetTriggerMode(0);  //set software trigger. mode 0:internal, 1: ext, 6:ext start, 7:bulb, 10:software
+         if (retVal != DRV_SUCCESS)
+   {
+           ShutDown();
+           LogMessage("Could not set software trigger mode");
+           return retVal;
+   }
+		 strCurrentTriggerMode = "Internal";
+	   }
+	   vTriggerModes.push_back("Internal");
+   }
+   if(!HasProperty("Trigger"))
+   {
+      CPropertyAction *pAct = new CPropertyAction (this, &AndorCamera::OnSelectTrigger);
+      int nRet = CreateProperty("Trigger", "Trigger Mode", MM::String, false, pAct);
+      assert(nRet == DEVICE_OK);
+   }
+   int nRet = SetAllowedValues("Trigger", vTriggerModes);
+   assert(nRet == DEVICE_OK);
+   nRet = SetProperty("Trigger", strCurrentTriggerMode.c_str());
+   assert(nRet == DEVICE_OK);
+
+   return retVal;
 }

@@ -58,6 +58,7 @@
 #define ERR_INVALID_VSPEED 108
 #define ERR_TRIGGER_NOT_SUPPORTED 109
 #define ERR_OPEN_OR_CLOSE_SHUTTER_IN_ACQUISITION_NOT_ALLOWEDD 110
+#define ERR_NO_AVAIL_AMPS 111
 
 class AcqSequenceThread;
  
@@ -164,6 +165,8 @@ private:
 
    bool EMSwitch_;
 
+   unsigned int ui_swVersion;
+
    static AndorCamera* instance_;
    static unsigned refCount_;
    ImgBuffer img_;
@@ -262,11 +265,29 @@ private:
    std::string strCurrentTriggerMode;
    std::vector<std::string> vTriggerModes;
 
+    std::string strCurrentAmp;
+   std::vector<std::string> vAvailAmps;
+   std::map<std::string, int> mapAmps;
+
+   std::string strCurrentChannel;
+   std::vector<std::string> vChannels;
+
    bool bFrameTransfer_;
+
+   std::string m_str_frameTransferProp;
+   std::string m_str_camType;
+   std::vector<std::string> vCameraType;
 
    unsigned char* GetImageBuffer_();
    unsigned char* pImgBuffer_;
    unsigned char* GetAcquiredImage();
+   std::string getCameraType();
+   unsigned int createGainProperty(AndorCapabilities * caps);
+   unsigned int createTriggerProperty(AndorCapabilities * caps);
+
+   bool mb_canUseFan;
+   bool mb_canSetTemp;
+   bool bEMGainSupported;
 
 
 };
