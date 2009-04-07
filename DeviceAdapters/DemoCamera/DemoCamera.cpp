@@ -641,7 +641,12 @@ int CDemoCamera::OnPixelType(MM::PropertyBase* pProp, MM::ActionType eAct)
    case MM::BeforeGet:
       {
          long bytesPerPixel = GetImageBytesPerPixel();
-         pProp->Set(bytesPerPixel);
+         if (bytesPerPixel == 1)
+         	pProp->Set(g_PixelType_8bit);
+         else if (bytesPerPixel == 2)
+         	pProp->Set(g_PixelType_16bit);
+         else
+         	pProp->Set(g_PixelType_8bit);
          ret=DEVICE_OK;
       }break;
    }
