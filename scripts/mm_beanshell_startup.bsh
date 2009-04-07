@@ -58,5 +58,9 @@ void update(String x, bsh.NameSpace ns) {
 	}
 }
 
+run_unit_tests () {
+	source("scripts/mm_test_all.bsh");
+}
+
 source("scripts/mm_load_docs.bsh"); // Generates command "doc(object);"
 source("scripts/mm_inspector.bsh"); // Generates command "inspect(object);"
