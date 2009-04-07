@@ -193,8 +193,11 @@
       <copy file="${ScriptsRoot}/AutoExpose.bsh" todir="${ScriptsInstall}" />
       <copy file="${ScriptsRoot}/mm_beanshell_startup.bsh" todir="${ScriptsInstall}" />
       <copy file="${ScriptsRoot}/mm_load_docs.bsh" todir="${ScriptsInstall}" />
-      <copy file="${ScriptsRoot}/mm_inspector.bsh" todir="${ScriptsInstall}" />
-
+      <copy file="${ScriptsRoot}/mm_inspector.bsh" todir="${ScriptsInstall}" />     
+      <copy file="${ScriptsRoot}/mm_test_all.bsh" todir="${ScriptsInstall}" />
+      <copy file="${ScriptsRoot}/mm_test_camera.bsh" todir="${ScriptsInstall}" />
+      <copy file="${ScriptsRoot}/mm_test_properties.bsh" todir="${ScriptsInstall}" />
+      <copy file="${ScriptsRoot}/mm_test_shutter.bsh" todir="${ScriptsInstall}" />
       <copy file="${DriversRoot}/K8055_libusb.inf" todir="${DriversInstall}" />
       <copy file="${DriversRoot}/K8055_libusb.cat" todir="${DriversInstall}" />
       <copy file="${DriversRoot}/K8061_libusb.inf" todir="${DriversInstall}" />
