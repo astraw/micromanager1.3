@@ -1,0 +1,81 @@
+// Micro-Manager, UCSF, 2009
+// Arthur Edelstein, arthuredelstein@gmail.com
+// Main unit test adapter program
+
+// Utility functions:
+
+
+long _last_time=System.currentTimeMillis();
+tic() {
+	this_time = System.currentTimeMillis();
+	delta = this_time-_last_time;
+	_last_time = this_time;
+	return delta;
+}
+
+testCmd(cmd) {
+	tic();
+	bsh.console.print("  "  + cmd);
+	ret = eval(cmd);
+	t = tic();
+	output = "";
+	if (ret!=null)
+		output = " => " + ret;
+	output += "  (" + t + " ms)";
+	bsh.console.println(output);
+	bsh.console.history.add(cmd);
+	return ret;
+}
+
+getROI() {
+	// ROI values are give as x,y,w,h in individual one-member arrays (pointers in C++):
+	a = new int[4][1];
+	mmc.getROI(a[0],a[1],a[2],a[3]);
+	// Return as a single array with x,y,w,h:
+	int[] roiRect = {a[0][0],a[1][0],a[2][0],a[3][0]};
+	return roiRect;
+}
+
+update();
+
+// Run tests: -------------------------------------------------------------------
+
+gui.clearMessageWindow();
+
+print("\nMICRO-MANAGER BEANSHELL AUTOMATED TESTS");
+
+print("  " + System.getProperty("os.name") + " | v. " +
+	System.getProperty("os.version") + " | arch. " +
+	System.getProperty("os.arch"));
+
+print("  Java v. " + System.getProperty("java.version"));
+print("  Classpath: " + System.getProperty("java.class.path"));
+print("");
+
+mmc.sleep(200); // Prevent overlap
+
+testCmd("mmc.getVersionInfo();");
+testCmd("mmc.getUserId();");
+testCmd("mmc.getHostName();");
+testCmd("mmc.getAPIVersionInfo();");
+testCmd("mmc.getSystemState();");
+print(" Micro-Manager Version " + gui.VERSION);
+
+cd("scripts");
+source("mm_test_properties.bsh");
+source("mm_test_camera.bsh");
+source("mm_test_shutter.bsh");
+cd("..");
+
+print("\n\n\nDone with all tests!");
+
+JFileChooser fc = new JFileChooser();
+fc.setSelectedFile(new File("mm_bsh_test_results.txt"));
+fc.showSaveDialog(bsh.console);
+txt = bsh.console.text.getText();
+print("\nSaving to " + fc.selectedFile);
+fc.selectedFile.createNewFile();
+bw = new BufferedWriter(new FileWriter(fc.selectedFile));
+bw.write(txt);
+bw.close();
+fc = null;
