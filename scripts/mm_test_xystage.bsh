@@ -30,3 +30,25 @@ pos.y-=1;
 testCmd("gui.setXYStagePosition(" + pos.x + "," + pos.y + ");");
 pos = testCmd("gui.getXYStagePosition();");
 
+print("\n Moving again and taking images.");
+testCmd("gui.snapSingleImage()");
+
+pos.x+=1;
+testCmd("gui.setXYStagePosition(" + pos.x + "," + pos.y + ");");
+pos = testCmd("gui.getXYStagePosition();");
+testCmd("gui.snapSingleImage()");
+
+pos.y+=1;
+testCmd("gui.setXYStagePosition(" + pos.x + "," + pos.y + ");");
+pos = testCmd("gui.getXYStagePosition();");
+testCmd("gui.snapSingleImage()");
+
+pos.x-=1;
+testCmd("gui.setXYStagePosition(" + pos.x + "," + pos.y + ");");
+pos = testCmd("gui.getXYStagePosition();");
+testCmd("gui.snapSingleImage()");
+
+pos.y-=1;
+testCmd("gui.setXYStagePosition(" + pos.x + "," + pos.y + ");");
+pos = testCmd("gui.getXYStagePosition();");
+testCmd("gui.snapSingleImage()");
