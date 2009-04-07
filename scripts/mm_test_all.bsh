@@ -3,7 +3,7 @@
 // Main unit test adapter program
 
 // Utility functions:
-
+  
 
 _cons = bsh.console;
 
@@ -18,7 +18,11 @@ tic() {
 testCmd(cmd) {
 	tic();
 	_cons.print("  "  + cmd);
-	ret = eval(cmd);
+	try {
+		ret = eval(cmd);
+	} catch (Exception e) {
+		print(e.getMessage());
+	}
 	t = tic();
 	output = "";
 	if (ret!=null)
