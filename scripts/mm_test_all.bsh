@@ -5,6 +5,8 @@
 // Utility functions:
 
 
+_cons = bsh.console;
+
 long _last_time=System.currentTimeMillis();
 tic() {
 	this_time = System.currentTimeMillis();
@@ -15,15 +17,19 @@ tic() {
 
 testCmd(cmd) {
 	tic();
-	bsh.console.print("  "  + cmd);
+	_cons.print("  "  + cmd);
 	ret = eval(cmd);
 	t = tic();
 	output = "";
 	if (ret!=null)
 		output = " => " + ret;
 	output += "  (" + t + " ms)";
-	bsh.console.println(output);
-	bsh.console.history.add(cmd);
+	_cons.println(output);
+	// Add these commands to console history
+	// so that if script ends with an error,
+	// we can re-test the offending command.
+	if (0 != cmd.compareTo(_cons.history.lastElement())) // But don't add repetitive lines
+		bsh.console.history.add(cmd);
 	return ret;
 }
 
@@ -67,7 +73,7 @@ test(testNames) {
 	testCmd("mmc.getHostName();");
 	testCmd("mmc.getAPIVersionInfo();");
 	testCmd("mmc.getSystemState();");
-	print(" Micro-Manager Version " + gui.VERSION);
+	print("\n\nMicro-Manager Version " + gui.VERSION);
 
 	// Run desired tests:
 
@@ -92,6 +98,8 @@ test(testNames) {
 		bw.write(txt);
 		bw.close();
 		fc = null;
+	} else {
+		print ("File not saved.");
 	}
 }
 
