@@ -82,7 +82,7 @@ public:
    int Shutdown(){initialized_ = false; return DEVICE_OK;}
 
    // AutoFocus API
-   int SetContinuousFocusing(bool state) {return DEVICE_UNSUPPORTED_COMMAND;}
+   int SetContinuousFocusing(bool state) {return state ? DEVICE_UNSUPPORTED_COMMAND : DEVICE_OK;}
    int GetContinuousFocusing(bool& state) {state = false; return DEVICE_OK;}
    bool IsContinuousFocusLocked() {return false;}
    int FullFocus();
