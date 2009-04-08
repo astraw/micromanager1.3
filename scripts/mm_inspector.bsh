@@ -6,54 +6,29 @@ import javax.swing.table.DefaultTableModel;
 import org.jdesktop.swingx.*;
 import org.jdesktop.swingx.decorator.*;
 
-class MembersTab {
-	JPanel panel;
-	JTable table;
-	DefaultTableModel tableModel;
-	JScrollPane scrollPane;
 
-	MembersTab(String name, JTabbedPane tabbedPane) {
-		table = new JXTable();
-		tableModel = new DefaultTableModel();
-		table.setModel(tableModel);
-		scrollPane = new JScrollPane(table);
-		tabbedPane.addTab(name,scrollPane);
-		//table.setRowSorter(new TableRowSorter(tableModel));
-	}
-}
-
-
-class MemberViewer {
-	JFrame theFrame;
-	JTabbedPane theTabbedPane;
-	MembersTab fieldsTab;
-	MembersTab methodsTab;
-	Object theObject;
-	Vector fieldsData;
-	Vector methodsData;
+MemberViewer () {
 	String [] fieldColNames = {"Name","Value","Type","Declared in"};
 	String [] methodColNames = {"Name","Return type","Parameter types","Declared in"};
 	Vector fieldColNamesVec;
 	Vector methodColNamesVec;
+	Object theObject;
 
-	MemberViewer() {
-		setAccessibility(true);
-		searchBox = new JTextField(25);
-		theFrame = new JFrame();
-		theTabbedPane = new JTabbedPane();
-		methodsTab = new MembersTab("Methods",theTabbedPane);
-		fieldsTab = new MembersTab("Fields",theTabbedPane);
-		fieldColNamesVec = arrayToVector(fieldColNames);
-		methodColNamesVec = arrayToVector(methodColNames);
-		theFrame.add(theTabbedPane);
-		theFrame.pack();
-		theFrame.setBounds(100,100,800,500);
+	MembersTab (String name, JTabbedPane tabbedPane) { 
+		JPanel panel;
+		JTable table;
+		DefaultTableModel tableModel;
+		JScrollPane scrollPane;
+	
+		table = new JXTable();
+		//table = new JTable();
+		tableModel = new DefaultTableModel();
+		table.setModel(tableModel);
+		scrollPane = new JScrollPane(table);
+		tabbedPane.addTab(name,scrollPane);
+		return this;
 	}
 
-	MemberViewer(obj) {
-		MemberViewer();
-		inspect(obj);
-	}
 
 	void inspect(obj) {
 		theObject = obj;
@@ -122,17 +97,34 @@ class MemberViewer {
 			}
 			curClass = curClass.Superclass;
 		}
-	return rows;
+		return rows;
 	}
 
+	setAccessibility(true);
+	searchBox = new JTextField(25);
+	theFrame = new JFrame();
+	theTabbedPane = new JTabbedPane();
+	methodsTab = MembersTab("Methods",theTabbedPane);
+	fieldsTab = MembersTab("Fields",theTabbedPane);
+	fieldColNamesVec = arrayToVector(fieldColNames);
+	methodColNamesVec = arrayToVector(methodColNames);
+	theFrame.add(theTabbedPane);
+	theFrame.pack();
+	theFrame.setBounds(100,100,800,500);
 
 
+	return this;
 }
 
-__mv = new MemberViewer();
+__mv = null;
 
 void inspect(obj) {
-	__mv.inspect(obj);
+	if (super.__mv == null) {
+		print("Please wait while inspector is generated...");
+		super.__mv = MemberViewer();
+		}
+	super.__mv.inspect(obj);
 }
 
 update();
+
