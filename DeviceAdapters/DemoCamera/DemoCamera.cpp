@@ -356,6 +356,8 @@ int CDemoCamera::Shutdown()
 
 /**
 * Performs exposure and grabs a single image.
+* This function should block during the actual exposure and return immediately afterwards 
+* (i.e., before readout).  This behavior is needed for proper synchronization with the shutter.
 * Required by the MM::Camera API.
 */
 int CDemoCamera::SnapImage()
