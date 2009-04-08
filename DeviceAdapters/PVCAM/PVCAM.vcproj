@@ -4,6 +4,7 @@
 	Version="9.00"
 	Name="PVCAM"
 	ProjectGUID="{A28DEB4E-E645-4990-A91D-4A7FF6762239}"
+	RootNamespace="PVCAM"
 	Keyword="Win32Proj"
 	TargetFrameworkVersion="131072"
 	>
@@ -190,10 +191,6 @@
 			Filter="cpp;c;cxx;def;odl;idl;hpj;bat;asm;asmx"
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
-			<File
-				RelativePath=".\Cascade.cpp"
-				>
-			</File>
 			<File
 				RelativePath="..\..\MMDevice\DeviceUtils.cpp"
 				>

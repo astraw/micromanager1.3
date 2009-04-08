@@ -4,6 +4,7 @@
 	Version="9.00"
 	Name="Hamamatsu"
 	ProjectGUID="{E0369FA6-1D4C-4FF7-AF9E-FC7B6FA07B1D}"
+	RootNamespace="Hamamatsu"
 	Keyword="Win32Proj"
 	TargetFrameworkVersion="131072"
 	>
