@@ -242,6 +242,10 @@
 				RelativePath=".\SimpleAF.h"
 				>
 			</File>
+			<File
+				RelativePath=".\SimpleAFImageUtils.h"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Resource Files"
