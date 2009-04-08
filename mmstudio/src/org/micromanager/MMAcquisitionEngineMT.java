@@ -877,23 +877,19 @@ public class MMAcquisitionEngineMT implements AcquisitionEngine {
          } else {
             throw new MMException("Unrecognized slice mode: " + sliceMode_);
          }
-         if (numSlices > 1 && oldFocusEnabled_ && continuousFocusOffForZMove_) {
-            core_.enableContinuousFocus(true);
-         }
 
          // return to the starting position
          if (isFocusStageAvailable() && numSlices > 1) {
             core_.setPosition(zStage_, startZPosUm_);
             core_.waitForDevice(zStage_);
          }
-
-         // turn the continuous focus back again
-         /*
-         if (oldFocusEnabled_) {
-            core_.enableContinuousFocus(oldFocusEnabled_);
+ 
+         // turn the continuous focus back again       
+         if (numSlices > 1 && oldFocusEnabled_ && continuousFocusOffForZMove_) {
+            core_.enableContinuousFocus(true);
             waitForFocusLock();
          }
-         */
+
 
       } catch(MMException e) {
          stop(true);
@@ -1017,28 +1013,26 @@ public class MMAcquisitionEngineMT implements AcquisitionEngine {
 
    public void restoreSystem() {
       try {
-         //core_.waitForSystem();
          core_.setExposure(oldExposure_);
-         if (isFocusStageAvailable()) {
+         
+         // The following might be superfluous, since the stage already returned to its original position
+         // Not sure if it is always the case, so leave it in until that is assured.  This movement will 
+         // kill the continuous focus, so test for its state first
+         if (isFocusStageAvailable()  && !core_.isContinuousFocusEnabled()) {
             core_.setPosition(zStage_, startZPosUm_);
-
-            // TODO: this should not be necessary
             core_.waitForDevice(zStage_);
          }
-         //if (oldCameraState_ != null)
-         //core_.setSystemState(oldCameraState_); // restore original settings
+         
          if (oldChannelState_ != null) {
             core_.setSystemState(oldChannelState_);
             core_.waitForSystem();
             if (oldLiveRunning_)
                parentGUI_.enableLiveMode(true);
          }
-         core_.enableContinuousFocus(oldFocusEnabled_); // restore cont focus
+         // Continuous Focus is likely to be on already at this point
+         core_.enableContinuousFocus(oldFocusEnabled_);
          core_.waitForSystem();
 
-         // >>> update GUI disabled
-//       if (parentGUI_ != null)
-//       parentGUI_.updateGUI();
       } catch (Exception e) {
          // do not complain here
       }      
