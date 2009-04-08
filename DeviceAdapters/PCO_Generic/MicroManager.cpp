@@ -232,12 +232,19 @@ int CPCOCam::OnBinning(MM::PropertyBase* pProp, MM::ActionType eAct)
       m_nVBin = bin;
       m_nRoiXMin = 1;
       m_nRoiYMin = 1;
-      if(m_pCamera->iCamClass == 2)
+      if(m_pCamera->iCamClass == 1)// SensiCam
+      {
+        m_nRoiXMax = roiXMaxFull_;
+        m_nRoiYMax = roiYMaxFull_;
+      }
+      else
+      if(m_pCamera->iCamClass == 2)// PixelFly
       {
         m_nRoiXMax = roiXMaxFull_ / (m_nHBin + 1);
         m_nRoiYMax = roiYMaxFull_ / (m_nVBin + 1);
       }
       else
+      if(m_pCamera->iCamClass == 3)// pco.camera
       {
         m_nRoiXMax = roiXMaxFull_ / m_nHBin;
         m_nRoiYMax = roiYMaxFull_ / m_nVBin;

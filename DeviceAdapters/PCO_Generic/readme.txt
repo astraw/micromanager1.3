@@ -33,9 +33,6 @@ Additionally for the Matrox Cameralink interface:
 Additionally for the National Cameralink interface:
   sc2_cl_nat.dll
 
-Additionally for the USB interface:
-  sc2_usb.dll
-
 All files mentioned above can be found either in the CamWare folder, or the sdk.
 
 VERSION HISTORY:
@@ -64,4 +61,3 @@ KNOWN BUGS:
  Any trademarks referenced in this document are the property of
  their respective owners.
 -------------------------------------------------------------------
-
