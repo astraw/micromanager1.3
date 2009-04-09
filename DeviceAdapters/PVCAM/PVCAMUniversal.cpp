@@ -291,9 +291,17 @@ int Universal::OnExposure(MM::PropertyBase* pProp, MM::ActionType eAct)
       double exp;
       pProp->Get(exp);
       exposure_ = exp;
-      resume();
+      if (!IsCapturing())
+      {
+         ResizeImageBufferSingle();
+      }
+      else
+      {
+         suspend();
+         ResizeImageBufferContinuous();
+         resume();
+      }
       return DEVICE_OK;
-
    }
    return DEVICE_OK;
 }
@@ -1880,19 +1888,42 @@ int Universal::PushImage()
       nRet = ip->Process((unsigned char*) pixBuffer, GetImageWidth(), GetImageHeight(), GetImageBytesPerPixel());
       RETURN_IF_MM_ERROR(nRet);
    }
+
+      // create metadata
+   char label[MM::MaxStrLength];
+   GetLabel(label);
+
+   MM::MMTime timestamp = GetCurrentMMTime();
+   Metadata md;
+   MetadataSingleTag mst(MM::g_Keyword_Elapsed_Time_ms, label, true);
+   mst.SetValue(CDeviceUtils::ConvertToString(timestamp.getMsec()));
+   md.SetTag(mst);
+
    // This method inserts new image in the circular buffer (residing in MMCore)
-   nRet = GetCoreCallback()->InsertImage(this, (unsigned char*) pixBuffer,
+   //nRet = GetCoreCallback()->InsertImage(this, (unsigned char*) pixBuffer,
+   //   GetImageWidth(),
+   //   GetImageHeight(),
+   //   GetImageBytesPerPixel());
+
+   nRet = GetCoreCallback()->InsertMultiChannel(this,
+      (unsigned char*) pixBuffer,
+      1,
       GetImageWidth(),
       GetImageHeight(),
-      GetImageBytesPerPixel());
+      GetImageBytesPerPixel(),
+      &md);
+
    if (!stopOnOverflow_ && nRet == DEVICE_BUFFER_OVERFLOW)
    {
       // do not stop on overflow - just reset the buffer
       GetCoreCallback()->ClearImageBuffer(this);
-      nRet = GetCoreCallback()->InsertImage(this, (unsigned char*) pixBuffer,
+      nRet = GetCoreCallback()->InsertMultiChannel(this,
+         (unsigned char*) pixBuffer,
+         1,
          GetImageWidth(),
          GetImageHeight(),
-         GetImageBytesPerPixel());;
+         GetImageBytesPerPixel(),
+         &md);
    }
 
    LOG_IF_MM_ERROR(nRet);
