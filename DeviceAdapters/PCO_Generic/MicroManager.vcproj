@@ -130,6 +130,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
+				AdditionalIncludeDirectories="\projects\3rdparty\Microsoft\VisualC++\atlmfc\include"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;MODULE_EXPORTS;_LIGHT"
 				ExceptionHandling="2"
 				RuntimeLibrary="0"
@@ -154,6 +155,7 @@
 				AdditionalDependencies="version.lib  nafxcw.lib ..\..\..\3rdparty\Pco\windows\pco_generic\Kamlib.lib"
 				OutputFile="$(OutDir)/mmgr_dal_PCO_Camera.dll"
 				LinkIncremental="1"
+				AdditionalLibraryDirectories="&quot;\projects\3rdparty\Microsoft\VisualC++\atlmfc\lib&quot;;\projects\3rdparty\PCO\Windows\pco_generic"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				OptimizeReferences="2"
