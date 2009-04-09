@@ -42,7 +42,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;..\..\..\3rdparty\Andor\SDK 2.82&quot;"
+				AdditionalIncludeDirectories="&quot;..\..\..\3rdparty\Andor\04-08-2009&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;MODULE_EXPORTS"
 				MinimalRebuild="true"
 				ExceptionHandling="2"
@@ -69,7 +69,7 @@
 				AdditionalDependencies="ATMCD32M.LIB"
 				OutputFile="$(OutDir)/mmgr_dal_Andor.dll"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="..\..\..\3rdparty\Andor\06-12-2007"
+				AdditionalLibraryDirectories="..\..\..\3rdparty\Andor\04-08-2009"
 				GenerateDebugInformation="true"
 				ProgramDatabaseFile="$(OutDir)/Andor.pdb"
 				SubSystem="2"
