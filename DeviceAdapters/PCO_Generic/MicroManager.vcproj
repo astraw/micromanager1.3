@@ -68,7 +68,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="version.lib nafxcwd.lib ..\..\..\3rdparty\Pco\windows\pco_generic\Kamlibd.lib &quot;\projects\3rdparty\Microsoft\VisualC++\atlmfc\lib\nafxcwd.lib&quot;"
+				AdditionalDependencies="version.lib nafxcwd.lib Kamlibd.lib"
 				ShowProgress="0"
 				OutputFile="$(OutDir)/mmgr_dal_PCO_Camera.dll"
 				LinkIncremental="2"
