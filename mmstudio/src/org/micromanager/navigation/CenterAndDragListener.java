@@ -16,6 +16,8 @@ import java.awt.event.MouseMotionListener;
 
 import javax.swing.JOptionPane;
 
+import org.micromanager.MMStudioMainFrame;
+
 import mmcorej.CMMCore;
 import mmcorej.MMCoreJ;
 
@@ -25,7 +27,7 @@ import mmcorej.MMCoreJ;
  */
 public class CenterAndDragListener implements MouseListener,
 		MouseMotionListener {
-	private CMMCore core_;
+      private CMMCore core_;
 	   private ImageCanvas canvas_;
 	   private static boolean isRunning_ = false;
 	   private boolean mirrorX_;
@@ -44,12 +46,8 @@ public class CenterAndDragListener implements MouseListener,
 
 	      isRunning_ = true;
 
-	      // Get a handle to the AcqWindow
-	      if (WindowManager.getFrame("AcqWindow") != null) {
-	         ImagePlus img = WindowManager.getImage("AcqWindow");
-	         attach(img.getWindow());
-	      }
-	      getOrientation();
+	      // Get a handle to the Live window
+         attach (MMStudioMainFrame.getLiveWin());
 	   }
 
 	   public void stop() {
@@ -64,7 +62,12 @@ public class CenterAndDragListener implements MouseListener,
 	      return isRunning_;
 	   }
 
+      /*
+       * Attached a MouseLisetener and MouseMotionListener to the Live Window
+       */
 	   public void attach(ImageWindow win) {
+         if (win == null)
+            return;
 	      if (!isRunning_)
 	         return;
 	      canvas_ = win.getCanvas();
@@ -73,8 +76,13 @@ public class CenterAndDragListener implements MouseListener,
 	      if (Toolbar.getInstance() != null)
 	    	  //TO DO: Set appropriate tool
 	         Toolbar.getInstance().setTool(Toolbar.HAND);
+
+	      getOrientation();
 	   }
 
+      /*
+       * Ensures that the stage moves in the expected direction
+       */
 	   public void getOrientation() {
 	      String camera = core_.getCameraDevice();
 	      if (camera == null) {
@@ -107,57 +115,60 @@ public class CenterAndDragListener implements MouseListener,
 	         JOptionPane.showMessageDialog(null, "Exception encountered. Please report to the Micro-Manager support team");
 	         return;
 	      }
-	         
 	   }
+
 	   public void mouseClicked(MouseEvent e) {
-		   	// right click and single click: ignore
-		   int nc=   e.getClickCount();
-		   if ((e.getModifiers() & Event.META_MASK) != 0 || nc < 2) 
-		         return;
+         // TODO: evalute whether only to to respond when a specific Tool is chosen
 
-		      // Get needed info from core
-		      getOrientation();
-		      String xyStage = core_.getXYStageDevice();
-		      if (xyStage == null)
-		         return;
-		      double pixSizeUm = core_.getPixelSizeUm();
-		      if (! (pixSizeUm > 0.0)) {
-		         JOptionPane.showMessageDialog(null, "Please provide pixel size calibration data before using this function");
-		         return;
-		      }
-		      int width = (int) core_.getImageWidth();
-		      int height = (int) core_.getImageHeight();
+         // right click and single click: ignore
+         int nc=   e.getClickCount();
+         if ((e.getModifiers() & Event.META_MASK) != 0 || nc < 2) 
+		       return;
 
-		      // Get coordinates of event
-		      // TODO: correct for ImageJ magnification of the screen!
-		      int x = e.getX();
-		      int y = e.getY();
-		      int cX = canvas_.offScreenX(x);
-		      int cY = canvas_.offScreenY(y);
+         // Get needed info from core
+         getOrientation();
+         String xyStage = core_.getXYStageDevice();
+         if (xyStage == null)
+            return;
+         double pixSizeUm = core_.getPixelSizeUm();
+         if (! (pixSizeUm > 0.0)) {
+            JOptionPane.showMessageDialog(null, "Please provide pixel size calibration data before using this function");
+            return;
+         }
 
-		      // calculate needed relative movement
-		      double tmpXUm = ((0.5 * width) - cX) * pixSizeUm;
-		      double tmpYUm = ((0.5 * height) - cY) * pixSizeUm;
+         int width = (int) core_.getImageWidth();
+         int height = (int) core_.getImageHeight();
 
-		      double mXUm = tmpXUm;
-		      double mYUm = tmpYUm;
-		      // if camera does not correct image orientation, we'll correct for it here:
-		      if (!correction_) {
-		         // Order: swapxy, then mirror axis
-		         if (transposeXY_) {mXUm = tmpYUm; mYUm = tmpXUm;}
-		         if (mirrorX_) {mXUm = -mXUm;}
-		         if (mirrorY_) {mYUm = -mYUm;}
-		      }
+         // Get coordinates of event
+         int x = e.getX();
+         int y = e.getY();
+         int cX = canvas_.offScreenX(x);
+         int cY = canvas_.offScreenY(y);
 
-		      // Move the stage
-		      try {
-		         core_.setRelativeXYPosition(xyStage, mXUm, mYUm);
-		      } catch (Exception ex) {
-		         JOptionPane.showMessageDialog(null, ex.getMessage()); 
-		         return;
-		      }
+         // calculate needed relative movement
+         double tmpXUm = ((0.5 * width) - cX) * pixSizeUm;
+         double tmpYUm = ((0.5 * height) - cY) * pixSizeUm;
 
-		   } 
+         double mXUm = tmpXUm;
+         double mYUm = tmpYUm;
+         // if camera does not correct image orientation, we'll correct for it here:
+         if (!correction_) {
+            // Order: swapxy, then mirror axis
+            if (transposeXY_) {mXUm = tmpYUm; mYUm = tmpXUm;}
+            if (mirrorX_) {mXUm = -mXUm;}
+            if (mirrorY_) {mYUm = -mYUm;}
+         }
+
+         // Move the stage
+         try {
+            core_.setRelativeXYPosition(xyStage, mXUm, mYUm);
+         } catch (Exception ex) {
+            JOptionPane.showMessageDialog(null, ex.getMessage()); 
+            return;
+         }
+      } 
+
+
 	   // Mouse listener implementation
 	   public void mousePressed(MouseEvent e) {
 	      // Get the starting coordinate for the dragging
@@ -172,6 +183,7 @@ public class CenterAndDragListener implements MouseListener,
 	         return;
 
 	      // Get needed info from core
+         // (is it really needed to run this every time?)
 	      getOrientation();
 	      String xyStage = core_.getXYStageDevice();
 	      if (xyStage == null)
