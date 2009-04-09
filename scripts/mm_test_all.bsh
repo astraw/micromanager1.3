@@ -16,25 +16,28 @@ tic() {
 }
 
 testCmd(cmd) {
+	this.caller.namespace.setVariable("_cmd",cmd,false);
+	setNameSpace(this.caller.namespace);
+	_ret = null;
 	tic();
-	_cons.print("  "  + cmd);
+	_cons.print("  "  + _cmd);
 	try {
-		ret = eval(cmd);
+		_ret = eval(_cmd);
 	} catch (Exception e) {
 		print(e.getMessage());
 	}
-	t = tic();
-	output = "";
-	if (ret!=null)
-		output = " => " + ret;
-	output += "  (" + t + " ms)";
-	_cons.println(output);
+	_t = tic();
+	_output = "";
+	if (_ret!=null)
+		_output = " => " + _ret;
+	_output += "  (" + _t + " ms)";
+	_cons.println(_output);
 	// Add these commands to console history
 	// so that if script ends with an error,
 	// we can re-test the offending command.
-	if (0 != cmd.compareTo(_cons.history.lastElement())) // But don't add repetitive lines
-		bsh.console.history.add(cmd);
-	return ret;
+	if (0 != _cmd.compareTo(_cons.history.lastElement())) // But don't add repetitive lines
+		bsh.console.history.add(_cmd);
+	return _ret;
 }
 
 getROI() {
