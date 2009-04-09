@@ -6,7 +6,7 @@
 
 //AUTHOR:       Nenad Amodaj, nenad@amodaj.com, Dec 1, 2007
 
-//COPYRIGHT:    University of California, San Francisco, 2007
+//COPYRIGHT:    University of California, San Francisco, 2007, 2008, 2009
 //              100X Imaging Inc, www.100ximaging.com, 2008
 
 //LICENSE:      This file is distributed under the BSD license.
@@ -466,7 +466,7 @@ public class MMAcquisitionEngineMT implements AcquisitionEngine {
    }
    
    /**
-    * Starts acquisition of the single well, based on the current protocol, using the supplied
+    * Starts acquisition of a single well, based on the current protocol, using the supplied
     * acquisition data structure.
     * This command is specially designed for plate scanning and will automatically re-set
     * all appropriate parameters.
@@ -751,7 +751,7 @@ public class MMAcquisitionEngineMT implements AcquisitionEngine {
             if (posIdx != previousPosIdx_) {
                if (continuousFocusOffForXYMove_ && oldFocusEnabled_) {
                   core_.enableContinuousFocus(false);
-                  // The following needs testing (request by James Lock)
+                  // TODO: The following needs testing (request by James Lock)
                   // Update positionList with the current Z-position
                   MultiStagePosition previousPos = posList_.getPosition(previousPosIdx_);
                   if (previousPos != null)
@@ -834,14 +834,17 @@ public class MMAcquisitionEngineMT implements AcquisitionEngine {
          }
          if (sliceMode_ == SliceMode.CHANNELS_FIRST) {
             for (int j=0; j<numSlices; j++) {         
-               double z = 0.0;
-               double zCur = 0.0;
+               double z = startZPosUm_;
+               double zCur = z;
 
-               if (absoluteZ_) {
-                  z = sliceDeltaZ_[j];
-               } else {
-                  z = startZPosUm_ + sliceDeltaZ_[j];
+               if (useSliceSetting_) {
+                  if (absoluteZ_) {
+                     z = sliceDeltaZ_[j];
+                  } else {
+                     z = startZPosUm_ + sliceDeltaZ_[j];
+                  }
                }
+
                if (isFocusStageAvailable() && numSlices > 1) {
                   core_.setPosition(zStage_, z);
                   if (oldFocusEnabled_ && !continuousFocusOffForZMove_) 
@@ -859,14 +862,17 @@ public class MMAcquisitionEngineMT implements AcquisitionEngine {
             for (int k=0; k<channels_.size(); k++) {
                ChannelSpec cs = channels_.get(k);
                for (int j=0; j<numSlices; j++) {         
-                  double z = 0.0;
-                  double zCur = 0.0;
+                  double z = startZPosUm_;
+                  double zCur = z;
 
-                  if (absoluteZ_) {
-                     z = sliceDeltaZ_[j];
-                  } else {
-                     z = startZPosUm_ + sliceDeltaZ_[j];
+                  if (useSliceSetting_) {
+                     if (absoluteZ_) {
+                        z = sliceDeltaZ_[j];
+                     } else {
+                        z = startZPosUm_ + sliceDeltaZ_[j];
+                     }
                   }
+
                   if (isFocusStageAvailable() && numSlices > 1) {
                      core_.setPosition(zStage_, z);
                      zCur = z;
@@ -1569,6 +1575,20 @@ public class MMAcquisitionEngineMT implements AcquisitionEngine {
       continuousFocusOffForZMove_ = state;
    }
 
+   /*
+    * Acquires a single frame during acquisition
+    *
+    * Displays in an Image5D (if requested) or in Live Window
+    * Attached metadata
+    * @param cs - channel specification
+    * @param z - Current Z position 
+    * @param zCur - Used to return the now Current Z position 
+    * @param sliceIdx - Number of (z) slice
+    * @param channelIdx - Number of channel
+    * @param posIdx - Number of position (when using multi-field)
+    * @param numSlices - Total number of (z) slices
+    * @param posIndexNormalized - ???
+    */
    private void executeProtocolBody(ChannelSpec cs, double z, double zCur, int sliceIdx,
          int channelIdx, int posIdx, int numSlices, int posIndexNormalized) throws MMException, IOException, JSONException, MMAcqDataException{
 
@@ -1580,16 +1600,15 @@ public class MMAcquisitionEngineMT implements AcquisitionEngine {
          // attempt to fill in the gap by using the most recent channel data
          if (!singleFrame_) {
             int offset = frameCount_ % (Math.abs(cs.skipFactorFrame_) + 1);
-//!!!
-            int index = (null != img5d_[posIndexNormalized])
-            			?posIndexNormalized
-            			:0;
+
+            int index = 0;
+            if (img5d_[posIndexNormalized] != null)
+          	   index = posIndexNormalized;
 
             Object previousImg = img5d_[index].getPixels(channelIdx+1, sliceIdx+1, actualFrameCount + 1 - offset);
             if (previousImg != null)
                img5d_[0].setPixels(previousImg, channelIdx+1, sliceIdx+1, actualFrameCount + 1);
          }
-
          return; // skip this frame
       }
 
