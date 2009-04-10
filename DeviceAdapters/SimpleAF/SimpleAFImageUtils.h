@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// FILE:          SimpleAF.h
+// FILE:          SimpleAFImageUtils.h
 // PROJECT:       Micro-Manager
 // SUBSYSTEM:     DeviceAdapters
 //-----------------------------------------------------------------------------
@@ -38,19 +38,21 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+# ifndef _AFUTILS_H_
+# define _AFUTILS_H_
 
-// To remove the conflicts with the system defined max and min
-# ifdef max
-# undef max
-# endif
-# ifdef min
-# undef min
-# endif
+# include <string>
+# include "MMDevice.h"
+# include "DeviceBase.h"
+# include "ImgBuffer.h"
+#include "ModuleInterface.h"
 
-// For numeric limits, to work with the different pixel types
-# include <limits>
-
-
+/////////////////////////////////////////////////////////////
+// AFHistogramStretcher:
+// ---------------------
+// Stretch the histogram based on cthe dynamic range of the 
+// pixeltype.
+/////////////////////////////////////////////////////////////
 template <class PixelType> class AFHistogramStretcher
 {
 	public:
@@ -66,116 +68,41 @@ template <class PixelType> class AFHistogramStretcher
 
 	public:
 		
-		int Stretch(PixelDataType * src, int nWidth, int nHeight, PixelDataType * returnimage = 0)
-		{
-			double * histogram = new double[std::numeric_limits<PixelDataType>::max()+1];
-			// Get the max and the minimum
-	
-				PixelDataType val_max = std::numeric_limits<PixelDataType>::min(), 
-					      val_min = std::numeric_limits<PixelDataType>::max(),
-						  typemax = val_min,
-						  typemin = val_max;
-			// Getting min and max in one pass
-			for(long i = 0; i < nWidth * nHeight; ++i)
-			{
-				if(src[i] > val_max)
-					val_max = src[i];
-				if(src[i] < val_min)
-					val_min = src[i];
-				++histogram[src[i]];
-
-			}
-
-
-
-			// If the image has very low dynamic range.. do nothing, 
-			// you might just be amplifying the noise
-
-			if(((float)abs(val_min - val_max)/(float)typemax) < fContentThreshold)
-			{
-				if(operationmodel_ == OUTOFPLACE)
-				{
-					memcpy(returnimage,src,nWidth*nHeight*sizeof(PixelType));	
-					delete [] histogram;
-					histogram = 0;
-				}
-				return 0;
-			}
-
-
-			if(stretchingmodel_ == HISTOGRAMSTETCH)
-			{
-
-				if(operationmodel_ == INPLACE)
-				{
-					float fFactor = ((float)typemax)/((float)(val_max-val_min));
-					// Setting the scaling again
-					for(long i = 0; i < nWidth * nHeight; ++i)
-					{					
-						src[i] = static_cast<PixelDataType>((fFactor)*(src[i] - val_min));
-					}
-				}
-				else if(operationmodel_ == OUTOFPLACE)
-				{
-					float fFactor = ((float)typemax)/((float)(val_max-val_min));
-					// Setting the scaling again
-					for(long i = 0; i < nWidth * nHeight; ++i)
-					{					
-						returnimage[i] = static_cast<PixelDataType>((fFactor)*(src[i] - val_min));
-					}
-				}
-				return 1;
-			}
-			else
-			if(stretchingmodel_ == HISTOGRAMEQUALIZATION)
-			{
-				// Come in from the end and identify the cutoff point of the 
-				// histogram, which ensures that all hot pixels have been chucked out
-				// Also the cdf (cumulative distribution function) is generated in the same pass
-
-
-				long incidence  = 0;
-				long thresh = (long)((float)nWidth*(float)nHeight*(fStretchPercent));
-				long uppercutoff = 0;
-
-				double * cdf = new double [std::numeric_limits<PixelDataType>::max()];
-
-				for(long i = 0; i < std::numeric_limits<PixelDataType>::max(); ++i)
-				{
-					incidence += (long)histogram[i];
-					if(incidence > thresh && uppercutoff == 0)
-					{
-						uppercutoff = i;						
-					}
-					// CDF is generated here
-					if(i > 0)
-						cdf[i] = histogram[i] + cdf[i-1];         // For the later indices
-					else
-						cdf[i] = histogram[i];			          // For the first index
-				}
-				for(long i = 0; i < nWidth * nHeight; ++i)
-				{
-					if(operationmodel_ == INPLACE)
-					{
-						src[i] = static_cast<PixelType>(cdf[src[i]]);
-					}
-					else if(operationmodel_ == OUTOFPLACE)
-					{
-						returnimage[i] = static_cast<PixelType>(cdf[src[i]]);
-						
-					}
-				}
-				delete[] cdf;
-				cdf = 0;
-				if(histogram != 0)
-				{
-					delete[] histogram; 
-					histogram = 0;
-				}
-
-							
-				return 1;
-			}
-			return 1;
-		}
+		int Stretch(PixelDataType * src, int nWidth, int nHeight, PixelDataType * returnimage = 0);
+		
 };
+
+//////////////////////////////////////////////////////////////////
+// Shutter Manager:
+// ----------------
+// Open Shutter and remember state 
+class ShutterManager
+{
+	public:
+		ShutterManager():initialized_(false){}
+		int OpenCoreShutter(MM::Core *);
+		int RestoreCoreShutter(MM::Core *);
+
+	private:
+		std::string shutterName_;
+		std::string autoShutterState_;
+		std::string shutterState_;
+		bool initialized_;
+};
+
+
+///////////////////////////////////////////////////////////
+// Image Sharpness computations
+//
+////////////////////////////////////////////////////////////
+
+class ImageScorer
+{
+	public :
+		ImageScorer();
+		void Score(ImgBuffer & img);
+	private:
+		double score_;
+		ImgBuffer kernel_;
+};
+# endif
