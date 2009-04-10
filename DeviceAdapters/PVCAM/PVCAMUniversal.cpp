@@ -291,16 +291,7 @@ int Universal::OnExposure(MM::PropertyBase* pProp, MM::ActionType eAct)
       double exp;
       pProp->Get(exp);
       exposure_ = exp;
-      if (!IsCapturing())
-      {
-         ResizeImageBufferSingle();
-      }
-      else
-      {
-         suspend();
-         ResizeImageBufferContinuous();
-         resume();
-      }
+	  resume();
       return DEVICE_OK;
    }
    return DEVICE_OK;
