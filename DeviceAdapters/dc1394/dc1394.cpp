@@ -118,6 +118,8 @@ Cdc1394::Cdc1394() :
    integrateFrameNumber(1),
    maxNrIntegration(1),
    lnBin_(1),
+   stopOnOverflow_(false),
+   multi_shot_(false),
    acquiring_(false)
 {
    SetErrorText(ERR_CAMERA_NOT_FOUND, "Did not find a IIDC firewire camera");
@@ -1449,13 +1451,12 @@ void Cdc1394::setFrameRateMap()
 /**
  * Starts continuous acquisition.
  */
-int Cdc1394::StartSequenceAcquisition(long numImages, double interval_ms, bool /*stopOnOverflow*/)
+int Cdc1394::StartSequenceAcquisition(long numImages, double interval_ms, bool stopOnOverflow)
 {
    
    // If we're using the camera in some other way, stop that
    //Cdc1394::StopTransmission();
    
-   printf("Started camera streaming.\n");
    if (acquiring_)
       return ERR_BUSY_ACQUIRING;
 
@@ -1465,6 +1466,7 @@ int Cdc1394::StartSequenceAcquisition(long numImages, double interval_ms, bool /
 
    imageCounter_ = 0;
    sequenceLength_ = numImages;
+   stopOnOverflow_ = stopOnOverflow;
 
    double actualIntervalMs = max(GetExposure(), interval_ms);
    acqThread_->SetInterval(actualIntervalMs);
@@ -1475,8 +1477,8 @@ int Cdc1394::StartSequenceAcquisition(long numImages, double interval_ms, bool /
       logMsg_.clear();
       logMsg_ << "Unable to start multi-shot" << endl;
       LogMessage(logMsg_.str().c_str());
-      //return err;
    }
+   multi_shot_ = true;
 
    ResizeImageBuffer();
 
@@ -1490,7 +1492,7 @@ int Cdc1394::StartSequenceAcquisition(long numImages, double interval_ms, bool /
 
    // TODO: check trigger mode, etc..
 
-   // emtpy the buffer to ensure we'll get freh images
+   // emtpy the buffer to ensure we'll get fresh images
    dc1394video_frame_t *frame2;
    bool endFound = false;
    long nrFrames = 0;
@@ -1504,8 +1506,6 @@ int Cdc1394::StartSequenceAcquisition(long numImages, double interval_ms, bool /
          endFound=true;
    }
 
-
-   printf("%ld Frames discarded\n", nrFrames);
    acquiring_ = true;
    acqThread_->Start();
 
@@ -1525,6 +1525,7 @@ int Cdc1394::StartSequenceAcquisition(double interval_ms)
    LogMessage(logMsg_.str().c_str());
 
    imageCounter_ = 0;
+   stopOnOverflow_ = false;
    sequenceLength_ = LONG_MAX;
 
    double actualIntervalMs = max(GetExposure(), interval_ms);
@@ -1576,13 +1577,17 @@ int Cdc1394::StopSequenceAcquisition()
    printf("Stopped camera streaming.\n");
    acqThread_->Stop();
    acquiring_ = false;
-   err = dc1394_video_set_multi_shot(camera, 0, DC1394_OFF);
-   if (err != DC1394_SUCCESS) {
-      logMsg_.clear();
-      logMsg_ << "Unable to stop multi-shot" << endl;
-      LogMessage(logMsg_.str().c_str());
-      // return err;
+
+   if (multi_shot_) {
+      err = dc1394_video_set_multi_shot(camera, 0, DC1394_OFF);
+      if (err != DC1394_SUCCESS) {
+         logMsg_.clear();
+         logMsg_ << "Unable to stop multi-shot" << endl;
+         LogMessage(logMsg_.str().c_str());
+      }
+      multi_shot_ = false;
    }
+
    // TODO: the correct termination code needs to be passed here instead of "0"
    MM::Core* cb = GetCoreCallback();
    if (cb)
@@ -1626,8 +1631,18 @@ int Cdc1394::PushImage(dc1394video_frame_t *myframe)
    */
 
    // insert image into the circular MMCore buffer
-   int ret =  GetCoreCallback()->InsertImage(this, buf,
-                                           width, height, bytesPerPixel);
+   int ret =  GetCoreCallback()->InsertImage(this, buf, width, height, bytesPerPixel);
+
+   if (!stopOnOverflow_ && ret == DEVICE_BUFFER_OVERFLOW) {
+      // do not stop on overflow - just reset the buffer                     
+      GetCoreCallback()->ClearImageBuffer(this);                             
+      ret =  GetCoreCallback()->InsertImage(this, buf, width, height, bytesPerPixel);
+   }
+
+   std::ostringstream os;
+   os << "Inserted Image in circular buffer, with result: " << ret;
+   LogMessage (os.str().c_str(), true);
+
    free(buf);
    return ret;
 }

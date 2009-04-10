@@ -185,6 +185,8 @@ private:
    std::ostringstream logMsg_;
    
    // For Burst Mode
+   bool stopOnOverflow_;
+   bool multi_shot_;
    bool acquiring_;
    unsigned long imageCounter_;
    unsigned long sequenceLength_;
