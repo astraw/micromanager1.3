@@ -50,6 +50,7 @@
 #include "ModuleInterface.h"
 #include <sstream>
 #include <ctime>
+#include "SimpleAFImageUtils.h"
 
 using namespace std;
 const char* g_AutoFocusDeviceName = "SimpleAF";
@@ -134,6 +135,10 @@ int SimpleAF::Initialize()
    // Set Exposure
    CPropertyAction *pAct = new CPropertyAction (this, &SimpleAF::OnExposure);
    CreateProperty(MM::g_Keyword_Exposure, "10.0", MM::Float, false, pAct);
+
+   
+
+
   
    ret = UpdateStatus();
    if (ret != DEVICE_OK)
@@ -195,14 +200,14 @@ int SimpleAF::OnStepsizeCoarse(MM::PropertyBase *pProp, MM::ActionType eAct)
 	{
 		double StepSizeCoarse = 0.0f;
 		pProp->Get(StepSizeCoarse);
-		//this->param_stepsize_coarse_ = StepSizeCoarse;
+		this->param_stepsize_coarse_ = StepSizeCoarse;
 
 	}
 	else if(eAct == MM::BeforeGet)
 	{
 		double StepSizeCoarse = 0.0f;
 		pProp->Get(StepSizeCoarse);
-		//this->param_stepsize_coarse_ = StepSizeCoarse;
+		this->param_stepsize_coarse_ = StepSizeCoarse;
 	}
 	return DEVICE_OK;
 }
@@ -213,13 +218,15 @@ int SimpleAF::OnStepSizeFine(MM::PropertyBase *pProp, MM::ActionType eAct)
 	{
 		double StepSizeFine = 0.0f;
 		pProp->Get(StepSizeFine);
-		//this->param_stepsize_fine_ = StepSizeFine;
+		this->param_stepsize_fine_ = StepSizeFine;
 	}
 	else if(eAct == MM::BeforeGet)
 	{
 	    double StepSizeFine = 0.0f;
 		pProp->Get(StepSizeFine);
-		//this->param_stepsize_fine_ = StepSizeFine;
+		this->param_stepsize_fine_ = StepSizeFine;
 	}
+
+
 	return DEVICE_OK;
 }

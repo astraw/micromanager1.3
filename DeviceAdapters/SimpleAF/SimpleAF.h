@@ -96,8 +96,19 @@ public:
    int OnExposure(MM::PropertyBase* pProp, MM::ActionType eAct);
    int OnStepsizeCoarse(MM::PropertyBase* pProp, MM::ActionType eAct);
    int OnStepSizeFine(MM::PropertyBase* pProp, MM::ActionType eAct);
+   int OnChannelForAutofocus(MM::PropertyBase * pProp, MM::ActionType eAct);
+   int OnSearchSpanCoarse(MM::PropertyBase * pProp, MM::ActionType eAct);
+   int OnSearchSpanFine(MM::PropertyBase * pProp, MM::ActionType eAct);
+   int OnThresholdForSharpness(MM::PropertyBase * pProp, MM::ActionType eAct);
+   int OnMaxNumberofStepsCoarse(MM::PropertyBase * pProp, MM::ActionType eAct);
+   int OnMaxNumberofStepsFine(MM::PropertyBase * pProp, MM::ActionType eAct);
+
+
 
 private:
    bool				busy_;
    bool				initialized_;
+   double			param_stepsize_fine_;
+   double			param_stepsize_coarse_;
+
 };
