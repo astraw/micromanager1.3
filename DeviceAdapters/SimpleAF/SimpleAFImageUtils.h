@@ -96,13 +96,5 @@ class ShutterManager
 //
 ////////////////////////////////////////////////////////////
 
-class ImageScorer
-{
-	public :
-		ImageScorer();
-		void Score(ImgBuffer & img);
-	private:
-		double score_;
-		ImgBuffer kernel_;
-};
+
 # endif

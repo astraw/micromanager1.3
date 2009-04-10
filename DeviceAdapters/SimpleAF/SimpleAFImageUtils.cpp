@@ -222,17 +222,6 @@ int ShutterManager::RestoreCoreShutter(MM::Core * core)
 }
 
 
-void ImageScorer::ImageScorer():score_(-1.0f)
-{
-	kernel_
-}
-
-void ImageScorer::Score(ImgBuffer &img)
-{
-	if (img.Height() == 0 || img.Width() == 0 || img.Depth() == 0)
-		return;
-	
-}
 
 
 
