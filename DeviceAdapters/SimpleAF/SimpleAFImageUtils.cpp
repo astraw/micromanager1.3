@@ -42,7 +42,7 @@
 # include "SimpleAFImageUtils.h"
 // For numeric limits, to work with the different pixel types
 # include <limits>
-
+# include "fast.h"
 
 
 # ifdef max
@@ -221,7 +221,34 @@ int ShutterManager::RestoreCoreShutter(MM::Core * core)
 	return DEVICE_OK;
 }
 
+///
+// Image Scorer
+//
+///
 
+int ImageScorer::Score()
+{
+	if(m_imagepointer == 0 )
+	{
+		throw ("Image not set");
+	}
 
+	int numcorners = 0;
+	xy * cornerlist = 0;
+	xy * cornerlistnm = 0;	
+	
+	numcorners = 0;
+	cornerlist = fast_corner_detect_9(m_imagepointer,m_nImageWidth,m_nImageWidth,m_nThreshold, & numcorners);
+	if(m_bNonMax)
+	{
+		fast_nonmax(m_imagepointer, m_nImageWidth, m_nImageHeight,cornerlist, numcorners,m_nThreshold,& numcorners);
+		free(cornerlistnm);
+		cornerlistnm = 0;
+	}
+	free(cornerlist);
+	cornerlist = 0;
+	m_nTotalCorners = numcorners;
 
+	return m_nTotalCorners;
+}
 
