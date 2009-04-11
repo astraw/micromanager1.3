@@ -411,17 +411,6 @@ public:
       return properties_.Update(name);
    }
 
-   /**
-   * Prepare hardware for setting the property.
-   * Return DEVICE_CAN_NOT_SET_PROPERTY 
-   * if the property can not be set at the moment
-   */
-   /*
-   int PrepareToSetProperty(const char* name)
-   {
-      return properties_.Prepare(name);
-   }
-   */
 
    /**
    * Apply the current property value to the hardware.
@@ -485,6 +474,7 @@ protected:
          return callback_->LogMessage(this, msg, debugOnly);
       return DEVICE_NO_CALLBACK_REGISTERED;
    }
+
    /**
    * Output the specified text message to the log stream.
    * @param msg - message text
@@ -497,6 +487,24 @@ protected:
       return DEVICE_NO_CALLBACK_REGISTERED;
    }
 
+   /**
+   * Outputs time difference between two time stamps.
+   * Handy for hardware profiling
+   * @param start - Time stamp for start of Process 
+   * @param end - Time stamp for endof Process 
+   * @param debugOnly - if true the meassage will be sent only in the log-debug mode
+   */
+   int LogTimeDiff(MM::MMTime start, MM::MMTime end, bool debugOnly = false) const
+   {
+      std::ostringstream os;
+      MM::MMTime t = end-start;
+      os << "Process took: " << t.sec_ << " seconds and " << t.uSec_ / 1000.0 << " msec";
+      if (callback_)
+         return callback_->LogMessage(this, os.str().c_str(), debugOnly);
+      return DEVICE_NO_CALLBACK_REGISTERED;
+   }
+
+   /**
    /**
    * Sets-up the standard set of error codes and error messages.
    */
