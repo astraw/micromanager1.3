@@ -87,7 +87,6 @@ MMJ_.jar:  \
 	$(srcdir)/src/org/micromanager/image5d/Open_Image5D.java \
 	$(srcdir)/src/org/micromanager/image5d/Open_Series_As_Image5D.java \
 	$(srcdir)/src/org/micromanager/image5d/RGB_to_Image5D.java \
-	$(srcdir)/src/org/micromanager/image5d/Save_Image5D.java \
 	$(srcdir)/src/org/micromanager/image5d/ScrollbarWithLabel.java \
 	$(srcdir)/src/org/micromanager/image5d/Set_Channel_Display.java \
 	$(srcdir)/src/org/micromanager/image5d/Set_Channel_Labels.java \
