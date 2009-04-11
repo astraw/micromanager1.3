@@ -189,7 +189,6 @@ singleFrameModeReady_(false),
 exposureStartTime_(0.0),
 use_pl_exp_check_status_(true)
 {
-   // ACE::init();
    InitializeDefaultErrorMessages();
 
    // add custom messages
@@ -232,23 +231,21 @@ int Universal::OnBinning(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
    if (eAct == MM::AfterSet)
    {
-      bool capturing = IsCapturing();
-      if (capturing)
-         suspend();
-
+      suspend();
       long bin;
+      long oldBinSize = binSize_;
       pProp->Get(bin);
       binSize_ = bin;
       ClearROI(); // reset region of interest
-      int nRet;
-      singleFrameModeReady_=false;
-      if (capturing)      
-         nRet = resume(); 
-      else
-         nRet = ResizeImageBufferContinuous();
+      resume(); 
 
-      if (nRet != DEVICE_OK)
-         return nRet;
+      /*
+      if (!IsCapturing() && (oldBinSize != binSize_)) {
+         int nRet = ResizeImageBufferSingle();
+         if (nRet != DEVICE_OK)
+            return nRet;
+      }
+      */
    }
    else if (eAct == MM::BeforeGet)
    {
@@ -279,28 +276,32 @@ int Universal::OnChipName(MM::PropertyBase* pProp, MM::ActionType eAct)
 int Universal::OnExposure(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
    // exposure property is stored in milliseconds,
-   // while the driver returns the value in seconds
+   // whereas the driver returns the value in seconds
    if (eAct == MM::BeforeGet)
    {
       pProp->Set(exposure_);
    }
    else if (eAct == MM::AfterSet)
    {
-      singleFrameModeReady_=false;
       suspend();
-      double exp;
+      double exp, oldExposure;
+      oldExposure = exposure_;
       pProp->Get(exp);
       exposure_ = exp;
-	  resume();
-      return DEVICE_OK;
+      resume();
+
+      if (!IsCapturing() && (exposure_ != oldExposure)) {
+         int nRet = ResizeImageBufferSingle();
+         if (nRet != DEVICE_OK)
+            return nRet;
+      }
+
    }
    return DEVICE_OK;
 }
 
 int Universal::OnPixelType(MM::PropertyBase* pProp, MM::ActionType /*eAct*/)
 {  
-
-   singleFrameModeReady_=false;
 
    int16 bitDepth;
    RETURN_DEVICE_ERR_IF_CAM_ERROR(
@@ -314,15 +315,13 @@ int Universal::OnPixelType(MM::PropertyBase* pProp, MM::ActionType /*eAct*/)
       case (16) : pProp->Set(g_PixelType_16bit); return DEVICE_OK;
    }
 
-
    return DEVICE_OK;
 }
+
 
 // Camera Speed
 int Universal::OnReadoutRate(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
-
-
    if (eAct == MM::AfterSet)
    {
       singleFrameModeReady_=false;
@@ -343,14 +342,22 @@ int Universal::OnReadoutRate(MM::PropertyBase* pProp, MM::ActionType eAct)
 
       // Try setting the gain to original value, don't make a fuss when it fails
       SetLongParam_PvCam_safe(hPVCAM_, PARAM_GAIN_INDEX, gain);
-      if (!SetGainLimits())
+      if (SetGainLimits() != DEVICE_OK)
          return pl_error_code();
-      if (!SetAllowedPixelTypes())
+      if (SetAllowedPixelTypes() != DEVICE_OK)
          return pl_error_code();
+
       // update GUI to reflect these changes
       int ret = OnPropertiesChanged();
       if (ret != DEVICE_OK)
          return ret;
+
+      if (!IsCapturing()) {
+         ret = ResizeImageBufferSingle();
+         if (ret != DEVICE_OK)
+            return ret;
+      }
+
    }
    else if (eAct == MM::BeforeGet)
    {
@@ -453,13 +460,9 @@ int Universal::OnGain(MM::PropertyBase* pProp, MM::ActionType eAct)
 
 void Universal::suspend()
 {
-
-   //CaptureRestartHelper restart(this);
    if(IsCapturing())
    {
       restart_ = true;
-      //thd_->Suspend();
-      //while (! thd_->IsSuspended());
       thd_->Stop();
       thd_->wait();
       LOG_IF_CAM_ERROR(pl_exp_stop_cont(hPVCAM_, CCS_HALT)); //Circular buffer only
@@ -469,7 +472,7 @@ void Universal::suspend()
 
 int Universal::resume()
 {
-   CaptureRestartHelper cameraAlreadyRunning(this);
+   //CaptureRestartHelper cameraAlreadyRunning(this);
    if(restart_) 
    {
       int ret = ResizeImageBufferContinuous();
@@ -480,10 +483,8 @@ int Universal::resume()
 
       long imageCount = thd_->GetImageCounter();
       double intervalMs = thd_->GetIntervalMs();
-      //thd_->Resume();
       thd_->Start(numImages_ - imageCount, intervalMs);
       restart_ = false;
-      
    }
 
    return DEVICE_OK;
@@ -644,7 +645,8 @@ void Universal::GetName(char* name) const
 
 ///////////////////////////////////////////////////////////////////////////////
 // Function name   : &Universal::Initialize
-// Description     : Initialize the camera
+// Description     : Initializes the camera
+//                   Sets up the (single) image buffer 
 // Return type     : bool 
 
 int Universal::Initialize()
@@ -861,27 +863,27 @@ int Universal::Initialize()
 
       bool getLongSuccess = GetLongParam_PvCam_safe(hPVCAM_, param_set[i].id, &ldata);
 
-      rs_bool plResult;
-
-      plResult = pl_get_param_safe( hPVCAM_, param_set[i].id, ATTR_ACCESS, &AccessType);
-         LOG_DESCRIPTION_IF_CAM_ERROR(plResult, std::string(param_set[i].name));
-      plResult = pl_get_param_safe( hPVCAM_, param_set[i].id, ATTR_AVAIL, &bAvail);
-         LOG_DESCRIPTION_IF_CAM_ERROR(plResult, std::string(param_set[i].name));
+      pl_get_param_safe( hPVCAM_, param_set[i].id, ATTR_ACCESS, &AccessType);
+      pl_get_param_safe( hPVCAM_, param_set[i].id, ATTR_AVAIL, &bAvail);
       if ( (AccessType != ACC_ERROR) && bAvail && getLongSuccess && versionTest) 
       {
          snprintf(buf, BUFSIZE, "%ld", ldata);
          CPropertyActionEx *pAct = new CPropertyActionEx(this, &Universal::OnUniversalProperty, (long)i);
          uint16_t dataType;
-         plResult = pl_get_param_safe(hPVCAM_, param_set[i].id, ATTR_TYPE, &dataType);
-            LOG_DESCRIPTION_IF_CAM_ERROR(plResult, std::string(param_set[i].name));
+         rs_bool plResult = pl_get_param_safe(hPVCAM_, param_set[i].id, ATTR_TYPE, &dataType);
+         LOG_DESCRIPTION_IF_CAM_ERROR(plResult, std::string(param_set[i].name));
+         std::string propertyMsg = "Added property: " + std::string(param_set[i].name);
+         LogMessage(propertyMsg.c_str(), true);
          if (!plResult || (dataType != TYPE_ENUM)) {
             nRet = CreateProperty(param_set[i].name, buf, MM::Integer, AccessType == ACC_READ_ONLY, pAct);
-            RETURN_IF_MM_ERROR(nRet);
+            if (nRet != DEVICE_OK)
+               return nRet;
 
             // get allowed values for non-enum types 
             if (plResult) {
                nRet = SetUniversalAllowedValues(i, dataType);
-               RETURN_IF_MM_ERROR(nRet);
+               if (nRet != DEVICE_OK)
+                  return nRet;
             }
             else {
                ostringstream os;
@@ -932,8 +934,9 @@ int Universal::Initialize()
 
    // setup the buffer
    // ----------------
-   nRet = ResizeImageBufferContinuous();
-   RETURN_IF_MM_ERROR(nRet);
+   nRet = ResizeImageBufferSingle();
+   if (nRet != DEVICE_OK)
+      return nRet;
 
    initialized_ = true;
    return DEVICE_OK;
@@ -982,15 +985,13 @@ bool Universal::Busy()
 
 int Universal::SnapImage()
 {
-   int nRet = DEVICE_ERR;
+   MM::MMTime start = GetCurrentMMTime();
 
-   //calls of GetImage will be locked until SnapImage returns
-   //!!! ToDo: enable after testing 
-   //MMThreadGuard(this->snappingSingleFrame_Lock_);
+   int nRet = DEVICE_ERR;
 
    if(snappingSingleFrame_)
    {
-      LOG_MESSAGE(std::string("Warning: Entering SnapImage while GetImage has not been done for previous frame"));
+      LogMessage("Warning: Entering SnapImage while GetImage has not been done for previous frame", true);
    };
 
    if (!bufferOK_)
@@ -1006,16 +1007,22 @@ int Universal::SnapImage()
       RETURN_IF_MM_ERROR(nRet);
    }
 
-   //Call of ResizeImageBufferSingle() will be locked 
-   //until SnapImage returns (== until the exposure is done)
-   //!!! ToDo: enable after testing 
-   //MMThreadGuard(this->singleFrameModeReady_Lock_);
+   // Make sure that the camera is ready to start an exposure
+   // TODO: we might need a timeout on this call
+   int16 status;
+   uns32 not_needed;
+
+   // This is needed to deal with users calling snapImage twice in a row
+   if (snappingSingleFrame_) {
+      while(pl_exp_check_status(hPVCAM_, &status, &not_needed) && 
+         (status != READOUT_COMPLETE && status != READOUT_FAILED && status != READOUT_NOT_ACTIVE) );
+   }
 
    void* pixBuffer = const_cast<unsigned char*> (img_.GetPixels());
+   MM::MMTime mid = GetCurrentMMTime();
    RETURN_DEVICE_ERR_IF_CAM_ERROR(pl_exp_start_seq(hPVCAM_, pixBuffer));
    exposureStartTime_ = GetCurrentMMTime();
    snappingSingleFrame_=true;
-
 
    if(WaitForExposureDone())
    { 
@@ -1027,6 +1034,12 @@ int Universal::SnapImage()
       //tries to get (wrong) image by calling GetImage, the error will be reported
       snappingSingleFrame_=false;
    }
+
+   MM::MMTime end = GetCurrentMMTime();
+
+   LogTimeDiff(start, mid, true);
+   LogTimeDiff(start, exposureStartTime_, true);
+   LogTimeDiff(start, end, true);
 
    return nRet;
 }
@@ -1155,11 +1168,13 @@ const unsigned char* Universal::GetImageBuffer()
    if(!snappingSingleFrame_)
    {
       LOG_MESSAGE(std::string("Warning: GetImageBuffer called before SnapImage()"));
+      return 0;
    }
 
    // wait for data or error
    void* pixBuffer = const_cast<unsigned char*> (img_.GetPixels());
 
+   // TODO: timeout
    while(pl_exp_check_status(hPVCAM_, &status, &not_needed) && 
       (status != READOUT_COMPLETE && status != READOUT_FAILED) );
 
@@ -1506,7 +1521,7 @@ int Universal::GetSpeedTable()
    //Speed Table Index is 0 based.  We got the max number but want the total count
    spdTableCount +=1;
    ostringstream os;
-   os << "SpeedTableCountd: " << spdTableCount << "\n";
+   os << "SpeedTableCountd: " << spdTableCount;
 
    // log the current settings, so that we can revert to it after cycling through the options
    int16 spdTableIndex;
@@ -1524,7 +1539,7 @@ int Universal::GetSpeedTable()
       nRet = GetSpeedString(speedString);
       RETURN_IF_MM_ERROR(nRet);
 
-      os << "Speed: " << speedString.c_str() << "\n";
+      os << "\n\t" << "Speed: " << speedString.c_str();
       speedValues.push_back(speedString);
       rateMap_[speedString] = i;
    }
@@ -1686,6 +1701,7 @@ int Universal::ResizeImageBufferContinuous()
 
 int Universal::ResizeImageBufferSingle()
 {
+   LogMessage("Resizing image Buffer Single", true);
    //ToDo: use semaphore
    bufferOK_ = false;
    int nRet = DEVICE_ERR;
@@ -1707,8 +1723,7 @@ int Universal::ResizeImageBufferSingle()
       RETURN_CAM_ERROR_IF_CAM_ERROR(
          pl_exp_setup_seq(hPVCAM_, 1, 1, &newRegion, TIMED_MODE, (uns32)exposure_, &frameSize ));
 
-      if (img_.Height() * img_.Width() * img_.Depth() != frameSize)
-      {
+      if (img_.Height() * img_.Width() * img_.Depth() != frameSize) {
          return DEVICE_INTERNAL_INCONSISTENCY; // buffer sizes don't match ???
       }
 
