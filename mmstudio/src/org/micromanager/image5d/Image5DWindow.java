@@ -405,9 +405,6 @@ public class Image5DWindow extends StackWindow {
     */
    public void saveAs() {
       // NOTE: >> save as directory instead of image 5D
-//      Save_Image5D save = new Save_Image5D();
-//      save.run("");
-//      acqNeedsSave_ = false;
       
       if (acqData_ == null) {
          JOptionPane.showMessageDialog(this,
@@ -417,13 +414,16 @@ public class Image5DWindow extends StackWindow {
       }
 
       try {
-
+         if (metaDlg_ != null) {
+            acqData_.setComment(metaDlg_.getComment());
+         }
          for (int i=0; i<acqData_.getNumberOfChannels(); i++) {
+            i5d.storeChannelProperties(i+1);
             ChannelDisplayProperties cdp = i5d.getChannelDisplayProperties(i+1);
-            DisplaySettings ds = new DisplaySettings();
-            ds.min = cdp.getMinValue();
-            ds.max = cdp.getMaxValue();
+            DisplaySettings ds = new DisplaySettings(cdp.getMinValue(), cdp.getMaxValue());
             acqData_.setChannelDisplaySetting(i, ds);
+            Color c = getColor(i+1);
+            acqData_.setChannelColor(i, c.getRGB());
          }
       } catch (MMAcqDataException e1) {
          JOptionPane.showMessageDialog(this, e1.getMessage());

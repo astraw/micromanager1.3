@@ -316,6 +316,15 @@ public class MetadataDlg extends MMDialog {
       }
    }
    
+   /**
+    * Return text in comment Area
+    */
+   public String getComment() {
+      if (commentArea_ != null)
+         return commentArea_.getText();
+      return "";
+   }
+
    private class ColumnSorter implements Comparator {
       int colIndex;
       boolean ascending;
