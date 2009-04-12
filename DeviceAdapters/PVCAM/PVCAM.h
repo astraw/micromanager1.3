@@ -219,6 +219,8 @@ private:
    double exposure_;
    unsigned binSize_;
    bool bufferOK_;
+   MM::MMTime startTime_;
+   long imageCounter_;
 
    std::map<std::string, int> portMap_;
    std::map<std::string, int> rateMap_;

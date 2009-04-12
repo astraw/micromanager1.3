@@ -187,7 +187,8 @@ restart_(false),
 snappingSingleFrame_(false),
 singleFrameModeReady_(false),
 exposureStartTime_(0.0),
-use_pl_exp_check_status_(true)
+use_pl_exp_check_status_(true),
+imageCounter_(0)
 {
    InitializeDefaultErrorMessages();
 
@@ -1790,8 +1791,6 @@ int Universal::StartSequenceAcquisition(long numImages, double interval_ms, bool
    stopOnOverflow_ = stopOnOverflow;
    numImages_ = numImages;
    ostringstream os;
-   os << "Started sequnce acquisition: " << numImages << " at " << interval_ms << " ms" << endl;
-   LogMessage(os.str().c_str());
 
    // prepare the camera
    nRet = ResizeImageBufferContinuous();
@@ -1814,13 +1813,17 @@ int Universal::StartSequenceAcquisition(long numImages, double interval_ms, bool
    }
 
    thd_->Start(numImages, interval_ms);
+   startTime_ = GetCurrentMMTime();
+   imageCounter_ = 0;
 
    // set actual interval the same as exposure
    // with PVCAM there is no straightforward way to get actual interval
    // TODO: create a better estimate
    SetProperty(MM::g_Keyword_ActualInterval_ms, CDeviceUtils::ConvertToString(exposure_)); 
 
-   os << "Started sequence acquisition: " << numImages << " at " << interval_ms << " ms" << endl;
+   char label[MM::MaxStrLength];
+   GetLabel(label);
+   os << "Started sequence on " << label << ", at " << startTime_.serialize() << ", with " << numImages << " and " << interval_ms << " ms" << endl;
    LogMessage(os.str().c_str());
 
    return DEVICE_OK;
@@ -1895,22 +1898,26 @@ int Universal::PushImage()
       RETURN_IF_MM_ERROR(nRet);
    }
 
-      // create metadata
+   // create metadata
    char label[MM::MaxStrLength];
    GetLabel(label);
 
    MM::MMTime timestamp = GetCurrentMMTime();
    Metadata md;
-   MetadataSingleTag mst(MM::g_Keyword_Elapsed_Time_ms, label, true);
-   mst.SetValue(CDeviceUtils::ConvertToString(timestamp.getMsec()));
-   md.SetTag(mst);
+
+   MetadataSingleTag mstStartTime(MM::g_Keyword_Metadata_StartTime, label, true);
+	mstStartTime.SetValue(CDeviceUtils::ConvertToString(startTime_.getMsec()));
+   md.SetTag(mstStartTime);
+
+   MetadataSingleTag mstElapsed(MM::g_Keyword_Elapsed_Time_ms, label, true);
+   mstElapsed.SetValue(CDeviceUtils::ConvertToString((timestamp - startTime_).getMsec()));
+   md.SetTag(mstElapsed);
+
+   MetadataSingleTag mstCount(MM::g_Keyword_Metadata_ImageNumber, label, true);
+   mstCount.SetValue(CDeviceUtils::ConvertToString(imageCounter_++));
+   md.SetTag(mstCount);
 
    // This method inserts new image in the circular buffer (residing in MMCore)
-   //nRet = GetCoreCallback()->InsertImage(this, (unsigned char*) pixBuffer,
-   //   GetImageWidth(),
-   //   GetImageHeight(),
-   //   GetImageBytesPerPixel());
-
    nRet = GetCoreCallback()->InsertMultiChannel(this,
       (unsigned char*) pixBuffer,
       1,
@@ -1932,7 +1939,7 @@ int Universal::PushImage()
          &md);
    }
 
-   LOG_IF_MM_ERROR(nRet);
+//   LOG_IF_MM_ERROR(nRet);
 
    return nRet;
 }

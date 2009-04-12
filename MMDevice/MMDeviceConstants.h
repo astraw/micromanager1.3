@@ -128,6 +128,8 @@ namespace MM {
    const char* const g_Keyword_Metadata_Z           = "Z-um";
    const char* const g_Keyword_Meatdata_Exposure    = "Exposure-ms";
    const char* const g_Keyword_Metadata_Score       = "Score";
+   const char* const g_Keyword_Metadata_ImageNumber = "ImageNumber";
+   const char* const g_Keyword_Metadata_StartTime   = "StartTime-ms";
 
    // configuration file format constants
    const char* const g_FieldDelimiters = ",";
