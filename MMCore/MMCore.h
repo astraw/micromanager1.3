@@ -247,9 +247,12 @@ public:
    bool getShutterOpen() throw (CMMError);
 
    void startSequenceAcquisition(long numImages, double intervalMs, bool stopOnOverflow) throw (CMMError);
+   void startSequenceAcquisition(const char* cameraLabel, long numImages, double intervalMs, bool stopOnOverflow) throw (CMMError);
    void startContinuousSequenceAcquisition(double intervalMs) throw (CMMError);
    void stopSequenceAcquisition() throw (CMMError);
+   void stopSequenceAcquisition(const char* label) throw (CMMError);
    bool isSequenceRunning() throw ();
+   bool isSequenceRunning(const char* label) throw (CMMError);
    void* getLastImage() const throw (CMMError);
    void* popNextImage() throw (CMMError);
 
@@ -266,7 +269,8 @@ public:
    double getBufferIntervalMs() const;
    bool isBufferOverflowed() const;
    void setCircularBufferMemoryFootprint(unsigned sizeMB) throw (CMMError);
-  //@ }
+   void intializeCircularBuffer() throw (CMMError);
+   //@ }
 
    /** @name Auto-focusing
     * API for controlling auto-focusing devices or software modules.

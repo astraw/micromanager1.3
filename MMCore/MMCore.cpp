@@ -1511,6 +1511,65 @@ void CMMCore::startSequenceAcquisition(long numImages, double intervalMs, bool s
 }
 
 /**
+ * Starts straming camera sequence acquisition for a specified camera.
+ * This command does not block the calling thread for the uration of the acquisition.
+ * The difference between this method and the one with the same name but operating on the "default"
+ * camera is that it does not automatically intitialize the circular buffer.
+ */
+void CMMCore::startSequenceAcquisition(const char* label, long numImages, double intervalMs, bool stopOnOverflow) throw (CMMError)
+{
+   MM::Camera* pCam = getSpecificDevice<MM::Camera>(label);
+
+   if(pCam->IsCapturing())
+      throw CMMError(getCoreErrorText(MMERR_NotAllowedDuringSequenceAcquisition).c_str(), 
+                     MMERR_NotAllowedDuringSequenceAcquisition);
+   
+   int nRet = pCam->StartSequenceAcquisition(numImages, intervalMs, stopOnOverflow);
+   if (nRet != DEVICE_OK)
+      throw CMMError(getDeviceErrorText(nRet, pCam).c_str(), MMERR_DEVICE_GENERIC);
+
+   CORE_DEBUG1("Sequence acquisition started on %s.\n", label);
+}
+
+/**
+ * Initialize circular buffer based on the current camera settings.
+ */
+void CMMCore::intializeCircularBuffer()
+{
+   if (camera_)
+   {
+      if (!cbuf_->Initialize(camera_->GetNumberOfChannels(), 1, camera_->GetImageWidth(), camera_->GetImageHeight(), camera_->GetImageBytesPerPixel()))
+      {
+         logError(getDeviceName(camera_).c_str(), getCoreErrorText(MMERR_CircularBufferFailedToInitialize).c_str());
+         throw CMMError(getCoreErrorText(MMERR_CircularBufferFailedToInitialize).c_str(), MMERR_CircularBufferFailedToInitialize);
+      }
+      cbuf_->Clear();
+   }
+   else
+   {
+      logError(getDeviceName(camera_).c_str(), getCoreErrorText(MMERR_CameraNotAvailable).c_str());
+      throw CMMError(getCoreErrorText(MMERR_CameraNotAvailable).c_str(), MMERR_CameraNotAvailable);
+   }
+   CORE_DEBUG("Circular buffer intitialized based on the current camera.\n");
+}
+
+/**
+ * Stops streming camera sequence acquisition for a specified camera.
+ */
+void CMMCore::stopSequenceAcquisition(const char* label) throw (CMMError)
+{
+   MM::Camera* pCam = getSpecificDevice<MM::Camera>(label);
+   int nRet = pCam->StopSequenceAcquisition();
+   if (nRet != DEVICE_OK)
+   {
+      logError(getDeviceName(camera_).c_str(), getDeviceErrorText(nRet, camera_).c_str());
+      throw CMMError(getDeviceErrorText(nRet, camera_).c_str(), MMERR_DEVICE_GENERIC);
+   }
+
+   CORE_DEBUG1("Sequence acquisition stopped on %.\n", label);
+}
+
+/**
  * Starts the continuous camera sequence acquisition.
  * This command does not block the calling thread for the duration of the acquisition.
  */
@@ -1573,6 +1632,16 @@ void CMMCore::stopSequenceAcquisition() throw (CMMError)
 bool CMMCore::isSequenceRunning() throw ()
 {
    return camera_ && camera_->IsCapturing();
+};
+
+/**
+ * Check if the specified camera is acquiring the sequence
+ * Returns false when the sequence is done
+ */
+bool CMMCore::isSequenceRunning(const char* label) throw (CMMError)
+{
+   MM::Camera* pCam = getSpecificDevice<MM::Camera>(label);
+   return pCam->IsCapturing();
 };
 
 /**
