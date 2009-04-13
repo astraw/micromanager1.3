@@ -137,14 +137,16 @@ class ImageSharpnessScorer
 {
 public:
 	ImageSharpnessScorer();
+	~ImageSharpnessScorer();
 	void SetImage(ImgBuffer);
 	void MedianFilter(int xsize, int ysize);
-	void LaplacianFilter(int xsize, int ysize);
+	void LaplacianFilter();
 	double GetScore();
 	void SetCore(MM::Core * );
 
 
 private:
 	ImgBuffer buffer_;
+	double * kernel_;
 };
 # endif

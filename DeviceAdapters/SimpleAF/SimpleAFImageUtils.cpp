@@ -252,18 +252,38 @@ int ImageScorer::Score()
 	return m_nTotalCorners;
 }
 
-
+//
+// Image sharpness scorer
+//
 ImageSharpnessScorer::ImageSharpnessScorer()
 {
+	int xsize = 3;
+	int ysize = 3;
+	kernel_ = new double[xsize*ysize];
+	//kernel_ = {2.0, 1.0, 0.0, 1.0, 0.0, -1.0, 0.0, -1.0, -2.0};
+	
 }
 
-void ImageSharpnessScorer::SetCore(MM::Core * core)
+ImageSharpnessScorer::~ImageSharpnessScorer()
 {
+	delete [] kernel_;
+	kernel_ = 0;
 }
 
-void ImageSharpnessScorer::LaplacianFilter(int xsize, int ysize)
+
+void ImageSharpnessScorer::LaplacianFilter()
 {
-	ImgBuffer kernel_;
+
+	int xwidth = 3, ywidth = 3;
+	int index = 0;
+	double kernel[9] = {2.0, 1.0, 0.0, 1.0, 0.0, -1.0, 0.0, -1.0, -2.0};
+	for(int j = 0; j < buffer_.width(); ++j)
+	{
+		for(int i = 0; i < buffer_.height(); ++i)
+		{
+		}
+	}
+	
 }
 
 void ImageSharpnessScorer::MedianFilter(int xsize, int ysize)
