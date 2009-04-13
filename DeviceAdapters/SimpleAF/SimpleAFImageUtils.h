@@ -132,4 +132,19 @@ private:
 	bool m_bNonMax;
 	long int m_nTotalCorners;
 };
+
+class ImageSharpnessScorer
+{
+public:
+	ImageSharpnessScorer();
+	void SetImage(ImgBuffer);
+	void MedianFilter(int xsize, int ysize);
+	void LaplacianFilter(int xsize, int ysize);
+	double GetScore();
+	void SetCore(MM::Core * );
+
+
+private:
+	ImgBuffer buffer_;
+};
 # endif

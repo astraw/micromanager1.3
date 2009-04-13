@@ -252,3 +252,95 @@ int ImageScorer::Score()
 	return m_nTotalCorners;
 }
 
+
+ImageSharpnessScorer::ImageSharpnessScorer()
+{
+}
+
+void ImageSharpnessScorer::SetCore(MM::Core * core)
+{
+}
+
+void ImageSharpnessScorer::LaplacianFilter(int xsize, int ysize)
+{
+	ImgBuffer kernel_;
+}
+
+void ImageSharpnessScorer::MedianFilter(int xsize, int ysize)
+{
+	ImgBuffer filtimage_(buffer_);
+	// Navigating through the buffer
+	for (unsigned int j=0; j<buffer_.Height(); j++)
+	{
+		for (unsigned int k=0; k<buffer_.Width(); k++)
+		{
+			double * kernelmask_ = new double[xsize*ysize];
+			// For getting the central array
+			int count = 0;
+			for(int  y_off = -ysize/2 ; y_off < ysize; ++y_off)
+			{
+				for(int  x_off = -xsize/2 ; x_off < xsize; ++x_off)
+				{
+					long lIndex = buffer_.Width()*(j + y_off) + (k + x_off);
+					if(lIndex >= 0 && lIndex < (long)(buffer_.Width()*buffer_.Height()))
+					{
+						kernelmask_[count] = buffer_.GetPixels()[lIndex];						
+					}
+					++count;
+				}
+			}
+			// sort the kernel mask array
+
+			double min = kernelmask_[0];
+			double temp = kernelmask_[0];
+			for(int i = 0; i < (ysize * xsize) - 1; ++i)
+			{
+				for(int j = i; j < xsize*ysize ; ++j)
+				{
+					if(kernelmask_[j] < min)
+					{
+						min = kernelmask_[j];
+						temp = kernelmask_[i];
+						kernelmask_[i] = kernelmask_[j];
+						kernelmask_[i+1] = temp;
+					}
+				}
+			}
+	
+			// Get the median
+			// if odd - set the central value
+
+			unsigned char * pBuf = const_cast<unsigned char *>(filtimage_.GetPixels());
+			if((xsize * ysize) % 2 == 1)
+			{
+				int index = (int)((float)(xsize * ysize )/2.0f);
+				unsigned char medianvalue_ = (unsigned char)kernelmask_[index];
+				long setIndex = buffer_.Width()*j + k;
+				*(pBuf + setIndex) = medianvalue_;
+
+			}
+			else
+			// if even - set the average of the two central values
+			{
+				int index = (int)((float)(xsize * ysize )/2.0f);
+				unsigned char medianvalue_ = (unsigned char)((float)(kernelmask_[(int)(index - 0.5f)] + kernelmask_[(int)(index + 0.5f)])/2.0f);
+				long setIndex = buffer_.Width()*j + k;
+				*(pBuf + setIndex) = medianvalue_;
+			}
+
+			// delete the buffer
+			delete [] kernelmask_; kernelmask_ = 0;
+		}
+	}
+	buffer_ = filtimage_;	
+}
+
+double ImageSharpnessScorer::GetScore()
+{
+	double score = 0.0f;
+	return score;
+}
+
+void ImageSharpnessScorer::SetImage(ImgBuffer)
+{
+}
