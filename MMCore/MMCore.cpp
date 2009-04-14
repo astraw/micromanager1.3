@@ -1534,7 +1534,7 @@ void CMMCore::startSequenceAcquisition(const char* label, long numImages, double
 /**
  * Initialize circular buffer based on the current camera settings.
  */
-void CMMCore::intializeCircularBuffer()
+void CMMCore::intializeCircularBuffer() throw (CMMError)
 {
    if (camera_)
    {
