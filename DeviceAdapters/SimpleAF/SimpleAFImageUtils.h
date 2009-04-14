@@ -143,10 +143,10 @@ public:
 	void LaplacianFilter();
 	double GetScore();
 	void SetCore(MM::Core * );
+	void SetImage(unsigned char * buffer, int width, int height, int depth);
 
 
 private:
-	ImgBuffer buffer_;
-	double * kernel_;
+	ImgBuffer buffer_;	
 };
 # endif

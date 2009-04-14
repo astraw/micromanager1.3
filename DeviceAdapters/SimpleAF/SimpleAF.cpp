@@ -162,7 +162,7 @@ int SimpleAF::IncrementalFocus()
 
 int SimpleAF::GetLastFocusScore(double & score)
 {
-   score = 0.0;
+	score = lastscore_;
 	return DEVICE_OK;
 }
 
@@ -229,4 +229,18 @@ int SimpleAF::OnStepSizeFine(MM::PropertyBase *pProp, MM::ActionType eAct)
 
 
 	return DEVICE_OK;
+}
+
+int SimpleAF::Focus(SimpleAF::FocusMode focusmode)
+{
+	// Do for full focus
+	if(focusmode == FULLFOCUS)
+	{
+
+	}
+	// Do for incremental focus
+	if(focusmode == INCREMENTALFOCUS)
+	{
+	}
+	// Do for profiling objective
 }

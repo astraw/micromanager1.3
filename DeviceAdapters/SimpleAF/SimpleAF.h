@@ -106,9 +106,17 @@ public:
 
 
 private:
+   enum				FocusMode{FULLFOCUS, INCREMENTALFOCUS};
    bool				busy_;
    bool				initialized_;
    double			param_stepsize_fine_;
    double			param_stepsize_coarse_;
+   double			lastscore_;
+   double			lastbestscore_;
+   double			param_coarse_search_span_;
+   double			param_fne_search_span_;
+   int				Focus(FocusMode);
+   double			activespan_;
+   double			activestep_;
 
 };

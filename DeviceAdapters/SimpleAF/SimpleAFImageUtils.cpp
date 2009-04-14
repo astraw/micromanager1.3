@@ -257,33 +257,46 @@ int ImageScorer::Score()
 //
 ImageSharpnessScorer::ImageSharpnessScorer()
 {
-	int xsize = 3;
-	int ysize = 3;
-	kernel_ = new double[xsize*ysize];
-	//kernel_ = {2.0, 1.0, 0.0, 1.0, 0.0, -1.0, 0.0, -1.0, -2.0};
 	
 }
 
 ImageSharpnessScorer::~ImageSharpnessScorer()
 {
-	delete [] kernel_;
-	kernel_ = 0;
+
 }
 
 
 void ImageSharpnessScorer::LaplacianFilter()
 {
-
 	int xwidth = 3, ywidth = 3;
-	int index = 0;
+	long index = 0;
+	ImgBuffer convimage_(buffer_.Width(), buffer_.Height(),1);
+	unsigned char * poutbuf = const_cast<unsigned char *>(convimage_.GetPixels());
 	double kernel[9] = {2.0, 1.0, 0.0, 1.0, 0.0, -1.0, 0.0, -1.0, -2.0};
-	for(int j = 0; j < buffer_.width(); ++j)
+	// Looping over the image
+	for(unsigned int j = 1; j < buffer_.Width() -1 ; ++j)
 	{
-		for(int i = 0; i < buffer_.height(); ++i)
+		for(unsigned int i = 1; i < buffer_.Height() - 1; ++i)
 		{
+			  double accumulation = 0;
+			  double weightsum = 0;
+			  // Looping over the kernel
+			  int kindex = 0;
+			  for(int ii = 0; ii < 3; ++ii)
+			  {
+				  for(int jj = 0; jj < 3; ++jj)
+				  {
+					  index = j*buffer_.Width() + j;
+					  kindex = jj*3 + i;
+					  unsigned char k = *(buffer_.GetPixels() + index);
+					  accumulation += k * (*(kernel + kindex));
+					  weightsum += *(kernel + kindex);
+				  }
+			  }
+			  *(poutbuf + index) = (unsigned char)(accumulation/weightsum);
 		}
 	}
-	
+	buffer_ = convimage_;	
 }
 
 void ImageSharpnessScorer::MedianFilter(int xsize, int ysize)
@@ -357,10 +370,35 @@ void ImageSharpnessScorer::MedianFilter(int xsize, int ysize)
 
 double ImageSharpnessScorer::GetScore()
 {
+  // 1. Get the median filtering done
+	this->MedianFilter(3,3);
+  // 2. Run the laplacian filter
+	this->LaplacianFilter();
+  // 3. Generate the score
+	// Touch all the pixels and sum to get the sharpness score
+
 	double score = 0.0f;
+	long index = 0;
+	for(unsigned int j = 1; j < buffer_.Height() - 1; ++j)
+	{
+		for(unsigned int i = 0; i < buffer_.Width() - 1; ++i)
+		{
+			index = j*buffer_.Width() + i;
+			score += pow((float)*(buffer_.GetPixels() + index),2.0f);
+		}
+	}
+
 	return score;
 }
 
-void ImageSharpnessScorer::SetImage(ImgBuffer)
+void ImageSharpnessScorer::SetImage(ImgBuffer inputbuffer)
 {
+	buffer_ = inputbuffer;
+}
+
+void ImageSharpnessScorer::SetImage(unsigned char * buffer, int width, int height, int depth)
+{
+	ImgBuffer newbuffer(width,height,depth);
+	newbuffer.SetPixels(buffer);
+	buffer_ = newbuffer;
 }
