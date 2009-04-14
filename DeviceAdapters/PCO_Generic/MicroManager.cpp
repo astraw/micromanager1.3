@@ -381,7 +381,7 @@ int CPCOCam::Initialize()
      nErr = m_pCamera->PreInitPcCam(0, 0, 0);
    if (nErr != 0)
    {
-     if(::MessageBox(::GetForegroundWindow(), "No camera found! Switch to demo?", "pco generic device adapter", MB_YESNO) == IDYES)
+     if(::MessageBox(::GetForegroundWindow(), "No camera found! Please copy the appropriate runtime\r\ndlls to the MM directory. Switch to demo?", "pco generic device adapter", MB_YESNO) == IDYES)
      {
        m_pCamera->SetDemoMode(TRUE, 1280, 1024, FALSE, FALSE,
                           12, 0);
@@ -395,7 +395,18 @@ int CPCOCam::Initialize()
    }
 
    if(!m_bDemoMode)
-     nErr = m_pCamera->Init(FALSE);
+   {
+     try
+     {
+       nErr = m_pCamera->Init(FALSE);
+     }
+     catch(...)
+     {
+       ::MessageBox(::GetForegroundWindow(), "Convert dll missing. Please copy pcocnv.dll and pcoltdlg.dll to MM directory!", "pco generic device adapter", MB_OK);
+       delete(m_pCamera);
+       return -1;
+     }
+   }
    if (nErr != 0)
       return nErr;
 
