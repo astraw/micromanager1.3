@@ -402,9 +402,9 @@ int CPCOCam::Initialize()
      }
      catch(...)
      {
-       ::MessageBox(::GetForegroundWindow(), "Convert dll missing. Please copy pcocnv.dll and pcoltdlg.dll to MM directory!", "pco generic device adapter", MB_OK);
+       ::MessageBox(::GetForegroundWindow(), "Convert dll missing. Please copy pcocnv.dll to MM directory!", "pco generic device adapter", MB_OK);
        delete(m_pCamera);
-       return -1;
+       return DEVICE_NATIVE_MODULE_FAILED;
      }
    }
    if (nErr != 0)
