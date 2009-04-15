@@ -114,47 +114,6 @@ class ExposureManager
 		bool working_;
 
 };
-///////////////////////////////////////////////////////////
-// Image Sharpness computations
-//
-////////////////////////////////////////////////////////////
-
-class ImageScorer
-{
-public :
-	ImageScorer(): 
-	  m_nThreshold(25),
-	  m_bNonMax(false),
-	  m_imagepointer(0),
-	  m_nTotalCorners(-1)
-	  {}
-	~ImageScorer()
-	{
-	}
-	
-	void SetUseNonMaxOn()
-	{
-		m_bNonMax = true;
-	}
-	void SetImage(unsigned char * imagepointer, int nWidth, int nHeight)
-	{
-		m_imagepointer = imagepointer;
-		m_nImageWidth = nWidth;
-		m_nImageHeight = nHeight;
-	}
-
-	int Score();
-
-	void SetThreshold(int nThreshold){m_nThreshold = nThreshold;}
-
-private:
-	int m_nImageWidth;
-	int m_nImageHeight;
-	int m_nThreshold;
-	unsigned char * m_imagepointer;
-	bool m_bNonMax;
-	long int m_nTotalCorners;
-};
 
 class ImageSharpnessScorer
 {
