@@ -60,8 +60,8 @@ Stretch(PixelDataType *src, int nWidth, int nHeight, PixelDataType *returnimage 
 	double * histogram = new double[std::numeric_limits<PixelDataType>::max()+1];
 	// Get the max and the minimum
 
-	PixelDataType val_max = std::numeric_limits<PixelDataType>::min(), 
-			      val_min = std::numeric_limits<PixelDataType>::max(),
+	PixelType val_max = std::numeric_limits<PixelType>::min(), 
+			      val_min = std::numeric_limits<PixelType>::max(),
 				  typemax = val_min,
 				  typemin = val_max;
 	// Getting min and max in one pass
@@ -101,7 +101,7 @@ Stretch(PixelDataType *src, int nWidth, int nHeight, PixelDataType *returnimage 
 			// Setting the scaling again
 			for(long i = 0; i < nWidth * nHeight; ++i)
 			{					
-				src[i] = static_cast<PixelDataType>((fFactor)*(src[i] - val_min));
+				src[i] = static_cast<PixelType>((fFactor)*(src[i] - val_min));
 			}
 		}
 		else if(operationmodel_ == OUTOFPLACE)
@@ -110,7 +110,7 @@ Stretch(PixelDataType *src, int nWidth, int nHeight, PixelDataType *returnimage 
 			// Setting the scaling again
 			for(long i = 0; i < nWidth * nHeight; ++i)
 			{					
-				returnimage[i] = static_cast<PixelDataType>((fFactor)*(src[i] - val_min));
+				returnimage[i] = static_cast<PixelType>((fFactor)*(src[i] - val_min));
 			}
 		}
 		return 1;
@@ -127,9 +127,9 @@ Stretch(PixelDataType *src, int nWidth, int nHeight, PixelDataType *returnimage 
 		long thresh = (long)((float)nWidth*(float)nHeight*(fStretchPercent));
 		long uppercutoff = 0;
 
-		double * cdf = new double [std::numeric_limits<PixelDataType>::max()];
+		double * cdf = new double [std::numeric_limits<PixelType>::max()];
 
-		for(long i = 0; i < std::numeric_limits<PixelDataType>::max(); ++i)
+		for(long i = 0; i < std::numeric_limits<PixelType>::max(); ++i)
 		{
 			incidence += (long)histogram[i];
 			if(incidence > thresh && uppercutoff == 0)

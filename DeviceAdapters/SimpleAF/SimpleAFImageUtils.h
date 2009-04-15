@@ -58,7 +58,7 @@ template <typename PixelDataType> class AFHistogramStretcher
 	public:
 		AFHistogramStretcher():fContentThreshold(0.001f),fStretchPercent(0.99f)
 			,operationmodel_(INPLACE),stretchingmodel_(HISTOGRAMEQUALIZATION){}
-		typedef typename PixelDataType PixelDataType;
+		typedef typename PixelDataType PixelType;
 		float fContentThreshold;
 		float fStretchPercent;
 		enum OperationType {INPLACE, OUTOFPLACE};
