@@ -286,6 +286,7 @@ int CPCOCam::SetupCamera()
   if (nErr != 0)
     return nErr;
 
+  m_nTimesLen = MMSENSICAM_MAX_STRLEN;
   nErr = m_pCamera->testcoc(&m_nMode, &m_nTrig, &m_nRoiXMin, &m_nRoiXMax, &m_nRoiYMin, &m_nRoiYMax,
                             &m_nHBin, &m_nVBin, m_pszTimes, &m_nTimesLen, &m_iGain, &m_iOffset, &m_uiFlags);
   if ((nErr != 0) && (nErr != 103))
