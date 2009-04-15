@@ -49,6 +49,7 @@
 using namespace std;
 unsigned Universal::refCount_ = 0;
 bool Universal::PVCAM_initialized_ = false;
+MMThreadLock g_pvcamLock;
 
 const int BUFSIZE = 60;
 #if WIN32
@@ -1757,6 +1758,11 @@ int Universal::ThreadRun(void)
 
    int ret=DEVICE_ERR;
 
+   std::ostringstream txt;
+   txt << name_ << " entered ThreadRun()";
+   LOG_MESSAGE(txt.str());
+   //MMThreadGuard guard(g_pvcamLock);
+
    // wait until image is ready
    while (pl_exp_check_cont_status(hPVCAM_, &status, &byteCnt, &bufferCnt) //Circular buffer only
       && (status != READOUT_COMPLETE) 
@@ -1774,6 +1780,9 @@ int Universal::ThreadRun(void)
       LOG_MESSAGE(std::string("PVCamera readout failed"));
    }
 
+   ostringstream txtEnd;
+   txtEnd << name_ << " exited ThreadRun()";
+   LOG_MESSAGE(txtEnd.str());
    return ret;
 }
 
@@ -1805,12 +1814,15 @@ int Universal::StartSequenceAcquisition(long numImages, double interval_ms, bool
       RETURN_IF_MM_ERROR(nRet);
    }
 
+   MM::MMTime start = GetCurrentMMTime();
    if (!pl_exp_start_cont(hPVCAM_, circBuffer_, bufferSize_)) //Circular buffer only
    {
       LOG_CAM_ERROR;
       ResizeImageBufferSingle();
       return DEVICE_ERR;
    }
+   MM::MMTime end = GetCurrentMMTime();
+   LogTimeDiff(start, end, true);
 
    thd_->Start(numImages, interval_ms);
    startTime_ = GetCurrentMMTime();
@@ -1871,6 +1883,10 @@ int Universal::StopSequenceAcquisition()
 */
 int Universal::PushImage()
 {
+   ostringstream txt;
+   txt << name_ << " entered PushImage()";
+   LogMessage(txt.str());
+
    int nRet = DEVICE_ERR;
    // get the image from the circular buffer
    void_ptr imgPtr;
@@ -1941,6 +1957,9 @@ int Universal::PushImage()
 
 //   LOG_IF_MM_ERROR(nRet);
 
+   ostringstream txtEnd;
+   txtEnd << name_ << " exited PushImage()";
+   LogMessage(txtEnd.str());
    return nRet;
 }
 

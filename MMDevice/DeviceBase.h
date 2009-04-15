@@ -65,8 +65,6 @@ const char* const g_Msg_SEQUENCE_ACQUISITION_THREAD_EXITING="Sequence thread exi
 const char* const g_Msg_DEVICE_CAMERA_BUSY_ACQUIRING="Camera is busy acquiring images.  Stop camera activity before changing this property";
 const char* const g_Msg_DEVICE_CAN_NOT_SET_PROPERTY="The device can not set this property at this moment";
 
-
-
 /**
 * Implements functionality common to all devices.
 * Typically used as the base class for actual device adapters. In general,
