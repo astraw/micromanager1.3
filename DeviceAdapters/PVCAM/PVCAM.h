@@ -134,6 +134,9 @@ public:
    // high-speed interface
    int StartSequenceAcquisition(long numImages, double interval_ms, bool stopOnOverflow);
    int StopSequenceAcquisition();
+   // temporary debug methods
+   int PrepareSequenceAcqusition();
+   int LaunchSequenceAcquisition(long numImages, double interval_ms, bool stopOnOverflow);
 
    // action interface
    int OnBinning(MM::PropertyBase* pProp, MM::ActionType eAct);

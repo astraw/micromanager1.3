@@ -1764,14 +1764,38 @@ int Universal::ThreadRun(void)
    //MMThreadGuard guard(g_pvcamLock);
 
    // wait until image is ready
-   while (pl_exp_check_cont_status(hPVCAM_, &status, &byteCnt, &bufferCnt) //Circular buffer only
+   MM::MMTime timeout(2, 0);
+   MM::MMTime startTime = GetCurrentMMTime();
+   MM::MMTime elapsed;
+   bool timedOut = false;
+   rs_bool retVal = FALSE;
+
+   retVal = pl_exp_check_cont_status(hPVCAM_, &status, &byteCnt, &bufferCnt);
+
+   while (
+      retVal
       && (status != READOUT_COMPLETE) 
-      && (status != READOUT_FAILED))
+      && (status != READOUT_FAILED)
+      && !timedOut)
    {
-      CDeviceUtils::SleepMs(5);
+      MMThreadGuard guard(g_pvcamLock);
+      retVal = pl_exp_check_cont_status(hPVCAM_, &status, &byteCnt, &bufferCnt);
+
+      std::ostringstream msg;
+      msg << "Waiting with status " << (int)status;
+      LOG_MESSAGE(msg.str());
+
+      CDeviceUtils::SleepMs(10);
+      elapsed = GetCurrentMMTime() - startTime;
+      if (elapsed > timeout) {
+         timedOut = true;
+         LOG_MESSAGE(std::string("Timed out!"));
+      }
+      if (!retVal)
+         LOG_MESSAGE(std::string("pl_exp_check_cont_status() failed!"));
    }
 
-   if (status != READOUT_FAILED)
+   if (status != READOUT_FAILED && !timedOut && retVal)
    {
       ret = PushImage();
    }
@@ -1836,6 +1860,67 @@ int Universal::StartSequenceAcquisition(long numImages, double interval_ms, bool
    char label[MM::MaxStrLength];
    GetLabel(label);
    os << "Started sequence on " << label << ", at " << startTime_.serialize() << ", with " << numImages << " and " << interval_ms << " ms" << endl;
+   LogMessage(os.str().c_str());
+
+   return DEVICE_OK;
+}
+
+int Universal::PrepareSequenceAcqusition()
+{
+   if (IsCapturing())
+      return ERR_BUSY_ACQUIRING;
+
+   int nRet = DEVICE_ERR;
+
+   ostringstream os;
+
+   // prepare the camera
+   nRet = ResizeImageBufferContinuous();
+   RETURN_IF_MM_ERROR(nRet);
+
+   // start thread
+   // prepare the core
+   nRet = GetCoreCallback()->PrepareForAcq(this);
+   if (nRet != DEVICE_OK)
+   {
+      ResizeImageBufferContinuous();
+      RETURN_IF_MM_ERROR(nRet);
+   }
+
+   return nRet;
+}
+
+int Universal::LaunchSequenceAcquisition(long numImages, double interval_ms, bool stopOnOverflow)
+{
+   if (IsCapturing())
+      return ERR_BUSY_ACQUIRING;
+
+   stopOnOverflow_ = stopOnOverflow;
+   numImages_ = numImages;
+
+   MM::MMTime start = GetCurrentMMTime();
+   if (!pl_exp_start_cont(hPVCAM_, circBuffer_, bufferSize_)) //Circular buffer only
+   {
+      LOG_CAM_ERROR;
+      ResizeImageBufferSingle();
+      return DEVICE_ERR;
+   }
+   MM::MMTime end = GetCurrentMMTime();
+   LogTimeDiff(start, end, true);
+
+   thd_->Start(numImages, interval_ms);
+   startTime_ = GetCurrentMMTime();
+   imageCounter_ = 0;
+
+   // set actual interval the same as exposure
+   // with PVCAM there is no straightforward way to get actual interval
+   // TODO: create a better estimate
+   SetProperty(MM::g_Keyword_ActualInterval_ms, CDeviceUtils::ConvertToString(exposure_)); 
+
+   char label[MM::MaxStrLength];
+   GetLabel(label);
+   ostringstream os;
+   os << "Launched sequence on " << label << ", at " << startTime_.serialize() << ", with " << numImages << " and " << interval_ms << " ms" << endl;
    LogMessage(os.str().c_str());
 
    return DEVICE_OK;

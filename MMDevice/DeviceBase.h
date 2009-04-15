@@ -823,6 +823,10 @@ public:
       return 0;
    }
 
+   // temporary debug methods
+   int PrepareSequenceAcqusition() {return DEVICE_UNSUPPORTED_COMMAND;}
+   int LaunchSequenceAcquisition(long /*numImages*/, double /*interval_ms*/, bool /*stopOnOverflow*/) {return DEVICE_UNSUPPORTED_COMMAND;}
+
    /**
    * Default implementation.
    */
@@ -980,18 +984,7 @@ protected:
          {
             do
             {  
-               MM::MMTime currentTime=camera_->GetCurrentMMTime();
-               double currentIntervalMs 
-                  = (currentTime - lastFrameTime_).getMsec();
-               if(!IsSuspended() && currentIntervalMs >= intervalMs_)
-               {
-                  //call virtual function overriden in the derived class
-                  ret=camera_->ThreadRun();
-                  if(DEVICE_OK == ret)
-                  {
-                     lastFrameTime_=currentTime;
-                  }
-               }
+               ret=camera_->ThreadRun();
             } while (DEVICE_OK == ret && !IsStopped() && imageCounter_++ < numImages_-1);
             if (IsStopped())
                camera_->LogMessage("SeqAcquisition interrupted by the user\n");

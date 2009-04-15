@@ -1531,6 +1531,37 @@ void CMMCore::startSequenceAcquisition(const char* label, long numImages, double
    CORE_DEBUG1("Sequence acquisition started on %s.\n", label);
 }
 
+void CMMCore::launchSequenceAcquisition(const char* label, long numImages, double intervalMs, bool stopOnOverflow) throw (CMMError)
+{
+   MM::Camera* pCam = getSpecificDevice<MM::Camera>(label);
+
+   if(pCam->IsCapturing())
+      throw CMMError(getCoreErrorText(MMERR_NotAllowedDuringSequenceAcquisition).c_str(), 
+                     MMERR_NotAllowedDuringSequenceAcquisition);
+   
+   int nRet = pCam->LaunchSequenceAcquisition(numImages, intervalMs, stopOnOverflow);
+   if (nRet != DEVICE_OK)
+      throw CMMError(getDeviceErrorText(nRet, pCam).c_str(), MMERR_DEVICE_GENERIC);
+
+   CORE_DEBUG1("Sequence acquisition launched on %s.\n", label);
+}
+
+void CMMCore::prepareSequenceAcquisition(const char* label) throw (CMMError)
+{
+   MM::Camera* pCam = getSpecificDevice<MM::Camera>(label);
+
+   if(pCam->IsCapturing())
+      throw CMMError(getCoreErrorText(MMERR_NotAllowedDuringSequenceAcquisition).c_str(), 
+                     MMERR_NotAllowedDuringSequenceAcquisition);
+   
+   int nRet = pCam->PrepareSequenceAcqusition();
+   if (nRet != DEVICE_OK)
+      throw CMMError(getDeviceErrorText(nRet, pCam).c_str(), MMERR_DEVICE_GENERIC);
+
+   CORE_DEBUG1("Sequence acquisition prepared on %s.\n", label);
+}
+
+
 /**
  * Initialize circular buffer based on the current camera settings.
  */
