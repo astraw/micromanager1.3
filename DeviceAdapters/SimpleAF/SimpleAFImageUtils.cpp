@@ -42,6 +42,7 @@
 # include "SimpleAFImageUtils.h"
 // For numeric limits, to work with the different pixel types
 # include <limits>
+# include <vector>
 
 
 
@@ -253,6 +254,7 @@ void ImageSharpnessScorer::LaplacianFilter()
 	ImgBuffer convimage_(buffer_.Width(), buffer_.Height(),1);
 	unsigned char * poutbuf = const_cast<unsigned char *>(convimage_.GetPixels());
 	double kernel[9] = {2.0, 1.0, 0.0, 1.0, 0.0, -1.0, 0.0, -1.0, -2.0};
+	
 	// Looping over the image
 	for(unsigned int j = 1; j < buffer_.Width() -1 ; ++j)
 	{
@@ -269,8 +271,8 @@ void ImageSharpnessScorer::LaplacianFilter()
 					  index = j*buffer_.Width() + j;
 					  kindex = jj*3 + i;
 					  unsigned char k = *(buffer_.GetPixels() + index);
-					  accumulation += k * (*(kernel + kindex));
-					  weightsum += *(kernel + kindex);
+					  accumulation += k * kernel[kindex];
+					  weightsum += kernel[kindex];
 				  }
 			  }
 			  *(poutbuf + index) = (unsigned char)(accumulation/weightsum);
@@ -287,14 +289,14 @@ void ImageSharpnessScorer::MedianFilter(int xsize, int ysize)
 	{
 		for (unsigned int k=0; k< buffer_.Width(); k++)
 		{
-			double * kernelmask_ = new double[xsize*ysize];
+			std::vector<double> kernelmask_(xsize * ysize);
 			for(int i = 0; i < xsize*ysize; ++i)
 				kernelmask_[i] = 0;
 			// For getting the central array
 			int count = 0;
-			for(int  y_off = -ysize/2 ; y_off < ysize; ++y_off)
+			for(int  y_off = -ysize/2 ; y_off <= ysize/2; ++y_off)
 			{
-				for(int  x_off = -xsize/2 ; x_off < xsize; ++x_off)
+				for(int  x_off = -xsize/2 ; x_off <= xsize/2; ++x_off)
 				{
 					long lIndex = buffer_.Width()*(j + y_off) + (k + x_off);
 					if(lIndex >= 0 && 
@@ -335,7 +337,7 @@ void ImageSharpnessScorer::MedianFilter(int xsize, int ysize)
 				unsigned char medianvalue_ = (unsigned char)kernelmask_[index];
 				long setIndex = buffer_.Width()*j + k;
 				*(pBuf + setIndex) = medianvalue_;
-				delete [] kernelmask_; kernelmask_ = 0;
+				//delete [] kernelmask_; kernelmask_ = 0;
 
 			}
 			else
@@ -345,7 +347,7 @@ void ImageSharpnessScorer::MedianFilter(int xsize, int ysize)
 				unsigned char medianvalue_ = (unsigned char)((float)(kernelmask_[(int)(index - 0.5f)] + kernelmask_[(int)(index + 0.5f)])/2.0f);
 				long setIndex = buffer_.Width()*j + k;
 				*(pBuf + setIndex) = medianvalue_;
-				delete [] kernelmask_; kernelmask_ = 0;
+				//delete [] kernelmask_; kernelmask_ = 0;
 			}
 
 			// delete the buffer
