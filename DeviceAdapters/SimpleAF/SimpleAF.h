@@ -40,9 +40,9 @@
 
 #pragma once;
 
-# include "MMDevice.h"
-# include "DeviceBase.h"
-# include "ImgBuffer.h"
+# include "../../MMDevice/MMDevice.h"
+# include "../../MMDevice/DeviceBase.h"
+# include "../../MMDevice/ImgBuffer.h"
 # include <string>
 # include <ctime>
 #include "SimpleAFImageUtils.h"

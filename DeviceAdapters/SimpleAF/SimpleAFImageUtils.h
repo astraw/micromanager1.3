@@ -42,10 +42,10 @@
 # define _AFUTILS_H_
 
 # include <string>
-# include "MMDevice.h"
-# include "DeviceBase.h"
-# include "ImgBuffer.h"
-#include "ModuleInterface.h"
+# include "../../MMDevice/MMDevice.h"
+# include "../../MMDevice/DeviceBase.h"
+# include "../../MMDevice/ImgBuffer.h"
+#include "../../MMDevice/ModuleInterface.h"
 
 /////////////////////////////////////////////////////////////
 // AFHistogramStretcher:

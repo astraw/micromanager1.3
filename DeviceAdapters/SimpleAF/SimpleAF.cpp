@@ -47,7 +47,7 @@
 #include "SimpleAF.h"
 #include <string>
 #include <math.h>
-#include "ModuleInterface.h"
+#include "../../MMDevice/ModuleInterface.h"
 #include <sstream>
 #include <ctime>
 #include "SimpleAFImageUtils.h"
