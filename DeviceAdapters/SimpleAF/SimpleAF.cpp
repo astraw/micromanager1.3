@@ -106,7 +106,7 @@ MODULE_API void DeleteDevice(MM::Device* pDevice)
 
 SimpleAF::SimpleAF():
 		busy_(false),initialized_(false),timemeasurement_(false),
-		start_(0),stop_(0),timestamp_(0)
+			start_(0),stop_(0),timestamp_(0),param_channel_("DAPI")
 {
 }
 

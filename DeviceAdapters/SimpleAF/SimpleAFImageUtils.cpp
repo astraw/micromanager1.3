@@ -52,14 +52,14 @@
 # undef min
 # endif
 
-template <class PixelType>
-int AFHistogramStretcher<PixelType>::
+template <typename PixelDataType>
+int AFHistogramStretcher<PixelDataType>::
 Stretch(PixelDataType *src, int nWidth, int nHeight, PixelDataType *returnimage = 0)
 {
 	double * histogram = new double[std::numeric_limits<PixelDataType>::max()+1];
 	// Get the max and the minimum
 
-		PixelDataType val_max = std::numeric_limits<PixelDataType>::min(), 
+	PixelDataType val_max = std::numeric_limits<PixelDataType>::min(), 
 			      val_min = std::numeric_limits<PixelDataType>::max(),
 				  typemax = val_min,
 				  typemin = val_max;
@@ -285,9 +285,11 @@ void ImageSharpnessScorer::MedianFilter(int xsize, int ysize)
 	// Navigating through the buffer
 	for (unsigned int j=0; j<buffer_.Height(); j++)
 	{
-		for (unsigned int k=0; k<buffer_.Width(); k++)
+		for (unsigned int k=0; k< buffer_.Width(); k++)
 		{
 			double * kernelmask_ = new double[xsize*ysize];
+			for(int i = 0; i < xsize*ysize; ++i)
+				kernelmask_[i] = 0;
 			// For getting the central array
 			int count = 0;
 			for(int  y_off = -ysize/2 ; y_off < ysize; ++y_off)
@@ -295,7 +297,10 @@ void ImageSharpnessScorer::MedianFilter(int xsize, int ysize)
 				for(int  x_off = -xsize/2 ; x_off < xsize; ++x_off)
 				{
 					long lIndex = buffer_.Width()*(j + y_off) + (k + x_off);
-					if(lIndex >= 0 && lIndex < (long)(buffer_.Width()*buffer_.Height()))
+					if(lIndex >= 0 && 
+						lIndex < (long)(buffer_.Width()*buffer_.Height())&&
+						(j + y_off) >= 0 && (k + x_off) >= 0
+						)
 					{
 						kernelmask_[count] = buffer_.GetPixels()[lIndex];						
 					}
@@ -308,7 +313,7 @@ void ImageSharpnessScorer::MedianFilter(int xsize, int ysize)
 			double temp = kernelmask_[0];
 			for(int i = 0; i < (ysize * xsize) - 1; ++i)
 			{
-				for(int j = i; j < xsize*ysize ; ++j)
+				for(int j = i; j < xsize*ysize  ; ++j)
 				{
 					if(kernelmask_[j] < min)
 					{
@@ -330,6 +335,7 @@ void ImageSharpnessScorer::MedianFilter(int xsize, int ysize)
 				unsigned char medianvalue_ = (unsigned char)kernelmask_[index];
 				long setIndex = buffer_.Width()*j + k;
 				*(pBuf + setIndex) = medianvalue_;
+				delete [] kernelmask_; kernelmask_ = 0;
 
 			}
 			else
@@ -339,10 +345,11 @@ void ImageSharpnessScorer::MedianFilter(int xsize, int ysize)
 				unsigned char medianvalue_ = (unsigned char)((float)(kernelmask_[(int)(index - 0.5f)] + kernelmask_[(int)(index + 0.5f)])/2.0f);
 				long setIndex = buffer_.Width()*j + k;
 				*(pBuf + setIndex) = medianvalue_;
+				delete [] kernelmask_; kernelmask_ = 0;
 			}
 
 			// delete the buffer
-			delete [] kernelmask_; kernelmask_ = 0;
+			
 		}
 	}
 	buffer_ = filtimage_;	
