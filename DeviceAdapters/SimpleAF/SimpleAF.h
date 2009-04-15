@@ -44,6 +44,8 @@
 # include "DeviceBase.h"
 # include "ImgBuffer.h"
 # include <string>
+# include <ctime>
+#include "SimpleAFImageUtils.h"
 
 //////////////////////////////////////////////////////////////////////////////
 // Error codes
@@ -99,24 +101,42 @@ public:
    int OnChannelForAutofocus(MM::PropertyBase * pProp, MM::ActionType eAct);
    int OnSearchSpanCoarse(MM::PropertyBase * pProp, MM::ActionType eAct);
    int OnSearchSpanFine(MM::PropertyBase * pProp, MM::ActionType eAct);
-   int OnThresholdForSharpness(MM::PropertyBase * pProp, MM::ActionType eAct);
-   int OnMaxNumberofStepsCoarse(MM::PropertyBase * pProp, MM::ActionType eAct);
-   int OnMaxNumberofStepsFine(MM::PropertyBase * pProp, MM::ActionType eAct);
+   int OnThreshold(MM::PropertyBase * pProp, MM::ActionType eAct);
+  /* int OnMaxNumberofStepsCoarse(MM::PropertyBase * pProp, MM::ActionType eAct);
+   int OnMaxNumberofStepsFine(MM::PropertyBase * pProp, MM::ActionType eAct);*/
 
 
 
 private:
-   enum				FocusMode{FULLFOCUS, INCREMENTALFOCUS};
-   bool				busy_;
-   bool				initialized_;
-   double			param_stepsize_fine_;
-   double			param_stepsize_coarse_;
-   double			lastscore_;
-   double			lastbestscore_;
-   double			param_coarse_search_span_;
-   double			param_fne_search_span_;
+   enum					FocusMode{FULLFOCUS, INCREMENTALFOCUS};
+   bool					busy_;
+   bool					initialized_;
+   double				param_stepsize_fine_;
+   double				param_stepsize_coarse_;
+   double				score_;
+   double				bestscore_;
+   double				param_coarse_search_span_;
+   double				param_fine_search_span_;
+   double				param_afexposure_;
+   double				param_decision_threshold_;
+   std::string				param_channel_;
+   
+   double				activespan_;
+   double				activestep_;
+   std::clock_t     	start_;
+   std::clock_t     	stop_;
+   std::clock_t     	timestamp_;
+   bool             	timemeasurement_;
+   ExposureManager  	exposure_;
+   ShutterManager   	shutter_;
+   ImageSharpnessScorer scorer_;
+
    int				Focus(FocusMode);
-   double			activespan_;
-   double			activestep_;
+   void				StartClock();
+   long				GetElapsedTime();
+   int				InitScope();
+   int				RestoreScope();
+   int				GetImageForAnalysis(ImgBuffer & ,bool stretch = true);
+   double			GetScore(ImgBuffer & );
 
 };

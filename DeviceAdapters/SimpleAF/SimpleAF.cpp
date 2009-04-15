@@ -80,7 +80,7 @@ const char* g_AutoFocusDeviceName = "SimpleAF";
 
 MODULE_API void InitializeModuleData()
 {
-   AddAvailableDeviceName(g_AutoFocusDeviceName, "Exaustive search AF - 100XImaging Inc.");
+   AddAvailableDeviceName(g_AutoFocusDeviceName, "Exhaustive search AF - 100XImaging Inc.");
 }
 
 MODULE_API MM::Device* CreateDevice(const char* deviceName)
@@ -105,7 +105,8 @@ MODULE_API void DeleteDevice(MM::Device* pDevice)
 }
 
 SimpleAF::SimpleAF():
-   busy_(false),initialized_(false)
+		busy_(false),initialized_(false),timemeasurement_(false),
+		start_(0),stop_(0),timestamp_(0)
 {
 }
 
@@ -134,10 +135,31 @@ int SimpleAF::Initialize()
 
    // Set Exposure
    CPropertyAction *pAct = new CPropertyAction (this, &SimpleAF::OnExposure);
-   CreateProperty(MM::g_Keyword_Exposure, "10.0", MM::Float, false, pAct);
+   CreateProperty(MM::g_Keyword_Exposure, "10.0", MM::Float, false, pAct); 
 
-   
+   // Set the depth for coarse search
+   pAct = new CPropertyAction(this, &SimpleAF::OnSearchSpanCoarse);
+   CreateProperty("Full Search Span","300",MM::Float, false, pAct);
 
+   // Set the depth for fine search
+   pAct = new CPropertyAction(this, &SimpleAF::OnSearchSpanFine);
+   CreateProperty("Incremental Search Span","100",MM::Float, false, pAct);
+
+   // Set the span for coarse search
+   pAct = new CPropertyAction(this, &SimpleAF::OnStepsizeCoarse);
+   CreateProperty("Full Search Step","10",MM::Float, false, pAct);
+
+   // Set the span for fine search
+   pAct = new CPropertyAction(this, &SimpleAF::OnStepSizeFine);
+   CreateProperty("Incremental Search Step","3",MM::Float, false, pAct);
+
+   // Set the channel for autofocus
+   pAct = new CPropertyAction(this, &SimpleAF::OnChannelForAutofocus);
+   CreateProperty("Channel for autofocus","DAPI",MM::String, false, pAct);
+
+   // Set the threshold for decision making
+   pAct = new CPropertyAction(this, &SimpleAF::OnThreshold);
+   CreateProperty("Threshold for decision making","0.05",MM::Float, false, pAct);
 
   
    ret = UpdateStatus();
@@ -149,11 +171,13 @@ int SimpleAF::Initialize()
 
 int SimpleAF::FullFocus()
 {
+	Focus(FULLFOCUS);
 	return DEVICE_OK;
 }
 
 int SimpleAF::IncrementalFocus()
 {
+	Focus(INCREMENTALFOCUS);
 	return DEVICE_OK;	
 }
 
@@ -162,7 +186,7 @@ int SimpleAF::IncrementalFocus()
 
 int SimpleAF::GetLastFocusScore(double & score)
 {
-	score = lastscore_;
+	score = score_;
 	return DEVICE_OK;
 }
 
@@ -177,22 +201,6 @@ int SimpleAF::GetCurrentFocusScore(double &score)
 ///////////////////////////////////////////////////////////////////////////////
 // Properties
 ///////////////////////////////////////////////////////////////////////////////
-
-int SimpleAF::OnExposure(MM::PropertyBase* pProp, MM::ActionType eAct)
-{
-   if (eAct == MM::AfterSet)
-   {
-	   double dExposure;
-	   pProp->Get(dExposure);
-
-   }
-   else if (eAct == MM::BeforeGet)
-   {
-	   double dExposure;
-	   pProp->Get(dExposure);
-   }
-   return DEVICE_OK; 
-}
 
 int SimpleAF::OnStepsizeCoarse(MM::PropertyBase *pProp, MM::ActionType eAct)
 {
@@ -211,6 +219,26 @@ int SimpleAF::OnStepsizeCoarse(MM::PropertyBase *pProp, MM::ActionType eAct)
 	}
 	return DEVICE_OK;
 }
+
+int SimpleAF::OnChannelForAutofocus(MM::PropertyBase *pProp, MM::ActionType eAct)
+{
+	if(eAct == MM::AfterSet)
+	{
+		std::string Channel;
+		pProp->Get(Channel);
+		this->param_channel_ = Channel;
+
+	}
+	if(eAct == MM::AfterSet)
+	{
+		std::string Channel;
+		pProp->Get(Channel);
+		this->param_channel_ = Channel;
+
+	}
+	return DEVICE_OK;
+}
+
 
 int SimpleAF::OnStepSizeFine(MM::PropertyBase *pProp, MM::ActionType eAct)
 {
@@ -231,16 +259,273 @@ int SimpleAF::OnStepSizeFine(MM::PropertyBase *pProp, MM::ActionType eAct)
 	return DEVICE_OK;
 }
 
+int SimpleAF::OnThreshold(MM::PropertyBase *pProp, MM::ActionType eAct)
+{
+	if(eAct == MM::AfterSet)
+	{
+		double Threshold = 0.0f;
+		pProp->Get(Threshold);
+		this->param_decision_threshold_ = Threshold;
+	}
+	else if(eAct == MM::BeforeGet)
+	{
+		double Threshold = 0.0f;
+		pProp->Get(Threshold);
+		this->param_decision_threshold_ = Threshold;
+	}
+
+
+	return DEVICE_OK;
+}
+
+int SimpleAF::OnExposure(MM::PropertyBase *pProp, MM::ActionType eAct)
+{
+	if(eAct == MM::AfterSet)
+	{
+		double Exposure = 0.0f;
+		pProp->Get(Exposure);
+		this->param_afexposure_ = Exposure;
+	}
+	else if(eAct == MM::BeforeGet)
+	{
+		double Exposure = 0.0f;
+		pProp->Get(Exposure);
+		this->param_afexposure_ = Exposure;
+	}
+	return DEVICE_OK;
+}
+
+int SimpleAF::OnSearchSpanCoarse(MM::PropertyBase *pProp, MM::ActionType eAct)
+{
+	if(eAct == MM::AfterSet)
+	{
+		double CoarseSpan = 0.0f;
+		pProp->Get(CoarseSpan);
+		this->param_coarse_search_span_ = CoarseSpan;
+	}
+	else if(eAct == MM::BeforeGet)
+	{
+		double CoarseSpan = 0.0f;
+		pProp->Get(CoarseSpan);
+		this->param_coarse_search_span_ = CoarseSpan;
+	}
+	return DEVICE_OK;
+}
+
+int SimpleAF::OnSearchSpanFine(MM::PropertyBase *pProp, MM::ActionType eAct)
+{
+	if(eAct == MM::AfterSet)
+	{
+		double FineSpan = 0.0f;
+		pProp->Get(FineSpan);
+		this->param_coarse_search_span_ = FineSpan;
+	}
+	else if(eAct == MM::BeforeGet)
+	{
+		double FineSpan = 0.0f;
+		pProp->Get(FineSpan);
+		this->param_fine_search_span_ = FineSpan;
+	}
+	return DEVICE_OK;
+}
+// End of properties
+
 int SimpleAF::Focus(SimpleAF::FocusMode focusmode)
 {
-	// Do for full focus
+	// Set Channel to the required channel
+	int ret = GetCoreCallback()->SetConfig("Channel",param_channel_.c_str());
+	if(ret != DEVICE_OK)
+		return ret;
+	// Do full focus
 	if(focusmode == FULLFOCUS)
 	{
+		activespan_ = param_coarse_search_span_;
+		activestep_ = param_stepsize_coarse_;
 
 	}
-	// Do for incremental focus
+	// Do incremental focus
 	if(focusmode == INCREMENTALFOCUS)
 	{
+		activespan_ = param_fine_search_span_;
+		activestep_ = param_stepsize_fine_;
 	}
-	// Do for profiling objective
+
+	// Set scope to the way you need it to do AF
+	ret = InitScope();
+	if(ret != DEVICE_OK)
+		return ret;
+
+	// Start looking for object of interest
+
+	double dZHomePos = 0.0f, dzPos = 0.0f,dzTopPos = 0.0,dBestZPos = 0.0;
+	GetCoreCallback()->GetFocusPosition(dZHomePos);
+
+	// The old value is stored in dzHomePos -- To restore if focus fails
+	// dzPos is the variable that always stores the position that you want to go to
+
+	dzPos = dZHomePos - activespan_/2.0f;
+	dzTopPos = dZHomePos + activespan_/2.0f;
+
+	// Go to the lowest pos
+
+	ret = GetCoreCallback()->SetFocusPosition(dzPos);
+	if(ret != DEVICE_OK)
+		return ret;
+	bool proceed = true;
+
+	// Get the camera and image parameters
+	int width = 0, height = 0, depth = 0;
+	ret  = GetCoreCallback()->GetImageDimensions(width, height, depth);
+	if(ret != DEVICE_OK)
+		return ret;
+
+	while(proceed)
+	{
+		//1. Get an image
+		ImgBuffer image(width,height,depth);
+		GetImageForAnalysis(image);
+		//2. Get its sharness score
+		score_ = GetScore(image);
+		//3. Do the exit test
+		if(score_ > bestscore_)
+		{
+			bestscore_ = score_;
+			dBestZPos  = dzPos;
+		}
+		else if (bestscore_ - score_ > param_decision_threshold_*bestscore_ && dBestZPos < 5000) 
+		{
+			proceed = false;
+        }		
+		//4. Move the stage for the next run
+		dzPos += activestep_;
+		if(dzPos < dzTopPos)
+		{
+			ret = GetCoreCallback()->SetFocusPosition(dzPos);
+			if(ret != DEVICE_OK)
+				return ret;
+		}
+		else
+		{
+			proceed = false;
+		}
+	}
+
+	// Restore scope to the old settings
+	ret = RestoreScope();
+	if(ret != DEVICE_OK)
+		return ret;
+
+	return DEVICE_OK;
+
+}
+
+void SimpleAF::StartClock()
+{
+	timemeasurement_ = true;
+	this->timestamp_ = clock();
+}
+
+long SimpleAF::GetElapsedTime()
+{
+	if(timemeasurement_ == false)
+	{
+		return 0;
+	}
+	long elapsedtime = clock() - timestamp_;
+	timestamp_ = 0;
+	timemeasurement_ = false;
+	return elapsedtime;
+}
+
+int SimpleAF::InitScope()
+{
+	// Open the shutter
+	shutter_.SetCore(GetCoreCallback());
+	// Set the exposure
+	exposure_.SetCore(GetCoreCallback());
+	int ret = shutter_.OpenCoreShutter();
+	if(ret != DEVICE_OK)
+		return ret;
+	ret = exposure_.SetExposureToAF(param_afexposure_);
+	if(ret != DEVICE_OK)
+		return ret;
+	return DEVICE_OK;
+}
+
+int SimpleAF::RestoreScope()
+{
+	// Retore the core shutter
+	int ret  = shutter_.RestoreCoreShutter();
+	if(ret != DEVICE_OK)
+		return ret;
+	// Restore the core exposure
+	ret = exposure_.RestoreExposure();
+	if(ret != DEVICE_OK)
+		return ret;
+
+	return DEVICE_OK;
+}
+
+int SimpleAF::GetImageForAnalysis(ImgBuffer & buffer, bool stretch )
+{
+	// Do unsigned char related stuff
+	unsigned char * pBuf = const_cast<unsigned char *>(buffer.GetPixels());
+	if(buffer.Depth() == 1)
+	{
+		void * sourcepixel = malloc(buffer.Depth());
+		char * imageBuf = const_cast<char *>(GetCoreCallback()->GetImage());
+		for(unsigned long j = 0; j < buffer.Width()*buffer.Height() ; ++j )
+		{
+			if(memcpy(sourcepixel,(void *)(imageBuf + j),buffer.Depth()))
+			{
+				unsigned char val = *(static_cast<unsigned char *>(sourcepixel));
+				*(pBuf + j) = val;
+			}
+		}
+		free(sourcepixel); sourcepixel = 0;
+		return DEVICE_OK;
+	}
+	// Do unsigned short related stuff here
+	else
+	if(buffer.Depth() == 2)
+	{
+		// Getting a handle to the pixels
+		unsigned char * pBuf = const_cast<unsigned char *>(buffer.GetPixels());
+		// In the case of U-Short we are in slightly tricky territiry
+		// We need to create another array for stretching, that has to be stretched as unsigned short, before
+		// we can cast it as a char, otherwise the bit shift operation will ensure that the dynamic range is 
+		// pathetic. This also means that we need to clean up in this function itself
+
+		// 1. Create a ushort Array here
+		unsigned short * StretchedImage = new unsigned short [buffer.Width()*buffer.Height()];
+
+		// 2. Create a ushort pointer that points to the camera's image buffer
+
+		unsigned short * ImagePointer = static_cast<unsigned short *>(
+											static_cast<void *>(
+												const_cast<char*>(GetCoreCallback()->GetImage())));
+
+		// 4. Cast the stretched image back into u-char for processing	
+
+		for(unsigned long i = 0; i < buffer.Width()*buffer.Height(); ++i)
+		{
+			*(pBuf + i) = 
+				static_cast<unsigned char>(StretchedImage[i]>>((buffer.Depth() -sizeof(unsigned char))*8));
+		}
+	    
+		// Delete the ushort array that you declared. 
+		delete [] StretchedImage; StretchedImage = 0;
+		// Store a native copy in the image handle		
+		return DEVICE_OK;
+	}
+	else
+	{
+		return DEVICE_UNSUPPORTED_DATA_FORMAT;
+	}
+	return DEVICE_OK;
+}
+
+double SimpleAF::GetScore(ImgBuffer & buffer)
+{
+	return scorer_.GetScore(buffer);
 }

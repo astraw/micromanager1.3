@@ -79,18 +79,41 @@ template <class PixelType> class AFHistogramStretcher
 class ShutterManager
 {
 	public:
-		ShutterManager():initialized_(false){}
-		int OpenCoreShutter(MM::Core *);
-		int RestoreCoreShutter(MM::Core *);
+		ShutterManager():initialized_(false),core_(0){}
+		int OpenCoreShutter();
+		int RestoreCoreShutter();
+		void SetCore(MM::Core *);
 
 	private:
 		std::string shutterName_;
 		std::string autoShutterState_;
 		std::string shutterState_;
 		bool initialized_;
+		MM::Core * core_;
 };
 
+//////////////////////////////////////////////////////////
+// Exposure Manager:
+// -----------------
+// Manages the exposure for autofocus
+///////////////////////////////////////////////////////////
 
+class ExposureManager
+{
+	public:
+		ExposureManager():core_(0),working_(false){}
+		void SetCore(MM::Core * );
+		int SetExposureToAF(double afExp);
+		int RestoreExposure();
+		bool IsExposureManagerManagingExposure();
+
+	private:
+		double systemExposure_;
+		double autofocusExposure_;	
+		MM::Core * core_;
+		bool working_;
+
+};
 ///////////////////////////////////////////////////////////
 // Image Sharpness computations
 //
@@ -138,10 +161,11 @@ class ImageSharpnessScorer
 public:
 	ImageSharpnessScorer();
 	~ImageSharpnessScorer();
-	void SetImage(ImgBuffer);
+	void SetImage(ImgBuffer &);
 	void MedianFilter(int xsize, int ysize);
 	void LaplacianFilter();
 	double GetScore();
+	double GetScore(ImgBuffer & );
 	void SetCore(MM::Core * );
 	void SetImage(unsigned char * buffer, int width, int height, int depth);
 

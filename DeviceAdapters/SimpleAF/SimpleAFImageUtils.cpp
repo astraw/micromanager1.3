@@ -176,23 +176,30 @@ Stretch(PixelDataType *src, int nWidth, int nHeight, PixelDataType *returnimage 
 // call it
 /////////////////////////////////////////////////////////////////
 
-int ShutterManager::OpenCoreShutter(MM::Core * core)
+void ShutterManager::SetCore(MM::Core * core)
 {
+	core_ = core;
+}
+
+int ShutterManager::OpenCoreShutter()
+{
+	if(core_ == 0)
+		return DEVICE_ERR;
 
    // first get the current state of the auto-shutter and shutter
    char * value = new char[MM::MaxStrLength];
-   core->GetDeviceProperty(MM::g_Keyword_CoreDevice, MM::g_Keyword_CoreAutoShutter, value);
+   core_->GetDeviceProperty(MM::g_Keyword_CoreDevice, MM::g_Keyword_CoreAutoShutter, value);
    autoShutterState_ = value;;
 
    // then get the current state of the shutter
-   core->GetDeviceProperty(MM::g_Keyword_CoreDevice, MM::g_Keyword_CoreShutter, value);
+   core_->GetDeviceProperty(MM::g_Keyword_CoreDevice, MM::g_Keyword_CoreShutter, value);
    shutterName_ = value;;
-   core->GetDeviceProperty(shutterName_.c_str(), MM::g_Keyword_State, value);
+   core_->GetDeviceProperty(shutterName_.c_str(), MM::g_Keyword_State, value);
    shutterState_ = value;;
 
    // now we can open the shutter
-   core->SetDeviceProperty(MM::g_Keyword_CoreDevice, MM::g_Keyword_CoreAutoShutter, "0"); // disable auto-shutter
-   core->SetDeviceProperty(shutterName_.c_str(), MM::g_Keyword_State, "1"); // open shutter
+   core_->SetDeviceProperty(MM::g_Keyword_CoreDevice, MM::g_Keyword_CoreAutoShutter, "0"); // disable auto-shutter
+   core_->SetDeviceProperty(shutterName_.c_str(), MM::g_Keyword_State, "1"); // open shutter
 
    initialized_ = true;
 
@@ -206,17 +213,20 @@ int ShutterManager::OpenCoreShutter(MM::Core * core)
 //
 //////////////////////////////////////////////////////////////////////////
 
-int ShutterManager::RestoreCoreShutter(MM::Core * core)
+int ShutterManager::RestoreCoreShutter()
 {
-	if(!initialized_)
+	if(!initialized_ || core_ == 0)
 		return DEVICE_ERR;
 	// restore shutter and auto-shutter settings
 	// TODO: make sure to restore this in case there is an error and the flow never reaches this point
-	core->SetDeviceProperty(MM::g_Keyword_CoreDevice, MM::g_Keyword_CoreAutoShutter, autoShutterState_.c_str());
-	core->SetDeviceProperty(shutterName_.c_str(), MM::g_Keyword_State, shutterState_.c_str()); // open/close shutter
+	core_->SetDeviceProperty(MM::g_Keyword_CoreDevice, MM::g_Keyword_CoreAutoShutter, autoShutterState_.c_str());
+	core_->SetDeviceProperty(shutterName_.c_str(), MM::g_Keyword_State, shutterState_.c_str()); // open/close shutter
 
 	// Now state is not remembered, so set it back
 	initialized_ = false;
+	shutterName_ = "";
+	autoShutterState_ = "";
+	shutterState_ = "";
 
 	return DEVICE_OK;
 }
@@ -391,9 +401,16 @@ double ImageSharpnessScorer::GetScore()
 	return score;
 }
 
-void ImageSharpnessScorer::SetImage(ImgBuffer inputbuffer)
+double ImageSharpnessScorer::GetScore(ImgBuffer & buffer)
 {
-	buffer_ = inputbuffer;
+	buffer_.Copy(buffer);
+	return GetScore();
+
+}
+
+void ImageSharpnessScorer::SetImage(ImgBuffer & inputbuffer)
+{
+	buffer_.Copy(inputbuffer);
 }
 
 void ImageSharpnessScorer::SetImage(unsigned char * buffer, int width, int height, int depth)
@@ -401,4 +418,50 @@ void ImageSharpnessScorer::SetImage(unsigned char * buffer, int width, int heigh
 	ImgBuffer newbuffer(width,height,depth);
 	newbuffer.SetPixels(buffer);
 	buffer_ = newbuffer;
+}
+
+
+////////////////////////////////////////////////////////////
+// Exposure Manager
+//
+
+
+void ExposureManager::SetCore(MM::Core * core)
+{
+	core_ = core;	
+}
+
+bool ExposureManager::IsExposureManagerManagingExposure()
+{
+	return working_;
+}
+
+int ExposureManager::SetExposureToAF(double afExp)
+{
+	if(afExp <= 0.0f || core_ == 0)
+		return DEVICE_ERR;
+	autofocusExposure_ = afExp;
+	// 1. Get the current exposure and persist it
+	
+	int ret = core_->GetExposure(systemExposure_);
+	if(ret != DEVICE_OK)
+		return ret;
+	// 2. Set the expsoure to the requested AF exposure
+	ret = core_->SetExposure(autofocusExposure_);
+	if (ret != DEVICE_OK)		 
+		return ret;
+	// 3. Set the state flag to true
+	working_ = true;
+
+	return DEVICE_OK;
+}
+
+int ExposureManager::RestoreExposure()
+{
+	int ret = core_->SetExposure(systemExposure_);
+	if(ret != DEVICE_OK)
+		return ret;
+	working_ = false;
+
+	return DEVICE_OK;
 }
