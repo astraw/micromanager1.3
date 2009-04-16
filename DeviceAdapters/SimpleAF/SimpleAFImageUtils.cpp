@@ -268,6 +268,8 @@ double ImageSharpnessScorer::GetScore()
 		}
 	}
 
+	score/= (buffer_.Width() * buffer_.Height());
+
 	return score;
 }
 

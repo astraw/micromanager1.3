@@ -46,7 +46,7 @@
 
 #include "SimpleAF.h"
 #include <string>
-#include <math.h>
+#include <cmath>
 #include "../../MMDevice/ModuleInterface.h"
 #include <sstream>
 #include <ctime>
@@ -194,7 +194,23 @@ int SimpleAF::GetLastFocusScore(double & score)
 // Calculate the focus score at a given point
 int SimpleAF::GetCurrentFocusScore(double &score)
 {
+	GetCoreCallback()->LogMessage(this, "Acquiring image for profiling",false);
+	int width = 0, height = 0, depth = 0;
+	int ret  = GetCoreCallback()->GetImageDimensions(width, height, depth);
+	if(ret != DEVICE_OK)
+		return ret;
    score = 0.0;
+   // Get the image for analysis
+	ImgBuffer image(width,height,depth);
+	GetImageForAnalysis(image);
+   // score it
+	score = GetScore(image);
+	std::stringstream mesg;
+	mesg<<"Score is "<<score;
+	GetCoreCallback()->LogMessage(this,mesg.str().c_str() ,false);
+	mesg.str("");
+	
+   // report
    return DEVICE_OK;
 }
 
