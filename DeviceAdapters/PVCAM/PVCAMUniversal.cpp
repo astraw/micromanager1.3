@@ -1881,12 +1881,13 @@ int Universal::StartSequenceAcquisition(long numImages, double interval_ms, bool
       ResizeImageBufferSingle();
       return DEVICE_ERR;
    }
+   startTime_ = GetCurrentMMTime();
+   imageCounter_ = 0;
+
    MM::MMTime end = GetCurrentMMTime();
    LogTimeDiff(start, end, true);
 
    thd_->Start(numImages, interval_ms);
-   startTime_ = GetCurrentMMTime();
-   imageCounter_ = 0;
 
    // set actual interval the same as exposure
    // with PVCAM there is no straightforward way to get actual interval
