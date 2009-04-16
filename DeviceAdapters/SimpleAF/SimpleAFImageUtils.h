@@ -66,8 +66,7 @@ template <typename PixelDataType> class AFHistogramStretcher
 		StretchType stretchingmodel_;
 		OperationType operationmodel_;
 
-	public:
-		
+	public:		
 		int Stretch(PixelDataType * src, int nWidth, int nHeight, PixelDataType * returnimage = 0);
 		
 };

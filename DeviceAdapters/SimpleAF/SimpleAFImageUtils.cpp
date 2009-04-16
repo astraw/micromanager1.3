@@ -58,13 +58,16 @@ template <typename PixelDataType>
 int AFHistogramStretcher<PixelDataType>::
 Stretch(PixelDataType *src, int nWidth, int nHeight, PixelDataType *returnimage = 0)
 {
-	double * histogram = new double[std::numeric_limits<PixelDataType>::max()+1];
+	double * histogram = new double[std::numeric_limits<PixelDataType>::max() + 1];
 	// Get the max and the minimum
 
 	PixelType val_max = std::numeric_limits<PixelType>::min(), 
 			      val_min = std::numeric_limits<PixelType>::max(),
 				  typemax = val_min,
 				  typemin = val_max;
+	
+	
+
 	// Getting min and max in one pass
 	for(long i = 0; i < nWidth * nHeight; ++i)
 	{
@@ -76,7 +79,17 @@ Stretch(PixelDataType *src, int nWidth, int nHeight, PixelDataType *returnimage 
 
 	}
 
-
+	// Go once through the histogram and get the x% content threshold
+	double Observed = 0.0f;
+	double Increment = 1.0/((double)(nWidth * nHeight)) ;
+	for(int i = std::numeric_limits<PixelDataType>::max() + 1; i >= 0 ; --i)
+	{
+		Observed += histogram[i]*Increment;
+		if(Observed >= (1.0 - fStretchPercent))
+		{
+			val_max = i;
+		}
+	}
 
 	// If the image has very low dynamic range.. do nothing, 
 	// you might just be amplifying the noise

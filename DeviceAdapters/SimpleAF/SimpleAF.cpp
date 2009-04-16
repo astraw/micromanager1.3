@@ -516,6 +516,13 @@ int SimpleAF::GetImageForAnalysis(ImgBuffer & buffer, bool stretch )
 				*(pBuf + j) = val;
 			}
 		}
+		// Stretch the image			
+		AFHistogramStretcher<unsigned char> stretcher;
+		stretcher.fStretchPercent = 0.95f;		// Reject top 5% of pixels that is mostly shot noise
+		stretcher.fContentThreshold = 0.05f;		// If dynamic range < 5% reject that image
+		stretcher.operationmodel_ = AFHistogramStretcher<unsigned char>::INPLACE;
+		stretcher.stretchingmodel_ = AFHistogramStretcher<unsigned char>::HISTOGRAMSTETCH;
+		stretcher.Stretch(pBuf,buffer.Width(),buffer.Height());
 		free(sourcepixel); sourcepixel = 0;
 		return DEVICE_OK;
 	}
@@ -538,6 +545,14 @@ int SimpleAF::GetImageForAnalysis(ImgBuffer & buffer, bool stretch )
 		unsigned short * ImagePointer = static_cast<unsigned short *>(
 											static_cast<void *>(
 												const_cast<char*>(GetCoreCallback()->GetImage())));
+		// 3. Stretch the image
+
+		AFHistogramStretcher<unsigned short> stretcher;
+		stretcher.fStretchPercent = 0.95f;		// Reject top 5% of pixels that is mostly shot noise
+		stretcher.fContentThreshold = 0.05f;		// If dynamic range < 5% reject that image
+		stretcher.operationmodel_ = AFHistogramStretcher<unsigned short>::OUTOFPLACE;
+		stretcher.stretchingmodel_ = AFHistogramStretcher<unsigned short>::HISTOGRAMSTETCH;
+		stretcher.Stretch(ImagePointer,buffer.Width(),buffer.Height(),StretchedImage);
 
 		// 4. Cast the stretched image back into u-char for processing	
 
