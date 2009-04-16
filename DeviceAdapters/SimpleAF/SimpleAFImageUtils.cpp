@@ -43,6 +43,7 @@
 // For numeric limits, to work with the different pixel types
 # include <limits>
 # include <vector>
+# include <math.h>
 
 
 
