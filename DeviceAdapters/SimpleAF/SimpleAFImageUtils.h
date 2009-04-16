@@ -87,7 +87,7 @@ template <typename PixelDataType> class AFHistogramStretcher
 		int Stretch(PixelDataType * src, int nWidth, int nHeight, PixelDataType * returnimage = 0)
 		{
 			double * histogram = new double[std::numeric_limits<PixelDataType>::max() + 1];
-			for(int i = 0; i < std::numeric_limits<PixelDataType>::max(); ++i)
+			for(int i = 0; i <= std::numeric_limits<PixelDataType>::max(); ++i)
 			{
 				*(histogram + i) = 0.0f;
 			}
@@ -113,13 +113,13 @@ template <typename PixelDataType> class AFHistogramStretcher
 
 			// Go once through the histogram and get the x% content threshold
 			double Observed = 0.0f;
-			double Increment = 1.0f/((double)(nWidth * nHeight)) ;
-			for(int i = std::numeric_limits<PixelDataType>::max(); i >= 0 ; --i)
+			for(int i = std::numeric_limits<PixelDataType>::max(); i > 0 ; --i)
 			{
-				Observed+= histogram[i]*Increment;
-				if(Observed >= (1.0 - fStretchPercent))
+				Observed+= histogram[i];
+				if(Observed >= (1.0f - fStretchPercent)*(nWidth*nHeight))
 				{
 					val_max = i;
+					break;
 				}
 			}
 
