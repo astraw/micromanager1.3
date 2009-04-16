@@ -1348,10 +1348,17 @@ int CHamamatsu::SnapImage()
       dcam_getlasterror(m_hDCAM, NULL, 0);
 
    // start capture
-   // TODO: figure out what to do with Internal triggers
-   if (triggerMode_.compare(g_TrigMode_Software) == 0)
+   if (triggerMode_.compare(g_TrigMode_Software) == 0) {
       if (!dcam_firetrigger(m_hDCAM))
          return dcam_getlasterror(m_hDCAM, NULL, 0);
+   } else if (triggerMode_.compare(g_TrigMode_Internal) == 0) {
+      // With internal triggers, wait until a new frame starts
+      // I do not understand how this works, but it seems to synchronize shutter and exposure down to about 50 msec.  
+      CDeviceUtils::SleepMs((long) (dExp*1000.0));
+      DWORD dwEvent = DCAM_EVENT_FRAMEEND; 
+      if (!dcam_wait(m_hDCAM, &dwEvent, dExp + 5, NULL))
+         return dcam_getlasterror(m_hDCAM, NULL, 0);
+   }
 
    snapInProgress_ = true;
 
@@ -1384,12 +1391,6 @@ const unsigned char* CHamamatsu::GetImageBuffer()
    char rT[MM::MaxStrLength];
    GetProperty(MM::g_Keyword_ReadoutTime, rT);
    dReadoutTime = atof(rT);
-   
-   /*
-   if (!dcam_getexposuretime(m_hDCAM, &dExp))
-      return 0;
-      // return dcam_getlasterror(m_hDCAM, NULL, 0);
-   */
    
    long lnTimeOut = (long) ((dReadoutTime + 20.0) * 1000.0);
    
@@ -1614,15 +1615,23 @@ int CHamamatsu::ResizeImageBuffer(long frameBufSize)
    if (!dcam_freeframe(m_hDCAM))
       return ReportError("Error in dcam_freeframe: ");
 
-   if (!dcam_allocframe(m_hDCAM, frameBufSize))
-      return ReportError("Error in dcam_allocframe: ");
-
    long numFrames;
-   if (!dcam_getframecount(m_hDCAM, &numFrames))
-      return ReportError("Error in dcam_getframecount: ");
+   if (!dcam_allocframe(m_hDCAM, frameBufSize)) {
+      // If we did not get what we asked for, ask for the optimum
+      if (!dcam_allocframe(m_hDCAM, 0)) {
+         return ReportError("Error in dcam_allocframe: ");
+      }
+      if (!dcam_getframecount(m_hDCAM, &numFrames))
+         return ReportError("Error in dcam_getframecount: ");
+      // make sure that we remember how many frames we have in the buffer (needed in PushImage)
+      frameBufSize_ = numFrames;
+   } else {
+      if (!dcam_getframecount(m_hDCAM, &numFrames))
+         return ReportError("Error in dcam_getframecount: ");
 
-   if (numFrames != frameBufSize)
-      return ERR_BUFFER_ALLOCATION_FAILED;
+      if (numFrames != frameBufSize)
+         return ERR_BUFFER_ALLOCATION_FAILED;
+   }
 
    DWORD dwDataBufferSize;
    if (!dcam_getdataframebytes(m_hDCAM, &dwDataBufferSize))
@@ -1748,7 +1757,6 @@ void CHamamatsu::SetTextInfo()
  */
 int CHamamatsu::AddExtendedProperty(std::string propName, long propertyId)
 {
-   printf("%lx\n", propertyId);
    DCAM_PROPERTYATTR propAttr;
    if (IsPropertySupported(propAttr, propertyId))
    {
@@ -1937,7 +1945,6 @@ int AcqSequenceThread::svc(void)
 	       ostringstream os;
           os << "PushImage() failed with errorcode: " << ret;
           camera_->LogMessage(os.str().c_str());
-          // camera_->StopSequenceAcquisition();
           Stop();
           return 2;
       }
