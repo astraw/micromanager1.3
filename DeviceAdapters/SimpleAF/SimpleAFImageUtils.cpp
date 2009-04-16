@@ -41,7 +41,7 @@
 
 # include "SimpleAFImageUtils.h"
 // For numeric limits, to work with the different pixel types
-# include <limits>
+
 # include <vector>
 # include <cmath>
 
@@ -54,133 +54,10 @@
 # undef min
 # endif
 
-template <typename PixelDataType>
-int AFHistogramStretcher<PixelDataType>::
-Stretch(PixelDataType *src, int nWidth, int nHeight, PixelDataType *returnimage = 0)
-{
-	double * histogram = new double[std::numeric_limits<PixelDataType>::max() + 1];
-	// Get the max and the minimum
-
-	PixelType val_max = std::numeric_limits<PixelType>::min(), 
-			      val_min = std::numeric_limits<PixelType>::max(),
-				  typemax = val_min,
-				  typemin = val_max;
-	
-	
-
-	// Getting min and max in one pass
-	for(long i = 0; i < nWidth * nHeight; ++i)
-	{
-		if(src[i] > val_max)
-			val_max = src[i];
-		if(src[i] < val_min)
-			val_min = src[i]; 
-		++histogram[src[i]];
-
-	}
-
-	// Go once through the histogram and get the x% content threshold
-	double Observed = 0.0f;
-	double Increment = 1.0/((double)(nWidth * nHeight)) ;
-	for(int i = std::numeric_limits<PixelDataType>::max() + 1; i >= 0 ; --i)
-	{
-		Observed += histogram[i]*Increment;
-		if(Observed >= (1.0 - fStretchPercent))
-		{
-			val_max = i;
-		}
-	}
-
-	// If the image has very low dynamic range.. do nothing, 
-	// you might just be amplifying the noise
-
-	if(((float)abs(val_min - val_max)/(float)typemax) < fContentThreshold)
-	{
-		if(operationmodel_ == OUTOFPLACE)
-		{
-			memcpy(returnimage,src,nWidth*nHeight*sizeof(PixelType));	
-			delete [] histogram;
-			histogram = 0;
-		}
-		return 0;
-	}
-
-
-	if(stretchingmodel_ == HISTOGRAMSTETCH)
-	{
-
-		if(operationmodel_ == INPLACE)
-		{
-			float fFactor = ((float)typemax)/((float)(val_max-val_min));
-			// Setting the scaling again
-			for(long i = 0; i < nWidth * nHeight; ++i)
-			{					
-				src[i] = static_cast<PixelType>((fFactor)*(src[i] - val_min));
-			}
-		}
-		else if(operationmodel_ == OUTOFPLACE)
-		{
-			float fFactor = ((float)typemax)/((float)(val_max-val_min));
-			// Setting the scaling again
-			for(long i = 0; i < nWidth * nHeight; ++i)
-			{					
-				returnimage[i] = static_cast<PixelType>((fFactor)*(src[i] - val_min));
-			}
-		}
-		return 1;
-	}
-	else
-	if(stretchingmodel_ == HISTOGRAMEQUALIZATION)
-	{
-		// Come in from the end and identify the cutoff point of the 
-		// histogram, which ensures that all hot pixels have been chucked out
-		// Also the cdf (cumulative distribution function) is generated in the same pass
-
-
-		long incidence  = 0;
-		long thresh = (long)((float)nWidth*(float)nHeight*(fStretchPercent));
-		long uppercutoff = 0;
-
-		double * cdf = new double [std::numeric_limits<PixelType>::max()];
-
-		for(long i = 0; i < std::numeric_limits<PixelType>::max(); ++i)
-		{
-			incidence += (long)histogram[i];
-			if(incidence > thresh && uppercutoff == 0)
-			{
-				uppercutoff = i;						
-			}
-			// CDF is generated here
-			if(i > 0)
-				cdf[i] = histogram[i] + cdf[i-1];         // For the later indices
-			else
-				cdf[i] = histogram[i];			          // For the first index
-		}
-		for(long i = 0; i < nWidth * nHeight; ++i)
-		{
-			if(operationmodel_ == INPLACE)
-			{
-				src[i] = static_cast<PixelType>(cdf[src[i]]);
-			}
-			else if(operationmodel_ == OUTOFPLACE)
-			{
-				returnimage[i] = static_cast<PixelType>(cdf[src[i]]);
-				
-			}
-		}
-		delete[] cdf;
-		cdf = 0;
-		if(histogram != 0)
-		{
-			delete[] histogram; 
-			histogram = 0;
-		}
-
-					
-		return 1;
-	}
-	return 1;
-}
+//template <typename PixelDataType>
+//int AFHistogramStretcher<PixelDataType>::
+//Stretch(PixelDataType *src, int nWidth, int nHeight, PixelDataType *returnimage = 0)
+// NOTE: Implemented in the .h see the note there
 
 ////////////////////////////////////////////////////////////////
 // Shutter Manager class:
