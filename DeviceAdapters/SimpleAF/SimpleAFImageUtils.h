@@ -83,6 +83,7 @@ template <typename PixelDataType> class AFHistogramStretcher
 		//		  file by some other name, and explicitly including it at the end of the header
 		//		  file eg. At the end of this file we write # include "SimpleAFImageUtils.txx"
 		//		  but it is not practiced in the MM codebase, so defining inline
+
 		int Stretch(PixelDataType * src, int nWidth, int nHeight, PixelDataType * returnimage = 0)
 		{
 			double * histogram = new double[std::numeric_limits<PixelDataType>::max() + 1];
