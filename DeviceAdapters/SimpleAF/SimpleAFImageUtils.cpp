@@ -354,6 +354,9 @@ int ReportingManager::InitializeDebugStack(MM::Device * callee)
 		return DEVICE_ERR;
 	}
 
+	if(bufferinitialized_)
+		return DEVICE_OK;
+
 	
 	int ret = core_->GetImageDimensions(width_,height_,depth_);
 

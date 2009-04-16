@@ -308,7 +308,7 @@ private:
 	bool bufferinitialized_;
 	int width_;
 	int height_;
-	int depth_;
+	int depth_;	
 };
 
 

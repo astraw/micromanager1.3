@@ -422,7 +422,7 @@ int SimpleAF::Focus(SimpleAF::FocusMode focusmode)
 		IMd.SetTag(stgScore);
 		
 		reporter_.InsertCurrentImageInDebugStack(IMd);
-		if(score_ > bestscore_)
+		if(score_ >= bestscore_)
 		{
 			bestscore_ = score_;
 			dBestZPos  = dzPos;
@@ -455,6 +455,9 @@ int SimpleAF::Focus(SimpleAF::FocusMode focusmode)
 		GetCoreCallback()->LogMessage(this, mesg.str().c_str(),false);
 		mesg.str("");
 		mesg<<"Current z-pos is :"<<dzPos<<", The span is : "<<activespan_<<", The step is :"<<activestep_;
+		GetCoreCallback()->LogMessage(this, mesg.str().c_str(),false);
+		mesg.str("");
+		mesg<<"Current score is :"<<score_;
 		GetCoreCallback()->LogMessage(this, mesg.str().c_str(),false);
 		mesg.str("");
 		mesg<<"The top point for the search is "<<dzTopPos;
