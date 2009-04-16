@@ -389,10 +389,23 @@ int SimpleAF::Focus(SimpleAF::FocusMode focusmode)
 		ImgBuffer image(width,height,depth);
 		GetImageForAnalysis(image);
 		Metadata IMd;
-		reporter_.InsertCurrentImageInDebugStack(IMd);
+		MetadataSingleTag stgExp(MM::g_Keyword_Exposure, g_AutoFocusDeviceName, true);
+		stgExp.SetValue(CDeviceUtils::ConvertToString(param_afexposure_));
+		IMd.SetTag(stgExp);
+
+		MetadataSingleTag stgZ(MM::g_Keyword_Metadata_Z, g_AutoFocusDeviceName, true);
+		stgZ.SetValue(CDeviceUtils::ConvertToString(dzPos));
+		IMd.SetTag(stgZ);
+		
 		//2. Get its sharness score
 		score_ = GetScore(image);
+
 		//3. Do the exit test
+		MetadataSingleTag stgScore(MM::g_Keyword_Metadata_Score, g_AutoFocusDeviceName, true);
+		stgScore.SetValue(CDeviceUtils::ConvertToString(score_));
+		IMd.SetTag(stgScore);
+		
+		reporter_.InsertCurrentImageInDebugStack(IMd);
 		if(score_ > bestscore_)
 		{
 			bestscore_ = score_;

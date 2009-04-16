@@ -119,7 +119,7 @@ private:
    double				param_fine_search_span_;
    double				param_afexposure_;
    double				param_decision_threshold_;
-   std::string				param_channel_;
+   std::string			param_channel_;
    
    double				activespan_;
    double				activestep_;
