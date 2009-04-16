@@ -154,14 +154,14 @@ public:
    int OnUniversalProperty(MM::PropertyBase* pProp, MM::ActionType eAct, long index);
 
    // Thread-safe param access:
-   rs_bool pl_set_param_safe(int16 hcam, uns32 param_id, void_ptr param_value);
-   rs_bool pl_get_param_safe(int16 hcam, uns32 param_id, int16 param_attribute, void_ptr param_value);
+   rs_bool PlSetParamSafe(int16 hcam, uns32 param_id, void_ptr param_value);
+   rs_bool PlGetParamSafe(int16 hcam, uns32 param_id, int16 param_attribute, void_ptr param_value);
    bool GetLongParam_PvCam_safe(int16 handle, uns32 pvcam_cmd, long *value);
    bool SetLongParam_PvCam_safe(int16 handle, uns32 pvcam_cmd, long value);
-   rs_bool pl_get_enum_param_safe(int16 hcam, uns32 param_id, uns32 index,
+   rs_bool PlGetEnumParamSafe(int16 hcam, uns32 param_id, uns32 index,
                                      int32_ptr value, char_ptr desc,
                                      uns32 length);
-   rs_bool pl_enum_str_length_safe(int16 hcam, uns32 param_id, uns32 index,
+   rs_bool PlEnumStrLengthSafe(int16 hcam, uns32 param_id, uns32 index,
                                       uns32_ptr length);
 
 protected:
@@ -188,24 +188,19 @@ private:
    int SetAllowedPixelTypes();
    int SetUniversalAllowedValues(int i, uns16 datatype);
    int SetGainLimits();
-   void Universal::suspend();
-   int Universal::resume();
+   void SuspendSequence();
+   int ResumeSequence();
    bool WaitForExposureDone()throw();
    int LaunchSequenceAcquisition(long numImages, double interval_ms, bool stopOnOverflow);
 
-
-   //helpers
+   // Utility logging functions
    void LogCamError(
                      std::string strMessage, 
                      std::string strLocation, 
                      bool bDebugonly=false
                    ) const throw();
-   void LogMMError(
-                     int nErrCode, 
-                     std::string strMessage, 
-                     std::string strLocation, 
-                     bool bDebugonly=false
-                  )const throw();
+   void LogMMError(int errCode, int lineNr, std::string message="", bool debug=false) const throw();
+   void LogMMMessage(int lineNr, std::string message="", bool debug=true) const throw();
 
    bool restart_;
    int16 bitDepth_;

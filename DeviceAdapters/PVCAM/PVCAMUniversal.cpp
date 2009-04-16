@@ -105,22 +105,11 @@ std::string IntToString(int i)throw()
    return s;
 };
 
-std::string DoubleToString(double d)throw()
-{
-   std::string s;
-   try{ ostringstream os; os<<d; s=os.str();}catch(...){};
-   return s;
-};
-
 #define LOG_MESSAGE(strMsg) \
 {\
    strMsg += std::string(__FILE__) + std::string(" Line ") + IntToString(__LINE__);\
    LogMessage(strMsg);\
 }
-
-#define LOCATION \
-   std::string(gErrorMsg) + std::string(__FILE__)\
-   +std::string(" Line ") + IntToString(__LINE__)
 
 #define LOG_CAM_ERROR \
 {\
@@ -157,8 +146,7 @@ std::string DoubleToString(double d)throw()
 #define LOG_MM_ERROR(nRet)\
 { \
    std::string strMsg("");\
-   strMsg += std::string(__FILE__) + std::string(" Line ") + IntToString(__LINE__);\
-   LogMMError(nRet, " ", strMsg);\
+   LogMMError(nRet, __LINE__);\
 } 
 #define LOG_IF_MM_ERROR(nRet)\
    if(DEVICE_OK != nRet){LOG_MM_ERROR(nRet)}
@@ -234,21 +222,21 @@ int Universal::OnBinning(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
    if (eAct == MM::AfterSet)
    {
-      suspend();
+      SuspendSequence();
       long bin;
       long oldBinSize = binSize_;
       pProp->Get(bin);
       binSize_ = bin;
       ClearROI(); // reset region of interest
-      resume(); 
+      ResumeSequence(); 
 
-      /*
       if (!IsCapturing() && (oldBinSize != binSize_)) {
+         LOG_IF_CAM_ERROR(pl_exp_stop_cont(hPVCAM_, CCS_HALT));
+         LOG_IF_CAM_ERROR(pl_exp_finish_seq(hPVCAM_, circBuffer_, 0));
          int nRet = ResizeImageBufferSingle();
          if (nRet != DEVICE_OK)
             return nRet;
       }
-      */
    }
    else if (eAct == MM::BeforeGet)
    {
@@ -265,7 +253,7 @@ int Universal::OnChipName(MM::PropertyBase* pProp, MM::ActionType eAct)
    if (eAct == MM::BeforeGet)
    {
       char chipName[CCD_NAME_LEN];
-      RETURN_DEVICE_ERR_IF_CAM_ERROR(pl_get_param_safe(hPVCAM_, PARAM_CHIP_NAME, ATTR_CURRENT, chipName));
+      RETURN_DEVICE_ERR_IF_CAM_ERROR(PlGetParamSafe(hPVCAM_, PARAM_CHIP_NAME, ATTR_CURRENT, chipName));
 
       pProp->Set(chipName);
       chipName_  = chipName;
@@ -286,12 +274,12 @@ int Universal::OnExposure(MM::PropertyBase* pProp, MM::ActionType eAct)
    }
    else if (eAct == MM::AfterSet)
    {
-      suspend();
+      SuspendSequence();
       double exp, oldExposure;
       oldExposure = exposure_;
       pProp->Get(exp);
       exposure_ = exp;
-      resume();
+      ResumeSequence();
 
       if (!IsCapturing() && (exposure_ != oldExposure)) {
          int nRet = ResizeImageBufferSingle();
@@ -308,7 +296,7 @@ int Universal::OnPixelType(MM::PropertyBase* pProp, MM::ActionType /*eAct*/)
 
    int16 bitDepth;
    RETURN_DEVICE_ERR_IF_CAM_ERROR(
-      pl_get_param_safe( hPVCAM_, PARAM_BIT_DEPTH, ATTR_CURRENT, &bitDepth)
+      PlGetParamSafe( hPVCAM_, PARAM_BIT_DEPTH, ATTR_CURRENT, &bitDepth)
       );
    switch (bitDepth) {
       case (8) : pProp->Set(g_PixelType_8bit); return DEVICE_OK;
@@ -461,7 +449,7 @@ int Universal::OnGain(MM::PropertyBase* pProp, MM::ActionType eAct)
 }
 
 
-void Universal::suspend()
+void Universal::SuspendSequence()
 {
    if(IsCapturing())
    {
@@ -473,7 +461,7 @@ void Universal::suspend()
    } 
 }
 
-int Universal::resume()
+int Universal::ResumeSequence()
 {
    //CaptureRestartHelper cameraAlreadyRunning(this);
    if(restart_) 
@@ -590,7 +578,7 @@ int Universal::OnUniversalProperty(MM::PropertyBase* pProp, MM::ActionType eAct,
    {
       singleFrameModeReady_=false;
       uns16 dataType;
-      if (!pl_get_param_safe(hPVCAM_, param_set[index].id, ATTR_TYPE, &dataType) || (dataType != TYPE_ENUM)) 
+      if (!PlGetParamSafe(hPVCAM_, param_set[index].id, ATTR_TYPE, &dataType) || (dataType != TYPE_ENUM)) 
       {
          long ldata;
          pProp->Get(ldata);
@@ -615,19 +603,19 @@ int Universal::OnUniversalProperty(MM::PropertyBase* pProp, MM::ActionType eAct,
          return pl_error_code();
 
       uns16 dataType;
-      if (!pl_get_param_safe(hPVCAM_, param_set[index].id, ATTR_TYPE, &dataType) || (dataType != TYPE_ENUM)) 
+      if (!PlGetParamSafe(hPVCAM_, param_set[index].id, ATTR_TYPE, &dataType) || (dataType != TYPE_ENUM)) 
       {
          pProp->Set(ldata);
       } else {
          char enumStr[100];
          int32 enumValue;
          // It is absurd, but we seem to need this param_set[index].indexMap[ldata] instead of straight ldata??!!!
-         if (pl_get_enum_param_safe(hPVCAM_, param_set[index].id, param_set[index].indexMap[ldata], &enumValue, enumStr, 100)) 
+         if (PlGetEnumParamSafe(hPVCAM_, param_set[index].id, param_set[index].indexMap[ldata], &enumValue, enumStr, 100)) 
          {
             pProp->Set(enumStr);
          } else {
             LOG_CAM_ERROR;
-            LogMessage ("Error in pl_get_enum_param_safe\n");
+            LogMessage ("Error in PlGetParamSafe\n");
             return pl_error_code();
          }
       }
@@ -720,7 +708,7 @@ int Universal::Initialize()
 
    // Bit depth
       RETURN_CAM_ERROR_IF_CAM_ERROR(
-      pl_get_param_safe(hPVCAM_, PARAM_BIT_DEPTH, ATTR_CURRENT, &bitDepth_));
+      PlGetParamSafe(hPVCAM_, PARAM_BIT_DEPTH, ATTR_CURRENT, &bitDepth_));
 
    // setup image parameters
    // ----------------------
@@ -754,7 +742,7 @@ int Universal::Initialize()
    // Gain
    // Check the allowed gain settings.  Note that this can change depending on output port, and readout rate. SetGainLimits() should be called after changing those parameters. 
    RETURN_CAM_ERROR_IF_CAM_ERROR(
-      pl_get_param_safe( hPVCAM_, PARAM_GAIN_INDEX, ATTR_AVAIL, &gainAvailable_));
+      PlGetParamSafe( hPVCAM_, PARAM_GAIN_INDEX, ATTR_AVAIL, &gainAvailable_));
    if (gainAvailable_) {
       pAct = new CPropertyAction (this, &Universal::OnGain);
       nRet = CreateProperty(MM::g_Keyword_Gain, "1", MM::Integer, false, pAct);
@@ -768,16 +756,16 @@ int Universal::Initialize()
    // ReadoutPorts
    rs_bool readoutPortAvailable;
    RETURN_CAM_ERROR_IF_CAM_ERROR(
-      pl_get_param_safe( hPVCAM_, PARAM_READOUT_PORT, ATTR_AVAIL, &readoutPortAvailable));
+      PlGetParamSafe( hPVCAM_, PARAM_READOUT_PORT, ATTR_AVAIL, &readoutPortAvailable));
    if (readoutPortAvailable) {
       uns32 minPort, maxPort;
       //should it return?
       LOG_IF_CAM_ERROR(
-         pl_get_param_safe(hPVCAM_, PARAM_READOUT_PORT, ATTR_COUNT, &nrPorts_));
+         PlGetParamSafe(hPVCAM_, PARAM_READOUT_PORT, ATTR_COUNT, &nrPorts_));
       LOG_IF_CAM_ERROR(
-         pl_get_param_safe(hPVCAM_, PARAM_READOUT_PORT, ATTR_MIN, &minPort));
+         PlGetParamSafe(hPVCAM_, PARAM_READOUT_PORT, ATTR_MIN, &minPort));
       LOG_IF_CAM_ERROR(
-         pl_get_param_safe(hPVCAM_, PARAM_READOUT_PORT, ATTR_MAX, &maxPort));
+         PlGetParamSafe(hPVCAM_, PARAM_READOUT_PORT, ATTR_MAX, &maxPort));
       long currentPort;
 
       if (!GetLongParam_PvCam_safe(hPVCAM_, PARAM_READOUT_PORT, &currentPort))
@@ -809,9 +797,9 @@ int Universal::Initialize()
    // The HQ2 has 'visual gain', which shows up as EM Gain.  
    // Detect whether this is an interline chip and do not expose EM Gain if it is.
    char chipName[CCD_NAME_LEN];
-   if (!pl_get_param_safe(hPVCAM_, PARAM_CHIP_NAME, ATTR_CURRENT, chipName))
+   if (!PlGetParamSafe(hPVCAM_, PARAM_CHIP_NAME, ATTR_CURRENT, chipName))
       return pl_error_code();
-   pl_get_param_safe( hPVCAM_, PARAM_GAIN_MULT_FACTOR, ATTR_AVAIL, &emGainAvailable);
+   PlGetParamSafe( hPVCAM_, PARAM_GAIN_MULT_FACTOR, ATTR_AVAIL, &emGainAvailable);
    LogMessage(chipName);
    if (emGainAvailable && (strstr(chipName, "ICX-285") == 0) && (strstr(chipName, "ICX285") == 0) ) {
       LogMessage("This Camera has Em Gain");
@@ -820,7 +808,7 @@ int Universal::Initialize()
       assert(nRet == DEVICE_OK);
       int16 emGainMax;
       // Apparently, the minimum EM gain is always 1
-      pl_get_param_safe( hPVCAM_, PARAM_GAIN_MULT_FACTOR, ATTR_MAX, &emGainMax);
+      PlGetParamSafe( hPVCAM_, PARAM_GAIN_MULT_FACTOR, ATTR_MAX, &emGainMax);
       ostringstream s;
       s << "EMGain " << " " << emGainMax;
       LogMessage(s.str().c_str(), true);
@@ -866,14 +854,14 @@ int Universal::Initialize()
 
       bool getLongSuccess = GetLongParam_PvCam_safe(hPVCAM_, param_set[i].id, &ldata);
 
-      pl_get_param_safe( hPVCAM_, param_set[i].id, ATTR_ACCESS, &AccessType);
-      pl_get_param_safe( hPVCAM_, param_set[i].id, ATTR_AVAIL, &bAvail);
+      PlGetParamSafe( hPVCAM_, param_set[i].id, ATTR_ACCESS, &AccessType);
+      PlGetParamSafe( hPVCAM_, param_set[i].id, ATTR_AVAIL, &bAvail);
       if ( (AccessType != ACC_ERROR) && bAvail && getLongSuccess && versionTest) 
       {
          snprintf(buf, BUFSIZE, "%ld", ldata);
          CPropertyActionEx *pAct = new CPropertyActionEx(this, &Universal::OnUniversalProperty, (long)i);
          uint16_t dataType;
-         rs_bool plResult = pl_get_param_safe(hPVCAM_, param_set[i].id, ATTR_TYPE, &dataType);
+         rs_bool plResult = PlGetParamSafe(hPVCAM_, param_set[i].id, ATTR_TYPE, &dataType);
          LOG_DESCRIPTION_IF_CAM_ERROR(plResult, std::string(param_set[i].name));
          std::string propertyMsg = "Added property: " + std::string(param_set[i].name);
          LogMessage(propertyMsg.c_str(), true);
@@ -900,16 +888,16 @@ int Universal::Initialize()
             uns32 count, index;
             int32 enumValue;
             char enumStr[100];
-            if (pl_get_param_safe(hPVCAM_, param_set[i].id, ATTR_COUNT, (void *) &count)) {
+            if (PlGetParamSafe(hPVCAM_, param_set[i].id, ATTR_COUNT, (void *) &count)) {
                for (index = 0; index < count; index++) {
-                  if (pl_get_enum_param_safe(hPVCAM_, param_set[i].id, index, &enumValue, enumStr, 100)) {
+                  if (PlGetEnumParamSafe(hPVCAM_, param_set[i].id, index, &enumValue, enumStr, 100)) {
                      AddAllowedValue(param_set[i].name, enumStr);
                      std::string tmp = enumStr;
                      param_set[i].indexMap[enumValue] = index;
                      param_set[i].enumMap[tmp] = enumValue;
                   }
                   else
-                     LogMessage ("Error in pl_get_enum_param_safe");
+                     LogMessage ("Error in PlGetParamSafe");
                }
             }
          }
@@ -933,7 +921,7 @@ int Universal::Initialize()
    // check for circular buffer support
    rs_bool availFlag;
    noSupportForStreaming_ = 
-      (!pl_get_param_safe(hPVCAM_, PARAM_CIRC_BUFFER, ATTR_AVAIL, &availFlag) || !availFlag);
+      (!PlGetParamSafe(hPVCAM_, PARAM_CIRC_BUFFER, ATTR_AVAIL, &availFlag) || !availFlag);
 
    // setup the buffer
    // ----------------
@@ -974,22 +962,24 @@ int Universal::Shutdown()
 
 bool Universal::Busy()
 {
-   return false;//acquiring_;
+   return false;
 }
 
 
-///////////////////////////////////////////////////////////////////////////////
-// Function name   : &Universal::SnapImage
-// Description     : Acquires a single frame and stores it in the internal
-//                   buffer.
-//                   This command blocks the calling thread
-//                   until the image is fully captured.
-// Return type     : int 
-
+/**
+ * Function name   : &Universal::SnapImage
+ * Description     : Acquires a single frame and stores it in the internal
+ *                   buffer.
+ *                   This command blocks the calling thread
+ *                   until the image is fully captured.
+ * Return type     : int 
+ * Timing data     : On an Intel Mac Pro OS X 10.5 with CoolsnapEZ, 0 ms exposure
+ *                   pl_exp_start_seq takes 28 msec
+ *                   WaitForExposureDone takes 25 ms, for a total of 54 msec
+ */                   
 int Universal::SnapImage()
 {
    MM::MMTime start = GetCurrentMMTime();
-
    int nRet = DEVICE_ERR;
 
    if(snappingSingleFrame_)
@@ -997,26 +987,26 @@ int Universal::SnapImage()
       LogMessage("Warning: Entering SnapImage while GetImage has not been done for previous frame", true);
    };
 
-   if (!bufferOK_)
+   if (!bufferOK_) {
+      LogMMError(ERR_INVALID_BUFFER, __LINE__);
       return ERR_INVALID_BUFFER;
+   }
 
    if(!singleFrameModeReady_)
    {
-
       LOG_IF_CAM_ERROR(pl_exp_stop_cont(hPVCAM_, CCS_HALT));
       LOG_IF_CAM_ERROR(pl_exp_finish_seq(hPVCAM_, circBuffer_, 0));
-
       nRet = ResizeImageBufferSingle();
-      RETURN_IF_MM_ERROR(nRet);
+      if (nRet != DEVICE_OK) {
+         LogMMError(nRet, __LINE__);
+         return nRet;
+      }
    }
 
    // Make sure that the camera is ready to start an exposure
-   // TODO: we might need a timeout on this call
    int16 status;
    uns32 not_needed;
-
-   // This is needed to deal with users calling snapImage twice in a row
-   if (snappingSingleFrame_) {
+   if (snappingSingleFrame_) { // This is needed to deal with users calling snapImage twice in a row
       while(pl_exp_check_status(hPVCAM_, &status, &not_needed) && 
          (status != READOUT_COMPLETE && status != READOUT_FAILED && status != READOUT_NOT_ACTIVE) );
    }
@@ -1071,8 +1061,8 @@ bool Universal::WaitForExposureDone()throw()
          MM::MMTime actual_interval = GetCurrentMMTime() - exposureStartTime_;
          if( actual_interval.getUsec() < exposure_ * 1000.0 )
          {
-            //As we are hear we could not get the camera status correctly 
-            //from whatever reason
+            // As we are here we could not get the camera status correctly 
+            // for whatever reason
             use_pl_exp_check_status_=false;
             ostringstream os;
             os<<"PVCAM pl_exp_check_status(): time: " << actual_interval.getUsec();
@@ -1080,10 +1070,11 @@ bool Universal::WaitForExposureDone()throw()
             LogMessage(os.str(), false);
          }
       }
-      //use_pl_exp_check_status_ can be set to false at previous step
+      // use_pl_exp_check_status_ can be set to false during the previous step
       if(!use_pl_exp_check_status_)
       {
-         do {
+         do 
+         {
             CDeviceUtils::SleepMs(2);
          } while ( (GetCurrentMMTime() - exposureStartTime_).getUsec() < exposure_time_safe );
       }
@@ -1091,7 +1082,7 @@ bool Universal::WaitForExposureDone()throw()
    }
    catch(...)
    {
-      LOG_MESSAGE(std::string("Unknown exception while waiting for exposure done"));
+      LogMMMessage(__LINE__, "Unknown exception while waiting for exposure to finish", false);
    }
    return bRet;
 }
@@ -1165,34 +1156,58 @@ const unsigned char* Universal::GetImageBuffer()
    int16 status;
    uns32 not_needed;
 
-   //!!! ToDo: enable after testing 
-   //MMThreadGuard(this->snappingSingleFrame_Lock_);
-
    if(!snappingSingleFrame_)
    {
-      LOG_MESSAGE(std::string("Warning: GetImageBuffer called before SnapImage()"));
+      LogMMMessage(__LINE__, "Warning: GetImageBuffer called before SnapImage()");
       return 0;
    }
 
    // wait for data or error
    void* pixBuffer = const_cast<unsigned char*> (img_.GetPixels());
 
-   // TODO: timeout
+   // Check status, timeout when this takes expsoure time + 5 seconds
+   MM::MMTime start = GetCurrentMMTime();
+   MM::MMTime maxDuration = (GetExposure() + 5000) * 1000;
+   bool timeout = false;
    while(pl_exp_check_status(hPVCAM_, &status, &not_needed) && 
-      (status != READOUT_COMPLETE && status != READOUT_FAILED) );
-
-   // ToDo: Check all Error Codes
-   if(status == READOUT_FAILED)
-   {
-      LOG_MESSAGE(std::string("PVCAM: status == READOUT_FAILED"));
-      return 0;
+      (status != READOUT_COMPLETE && status != READOUT_FAILED) && !timeout) {
+      if ((GetCurrentMMTime() - start) > maxDuration)
+         timeout = true;
    }
 
+   MM::MMTime mid = GetCurrentMMTime();
+
+   // Error handling
+   if (timeout)
+   {
+      LogMMMessage(__LINE__, "Timeout in GetImageBuffer", false);
+      return 0;
+   } 
+   if (status == READOUT_FAILED)
+   {
+      LogMMMessage(__LINE__, "GetImageBuffer: status == READOUT_FAILED", false);
+      return 0;
+   } 
+   if (status != READOUT_COMPLETE)
+   {
+      LogMMMessage(__LINE__, "GetImageBuffer: status != READOUT_COMPLETE", false);
+      return 0;
+   } 
+
+   /*
+    * NS: I am not sure why this was there.  This takes about 400 ms on a Mac
+    * with Coolsnap EZ and can be deleted without problems.
+    * Restore if needed
    if (!pl_exp_finish_seq(hPVCAM_, pixBuffer, 0))
    {
       LOG_CAM_ERROR;
       return 0;
    }
+   */
+
+   MM::MMTime end = GetCurrentMMTime();
+   LogTimeDiff(start, mid, true);
+   LogTimeDiff(mid, end, true);
 
    snappingSingleFrame_=false;
 
@@ -1204,8 +1219,7 @@ double Universal::GetExposure() const
 {
    char buf[MM::MaxStrLength];
    buf[0] = '\0';
-   LOG_IF_MM_ERROR(
-      GetProperty(MM::g_Keyword_Exposure, buf));
+   GetProperty(MM::g_Keyword_Exposure, buf);
    return atof(buf);
 }
 
@@ -1218,7 +1232,6 @@ void Universal::SetExposure(double exp)
 /**
 * Returns the raw image buffer.
 */
-
 unsigned Universal::GetBitDepth() const
 {
 
@@ -1238,7 +1251,7 @@ int Universal::SetROI(unsigned x, unsigned y, unsigned xSize, unsigned ySize)
    roi_.xSize = (uns16) (xSize * binSize_);
    roi_.ySize = (uns16) (ySize * binSize_);
 
-   return ResizeImageBufferContinuous();
+   return ResizeImageBufferSingle();
 }
 
 int Universal::GetROI(unsigned& x, unsigned& y, unsigned& xSize, unsigned& ySize)
@@ -1263,7 +1276,7 @@ int Universal::ClearROI()
    roi_.xSize = 0;
    roi_.ySize = 0;
 
-   return ResizeImageBufferContinuous();
+   return ResizeImageBufferSingle();
 }
 
 bool Universal::GetErrorText(int errorCode, char* text) const
@@ -1289,13 +1302,13 @@ int Universal::SetAllowedPixelTypes()
 {
    int16 bitDepth, minBitDepth, maxBitDepth, bitDepthIncrement;
    LOG_IF_CAM_ERROR(
-      pl_get_param_safe( hPVCAM_, PARAM_BIT_DEPTH, ATTR_CURRENT, &bitDepth));
+      PlGetParamSafe( hPVCAM_, PARAM_BIT_DEPTH, ATTR_CURRENT, &bitDepth));
    LOG_IF_CAM_ERROR(
-      pl_get_param_safe( hPVCAM_, PARAM_BIT_DEPTH, ATTR_INCREMENT, &bitDepthIncrement));
+      PlGetParamSafe( hPVCAM_, PARAM_BIT_DEPTH, ATTR_INCREMENT, &bitDepthIncrement));
    LOG_IF_CAM_ERROR(
-      pl_get_param_safe( hPVCAM_, PARAM_BIT_DEPTH, ATTR_MAX, &maxBitDepth));
+      PlGetParamSafe( hPVCAM_, PARAM_BIT_DEPTH, ATTR_MAX, &maxBitDepth));
    LOG_IF_CAM_ERROR(
-      pl_get_param_safe( hPVCAM_, PARAM_BIT_DEPTH, ATTR_MIN, &minBitDepth));
+      PlGetParamSafe( hPVCAM_, PARAM_BIT_DEPTH, ATTR_MIN, &minBitDepth));
 
    ostringstream os;
    os << "Pixel Type: " << bitDepth << " " << bitDepthIncrement << " " << minBitDepth << " " << maxBitDepth;
@@ -1333,9 +1346,9 @@ int Universal::SetGainLimits()
       return DEVICE_OK;
    int16 gainMin, gainMax;
    LOG_IF_CAM_ERROR(
-      pl_get_param_safe( hPVCAM_, PARAM_GAIN_INDEX, ATTR_MIN, &gainMin));
+      PlGetParamSafe( hPVCAM_, PARAM_GAIN_INDEX, ATTR_MIN, &gainMin));
    LOG_IF_CAM_ERROR(
-      pl_get_param_safe( hPVCAM_, PARAM_GAIN_INDEX, ATTR_MAX, &gainMax));
+      PlGetParamSafe( hPVCAM_, PARAM_GAIN_INDEX, ATTR_MAX, &gainMax));
    ostringstream s;
    s << "Gain " << " " << gainMin << " " << gainMax;
    LogMessage(s.str().c_str(), true);
@@ -1360,7 +1373,7 @@ int Universal::SetUniversalAllowedValues(int i, uns16 dataType)
    switch (dataType) { 
       case TYPE_INT8 : {
          int8 min, max, index;
-         if (pl_get_param_safe(hPVCAM_, param_set[i].id, ATTR_MIN, (void *) &min) && pl_get_param_safe(hPVCAM_, param_set[i].id, ATTR_MAX, (void*) &max ) )  
+         if (PlGetParamSafe(hPVCAM_, param_set[i].id, ATTR_MIN, (void *) &min) && PlGetParamSafe(hPVCAM_, param_set[i].id, ATTR_MAX, (void*) &max ) )  
          {
             if ((max - min) > 10) {
                SetPropertyLimits(param_set[i].name, (double) min, (double) max);
@@ -1381,7 +1394,7 @@ int Universal::SetUniversalAllowedValues(int i, uns16 dataType)
                        }
       case TYPE_UNS8 : {
          uns8 min, max, index;
-         if (pl_get_param_safe(hPVCAM_, param_set[i].id, ATTR_MIN, (void *) &min) && pl_get_param_safe(hPVCAM_, param_set[i].id, ATTR_MAX, (void*) &max ) )  {
+         if (PlGetParamSafe(hPVCAM_, param_set[i].id, ATTR_MIN, (void *) &min) && PlGetParamSafe(hPVCAM_, param_set[i].id, ATTR_MAX, (void*) &max ) )  {
             if ((max - min) > 10) {
                SetPropertyLimits(param_set[i].name, (double) min, (double) max);
             } else {
@@ -1401,7 +1414,7 @@ int Universal::SetUniversalAllowedValues(int i, uns16 dataType)
                        }
       case TYPE_INT16 : {
          int16 min, max, index;
-         if (pl_get_param_safe(hPVCAM_, param_set[i].id, ATTR_MIN, (void *) &min) && pl_get_param_safe(hPVCAM_, param_set[i].id, ATTR_MAX, (void*) &max ) )  {
+         if (PlGetParamSafe(hPVCAM_, param_set[i].id, ATTR_MIN, (void *) &min) && PlGetParamSafe(hPVCAM_, param_set[i].id, ATTR_MAX, (void*) &max ) )  {
             if ((max - min) > 10) {
                SetPropertyLimits(param_set[i].name, (double) min, (double) max);
             } else if ((max-min) < 1000000) {
@@ -1421,7 +1434,7 @@ int Universal::SetUniversalAllowedValues(int i, uns16 dataType)
                         }
       case TYPE_UNS16 : {
          uns16 min, max, index;
-         if (pl_get_param_safe(hPVCAM_, param_set[i].id, ATTR_MIN, (void *) &min) && pl_get_param_safe(hPVCAM_, param_set[i].id, ATTR_MAX, (void*) &max ) )  {
+         if (PlGetParamSafe(hPVCAM_, param_set[i].id, ATTR_MIN, (void *) &min) && PlGetParamSafe(hPVCAM_, param_set[i].id, ATTR_MAX, (void*) &max ) )  {
             if ((max - min) > 10) {
                SetPropertyLimits(param_set[i].name, (double) min, (double) max);
             } else if ((max-min) < 1000000) {
@@ -1441,7 +1454,7 @@ int Universal::SetUniversalAllowedValues(int i, uns16 dataType)
                         }
       case TYPE_INT32 : {
          int32 min, max, index;
-         if (pl_get_param_safe(hPVCAM_, param_set[i].id, ATTR_MIN, (void *) &min) && pl_get_param_safe(hPVCAM_, param_set[i].id, ATTR_MAX, (void*) &max ) )  {
+         if (PlGetParamSafe(hPVCAM_, param_set[i].id, ATTR_MIN, (void *) &min) && PlGetParamSafe(hPVCAM_, param_set[i].id, ATTR_MAX, (void*) &max ) )  {
             if ((max - min) > 10) {
                SetPropertyLimits(param_set[i].name, (double) min, (double) max);
             } else if ((max-min) < 1000000) {
@@ -1461,7 +1474,7 @@ int Universal::SetUniversalAllowedValues(int i, uns16 dataType)
                         }
       case TYPE_UNS32 : {
          uns32 min, max, index;
-         if (pl_get_param_safe(hPVCAM_, param_set[i].id, ATTR_MIN, (void *) &min) && pl_get_param_safe(hPVCAM_, param_set[i].id, ATTR_MAX, (void*) &max ) )  {
+         if (PlGetParamSafe(hPVCAM_, param_set[i].id, ATTR_MIN, (void *) &min) && PlGetParamSafe(hPVCAM_, param_set[i].id, ATTR_MAX, (void*) &max ) )  {
             if ((max - min) > 10) {
                SetPropertyLimits(param_set[i].name, (double) min, (double) max);
             } else if ((max-min) < 1000000) {
@@ -1490,7 +1503,7 @@ int Universal::GetSpeedString(std::string& modeString)
    // read speed table setting from camera:
    int16 spdTableIndex;
    RETURN_CAM_ERROR_IF_CAM_ERROR(
-      pl_get_param_safe(hPVCAM_, PARAM_SPDTAB_INDEX, ATTR_CURRENT, &spdTableIndex));
+      PlGetParamSafe(hPVCAM_, PARAM_SPDTAB_INDEX, ATTR_CURRENT, &spdTableIndex));
 
    // read pixel time:
    long pixelTime;
@@ -1519,7 +1532,7 @@ int Universal::GetSpeedTable()
    int nRet=DEVICE_ERR;
    int16 spdTableCount;
    RETURN_CAM_ERROR_IF_CAM_ERROR(
-      pl_get_param_safe(hPVCAM_, PARAM_SPDTAB_INDEX, ATTR_MAX, &spdTableCount));
+      PlGetParamSafe(hPVCAM_, PARAM_SPDTAB_INDEX, ATTR_MAX, &spdTableCount));
 
    //Speed Table Index is 0 based.  We got the max number but want the total count
    spdTableCount +=1;
@@ -1529,7 +1542,7 @@ int Universal::GetSpeedTable()
    // log the current settings, so that we can revert to it after cycling through the options
    int16 spdTableIndex;
    LOG_IF_CAM_ERROR(
-      pl_get_param_safe(hPVCAM_, PARAM_SPDTAB_INDEX, ATTR_CURRENT, &spdTableIndex));
+      PlGetParamSafe(hPVCAM_, PARAM_SPDTAB_INDEX, ATTR_CURRENT, &spdTableIndex));
    // cycle through the speed table entries and record the associated settings
    vector<string> speedValues;
    rateMap_.clear();
@@ -1538,7 +1551,7 @@ int Universal::GetSpeedTable()
    {
       stringstream tmp;
       LOG_IF_CAM_ERROR(
-         pl_set_param_safe(hPVCAM_, PARAM_SPDTAB_INDEX, &i));
+         PlSetParamSafe(hPVCAM_, PARAM_SPDTAB_INDEX, &i));
       nRet = GetSpeedString(speedString);
       RETURN_IF_MM_ERROR(nRet);
 
@@ -1549,7 +1562,7 @@ int Universal::GetSpeedTable()
    LogMessage (os.str().c_str(), true);
    // switch back to original setting
    LOG_IF_CAM_ERROR(
-      pl_set_param_safe(hPVCAM_, PARAM_SPDTAB_INDEX, &spdTableIndex));
+      PlSetParamSafe(hPVCAM_, PARAM_SPDTAB_INDEX, &spdTableIndex));
 
    RETURN_IF_MM_ERROR(
       SetAllowedValues(g_ReadoutRate, speedValues));
@@ -1585,21 +1598,21 @@ bool Universal::GetEnumParam_PvCam(uns32 pvcam_cmd, uns32 index, std::string& en
    // First check this is an enumerated type:
    uint16_t dataType;
    RETURN_BOOL_IF_CAM_ERROR(
-      pl_get_param_safe(hPVCAM_, pvcam_cmd, ATTR_TYPE, &dataType));
+      PlGetParamSafe(hPVCAM_, pvcam_cmd, ATTR_TYPE, &dataType));
 
    if (dataType != TYPE_ENUM)
       return false;
 
    long unsigned int strLength;
    RETURN_BOOL_IF_CAM_ERROR(
-      pl_enum_str_length_safe(hPVCAM_, pvcam_cmd, index, &strLength));
+      PlEnumStrLengthSafe(hPVCAM_, pvcam_cmd, index, &strLength));
 
    char* strTmp;
    strTmp = (char*) malloc(strLength);
    int32 tmp;
 
    RETURN_BOOL_IF_CAM_ERROR(
-      pl_get_enum_param_safe(hPVCAM_, pvcam_cmd, index, &tmp, strTmp, strLength));
+      PlGetEnumParamSafe(hPVCAM_, pvcam_cmd, index, &tmp, strTmp, strLength));
 
    enumIndex = tmp;
    enumString = strTmp;
@@ -1702,6 +1715,13 @@ int Universal::ResizeImageBufferContinuous()
    return nRet;
 }
 
+/**
+ * This function calls pl_exp_seq_seq with the correct parameters, to set the camera
+ * in a mode in which single images can be taken
+ *
+ * Timing data:      On a Mac Pro OS X 10.5 with CoolsnapEZ, this functions takes
+ *                   takes 245 msec.
+ */
 int Universal::ResizeImageBufferSingle()
 {
    LogMessage("Resizing image Buffer Single", true);
@@ -1747,9 +1767,9 @@ int Universal::ResizeImageBufferSingle()
 // Continuous acquisition
 //
 /*
-*Overrides a virtual function from the CCameraBase class
-*Do actual capture
-*called from the acquisition thread function
+* Overrides a virtual function from the CCameraBase class
+* Do actual capture
+* Called from the acquisition thread function
 */
 int Universal::ThreadRun(void)
 {
@@ -1831,7 +1851,7 @@ int Universal::PrepareSequenceAcqusition()
    nRet = GetCoreCallback()->PrepareForAcq(this);
    if (nRet != DEVICE_OK)
    {
-      ResizeImageBufferContinuous();
+      ResizeImageBufferSingle();
       RETURN_IF_MM_ERROR(nRet);
    }
 
@@ -1902,15 +1922,23 @@ void Universal::OnThreadExiting() throw ()
 */
 int Universal::StopSequenceAcquisition()
 {
-   int nRet = DEVICE_ERR;
-   //call function of the base class, which does a useful work
-   nRet = this->CCameraBase<Universal>::StopSequenceAcquisition();
-   LOG_IF_MM_ERROR(nRet);
+   // call function of the base class, which does useful work
+   int nRet = this->CCameraBase<Universal>::StopSequenceAcquisition();
+   if (nRet != DEVICE_OK) {
+      LogMMError(nRet, __LINE__);
+      return nRet;
+   }
 
    LOG_IF_CAM_ERROR(
       pl_exp_stop_cont(hPVCAM_, CCS_HALT)); //Circular buffer only
    LOG_IF_CAM_ERROR(
       pl_exp_finish_seq(hPVCAM_, circBuffer_, 0));
+
+   nRet = ResizeImageBufferSingle();
+   if (nRet != DEVICE_OK) {
+      LogMMError(nRet, __LINE__);
+      return nRet;
+   }
 
    return nRet;
 }
@@ -1997,8 +2025,6 @@ int Universal::PushImage()
          &md);
    }
 
-//   LOG_IF_MM_ERROR(nRet);
-
    ostringstream txtEnd;
    txtEnd << name_ << " exited PushImage()";
    LogMessage(txtEnd.str());
@@ -2007,24 +2033,24 @@ int Universal::PushImage()
 
 
 
-rs_bool Universal::pl_get_param_safe(int16 hcam, uns32 param_id,
+rs_bool Universal::PlGetParamSafe(int16 hcam, uns32 param_id,
                                      int16 param_attribute, void_ptr param_value)
 {
    rs_bool ret;
-   suspend();
+   SuspendSequence();
    ret = pl_get_param (hcam, param_id, param_attribute, param_value);
-   resume();
+   ResumeSequence();
    return ret;
 }
 
 
-rs_bool Universal::pl_set_param_safe(int16 hcam, uns32 param_id, void_ptr param_value)
+rs_bool Universal::PlSetParamSafe(int16 hcam, uns32 param_id, void_ptr param_value)
 {
    rs_bool ret;
-   suspend();
+   SuspendSequence();
 
    ret = pl_set_param (hcam, param_id, param_value);
-   resume();
+   ResumeSequence();
    return ret;
 }
 
@@ -2032,40 +2058,40 @@ rs_bool Universal::pl_set_param_safe(int16 hcam, uns32 param_id, void_ptr param_
 bool Universal::GetLongParam_PvCam_safe(int16 handle, uns32 pvcam_cmd, long *value) 
 {
    bool ret;
-   suspend();
+   SuspendSequence();
    ret = GetLongParam_PvCam(handle, pvcam_cmd, value);
-   resume();
+   ResumeSequence();
    return ret;
 }
 
 bool Universal::SetLongParam_PvCam_safe(int16 handle, uns32 pvcam_cmd, long value) 
 {
    bool ret;
-   suspend();
+   SuspendSequence();
    ret = SetLongParam_PvCam(handle, pvcam_cmd, value);
-   resume();
+   ResumeSequence();
    return ret;
 }
 
 
-rs_bool Universal::pl_get_enum_param_safe (int16 hcam, uns32 param_id, uns32 index,
+rs_bool Universal::PlGetEnumParamSafe (int16 hcam, uns32 param_id, uns32 index,
                                            int32_ptr value, char_ptr desc,
                                            uns32 length)
 {
    rs_bool ret;
-   suspend();
+   SuspendSequence();
    ret = pl_get_enum_param(hcam, param_id, index, value, desc, length);
-   resume();
+   ResumeSequence();
    return ret;
 }
 
-rs_bool Universal::pl_enum_str_length_safe (int16 hcam, uns32 param_id, uns32 index,
+rs_bool Universal::PlEnumStrLengthSafe (int16 hcam, uns32 param_id, uns32 index,
                                             uns32_ptr length)
 {
    rs_bool ret;
-   suspend();
+   SuspendSequence();
    ret = pl_enum_str_length(hcam, param_id, index, length);
-   resume();
+   ResumeSequence();
    return ret;
 }
 
@@ -2093,25 +2119,30 @@ void Universal::LogCamError(
    catch(...){}
 }
 
-void Universal::LogMMError(
-                           int nErrCode, 
-                           std::string strMessage, 
-                           std::string strLocation, 
-                           bool bDebugonly/*=false*/
-                           )const throw()
+void Universal::LogMMError(int errCode, int lineNr, std::string message, bool debug) const throw()
 {
    try
    {
       char strText[MM::MaxStrLength];
-      if (!CCameraBase<Universal>::GetErrorText(nErrCode, strText))
+      if (!CCameraBase<Universal>::GetErrorText(errCode, strText))
       {
          CDeviceUtils::CopyLimitedString(strText, "Unknown");
       }
       ostringstream os;
-      os << "MM API error: "<< strText <<"\n";
-      os << strMessage; 
-      os << strLocation<<"\n";
-      LogMessage(os.str(), bDebugonly);
+      os << "Error code "<< errCode << ": " <<  strText <<"\n";
+      os << "In file: " << __FILE__ << ", " << "line: " << lineNr << ", " << message; 
+      LogMessage(os.str(), debug);
+   }
+   catch(...) {}
+}
+
+void Universal::LogMMMessage(int lineNr, std::string message, bool debug) const throw()
+{
+   try
+   {
+      ostringstream os;
+      os << message << ", in file: " << __FILE__ << ", " << "line: " << lineNr; 
+      LogMessage(os.str(), debug);
    }
    catch(...){}
 }
