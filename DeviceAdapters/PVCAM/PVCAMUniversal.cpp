@@ -189,7 +189,8 @@ snappingSingleFrame_(false),
 singleFrameModeReady_(false),
 exposureStartTime_(0.0),
 use_pl_exp_check_status_(true),
-imageCounter_(0)
+imageCounter_(0),
+sequenceModeReady_(false)
 {
    InitializeDefaultErrorMessages();
 
@@ -1810,66 +1811,13 @@ int Universal::ThreadRun(void)
    return ret;
 }
 
-
-/**
-* Starts continuous acquisition.
-*/
-int Universal::StartSequenceAcquisition(long numImages, double interval_ms, bool stopOnOverflow)
-{
-   if (IsCapturing())
-      return ERR_BUSY_ACQUIRING;
-
-   int nRet = DEVICE_ERR;
-
-   stopOnOverflow_ = stopOnOverflow;
-   numImages_ = numImages;
-   ostringstream os;
-
-   // prepare the camera
-   nRet = ResizeImageBufferContinuous();
-   RETURN_IF_MM_ERROR(nRet);
-
-   // start thread
-   // prepare the core
-   nRet = GetCoreCallback()->PrepareForAcq(this);
-   if (nRet != DEVICE_OK)
-   {
-      ResizeImageBufferContinuous();
-      RETURN_IF_MM_ERROR(nRet);
-   }
-
-   MM::MMTime start = GetCurrentMMTime();
-   if (!pl_exp_start_cont(hPVCAM_, circBuffer_, bufferSize_)) //Circular buffer only
-   {
-      LOG_CAM_ERROR;
-      ResizeImageBufferSingle();
-      return DEVICE_ERR;
-   }
-   MM::MMTime end = GetCurrentMMTime();
-   LogTimeDiff(start, end, true);
-
-   thd_->Start(numImages, interval_ms);
-   startTime_ = GetCurrentMMTime();
-   imageCounter_ = 0;
-
-   // set actual interval the same as exposure
-   // with PVCAM there is no straightforward way to get actual interval
-   // TODO: create a better estimate
-   SetProperty(MM::g_Keyword_ActualInterval_ms, CDeviceUtils::ConvertToString(exposure_)); 
-
-   char label[MM::MaxStrLength];
-   GetLabel(label);
-   os << "Started sequence on " << label << ", at " << startTime_.serialize() << ", with " << numImages << " and " << interval_ms << " ms" << endl;
-   LogMessage(os.str().c_str());
-
-   return DEVICE_OK;
-}
-
 int Universal::PrepareSequenceAcqusition()
 {
    if (IsCapturing())
       return ERR_BUSY_ACQUIRING;
 
+   sequenceModeReady_ = false;
+
    int nRet = DEVICE_ERR;
 
    ostringstream os;
@@ -1887,13 +1835,21 @@ int Universal::PrepareSequenceAcqusition()
       RETURN_IF_MM_ERROR(nRet);
    }
 
+   sequenceModeReady_ = true;
    return nRet;
 }
 
-int Universal::LaunchSequenceAcquisition(long numImages, double interval_ms, bool stopOnOverflow)
+/**
+ * Starts continuous acquisition.
+ */
+int Universal::StartSequenceAcquisition(long numImages, double interval_ms, bool stopOnOverflow)
 {
-   if (IsCapturing())
-      return ERR_BUSY_ACQUIRING;
+   if (!sequenceModeReady_)
+   {
+      int ret = PrepareSequenceAcqusition();
+      if (ret != DEVICE_OK)
+         return ret;
+   }
 
    stopOnOverflow_ = stopOnOverflow;
    numImages_ = numImages;
@@ -1920,7 +1876,7 @@ int Universal::LaunchSequenceAcquisition(long numImages, double interval_ms, boo
    char label[MM::MaxStrLength];
    GetLabel(label);
    ostringstream os;
-   os << "Launched sequence on " << label << ", at " << startTime_.serialize() << ", with " << numImages << " and " << interval_ms << " ms" << endl;
+   os << "Started sequence on " << label << ", at " << startTime_.serialize() << ", with " << numImages << " and " << interval_ms << " ms" << endl;
    LogMessage(os.str().c_str());
 
    return DEVICE_OK;
@@ -1937,6 +1893,7 @@ void Universal::OnThreadExiting() throw ()
    } catch (...) {
       LOG_MESSAGE(std::string(g_Msg_EXCEPTION_IN_ON_THREAD_EXITING));
    }
+   sequenceModeReady_ = false;
    CCameraBase<Universal>::OnThreadExiting();
 }
 

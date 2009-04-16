@@ -136,7 +136,6 @@ public:
    int StopSequenceAcquisition();
    // temporary debug methods
    int PrepareSequenceAcqusition();
-   int LaunchSequenceAcquisition(long numImages, double interval_ms, bool stopOnOverflow);
 
    // action interface
    int OnBinning(MM::PropertyBase* pProp, MM::ActionType eAct);
@@ -192,6 +191,7 @@ private:
    void Universal::suspend();
    int Universal::resume();
    bool WaitForExposureDone()throw();
+   int LaunchSequenceAcquisition(long numImages, double interval_ms, bool stopOnOverflow);
 
 
    //helpers
@@ -244,6 +244,7 @@ private:
    MMThreadLock singleFrameModeReady_Lock_;
    MM::MMTime exposureStartTime_;
    bool use_pl_exp_check_status_;
+   bool sequenceModeReady_;
 
 };
 

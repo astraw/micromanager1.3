@@ -825,7 +825,6 @@ public:
 
    // temporary debug methods
    int PrepareSequenceAcqusition() {return DEVICE_UNSUPPORTED_COMMAND;}
-   int LaunchSequenceAcquisition(long /*numImages*/, double /*interval_ms*/, bool /*stopOnOverflow*/) {return DEVICE_UNSUPPORTED_COMMAND;}
 
    /**
    * Default implementation.

@@ -364,7 +364,6 @@ namespace MM {
       virtual int StartSequenceAcquisition(double interval_ms) = 0;
       virtual int StopSequenceAcquisition() = 0;
       virtual int PrepareSequenceAcqusition() = 0;
-      virtual int LaunchSequenceAcquisition(long numImages, double interval_ms, bool stopOnOverflow) = 0;
       /**
        * Flag to indicate whether Sequence Acquisition is currently running.
        * Return true when Sequence acquisition is activce, false otherwise

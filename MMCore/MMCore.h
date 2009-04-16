@@ -249,7 +249,6 @@ public:
    void startSequenceAcquisition(long numImages, double intervalMs, bool stopOnOverflow) throw (CMMError);
    void startSequenceAcquisition(const char* cameraLabel, long numImages, double intervalMs, bool stopOnOverflow) throw (CMMError);
    void prepareSequenceAcquisition(const char* cameraLabel) throw (CMMError);
-   void launchSequenceAcquisition(const char* cameraLabel, long numImages, double intervalMs, bool stopOnOverflow) throw (CMMError);
    void startContinuousSequenceAcquisition(double intervalMs) throw (CMMError);
    void stopSequenceAcquisition() throw (CMMError);
    void stopSequenceAcquisition(const char* label) throw (CMMError);
