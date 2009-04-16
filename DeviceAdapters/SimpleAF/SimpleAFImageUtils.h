@@ -132,4 +132,30 @@ public:
 private:
 	ImgBuffer buffer_;	
 };
+
+/////////////////////////////////////
+// Reporting Manager
+//
+///////////////////////////////////////
+
+class ReportingManager
+{
+public:
+	ReportingManager():core_(0),bufferinitialized_(false)
+					  ,width_(0),height_(0),depth_(0){}
+	void SetCore(MM::Core * );
+	int InitializeDebugStack(MM::Device * callee = 0);
+	int InsertCurrentImageInDebugStack(Metadata & IMd);
+
+private:
+
+	MM::Core * core_;
+	MM::Device * callee_;
+	bool bufferinitialized_;
+	int width_;
+	int height_;
+	int depth_;
+};
+
+
 # endif

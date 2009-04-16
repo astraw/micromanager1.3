@@ -43,7 +43,7 @@
 // For numeric limits, to work with the different pixel types
 # include <limits>
 # include <vector>
-# include <math.h>
+# include <cmath>
 
 
 
@@ -442,6 +442,62 @@ int ExposureManager::RestoreExposure()
 	if(ret != DEVICE_OK)
 		return ret;
 	working_ = false;
+
+	return DEVICE_OK;
+}
+
+/////////////////////////////////
+// Reporting Manager
+/////////////////////////////////
+
+void ReportingManager::SetCore(MM::Core * core)
+{
+	core_ = core;
+}
+
+int ReportingManager::InitializeDebugStack(MM::Device * callee)
+{
+	if(core_ == 0 || callee == 0)
+	{
+		return DEVICE_ERR;
+	}
+
+	
+	int ret = core_->GetImageDimensions(width_,height_,depth_);
+
+	if(ret != DEVICE_OK)
+	{
+		return ret;
+	}
+
+	if(!core_->InitializeImageBuffer(1,1,width_,height_,depth_))
+	{
+		return DEVICE_ERR;
+	}
+
+	bufferinitialized_ = true;
+	callee_ = callee;
+
+	
+	return DEVICE_OK;
+}
+
+int ReportingManager::InsertCurrentImageInDebugStack(Metadata &IMd)
+{
+	if(bufferinitialized_ == false || core_ == 0 || callee_ == 0)
+	{
+		return DEVICE_ERR;
+	}
+
+	// Get the image buffer
+
+	const unsigned char * iBuf = const_cast<unsigned char *>((unsigned char *)core_->GetImage()); 
+
+	int ret  = core_->InsertImage(callee_,iBuf,width_,height_,depth_,&IMd);
+	if(ret != DEVICE_OK)
+	{
+		return ret;
+	}
 
 	return DEVICE_OK;
 }

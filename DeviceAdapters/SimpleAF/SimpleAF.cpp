@@ -52,6 +52,7 @@
 #include <ctime>
 #include "SimpleAFImageUtils.h"
 
+
 using namespace std;
 const char* g_AutoFocusDeviceName = "SimpleAF";
 
@@ -360,6 +361,8 @@ int SimpleAF::Focus(SimpleAF::FocusMode focusmode)
 	double dZHomePos = 0.0f, dzPos = 0.0f,dzTopPos = 0.0,dBestZPos = 0.0;
 	GetCoreCallback()->GetFocusPosition(dZHomePos);
 
+	GetCoreCallback()->LogMessage(this, "Started focus method",false);
+
 	// The old value is stored in dzHomePos -- To restore if focus fails
 	// dzPos is the variable that always stores the position that you want to go to
 
@@ -378,12 +381,15 @@ int SimpleAF::Focus(SimpleAF::FocusMode focusmode)
 	ret  = GetCoreCallback()->GetImageDimensions(width, height, depth);
 	if(ret != DEVICE_OK)
 		return ret;
-
+	int count = 0;
+	std::stringstream mesg;
 	while(proceed)
 	{
 		//1. Get an image
 		ImgBuffer image(width,height,depth);
 		GetImageForAnalysis(image);
+		Metadata IMd;
+		reporter_.InsertCurrentImageInDebugStack(IMd);
 		//2. Get its sharness score
 		score_ = GetScore(image);
 		//3. Do the exit test
@@ -408,6 +414,19 @@ int SimpleAF::Focus(SimpleAF::FocusMode focusmode)
 		{
 			proceed = false;
 		}
+		++count;
+
+		// Logging messages
+		mesg<<"Acquired image "<<(count);
+		GetCoreCallback()->LogMessage(this, mesg.str().c_str(),false);
+		mesg.str("");
+		mesg<<"Current z-pos is :"<<dzPos<<", The span is : "<<activespan_<<", The step is :"<<activestep_;
+		GetCoreCallback()->LogMessage(this, mesg.str().c_str(),false);
+		mesg.str("");
+		mesg<<"The top point for the search is "<<dzTopPos;
+		GetCoreCallback()->LogMessage(this, mesg.str().c_str(),false);
+		mesg.str("");
+		// End of logging messages
 	}
 
 	// Restore scope to the old settings
@@ -447,6 +466,8 @@ int SimpleAF::InitScope()
 	if(ret != DEVICE_OK)
 		return ret;
 	ret = exposure_.SetExposureToAF(param_afexposure_);
+	reporter_.SetCore(GetCoreCallback());
+	reporter_.InitializeDebugStack(this);
 	if(ret != DEVICE_OK)
 		return ret;
 	return DEVICE_OK;

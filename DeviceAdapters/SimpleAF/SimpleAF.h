@@ -130,6 +130,7 @@ private:
    ExposureManager  	exposure_;
    ShutterManager   	shutter_;
    ImageSharpnessScorer scorer_;
+   ReportingManager		reporter_;
 
    int				Focus(FocusMode);
    void				StartClock();
