@@ -87,6 +87,10 @@ template <typename PixelDataType> class AFHistogramStretcher
 		int Stretch(PixelDataType * src, int nWidth, int nHeight, PixelDataType * returnimage = 0)
 		{
 			double * histogram = new double[std::numeric_limits<PixelDataType>::max() + 1];
+			for(int i = 0; i < std::numeric_limits<PixelDataType>::max(); ++i)
+			{
+				*(histogram + i) = 0.0f;
+			}
 			// Get the max and the minimum
 
 			PixelType val_max = std::numeric_limits<PixelType>::min(), 
@@ -109,10 +113,10 @@ template <typename PixelDataType> class AFHistogramStretcher
 
 			// Go once through the histogram and get the x% content threshold
 			double Observed = 0.0f;
-			double Increment = 1.0/((double)(nWidth * nHeight)) ;
-			for(int i = std::numeric_limits<PixelDataType>::max() + 1; i >= 0 ; --i)
+			double Increment = 1.0f/((double)(nWidth * nHeight)) ;
+			for(int i = std::numeric_limits<PixelDataType>::max(); i >= 0 ; --i)
 			{
-				Observed += histogram[i]*Increment;
+				Observed+= histogram[i]*Increment;
 				if(Observed >= (1.0 - fStretchPercent))
 				{
 					val_max = i;
@@ -142,8 +146,13 @@ template <typename PixelDataType> class AFHistogramStretcher
 					float fFactor = ((float)typemax)/((float)(val_max-val_min));
 					// Setting the scaling again
 					for(long i = 0; i < nWidth * nHeight; ++i)
-					{					
-						src[i] = static_cast<PixelType>((fFactor)*(src[i] - val_min));
+					{
+						float Pixel = (fFactor)*(src[i] - val_min);
+						if(Pixel > std::numeric_limits<PixelDataType>::max())
+						{
+							Pixel = std::numeric_limits<PixelDataType>::max();
+						}
+						src[i] = static_cast<PixelType>(Pixel);
 					}
 				}
 				else if(operationmodel_ == OUTOFPLACE)
@@ -151,8 +160,13 @@ template <typename PixelDataType> class AFHistogramStretcher
 					float fFactor = ((float)typemax)/((float)(val_max-val_min));
 					// Setting the scaling again
 					for(long i = 0; i < nWidth * nHeight; ++i)
-					{					
-						returnimage[i] = static_cast<PixelType>((fFactor)*(src[i] - val_min));
+					{
+						float Pixel = (fFactor)*(src[i] - val_min);
+						if(Pixel > std::numeric_limits<PixelDataType>::max())
+						{
+							Pixel = std::numeric_limits<PixelDataType>::max();
+						}
+						returnimage[i] = static_cast<PixelType>(Pixel);
 					}
 				}
 				return 1;
