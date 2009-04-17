@@ -918,6 +918,10 @@ int DemoStreamingCamera::PushImage()
    mst.SetValue(CDeviceUtils::ConvertToString(timestamp.getMsec()));
    md.SetTag(mst);
 
+   MetadataSingleTag mstCount(MM::g_Keyword_Metadata_ImageNumber, label, true);
+   mstCount.SetValue(CDeviceUtils::ConvertToString(thd_->GetImageCounter()));
+   md.SetTag(mstCount);
+
    // insert all three channels at once
    int ret = GetCoreCallback()->InsertMultiChannel(this, rawBuffer_, GetNumberOfChannels(), GetImageWidth(), GetImageHeight(), GetImageBytesPerPixel(), &md);
    if (!stopOnOverflow_ && ret == DEVICE_BUFFER_OVERFLOW)

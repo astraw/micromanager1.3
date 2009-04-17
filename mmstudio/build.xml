@@ -164,6 +164,7 @@
 		<copy file="${BinRoot}/mmgr_dal_PI.dll" todir="${InstallRoot}" />
 		<copy file="${BinRoot}/mmgr_dal_Olympus.dll" todir="${InstallRoot}" />
 		<copy file="${BinRoot}/mmgr_dal_Utilities.dll" todir="${InstallRoot}" />
+		<copy file="${BinRoot}/mmgr_dal_SimpleAF.dll" todir="${InstallRoot}" />
 
 		<copy file="${BinRoot}/MMDeviceList.txt" todir="${InstallRoot}" />
 
