@@ -205,8 +205,10 @@ int SimpleAF::GetCurrentFocusScore(double &score)
 	GetImageForAnalysis(image);
    // score it
 	score = GetScore(image);
+	double zPos = 0.0;
+	ret = GetCoreCallback()->GetFocusPosition(zPos);
 	std::stringstream mesg;
-	mesg<<"Score is "<<score;
+	mesg<<"Score is "<<score<<", and the focus position is "<<zPos;
 	GetCoreCallback()->LogMessage(this,mesg.str().c_str() ,false);
 	mesg.str("");
 	
