@@ -50,6 +50,7 @@ doc_className(String className) {
 	
 	suffix = className.replace(".","/") + ".html";
 
+	theUrl = null;
 	if (sunAPI)	
 		theUrl = "http://java.sun.com/javase/6/docs/api/" + suffix;
 	if (className.startsWith("ij.")) // ImageJ API
@@ -60,8 +61,13 @@ doc_className(String className) {
 		theUrl = "http://micro-manager.org/content/doc/mmstudio/" + suffix;
 	if (className.startsWith("mmcorej.CMMCore"))
 		theUrl = "http://micro-manager.org/content/doc/CMMCore.html";
+	if (className.startsWith("org.jdesktop.swingx"))
+		theUrl = "http://download.java.net/javadesktop/swinglabs/releases/0.8/docs/api/index.html?" + suffix;
 
-	BrowserLauncher.openURL(theUrl);
+	if (theUrl!=null)
+		BrowserLauncher.openURL(theUrl);
+	else
+		print("No docs found.");
 }
 
 update();

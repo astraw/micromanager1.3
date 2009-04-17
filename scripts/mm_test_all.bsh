@@ -32,11 +32,6 @@ testCmd(cmd) {
 		_output = " => " + _ret;
 	_output += "  (" + _t + " ms)";
 	_cons.println(_output);
-	// Add these commands to console history
-	// so that if script ends with an error,
-	// we can re-test the offending command.
-	if (0 != _cmd.compareTo(_cons.history.lastElement())) // But don't add repetitive lines
-		bsh.console.history.add(_cmd);
 	return _ret;
 }
 
