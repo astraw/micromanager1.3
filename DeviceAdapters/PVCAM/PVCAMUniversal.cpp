@@ -176,7 +176,7 @@ int Universal::OnBinning(MM::PropertyBase* pProp, MM::ActionType eAct)
    {
       SuspendSequence();
       long bin;
-      long oldBinSize = binSize_;
+      unsigned long oldBinSize = binSize_;
       pProp->Get(bin);
       binSize_ = bin;
       ClearROI(); // reset region of interest
@@ -953,6 +953,7 @@ int Universal::SnapImage()
 
    if(!singleFrameModeReady_)
    {
+      LogMessage("Resizing ImageBufferSingle in SnapImage", true);
       if (!pl_exp_stop_cont(hPVCAM_, CCS_HALT))
          LogCamError(__LINE__, "");
       if (!pl_exp_finish_seq(hPVCAM_, circBuffer_, 0))
@@ -966,6 +967,7 @@ int Universal::SnapImage()
    int16 status;
    uns32 not_needed;
    if (snappingSingleFrame_) { // This is needed to deal with users calling snapImage twice in a row
+      LogMessage ("Waiting in SnapImage for previous exposure to clear", true);
       while(pl_exp_check_status(hPVCAM_, &status, &not_needed) && 
          (status != READOUT_COMPLETE && status != READOUT_FAILED && status != READOUT_NOT_ACTIVE) );
    }
@@ -1712,7 +1714,7 @@ int Universal::ResizeImageBufferSingle()
    LogMessage("Resizing image Buffer Single", true);
    //ToDo: use semaphore
    bufferOK_ = false;
-   int nRet = DEVICE_ERR;
+   int nRet;
 
    ROI            newROI = roi_;
    unsigned short newXSize;
@@ -1733,19 +1735,20 @@ int Universal::ResizeImageBufferSingle()
          return LogCamError(__LINE__, "");
 
       if (img_.Height() * img_.Width() * img_.Depth() != frameSize) {
-         return DEVICE_INTERNAL_INCONSISTENCY; // buffer sizes don't match ???
+         return LogMMError(DEVICE_INTERNAL_INCONSISTENCY, __LINE__); // buffer sizes don't match ???
       }
 
       roi_=newROI;
-      nRet = DEVICE_OK;
       singleFrameModeReady_=true;
+      LogMessage("Set singleFrameModeReady_ to true", true);
    }
    catch(...)
    {
+      LogMessage("Caught error in ResizeImageBufferSingle", false);
    }
    //ToDo: use semaphore
    bufferOK_ = true;
-   return nRet;
+   return DEVICE_OK;
 }
 
 
@@ -2114,6 +2117,7 @@ int Universal::LogMMError(int errCode, int lineNr, std::string message, bool deb
       LogMessage(os.str(), debug);
    }
    catch(...) {}
+   return errCode;
 }
 
 void Universal::LogMMMessage(int lineNr, std::string message, bool debug) const throw()
