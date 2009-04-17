@@ -26,6 +26,8 @@
 #ifndef _DEVICE_BASE_H_
 #define _DEVICE_BASE_H_
 
+
+
 #include "MMDevice.h"
 #include "MMDeviceConstants.h"
 #include "Property.h"
@@ -705,6 +707,9 @@ protected:
    {
       usesDelay_ = state;
    }
+
+	MM::MMTime _start_time;
+	MM::MMTime _end_time;
 
 private:
    bool PropertyDefined(const char* propName) const
@@ -1442,5 +1447,22 @@ protected:
 private:
    std::map<std::string, long> labels_;
 };
+
+
+// _t, a macro for timing single lines.
+// This macros logs the text of the line, x, measures
+// the time it takes, and then logs that time.
+// Usage example:
+// _t( ex = GetExposure(); )
+
+
+#define _t(x) \
+   { \
+      LogMessage(#x); \
+      _start_time = GetCurrentMMTime(); \
+      x; \
+      _end_time = GetCurrentMMTime(); \
+      LogTimeDiff(_start_time,_end_time); \
+   }
 
 #endif //_DEVICE_BASE_H_
