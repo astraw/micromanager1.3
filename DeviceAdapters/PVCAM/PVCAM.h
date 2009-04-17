@@ -155,7 +155,8 @@ public:
 
    // Thread-safe param access:
    rs_bool PlSetParamSafe(int16 hcam, uns32 param_id, void_ptr param_value);
-   rs_bool PlGetParamSafe(int16 hcam, uns32 param_id, int16 param_attribute, void_ptr param_value);
+   rs_bool PlGetParamSafe(int16 hcam, uns32 param_id, int16 param_attribute, 
+                                    void_ptr param_value);
    bool GetLongParam_PvCam_safe(int16 handle, uns32 pvcam_cmd, long *value);
    bool SetLongParam_PvCam_safe(int16 handle, uns32 pvcam_cmd, long value);
    rs_bool PlGetEnumParamSafe(int16 hcam, uns32 param_id, uns32 index,
@@ -190,16 +191,12 @@ private:
    int SetGainLimits();
    void SuspendSequence();
    int ResumeSequence();
-   bool WaitForExposureDone()throw();
+   bool WaitForExposureDone() throw();
    int LaunchSequenceAcquisition(long numImages, double interval_ms, bool stopOnOverflow);
 
    // Utility logging functions
-   void LogCamError(
-                     std::string strMessage, 
-                     std::string strLocation, 
-                     bool bDebugonly=false
-                   ) const throw();
-   void LogMMError(int errCode, int lineNr, std::string message="", bool debug=false) const throw();
+   int16 LogCamError(int lineNr, std::string message="", bool debug=false) throw();
+   int LogMMError(int errCode, int lineNr, std::string message="", bool debug=false) const throw();
    void LogMMMessage(int lineNr, std::string message="", bool debug=true) const throw();
 
    bool restart_;
