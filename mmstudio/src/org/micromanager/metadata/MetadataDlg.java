@@ -51,7 +51,6 @@ import org.json.JSONObject;
 import org.micromanager.image5d.ChannelDisplayProperties;
 import org.micromanager.image5d.Image5DWindow;
 import org.micromanager.utils.MMDialog;
-import org.micromanager.utils.MMLogger;
 
 
 /**
@@ -75,7 +74,6 @@ public class MetadataDlg extends MMDialog {
    private JTabbedPane tabbedPane_;
    private JScrollPane sumTablePane_;
    private JTable sumTable_;
-   private JTabbedPane sumTabbedPane_;
 
    /**
     * Create dialog to view and save metadata
@@ -216,6 +214,7 @@ public class MetadataDlg extends MMDialog {
             sumData[i][1] = acqData_.getSummaryValue(sumKeys[i]);
          }
          TableModel sumModel = new DefaultTableModel(sumData, sumColumnNames) {
+            private static final long serialVersionUID = -5903944593494312094L;
             public Class<?> getColumnClass(int column) {
                return getValueAt(0, column).getClass();
             }
@@ -261,6 +260,7 @@ public class MetadataDlg extends MMDialog {
             imageData[i][1] = acqData_.getImageValue(frame, channel, slice, imageKeys[i]);
          }
          TableModel imageModel = new DefaultTableModel(imageData, imageColumnNames) {
+            private static final long serialVersionUID = -2710730115293363727L;
             public Class<?> getColumnClass(int column) {
                return getValueAt(0, column).getClass();
             }
@@ -279,13 +279,15 @@ public class MetadataDlg extends MMDialog {
          String stateColumnNames[] = { "Item", "Value" };
 
          int count = 0;
-         for (Iterator i = state.keys(); i.hasNext();) {
+         for (Iterator<?> i = state.keys(); i.hasNext();) {
             String stateRowKey = (String)i.next();
             stateTableData[count][0] = stateRowKey;
             stateTableData[count++][1] = state.getString(stateRowKey);
          }
 
          TableModel stateModel = new DefaultTableModel(stateTableData, stateColumnNames) {
+            private static final long serialVersionUID = 8850843608671322725L;
+
             public Class<?> getColumnClass(int column) {
                return getValueAt(0, column).getClass();
             }
@@ -325,6 +327,7 @@ public class MetadataDlg extends MMDialog {
       return "";
    }
 
+   @SuppressWarnings("unchecked")
    private class ColumnSorter implements Comparator {
       int colIndex;
       boolean ascending;
@@ -356,9 +359,9 @@ public class MetadataDlg extends MMDialog {
             return -1;
          } else if (o1 instanceof Comparable) {
             if (ascending) {
-               return ((Comparable)o1).compareTo(o2);
+               return ((Comparable<Object>)o1).compareTo(o2);
             } else {
-               return ((Comparable)o2).compareTo(o1);
+               return ((Comparable<Object>)o2).compareTo(o1);
             }
          } else {
             if (ascending) {
@@ -370,8 +373,9 @@ public class MetadataDlg extends MMDialog {
       }
    }
 
+   @SuppressWarnings("unchecked")
    private void sortAllRowsBy(DefaultTableModel model, int colIndex, boolean ascending) {
-      Vector data = model.getDataVector();
+      Vector<?> data = model.getDataVector();
       Collections.sort(data, new ColumnSorter(colIndex, ascending));
       model.fireTableStructureChanged();
    }

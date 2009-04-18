@@ -1569,10 +1569,11 @@ public class AcquisitionData {
    ////////////////////////////////////////////////////////////////////////////
    // Private methods
    ////////////////////////////////////////////////////////////////////////////
-   
+   /*
    static private String generateRootPath(String name, String baseDir) {
       return baseDir + "/" + generateRootName(name, baseDir);
    }
+   */
    
    static private String generateRootName(String name, String baseDir) {
       // create new acquisition directory

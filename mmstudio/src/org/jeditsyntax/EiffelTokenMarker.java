@@ -230,12 +230,11 @@ loop:		for(int i = offset; i < length; i++)
 	// private members
 	private static KeywordMap eiffelKeywords;
 
-	private boolean cpp;
 	private KeywordMap keywords;
 	private int lastOffset;
 	private int lastKeyword;
 
-	private boolean doKeyword(Segment line, int i, char c)
+	private boolean doKeyword(Segment line, int i, @SuppressWarnings("unused") char c)
 	{
 		int i1 = i+1;
 		boolean klassname = false;

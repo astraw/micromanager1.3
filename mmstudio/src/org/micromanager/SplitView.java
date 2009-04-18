@@ -22,7 +22,6 @@
 
 package org.micromanager;
 
-import ij.ImagePlus;
 import ij.ImageStack;
 import ij.measure.Calibration;
 import ij.process.ByteProcessor;
@@ -65,13 +64,12 @@ import com.swtdesigner.SwingResourceManager;
 
 public class SplitView extends MMDialog 
 {
+   private static final long serialVersionUID = 8624269914627495660L;
    private CMMCore core_;
    private Image5D image5D_;
    private Image5DWindow image5DWindow_;
    private long imgDepth_;
    private int width_, height_, newWidth_, newHeight_;
-   private ByteProcessor tmpProcByte_;
-   private ShortProcessor tmpProcShort_;
    private JToggleButton toggleButtonLive_;
    private JRadioButton lrButton_;
    private JRadioButton tbButton_;
@@ -80,7 +78,6 @@ public class SplitView extends MMDialog
    private GUIColors guiColors_;
    private Timer timer_;
    private double interval_;
-   private boolean liveRunning_;
    private String orientation_;
    private boolean autoShutterOrg_;
    private boolean shutterOrg_;
@@ -112,8 +109,8 @@ public class SplitView extends MMDialog
       core_ = core;
       options_ = options;
       // The following are use to get the default 8 and 16 bit color models:
-      tmpProcByte_ = new ByteProcessor(1, 1);
-      tmpProcShort_ = new ShortProcessor(1, 1);
+      //tmpProcByte_ = new ByteProcessor(1, 1);
+      //tmpProcShort_ = new ShortProcessor(1, 1);
 
       final JButton topLeftColorButton = new JButton();
       final JButton bottomRightColorButton = new JButton();
@@ -294,8 +291,7 @@ public class SplitView extends MMDialog
                core_.setShutterOpen(true); 
 
             timer_.start();
-            toggleButtonLive_.setText("Stop");                                  
-            liveRunning_ = true; 
+            toggleButtonLive_.setText("Stop"); 
          }
          else {
             if (!timer_.isRunning())
@@ -314,7 +310,6 @@ public class SplitView extends MMDialog
             core_.setAutoShutter(autoShutterOrg_);                              
 
             toggleButtonLive_.setText("Live"); 
-            liveRunning_ = false;
          }
       } catch (Exception err) {                                                 
          JOptionPane.showMessageDialog(this, err.getMessage());                 
@@ -324,14 +319,16 @@ public class SplitView extends MMDialog
 
    private void calculateSize()
    {
-      long byteDepth = core_.getBytesPerPixel();
+      //long byteDepth = core_.getBytesPerPixel();
 
       imgDepth_ = core_.getBytesPerPixel();
+      /*
       int type = ImagePlus.GRAY8;
       if (imgDepth_ == 1)
          type = ImagePlus.GRAY8;
       else if (imgDepth_ == 2)
          type = ImagePlus.GRAY16;
+       */
 
       width_ = (int) core_.getImageWidth();
       height_ = (int) core_.getImageHeight();
@@ -456,8 +453,9 @@ public class SplitView extends MMDialog
          double exposureMs = core_.getExposure();
 
          // set image data
-         String channel = "";
+         //String channel = "";
          for (int i=0; i<2; i++) {
+            /*
             if (i==0 && orientation_ == LR)
                channel = "Left";
             if (i==1 && orientation_ == LR)
@@ -466,6 +464,7 @@ public class SplitView extends MMDialog
                channel = "Top";
             if (i==1 && orientation_ == TB)
                channel = "Bottom";
+            */
             ad.insertImageMetadata(0, i, 0);
             ad.setImageValue(0, i, 0, ImagePropertyKeys.EXPOSURE_MS, exposureMs);
             Annotator.setStateMetadata(ad, 0, i, 0, core_.getSystemStateCache());

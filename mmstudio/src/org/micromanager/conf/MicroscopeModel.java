@@ -196,7 +196,7 @@ public class MicroscopeModel {
          libPaths = libPath.split(":");
       ArrayList<String> pathList;
       if (libPaths != null)
-         pathList = new ArrayList(Arrays.asList(libPaths));
+         pathList = new ArrayList<String>(Arrays.asList(libPaths));
       else
          pathList = new ArrayList<String>();
       pathList.add("");

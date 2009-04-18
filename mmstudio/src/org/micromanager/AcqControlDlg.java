@@ -192,8 +192,6 @@ public class AcqControlDlg extends JDialog implements PropertyChangeListener {
    //private static final String ACQ_SINGLE_WINDOW = "singleWindow";
    private static final int ACQ_DEFAULT_COLUMN_WIDTH = 77;
    private JCheckBox multiPosCheckBox_;
-   private JCheckBox singleFrameCheckBox_;
-   private JCheckBox singleWindowCheckBox_;
    private int columnWidth_[];
    private int columnOrder_[];
 
@@ -1370,7 +1368,7 @@ public class AcqControlDlg extends JDialog implements PropertyChangeListener {
    // Returns the TableColumn associated with the specified column
    // index in the model
    public TableColumn findTableColumn(JTable table, int columnModelIndex) {
-       Enumeration e = table.getColumnModel().getColumns();
+       Enumeration<?> e = table.getColumnModel().getColumns();
        for (; e.hasMoreElements(); ) {
            TableColumn col = (TableColumn)e.nextElement();
            if (col.getModelIndex() == columnModelIndex) {

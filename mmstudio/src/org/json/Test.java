@@ -14,7 +14,7 @@ public class Test {
      * @param args
      */
     public static void main(String args[]) {
-        Iterator it;
+        Iterator<?> it;
         JSONArray a;
         JSONObject j;
         JSONStringer jj;

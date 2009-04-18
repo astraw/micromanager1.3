@@ -147,7 +147,7 @@ public abstract class InputHandler extends KeyAdapter
 	 */
 	public static String getActionName(ActionListener listener)
 	{
-		Enumeration enumarator = getActions();
+		Enumeration<String> enumarator = getActions();
 		while(enumarator.hasMoreElements())
 		{
 			String name = (String)enumarator.nextElement();
@@ -161,7 +161,7 @@ public abstract class InputHandler extends KeyAdapter
 	/**
 	 * Returns an enumeration of all available actions.
 	 */
-	public static Enumeration getActions()
+	public static Enumeration<String> getActions()
 	{
 		return actions.keys();
 	}

@@ -128,7 +128,7 @@ public class CalibrationListDlg extends MMDialog {
    /**
     * Create the dialog
     */
-   public CalibrationListDlg(CMMCore core,  MMOptions opts) {
+   public CalibrationListDlg(CMMCore core) {
       super();
       addWindowListener(new WindowAdapter() {
          public void windowClosing(WindowEvent arg0) {
@@ -160,6 +160,8 @@ public class CalibrationListDlg extends MMDialog {
 
       // Create table with tooltip to show what is in the pixel size configurtaion
       calTable_ = new JTable() {
+         private static final long serialVersionUID = -5870707914970187465L;
+
          public String getToolTipText(MouseEvent e) {
             String tip = "";
             java.awt.Point p = e.getPoint();

@@ -357,7 +357,7 @@ public class ScriptPanel extends MMFrame implements MouseListener, ScriptingGUI 
    /**
     * Create the dialog
     */
-   public ScriptPanel(CMMCore core, MMOptions options) {
+   public ScriptPanel(@SuppressWarnings("unused") CMMCore core, @SuppressWarnings("unused") MMOptions options) {
       super();
       
       // Beanshell REPL Console
@@ -841,6 +841,7 @@ public class ScriptPanel extends MMFrame implements MouseListener, ScriptingGUI 
    /*
     * Runs the content of the editor Pane in the REPL context.
     */
+   @SuppressWarnings("unused")
    private void injectPane() {
 	   interp_.setInterpreter(beanshellREPLint_);
 	   runPane();

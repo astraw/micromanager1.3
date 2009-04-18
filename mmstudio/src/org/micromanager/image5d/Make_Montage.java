@@ -157,7 +157,7 @@ public class Make_Montage implements PlugIn {
         bDoScaling = doScaling;
     }
     
-    ImagePlus doMontage(Image5D i5d, int columns, int rows, double scale, int first, int last, int inc, int borderWidth, boolean labels) {
+    ImagePlus doMontage(Image5D i5d, int columns, int rows, double scale, int first, int last, int inc, int borderWidth, @SuppressWarnings("unused") boolean labels) {
         if(!i5d.lock()) return null;   // exit if in use
                
         ImagePlus imp = (ImagePlus)i5d;
@@ -265,7 +265,7 @@ public class Make_Montage implements PlugIn {
     }
     
     
-    Image5D doI5DMontage(Image5D i5d, int columns, int rows, double scale, int first, int last, int inc, int borderWidth, boolean labels) {
+    Image5D doI5DMontage(Image5D i5d, int columns, int rows, double scale, int first, int last, int inc, int borderWidth, @SuppressWarnings("unused") boolean labels) {
         if(!i5d.lock()) return null;   // exit if in use
         
         ImagePlus imp = (ImagePlus)i5d;

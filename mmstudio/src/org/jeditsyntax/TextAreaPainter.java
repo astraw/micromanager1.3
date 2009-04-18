@@ -34,7 +34,9 @@ import javax.swing.text.Utilities;
  */
 public class TextAreaPainter extends JComponent implements TabExpander
 {
-	/**
+   private static final long serialVersionUID = 6852129063983581791L;
+
+   /**
 	 * Creates a new repaint manager. This should be not be called
 	 * directly.
 	 */
@@ -358,7 +360,8 @@ public class TextAreaPainter extends JComponent implements TabExpander
 	 * cached font metrics and to recalculate which lines are visible.
 	 * @param font The font
 	 */
-	public void setFont(Font font)
+	@SuppressWarnings("deprecation")
+   public void setFont(Font font)
 	{
 		super.setFont(font);
 	   fm = Toolkit.getDefaultToolkit().getFontMetrics(font);

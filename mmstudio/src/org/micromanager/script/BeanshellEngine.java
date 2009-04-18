@@ -16,9 +16,8 @@ public class BeanshellEngine implements ScriptingEngine {
    boolean error_ = false;
    EvalThread evalThd_;
    boolean stop_ = false;
-   private static MMLogger logger_;
    private ScriptingGUI gui_;
-private Interpreter interp_old_;
+   private Interpreter interp_old_;
 
    public class EvalThread extends Thread {
       String script_;
@@ -72,7 +71,6 @@ private Interpreter interp_old_;
       //interp_ = new Interpreter();
       running_ = false;
       evalThd_ = new EvalThread("");
-      logger_ = new MMLogger();
       gui_ = gui;
    }
 

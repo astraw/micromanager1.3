@@ -289,6 +289,7 @@ public class ConfigGroupPad extends JScrollPane{
          return null;
       }
 
+     /*
       private class LiveModeSync
       {
     	  private boolean restartLive=false;  
@@ -312,6 +313,7 @@ public class ConfigGroupPad extends JScrollPane{
             	  }
     	  }
       }
+      */
       
       public void setValueAt(Object value, int row, int col) {
          StateItem item = groupList_.get(row);

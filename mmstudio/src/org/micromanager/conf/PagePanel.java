@@ -35,6 +35,7 @@ import mmcorej.CMMCore;
  * Wizard panel used as the abstract base class for all pages.
  */
 public abstract class PagePanel extends JPanel{
+   private static final long serialVersionUID = -4598248516499305300L;
    protected MicroscopeModel model_;
    protected CMMCore core_;
    protected Preferences prefs_;

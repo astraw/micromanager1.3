@@ -81,7 +81,7 @@ public class Annotator {
     */
    public static void setImageMetadata(AcquisitionData acq, int frame, int channel, int slice, JSONObject md) {
       try {
-         for (Iterator i = md.keys(); i.hasNext();) {
+         for (Iterator<?> i = md.keys(); i.hasNext();) {
             String key = (String)i.next();
             acq.setImageValue(frame, channel, slice, key, md.getString(key));
          }

@@ -34,7 +34,8 @@ import org.micromanager.acquisition.MMAcquisitionSnap;
 import com.swtdesigner.SwingResourceManager;
 
 public class Image5DWindowSnap extends Image5DWindow {
-	private MMAcquisitionSnap acq_;
+   private static final long serialVersionUID = 6593148168923699921L;
+   private MMAcquisitionSnap acq_;
 	
 	public Image5DWindowSnap(Image5D imp, MMAcquisitionSnap acq) {
 		super(imp);

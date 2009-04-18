@@ -289,11 +289,11 @@ public class Image5D extends ImagePlus {
 //			}
 		}
 		
-		public Image5D(String title, Image img) {
+		public Image5D(@SuppressWarnings("unused") String title, @SuppressWarnings("unused") Image img) {
 		    throw(new IllegalArgumentException("Constructor Image5D(String, Image) not supported."));
 		}
 
-		public Image5D(String pathOrURL) {
+		public Image5D(@SuppressWarnings("unused") String pathOrURL) {
 		    throw(new IllegalArgumentException("Constructor Image5D(String) not supported."));
 		}
 		

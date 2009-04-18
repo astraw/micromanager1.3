@@ -133,7 +133,7 @@ public class New_Image5D implements PlugIn {
         return true;
     }
     
-    public static void openImage5D(String title, int width, int height, int nChannels, int nSlices, int nFrames, int type, int options, boolean fill ) {
+    public static void openImage5D(String title, int width, int height, int nChannels, int nSlices, int nFrames, int type, int options, @SuppressWarnings("unused") boolean fill ) {
         int bitDepth = 8;
         if (type==NewImage.GRAY16) bitDepth = 16;
         else if (type==NewImage.GRAY32) bitDepth = 32;

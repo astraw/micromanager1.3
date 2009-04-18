@@ -248,7 +248,6 @@ public class PositionList {
     * @param stream
     * @throws MMSerializationException
     */
-   @SuppressWarnings("unchecked")
    public void restore(String stream) throws MMSerializationException {
       try {
          JSONObject meta = new JSONObject(stream);

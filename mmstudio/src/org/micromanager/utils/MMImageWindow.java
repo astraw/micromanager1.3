@@ -42,7 +42,6 @@ import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.image.ColorModel;
-import java.util.concurrent.locks.Lock;
 import java.util.logging.Level;
 import java.util.prefs.Preferences;
 
@@ -60,7 +59,6 @@ import com.swtdesigner.SwingResourceManager;
  */
 public class MMImageWindow extends ImageWindow {
 	private static final long serialVersionUID = 1L;
-	private static MMImageWindow imageWin_ = null;
 	private static final String WINDOW_X = "mmimg_y";
 	private static final String WINDOW_Y = "mmimg_x";
 	private static final String WINDOW_WIDTH = "mmimg_width";
@@ -68,7 +66,6 @@ public class MMImageWindow extends ImageWindow {
 	private static CMMCore core_ = null;
 	private static String title_ = "Live";
 	private static ColorModel currentColorLUT__ = null;
-	private static Lock winAccesslock_;
 	private static Preferences prefs_ = null;
 	private static MMStudioMainFrame gui_ = null;
 
@@ -156,6 +153,7 @@ public class MMImageWindow extends ImageWindow {
 
 	private static ImagePlus createImagePlus(CMMCore core, String wndTitle)
 			throws Exception {
+	   core_ = core;
 		ImageProcessor ip = null;
 		long byteDepth = core_.getBytesPerPixel();
 		long channels = core_.getNumberOfChannels();

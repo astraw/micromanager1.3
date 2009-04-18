@@ -340,7 +340,7 @@ loop:		for(int i = offset; i < length; i++)
 		keywords.add("extends",Token.KEYWORD1);
 	}
 
-	private boolean doKeyword(Segment line, int i, char c)
+	private boolean doKeyword(Segment line, int i, @SuppressWarnings("unused") char c)
 	{
 		int i1 = i+1;
 

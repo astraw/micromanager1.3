@@ -44,7 +44,6 @@ import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.image.ColorModel;
-import java.util.concurrent.locks.Lock;
 import java.util.prefs.Preferences;
 
 import javax.swing.AbstractButton;
@@ -71,7 +70,6 @@ public class MMSnapshotWindow extends Image5DWindow {
 	private static CMMCore core_ = null;
 	private static String title_ = "Snap";
 	private static ColorModel currentColorModel_ = null;
-	private static Lock winAccesslock_;
 	private static Preferences prefs_ = null;
 	private static ContrastSettings contrastSettings8_ = new ContrastSettings();
 	private static ContrastSettings contrastSettings16_ = new ContrastSettings();;
@@ -132,6 +130,7 @@ public class MMSnapshotWindow extends Image5DWindow {
 
 	private static Image5D createImage5D(CMMCore core, String wndTitle)
 			throws Exception {
+	   core_ = core;
 		ImageProcessor ip;
 		int type = 0;
 		int width_ = (int) core_.getImageWidth();
@@ -174,7 +173,8 @@ public class MMSnapshotWindow extends Image5DWindow {
 		ip.fill();
 		Image5D img5d = new Image5D(wndTitle, type, width_, height_, 1, 1, 1,
 				false);
-		Image5DWindow i5dw = new Image5DWindow(img5d);
+		@SuppressWarnings("unused")
+      Image5DWindow i5dw = new Image5DWindow(img5d);
 		return img5d;
 
 	}

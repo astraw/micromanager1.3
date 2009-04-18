@@ -103,11 +103,13 @@ public class MMAcquisition {
       }
    }
    
+
    public void setRootDirectory(String dir) throws MMScriptException {
       if (initialized_)
          throw new MMScriptException("Can't change root directory - the acquisition is already initialized");
       rootDirectory_ = dir;
    }
+
    
    public void initialize() throws MMScriptException {
       if (!show_) {

@@ -2089,7 +2089,7 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 		if (calibrationListDlg_ != null)
 			calibrationListDlg_.dispose();
 
-		calibrationListDlg_ = new CalibrationListDlg(core_, options_);
+		calibrationListDlg_ = new CalibrationListDlg(core_);
 		calibrationListDlg_.setVisible(true);
 		calibrationListDlg_.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		// calibrationListDlg_.setCore(core_);
@@ -3566,7 +3566,7 @@ public class MMStudioMainFrame extends JFrame implements DeviceControlGUI,
 		// instantiate auto-focusing module
 		String msg = new String(className + " module loaded.");
 		try {
-			Class cl = Class.forName(className);
+			Class<?> cl = Class.forName(className);
 			PluginItem pi = new PluginItem();
 			pi.menuItem = menuName;
 			pi.plugin = (MMPlugin) cl.newInstance();

@@ -681,8 +681,8 @@ public class PropertyEditor extends MMFrame {
       // The following methods override the defaults for performance reasons
       public void validate() {}
       public void revalidate() {}
-      protected void firePropertyChange(String propertyName, Object oldValue, Object newValue) {}
-      public void firePropertyChange(String propertyName, boolean oldValue, boolean newValue) {}
+      protected void firePropertyChange(@SuppressWarnings("unused") String propertyName, @SuppressWarnings("unused") Object oldValue, @SuppressWarnings("unused") Object newValue) {}
+      public void firePropertyChange(@SuppressWarnings("unused") String propertyName, @SuppressWarnings("unused") boolean oldValue, @SuppressWarnings("unused") boolean newValue) {}
       public PropertyCellRenderer() {
          super();
          //setFont(new Font("Arial", Font.PLAIN, 10));

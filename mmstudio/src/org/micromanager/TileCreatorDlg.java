@@ -47,7 +47,6 @@ import org.micromanager.utils.MMDialog;
 public class TileCreatorDlg extends MMDialog {
    private static final long serialVersionUID = 1L;
    private CMMCore core_;
-   private MMOptions opts_;
    private MultiStagePosition[] endPosition_;
    private boolean[] endPositionSet_;
    private PositionListDlg positionListDlg_;
@@ -62,7 +61,7 @@ public class TileCreatorDlg extends MMDialog {
    /**
     * Create the dialog
     */
-   public TileCreatorDlg(CMMCore core, MMOptions opts, PositionListDlg positionListDlg) {
+   public TileCreatorDlg(CMMCore core, @SuppressWarnings("unused") MMOptions opts, PositionListDlg positionListDlg) {
       super();
       setResizable(false);
       setName("tileDialog");
@@ -73,7 +72,6 @@ public class TileCreatorDlg extends MMDialog {
          }
       });
       core_ = core;
-      opts_ = opts;
       positionListDlg_ = positionListDlg;
       endPosition_ = new MultiStagePosition[4];
       endPositionSet_ = new boolean[4];

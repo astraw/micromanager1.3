@@ -8,14 +8,11 @@ import org.micromanager.api.DeviceControlGUI;
 public class DisplayTimerTask extends TimerTask {
 
    private CMMCore core_;
-   private String cameraName_;
    private DeviceControlGUI parentGUI_;
    
    public DisplayTimerTask(CMMCore core, DeviceControlGUI pg) {
       parentGUI_ = pg;
       core_ = core;
-      // obtain camera name
-      cameraName_ = core_.getCameraDevice();
    }
 
    public void run() {

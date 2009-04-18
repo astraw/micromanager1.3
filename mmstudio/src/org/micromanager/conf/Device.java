@@ -150,8 +150,6 @@ import mmcorej.StrVector;
    public void getSetupLabelsFromHardware(CMMCore core) throws Exception {
       // we can only add the state labels after initialization of the device!!
       if (type_ == DeviceType.StateDevice)  {
-         int numPos = 0;
-         numPos = core.getNumberOfStates(name_);
          StrVector stateLabels = core.getStateLabels(name_);
          for (int state = 0; state < numPos_; state++) {
             setSetupLabel(state, stateLabels.get(state));

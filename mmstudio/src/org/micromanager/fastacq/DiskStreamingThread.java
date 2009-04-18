@@ -1,6 +1,5 @@
 package org.micromanager.fastacq;
 
-import ij.ImagePlus;
 import ij.ImageStack;
 import ij.process.ByteProcessor;
 import ij.process.ImageProcessor;
@@ -31,7 +30,6 @@ public class DiskStreamingThread extends Thread {
    boolean stack_;
    double intervalMs_;
    private double pixelSize_um_;
-   private double pixelAspect_;
    private double elapsedTimeMs_;
    private AcquisitionData acqData_;
    private String acqName_;
@@ -87,7 +85,6 @@ public class DiskStreamingThread extends Thread {
       elapsedTimeMs_ = 0;
       
       // obtain camera name
-      String camera = core_.getCameraDevice();
       int width = (int)core_.getImageWidth();
       int height = (int)core_.getImageHeight();
       long byteDepth = core_.getBytesPerPixel();
@@ -116,10 +113,8 @@ public class DiskStreamingThread extends Thread {
       ip.setColor(Color.black);
       ip.fill();
       ImageStack stack = new ImageStack(width, height);
-      ImagePlus imp = new ImagePlus("sequence", ip);
             
       // Start streaming to disk
-      GregorianCalendar cld = new GregorianCalendar(); // begin time
       int count = 0;
       boolean error = false;
       try {

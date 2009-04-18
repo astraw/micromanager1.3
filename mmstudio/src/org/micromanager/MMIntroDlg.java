@@ -150,7 +150,7 @@ public class MMIntroDlg extends JDialog {
       textFieldFile_.setText(path);
    }
    
-   public void setScriptFile(String path) {
+   public void setScriptFile(@SuppressWarnings("unused") String path) {
    }
    
    public String getConfigFile() {

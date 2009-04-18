@@ -17,7 +17,6 @@ import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Insets;
 import java.awt.LayoutManager;
-import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.StringSelection;
@@ -94,6 +93,11 @@ import javax.swing.undo.UndoableEdit;
 public class JEditTextArea extends JComponent
 {
 	/**
+    * 
+    */
+   private static final long serialVersionUID = -2830116082820726753L;
+
+   /**
 	 * Adding components with this name to the text area will place
 	 * them left of the horizontal scroll bar. In jEdit, the status
 	 * bar is added this way.
@@ -322,7 +326,6 @@ public class JEditTextArea extends JComponent
 	{
 		if(firstLine == this.firstLine)
 			return;
-		int oldFirstLine = this.firstLine;
 		this.firstLine = firstLine;
 		if(firstLine != vertical.getValue())
 			updateScrollBars();
@@ -347,7 +350,6 @@ public class JEditTextArea extends JComponent
 			return;
 		int height = painter.getHeight();
 		int lineHeight = painter.getFontMetrics().getHeight();
-		int oldVisibleLines = visibleLines;
 		visibleLines = height / lineHeight;
 		updateScrollBars();
 	}
@@ -385,7 +387,6 @@ public class JEditTextArea extends JComponent
 	public boolean setOrigin(int firstLine, int horizontalOffset)
 	{
 		boolean changed = false;
-		int oldFirstLine = this.firstLine;
 
 		if(horizontalOffset != this.horizontalOffset)
 		{
@@ -553,7 +554,6 @@ public class JEditTextArea extends JComponent
 					= tokenMarker.markTokens(lineSegment,line);
 			}
 
-			Toolkit toolkit = painter.getToolkit();
 			Font defaultFont = painter.getFont();
 			SyntaxStyle[] styles = painter.getStyles();
 
@@ -652,7 +652,6 @@ public class JEditTextArea extends JComponent
 			}
 
 			int offset = 0;
-			Toolkit toolkit = painter.getToolkit();
 			Font defaultFont = painter.getFont();
 			SyntaxStyle[] styles = painter.getStyles();
 
@@ -1830,7 +1829,7 @@ public class JEditTextArea extends JComponent
 				centerHeight);
 
 			// Lay out all status components, in order
-			Enumeration status = leftOfScrollBar.elements();
+			Enumeration<Component> status = leftOfScrollBar.elements();
 			while(status.hasMoreElements())
 			{
 				Component comp = (Component)status.nextElement();
@@ -1868,7 +1867,12 @@ public class JEditTextArea extends JComponent
 
 	class MutableCaretEvent extends CaretEvent
 	{
-		MutableCaretEvent()
+		/**
+       * 
+       */
+      private static final long serialVersionUID = 9185882307037856685L;
+
+      MutableCaretEvent()
 		{
 			super(JEditTextArea.this);
 		}
@@ -2040,7 +2044,7 @@ public class JEditTextArea extends JComponent
 				// it can throw a BLE
 				try
 				{
-					doDoubleClick(evt,line,offset,dot);
+					doDoubleClick(line,offset,dot);
 				}
 				catch(BadLocationException bl)
 				{
@@ -2048,13 +2052,13 @@ public class JEditTextArea extends JComponent
 				}
 				break;
 			case 3:
-				doTripleClick(evt,line,offset,dot);
+				doTripleClick(line);
 				break;
 			}
 		}
 
-		private void doSingleClick(MouseEvent evt, int line, 
-			int offset, int dot)
+		private void doSingleClick(MouseEvent evt, @SuppressWarnings("unused") int line, 
+			@SuppressWarnings("unused") int offset, int dot)
 		{
 			if((evt.getModifiers() & InputEvent.SHIFT_MASK) != 0)
 			{
@@ -2065,7 +2069,7 @@ public class JEditTextArea extends JComponent
 				setCaretPosition(dot);
 		}
 
-		private void doDoubleClick(MouseEvent evt, int line,
+		private void doDoubleClick(int line,
 			int offset, int dot) throws BadLocationException
 		{
 			// Ignore empty lines
@@ -2149,8 +2153,7 @@ public class JEditTextArea extends JComponent
 			*/
 		}
 
-		private void doTripleClick(MouseEvent evt, int line,
-			int offset, int dot)
+		private void doTripleClick(int line)
 		{
 			select(getLineStartOffset(line),getLineEndOffset(line)-1);
 		}
@@ -2158,7 +2161,11 @@ public class JEditTextArea extends JComponent
 
 	class CaretUndo extends AbstractUndoableEdit
 	{
-		private int start;
+		/**
+       * 
+       */
+      private static final long serialVersionUID = 3912284959862652298L;
+      private int start;
 		private int end;
 
 		CaretUndo(int start, int end)
