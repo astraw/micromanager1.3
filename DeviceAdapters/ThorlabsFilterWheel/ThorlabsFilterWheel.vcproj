@@ -2,7 +2,7 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9.00"
-	Name="ThorlabFilterWheel"
+	Name="ThorlabsFilterWheel"
 	ProjectGUID="{DEE8AF34-2F99-4AA8-AFDA-848DE44F1DB2}"
 	RootNamespace="DemoCamera"
 	Keyword="Win32Proj"
