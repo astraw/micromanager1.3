@@ -135,7 +135,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ASIwptr", "..\DeviceAdapter
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SimpleAF", "..\DeviceAdapters\SimpleAF\SimpleAF.vcproj", "{1812A891-ADE6-4291-B52B-5ED2C4B23A13}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ThorlabFilterWheel", "..\DeviceAdapters\ThorlabFilterWheel\ThorlabFilterWheel.vcproj", "{DEE8AF34-2F99-4AA8-AFDA-848DE44F1DB2}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ThorlabsFilterWheel", "..\DeviceAdapters\ThorlabsFilterWheel\ThorlabsFilterWheel.vcproj", "{DEE8AF34-2F99-4AA8-AFDA-848DE44F1DB2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
