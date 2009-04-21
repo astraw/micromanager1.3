@@ -80,14 +80,14 @@ const char* g_CoolerMode_FanOnAtShutdown = "Fan on at shutdown";
 //const char* g_FrameTransferProp = "FrameTransfer";
 const char* g_FrameTransferOn = "On";
 const char* g_FrameTransferOff = "Off";
-const char* g_OutputAmplifier = "Output Amplifier";
+const char* g_OutputAmplifier = "Output_Amplifier";
 const char* g_OutputAmplifier_EM = "Standard EMCCD gain register";
 const char* g_OutputAmplifier_Conventional = "Conventional CCD register";
 
-const char* g_ADChannel = "A/D Channel";
+const char* g_ADChannel = "AD_Converter";
 
-const char* g_EMGain = "EM Gain -";
-const char* g_EMGainValue = "EM Gain - Value";
+const char* g_EMGain = "EMSwitch";
+const char* g_EMGainValue = "Gain";
 const char* g_CameraInformation = "1. Camera Information : | Type | Model | Serial No. |";
 const char* g_CycleTime = "Acquisition cycle time (ms)";
 
@@ -634,7 +634,7 @@ int AndorCamera::Initialize()
      int depth;
      ::GetBitDepth(i, &depth);
      char * buffer = new char[64];
-     sprintf(buffer, "AD %d (%d-bit)",i, depth);
+     sprintf(buffer, "%dbit)",depth);
      std::string temp(buffer);
      vChannels.push_back(temp);
      delete [] buffer;
@@ -1072,7 +1072,7 @@ int AndorCamera::Initialize()
           m_str_frameTransferProp = "Overlap";
         }
         else {
-          m_str_frameTransferProp = "Frame Transfer";
+          m_str_frameTransferProp = "FrameTransfer";
         }
         pAct = new CPropertyAction (this, &AndorCamera::OnFrameTransfer);
         nRet = CreateProperty(m_str_frameTransferProp.c_str(), g_FrameTransferOff, MM::String, false, pAct); 
