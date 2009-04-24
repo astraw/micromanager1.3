@@ -492,16 +492,29 @@ protected:
    * Handy for hardware profiling
    * @param start - Time stamp for start of Process 
    * @param end - Time stamp for endof Process 
+   * @param message - message that will be displayed in output
+   * @param debugOnly - if true the meassage will be sent only in the log-debug mode
+   */
+   int LogTimeDiff(MM::MMTime start, MM::MMTime end, std::string message, bool debugOnly = false) const
+   {
+      std::ostringstream os;
+      MM::MMTime t = end-start;
+      os << message << t.sec_ << " seconds and " << t.uSec_ / 1000.0 << " msec";
+      if (callback_)
+         return callback_->LogMessage(this, os.str().c_str(), debugOnly);
+      return DEVICE_NO_CALLBACK_REGISTERED;
+   }
+
+   /**
+   * Outputs time difference between two time stamps.
+   * Handy for hardware profiling
+   * @param start - Time stamp for start of Process 
+   * @param end - Time stamp for endof Process 
    * @param debugOnly - if true the meassage will be sent only in the log-debug mode
    */
    int LogTimeDiff(MM::MMTime start, MM::MMTime end, bool debugOnly = false) const
    {
-      std::ostringstream os;
-      MM::MMTime t = end-start;
-      os << "Process took: " << t.sec_ << " seconds and " << t.uSec_ / 1000.0 << " msec";
-      if (callback_)
-         return callback_->LogMessage(this, os.str().c_str(), debugOnly);
-      return DEVICE_NO_CALLBACK_REGISTERED;
+      return LogTimeDiff(start, end, "Process took: " , debugOnly);
    }
 
    /**
