@@ -226,15 +226,12 @@ private:
    uns32 nrPorts_;
    unsigned short* circBuffer_;
    unsigned long bufferSize_; // circular buffer size
-   bool init_seqStarted_;
    bool stopOnOverflow_;
    MMThreadLock imgLock_;
-   bool noSupportForStreaming_;
    bool snappingSingleFrame_;
    MMThreadLock snappingSingleFrame_Lock_;
    bool singleFrameModeReady_;
    MMThreadLock singleFrameModeReady_Lock_;
-   MM::MMTime exposureStartTime_;
    bool use_pl_exp_check_status_;
    bool sequenceModeReady_;
 

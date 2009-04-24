@@ -121,13 +121,10 @@ cameraId_(cameraId),
 name_("Undefined"),
 nrPorts_ (1),
 circBuffer_(0),
-init_seqStarted_(false),
 stopOnOverflow_(true),
-noSupportForStreaming_(true),
 restart_(false),
 snappingSingleFrame_(false),
 singleFrameModeReady_(false),
-exposureStartTime_(0.0),
 use_pl_exp_check_status_(true),
 imageCounter_(0),
 sequenceModeReady_(false)
@@ -364,6 +361,12 @@ int Universal::OnReadoutPort(MM::PropertyBase* pProp, MM::ActionType eAct)
       ret = OnPropertiesChanged();
       if (ret != DEVICE_OK)
          return ret;
+
+      if (!IsCapturing()) {
+         ret = ResizeImageBufferSingle();
+         if (ret != DEVICE_OK)
+            return ret;
+      }
    }
    else if (eAct == MM::BeforeGet)
    {
@@ -393,6 +396,12 @@ int Universal::OnGain(MM::PropertyBase* pProp, MM::ActionType eAct)
       pProp->Get(gain);
       if (!SetLongParam_PvCam_safe(hPVCAM_, PARAM_GAIN_INDEX, gain))
          return LogCamError(__LINE__);
+
+      if (!IsCapturing()) {
+         int ret = ResizeImageBufferSingle();
+         if (ret != DEVICE_OK)
+            return ret;
+      }
    }
    else if (eAct == MM::BeforeGet)
    {
@@ -447,12 +456,25 @@ int Universal::OnMultiplierGain(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
    if (eAct == MM::AfterSet)
    {
-      singleFrameModeReady_=false;
-      long gain;
+	   SuspendSequence();
+      long gain, oldGain;
       pProp->Get(gain);
 
-      if (!SetLongParam_PvCam_safe(hPVCAM_, PARAM_GAIN_MULT_FACTOR, gain))
+      if (!GetLongParam_PvCam_safe(hPVCAM_, PARAM_GAIN_MULT_FACTOR, &oldGain))
          return LogCamError(__LINE__);
+
+      if (gain != oldGain) 
+         if (!SetLongParam_PvCam(hPVCAM_, PARAM_GAIN_MULT_FACTOR, gain))
+            return LogCamError(__LINE__);
+
+      ResumeSequence();
+
+      if (!IsCapturing() && gain != oldGain) {
+         int nRet = ResizeImageBufferSingle();
+         if (nRet != DEVICE_OK)
+            return nRet;
+      }
+
    }
    else if (eAct == MM::BeforeGet)
    {
@@ -538,7 +560,8 @@ int Universal::OnUniversalProperty(MM::PropertyBase* pProp, MM::ActionType eAct,
          if (!SetLongParam_PvCam_safe(hPVCAM_, (long)param_set[index].id, (uns32) ldata))
             return LogCamError(__LINE__, "");
 
-      } else {
+      } else 
+      {
          std::string mnemonic;
          pProp->Get(mnemonic);
          uns32 ldata = param_set[index].enumMap[mnemonic];
@@ -546,6 +569,14 @@ int Universal::OnUniversalProperty(MM::PropertyBase* pProp, MM::ActionType eAct,
          if (!SetLongParam_PvCam_safe(hPVCAM_, (long)param_set[index].id, (uns32) ldata))
             return LogCamError(__LINE__, "");
       }
+
+      if (!IsCapturing()) 
+      {
+         int ret = ResizeImageBufferSingle();
+         if (ret != DEVICE_OK)
+            return ret;
+      }
+
    }
    else if (eAct == MM::BeforeGet)
    {
@@ -558,14 +589,16 @@ int Universal::OnUniversalProperty(MM::PropertyBase* pProp, MM::ActionType eAct,
       if (!PlGetParamSafe(hPVCAM_, param_set[index].id, ATTR_TYPE, &dataType) || (dataType != TYPE_ENUM)) 
       {
          pProp->Set(ldata);
-      } else {
+      } else 
+      {
          char enumStr[100];
          int32 enumValue;
          // It is absurd, but we seem to need this param_set[index].indexMap[ldata] instead of straight ldata??!!!
          if (PlGetEnumParamSafe(hPVCAM_, param_set[index].id, param_set[index].indexMap[ldata], &enumValue, enumStr, 100)) 
          {
             pProp->Set(enumStr);
-         } else {
+         } else 
+         {
             return LogCamError(__LINE__, "Error in PlGetParamSafe\n");
          }
       }
@@ -630,6 +663,7 @@ int Universal::Initialize()
    stringstream ver;
    ver << major << "." << minor << "." << trivial;
    nRet = CreateProperty("PVCAM Version", ver.str().c_str(),  MM::String, true);
+   LogMessage("PVCAM VERSION: " + ver.str());
    assert(nRet == DEVICE_OK);
 
    // find camera
@@ -671,10 +705,10 @@ int Universal::Initialize()
 
    // binning
    pAct = new CPropertyAction (this, &Universal::OnBinning);
-   pAct = new CPropertyAction (this, &Universal::OnBinning);
    nRet = CreateProperty(MM::g_Keyword_Binning, "1", MM::Integer, false, pAct);
    assert(nRet == DEVICE_OK);
    vector<string> binValues;
+   // TODO: Readout available binning modes dynamically rather than hardcode them
    binValues.push_back("1");
    binValues.push_back("2");
    binValues.push_back("4");
@@ -867,18 +901,21 @@ int Universal::Initialize()
 
    // synchronize all properties
    // --------------------------
-   nRet = UpdateStatus();
-   if(nRet != DEVICE_OK) 
-       return LogMMError(nRet, __LINE__); 
+   // nRet = UpdateStatus();
+   // if(nRet != DEVICE_OK) 
+   //    return LogMMError(nRet, __LINE__); 
 
    // setup imaging
    if (!pl_exp_init_seq())
       return LogCamError(__LINE__, "");
 
+   /**
+    * TODO: This does not seem to be used for anything.  Delete?
    // check for circular buffer support
    rs_bool availFlag;
    noSupportForStreaming_ = 
       (!PlGetParamSafe(hPVCAM_, PARAM_CIRC_BUFFER, ATTR_AVAIL, &availFlag) || !availFlag);
+   */
 
    // setup the buffer
    // ----------------
@@ -939,14 +976,14 @@ bool Universal::Busy()
  */                   
 int Universal::SnapImage()
 {
-   // TODO: Take out timing code before next release
    MM::MMTime start = GetCurrentMMTime();
+
    int nRet = DEVICE_ERR;
 
    if(snappingSingleFrame_)
    {
       LogMessage("Warning: Entering SnapImage while GetImage has not been done for previous frame", true);
-   };
+   }
 
    if (!bufferOK_) 
       return LogMMError(ERR_INVALID_BUFFER, __LINE__);
@@ -973,11 +1010,10 @@ int Universal::SnapImage()
    }
 
    void* pixBuffer = const_cast<unsigned char*> (img_.GetPixels());
-   MM::MMTime mid = GetCurrentMMTime();
+
    if (!pl_exp_start_seq(hPVCAM_, pixBuffer))
       return LogCamError(__LINE__);
 
-   exposureStartTime_ = GetCurrentMMTime();
    snappingSingleFrame_=true;
 
    if(WaitForExposureDone())
@@ -993,15 +1029,14 @@ int Universal::SnapImage()
 
    MM::MMTime end = GetCurrentMMTime();
 
-   LogTimeDiff(start, mid, true);
-   LogTimeDiff(start, exposureStartTime_, true);
-   LogTimeDiff(start, end, true);
+   LogTimeDiff(start, end, "Exposure took: ", true);
 
    return nRet;
 }
 
 bool Universal::WaitForExposureDone()throw()
 {
+   MM::MMTime startTime = GetCurrentMMTime();
    bool bRet=false;
    rs_bool rsbRet=0;
 
@@ -1022,7 +1057,7 @@ bool Universal::WaitForExposureDone()throw()
          if (!rsbRet)
             LogCamError(__LINE__, "");
 
-         MM::MMTime actual_interval = GetCurrentMMTime() - exposureStartTime_;
+         MM::MMTime actual_interval = GetCurrentMMTime() - startTime;
          if( actual_interval.getUsec() < exposure_ * 1000.0 )
          {
             // As we are here we could not get the camera status correctly 
@@ -1040,7 +1075,7 @@ bool Universal::WaitForExposureDone()throw()
          do 
          {
             CDeviceUtils::SleepMs(2);
-         } while ( (GetCurrentMMTime() - exposureStartTime_).getUsec() < exposure_time_safe );
+         } while ( (GetCurrentMMTime() - startTime).getUsec() < exposure_time_safe );
       }
       bRet=true;
    }
@@ -1053,67 +1088,6 @@ bool Universal::WaitForExposureDone()throw()
 
 
 
-
-/* On some cameras this implementation variant returns befor the exposure is done
-int Universal::SnapImage()
-{
-   int16 status;
-   uns32 not_needed;
-   rs_bool ret;
-   int nRet = DEVICE_ERR;
-
-   if(snappingSingleFrame_)
-   {
-      LOG_MESSAGE(std::string("Warning: Entering SnapImage while GetImage has not been done for previous frame"));
-   };
-
-   if (!bufferOK_)
-      return ERR_INVALID_BUFFER;
-
-   if(!singleFrameModeReady_)
-   {
-
-      LOG_IF_CAM_ERROR(pl_exp_stop_cont(hPVCAM_, CCS_HALT));
-      LOG_IF_CAM_ERROR(pl_exp_finish_seq(hPVCAM_, circBuffer_, 0));
-
-      nRet = ResizeImageBufferSingle();
-      RETURN_IF_MM_ERROR(nRet);
-   }
-
-   void* pixBuffer = const_cast<unsigned char*> (img_.GetPixels());
-   RETURN_DEVICE_ERR_IF_CAM_ERROR(pl_exp_start_seq(hPVCAM_, pixBuffer));
-   exposureStartTime_ = GetCurrentMMTime();
-   //ToDo: multithreading
-   snappingSingleFrame_=true;
-
-
-   // For MicroMax cameras, wait untill exposure is finished, for others, use the pvcam check status function
-   // Check for MicroMax camera in the chipname, this might not be the best method
-   if (chipName_.substr(0,3).compare("PID") == 0)
-   {
-      MM::MMTime startTime = GetCurrentMMTime();
-      do {
-         CDeviceUtils::SleepMs(2);
-      } while ( (GetCurrentMMTime() - startTime) < ( (exposure_ + 50) * 1000.0) );
-      ostringstream db;
-      db << chipName_.substr(0,3) << " exposure: " << exposure_;
-      LogMessage (db.str().c_str());
-   } else { // All modern cameras
-      // block until exposure is finished
-      do {
-         ret = pl_exp_check_status(hPVCAM_, &status, &not_needed);
-         LOG_IF_CAM_ERROR(ret);
-      } while (ret && (status == EXPOSURE_IN_PROGRESS));
-      if (!ret)
-      {
-         snappingSingleFrame_=false;
-         return pl_error_code();   
-      }
-   }
-
-   return DEVICE_OK;
-}
-*/
 
 const unsigned char* Universal::GetImageBuffer()
 {  
@@ -1128,18 +1102,18 @@ const unsigned char* Universal::GetImageBuffer()
 
    // wait for data or error
    void* pixBuffer = const_cast<unsigned char*> (img_.GetPixels());
-
-   // Check status, timeout when this takes expsoure time + 5 seconds
    MM::MMTime start = GetCurrentMMTime();
    MM::MMTime maxDuration = (GetExposure() + 5000) * 1000;
    bool timeout = false;
+   // Check status, timeout when this takes exposure time + 5 seconds
    while(pl_exp_check_status(hPVCAM_, &status, &not_needed) && 
       (status != READOUT_COMPLETE && status != READOUT_FAILED) && !timeout) {
       if ((GetCurrentMMTime() - start) > maxDuration)
          timeout = true;
    }
-
-   MM::MMTime mid = GetCurrentMMTime();
+   MM::MMTime end = GetCurrentMMTime();
+   // Log duration of readout in debug mode
+   LogTimeDiff(start, end, "Readout took: ", true);
 
    // Error handling
    if (timeout)
@@ -1157,21 +1131,6 @@ const unsigned char* Universal::GetImageBuffer()
       LogMMMessage(__LINE__, "GetImageBuffer: status != READOUT_COMPLETE", false);
       return 0;
    } 
-
-   /*
-    * NS: I am not sure why this was there.  This takes about 400 ms on a Mac
-    * with Coolsnap EZ and can be deleted without problems.
-    * Restore if needed
-   if (!pl_exp_finish_seq(hPVCAM_, pixBuffer, 0))
-   {
-      LOG_CAM_ERROR;
-      return 0;
-   }
-   */
-
-   MM::MMTime end = GetCurrentMMTime();
-   LogTimeDiff(start, mid, true);
-   LogTimeDiff(mid, end, true);
 
    snappingSingleFrame_=false;
 
@@ -1700,6 +1659,7 @@ int Universal::ResizeImageBufferContinuous()
    singleFrameModeReady_=false;
 
    return nRet;
+
 }
 
 /**
