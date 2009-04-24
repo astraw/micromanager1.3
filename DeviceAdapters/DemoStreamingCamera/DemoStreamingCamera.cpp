@@ -979,7 +979,6 @@ int DemoStreamingCamera::CopyToRawBuffer()
 int DemoStreamingCamera::ThreadRun()
 {
    LogMessage("Pushing image in thread", true);
-   LogMessage("Pushing image in thread", false);
    printf ("Pushing image\n");
    int ret = PushImage();
    if (ret != DEVICE_OK)

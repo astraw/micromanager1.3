@@ -51,12 +51,12 @@
 #include <ace/High_Res_Timer.h>
 #include <ace/Mutex.h>
 #include <ace/Guard_T.h>
-#include <ace/Log_Msg.h>
 
 #ifdef WIN32
 #pragma warning(default : 4312 4244)
 #endif
 
+#include "MMACELogger.h"
 #include "CoreUtils.h"
 #include "MMCore.h"
 #include "../MMDevice/DeviceUtils.h"
@@ -86,6 +86,8 @@ const char* g_logFileName = "/tmp/CoreLog.txt";
 #else
 const char* g_logFileName = "CoreLog.txt";
 #endif
+
+const char* g_CoreName = "MMCore";
 
 // version info
 const int MMCore_versionMajor = 2;
@@ -156,8 +158,6 @@ CMMCore::CMMCore() :
    errorText_[MMERR_BadConfigName] = "Configuration name contains illegale characters (/\\*!')";
    errorText_[MMERR_NotAllowedDuringSequenceAcquisition] = "This operation can not be executed while sequence acquisition is runnning.";
 
-   // open the log output stream
-   logStream_= new std::ofstream();
    initializeLogging();
    CORE_LOG("-------->>\n");
    CORE_LOG2("Core session started on %D by %s on %s\n", getUserId().c_str(), getHostName().c_str());
@@ -250,12 +250,7 @@ CMMCore::~CMMCore()
  */
 void CMMCore::clearLog()
 {
-   if (logStream_->is_open())
-      logStream_->close();
-
-   logStream_->open(g_logFileName, ios_base::trunc);
-
-   initializeLogging();
+   IMMLogger::Instance()->Reset();
    CORE_LOG("-------->>\n");
    CORE_LOG2("\nLog cleared and re-started on %D by %s on %s\n", getUserId().c_str(), getHostName().c_str());
 }
@@ -275,10 +270,7 @@ void CMMCore::logMessage(const char* msg)
 void CMMCore::enableDebugLog(bool enable)
 {
    debugLog_ = enable;
-   if (debugLog_)
-      ACE_LOG_MSG->priority_mask (LM_DEBUG|LM_INFO|LM_TRACE, ACE_Log_Msg::PROCESS);
-   else
-      ACE_LOG_MSG->priority_mask (LM_INFO, ACE_Log_Msg::PROCESS);
+   IMMLogger::Instance()->SetPriorityLevel(debugLog_?IMMLogger::debug:IMMLogger::info);
 
    CORE_LOG1("Debug logging %s\n", enable ? "enabled" : "disabled");
 }
@@ -289,16 +281,7 @@ void CMMCore::enableDebugLog(bool enable)
  */
 void CMMCore::enableStderrLog(bool enable)
 {
-   if (enable)
-   {
-      ACE_LOG_MSG->set_flags (ACE_Log_Msg::OSTREAM);
-      ACE_LOG_MSG->set_flags (ACE_Log_Msg::STDERR);
-   }
-   else
-   {
-      ACE_LOG_MSG->set_flags (ACE_Log_Msg::OSTREAM);
-      ACE_LOG_MSG->clr_flags (ACE_Log_Msg::STDERR);
-   }
+   IMMLogger::Instance()->EnableLogToStderr(enable);
 }
 
 /*!
@@ -4211,22 +4194,15 @@ T* CMMCore::getSpecificDevice(const char* deviceLabel) const throw (CMMError)
 
 void CMMCore::initializeLogging()
 {
-   //ACE_LOG_MSG->exists();
-   if (!logStream_->is_open())
-      logStream_->open(g_logFileName, ios_base::app);
-   ACE_LOG_MSG->msg_ostream (logStream_, 0);
-   ACE_LOG_MSG->set_flags (ACE_Log_Msg::OSTREAM);
-   ACE_LOG_MSG->set_flags (ACE_Log_Msg::STDERR);
+   IMMLogger::Instance()->Initialize(g_logFileName, g_CoreName);
+   IMMLogger::Instance()->EnableLogToStderr(true);
+   //only "debug" priority messages will have time stamp
+   //- requested feature
 }
 
 void CMMCore::shutdownLogging()
 {
-   ACE_LOG_MSG->clr_flags (ACE_Log_Msg::OSTREAM);
-   ACE_LOG_MSG->msg_ostream (0, 0);
-
-   //ACE_LOG_MSG->exists();
-   if (!logStream_->is_open())
-      logStream_->close();
+   IMMLogger::Instance()->Shutdown();
 }
 
 void CMMCore::logError(const char* device, const char* msg, const char* fileName, int line) const

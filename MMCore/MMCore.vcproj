@@ -186,6 +186,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\MMACELogger.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\MMCore.cpp"
 				>
 			</File>
@@ -237,6 +241,14 @@
 			</File>
 			<File
 				RelativePath="..\MMDevice\ImgBuffer.h"
+				>
+			</File>
+			<File
+				RelativePath=".\IMMLogger.h"
+				>
+			</File>
+			<File
+				RelativePath=".\MMACELogger.h"
 				>
 			</File>
 			<File

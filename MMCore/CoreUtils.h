@@ -29,22 +29,7 @@
 #include "ace/High_Res_Timer.h"
 #include "ace/Log_Msg.h"
 
-#define CORE_DEBUG_PREFIX "DBG(%P, %t:) "
 #define CORE_LOG_PREFIX "LOG(%P, %t:): "
-
-#define CORE_DEBUG(FMT)                         ACE_DEBUG((LM_DEBUG, CORE_DEBUG_PREFIX FMT))
-#define CORE_DEBUG1(FMT, arg1)                  ACE_DEBUG((LM_DEBUG, CORE_DEBUG_PREFIX FMT, arg1))
-#define CORE_DEBUG2(FMT, arg1, arg2)            ACE_DEBUG((LM_DEBUG, CORE_DEBUG_PREFIX FMT, arg1, arg2))
-#define CORE_DEBUG3(FMT, arg1, arg2, arg3)      ACE_DEBUG((LM_DEBUG, CORE_DEBUG_PREFIX FMT, arg1, arg2, arg3))
-#define CORE_DEBUG4(FMT, arg1, arg2, arg3, arg4) ACE_DEBUG((LM_DEBUG, CORE_DEBUG_PREFIX FMT, arg1, arg2, arg3, arg4))
-
-#define CORE_LOG(FMT)                           ACE_DEBUG((LM_INFO, CORE_LOG_PREFIX FMT))
-#define CORE_LOG1(FMT, arg1)                    ACE_DEBUG((LM_INFO, CORE_LOG_PREFIX FMT, arg1))
-#define CORE_LOG2(FMT, arg1, arg2)              ACE_DEBUG((LM_INFO, CORE_LOG_PREFIX FMT, arg1, arg2))
-#define CORE_LOG3(FMT, arg1, arg2, arg3)        ACE_DEBUG((LM_INFO, CORE_LOG_PREFIX FMT, arg1, arg2, arg3))
-#define CORE_LOG4(FMT, arg1, arg2, arg3, arg4)  ACE_DEBUG((LM_INFO, CORE_LOG_PREFIX FMT, arg1, arg2, arg3, arg4))
-#define CORE_LOG5(FMT, arg1, arg2, arg3, arg4, arg5)  ACE_DEBUG((LM_INFO, CORE_LOG_PREFIX FMT, arg1, arg2, arg3, arg4, arg5))
-#define CORE_TIMESTAMP()                        ACE_DEBUG((LM_INFO, CORE_LOG_PREFIX "%D\n"))
 
 ///////////////////////////////////////////////////////////////////////////////
 // Utility classes

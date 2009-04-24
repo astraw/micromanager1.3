@@ -40,6 +40,7 @@
 #include <sys/time.h>
 #endif
 
+#include "IMMLogger.h"
 #include "CoreUtils.h"
 #include "MMCore.h"
 #include "MMEventCallback.h"
