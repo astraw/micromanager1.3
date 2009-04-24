@@ -37,10 +37,10 @@ class IMMLogger
 protected:
    IMMLogger(){};
 public:
-   class runtime_exception:public std::runtime_error
+   class runtime_exception : public std::runtime_error
    {
    public:
-      runtime_exception::runtime_exception(std::string msg):runtime_error(msg){};
+      runtime_exception(std::string msg) : runtime_error(msg) {}
    };
    /**
    * Instance
