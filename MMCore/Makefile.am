@@ -8,6 +8,8 @@ libMMCore_a_SOURCES = MMCore.cpp MMCore.h \
 	CoreUtils.h \
 	Error.h ErrorCodes.h\
    PluginManager.h PluginManager.cpp \
+	IMLogger.h \
+	MMACELogger.h MMACELogger.cpp \
 	../MMDevice/MMDevice.h ../MMDevice/MMDeviceConstants.h \
 	../MMDevice/ModuleInterface.h
 ##libMMCore_a_LIBADD = $(LIBACE)

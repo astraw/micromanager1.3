@@ -291,10 +291,16 @@ char * MMACELogger::GetFormatPrefix(ACE_Log_Priority p)
    char * ret = CORE_DEBUG_PREFIX_T;
    if(MatchACEPriority(timestamp_level_) & p)
    {
-      ret = p == LM_DEBUG ? CORE_DEBUG_PREFIX_T : CORE_LOG_PREFIX_T ;
-   }else
+      if (p== LM_DEBUG) 
+         ret = CORE_DEBUG_PREFIX_T;
+      else
+         ret = CORE_LOG_PREFIX_T;
+   } else
    {
-      ret = p == LM_DEBUG ? CORE_DEBUG_PREFIX : CORE_LOG_PREFIX ;
+      if (p== LM_DEBUG) 
+         ret = CORE_DEBUG_PREFIX;
+      else
+         ret = CORE_LOG_PREFIX;
    }
    return ret;
 }
