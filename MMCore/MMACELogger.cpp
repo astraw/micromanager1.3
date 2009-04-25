@@ -286,9 +286,9 @@ void MMACELogger::ReportLogFailure()throw()
 #define CORE_DEBUG_PREFIX "DBG(%P, t:%t:) "
 #define CORE_LOG_PREFIX "LOG(%P, %t:): "
 
-char * MMACELogger::GetFormatPrefix(ACE_Log_Priority p)
+const char * MMACELogger::GetFormatPrefix(ACE_Log_Priority p)
 {
-   char * ret = CORE_DEBUG_PREFIX_T;
+   const char * ret = CORE_DEBUG_PREFIX_T;
    if(MatchACEPriority(timestamp_level_) & p)
    {
       if (p== LM_DEBUG) 

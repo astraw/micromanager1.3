@@ -56,7 +56,7 @@ public:
 private:
    //helpers
    void InitializeInCurrentThread();
-   char * GetFormatPrefix(ACE_Log_Priority p);
+   const char * GetFormatPrefix(ACE_Log_Priority p);
    void ReportLogFailure()throw();
    //to support legacy 2-level implementation:
    //returns LM_DEBUG or LM_INFO
