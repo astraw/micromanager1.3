@@ -89,11 +89,21 @@ import org.micromanager.utils.SliceMode;
  * metadata in JSON format.
  */
 public class MMAcquisitionEngineMT implements AcquisitionEngine {
-   // persistent properties (app settings)
+ 
+   // Class to hold some image metadata.  Start to refactor out some parts of Image5D
+   private class ImageData {
+      public long imgWidth_;
+      public long imgHeight_;
+      public long imgDepth_;
+      public double pixelSize_um_;
+      public double pixelAspect_;
+   }
 
+   // persistent properties (app settings) 
    private Preferences prefs_;
    private Image5D img5d_[];
    private Image5DWindow i5dWin_[];
+   private ImageData imgData_[];
    private String acqName_;
    private String rootName_;
    private int xWindowPos = 100;
@@ -1313,16 +1323,20 @@ public class MMAcquisitionEngineMT implements AcquisitionEngine {
          }
       }
 
-      for (int i=0; i<i5dWin_.length; i++) {
-    	   int index = (null != i5dWin_[i])?i:0;
+      for (int i=0; i<imgData_.length; i++) {
+    	   int index = (null != imgData_[i])?i:0;
+    	   /*
     	   ImageProcessor ip = i5dWin_[index].getImagePlus().getProcessor();         
          int imgDepth = 0;
          if (ip instanceof ByteProcessor)
             imgDepth = 1;
          else if (ip instanceof ShortProcessor)
             imgDepth = 2;
-
-         acqData_[i].setImagePhysicalDimensions(ip.getWidth(), ip.getHeight(), imgDepth);
+         */
+    	   
+         //acqData_[i].setImagePhysicalDimensions(ip.getWidth(), ip.getHeight(), imgDepth);
+         acqData_[i].setImagePhysicalDimensions((int) imgData_[index].imgWidth_, 
+               (int) imgData_[index].imgHeight_, (int) imgData_[index].imgDepth_);
          acqData_[i].setDimensions(0, channels_.size(), useSliceSetting_ ? sliceDeltaZ_.length : 1);
          acqData_[i].setComment(comment_);
          acqData_[i].setPixelSizeUm(pixelSize_um_);
@@ -1393,8 +1407,7 @@ public class MMAcquisitionEngineMT implements AcquisitionEngine {
       pixelSize_um_ = core_.getPixelSizeUm();
       pixelAspect_ = 1.0; // TODO: obtain from core
 
-//!!! 
-      if( singleWindow_ && posIndex > 0) 
+      if (singleWindow_ && posIndex > 0) 
          return;
       
       int type;
@@ -1406,17 +1419,21 @@ public class MMAcquisitionEngineMT implements AcquisitionEngine {
          throw new MMException("Unsupported pixel depth");
 
       // create a new Image5D object
-      int numSlices = useSliceSetting_ ? sliceDeltaZ_.length : 1;
+      int numSlices = 1;
+      if (useSliceSetting_)
+         numSlices = sliceDeltaZ_.length;
 
       if (useMultiplePositions_ && posMode_ == PositionMode.TIME_LAPSE) {
          img5d_ = new Image5D[posList_.getNumberOfPositions()]; 
          i5dWin_ = new Image5DWindow[posList_.getNumberOfPositions()];
+         imgData_ = new ImageData[posList_.getNumberOfPositions()];
       } else if (useMultiplePositions_ && posMode_ == PositionMode.MULTI_FIELD) {
          // multi-field mode special handling
          if (posIndex == 0) {
             if (img5d_ == null || img5d_.length != 1) {
                img5d_ = new Image5D[1];
                i5dWin_ = new Image5DWindow[1];
+               imgData_ = new ImageData[1];
             }
          } else {
             // reset
@@ -1424,10 +1441,12 @@ public class MMAcquisitionEngineMT implements AcquisitionEngine {
       } else {
          img5d_ = new Image5D[1];
          i5dWin_ = new Image5DWindow[1];
+         imgData_ = new ImageData[1];
       }
 
-//!!!      for (int i=0; i < img5d_.length; i++) {
-      int n = (singleWindow_)?1:img5d_.length;
+      int n = 1;
+      if (!singleWindow_)
+         n = img5d_.length;
       for (int i=0; i < n ; i++) 
       {
          int actualFrames = singleFrame_ ? 1 : numFrames_;
@@ -1445,8 +1464,13 @@ public class MMAcquisitionEngineMT implements AcquisitionEngine {
                newWindow = true;
             }
          }
+         imgData_[i] = new ImageData();
+         imgData_[i].imgWidth_ = core_.getImageWidth();
+         imgData_[i].imgHeight_ = core_.getImageHeight();
+         imgData_[i].imgDepth_ = core_.getBytesPerPixel();
+         imgData_[i].pixelSize_um_ = core_.getPixelSizeUm();
+         imgData_[i].pixelAspect_ = 1.0;
             
-
          // Set ImageJ calibration:
          Calibration cal = new Calibration();
          if (pixelSize_um_ != 0)
@@ -1598,6 +1622,7 @@ public class MMAcquisitionEngineMT implements AcquisitionEngine {
       if (frameCount_> 0 && frameCount_ % (Math.abs(cs.skipFactorFrame_)+1) != 0) {
 
          // attempt to fill in the gap by using the most recent channel data
+         // TODO: check what happens in case of singleWindow_
          if (!singleFrame_) {
             int offset = frameCount_ % (Math.abs(cs.skipFactorFrame_) + 1);
 
@@ -1660,7 +1685,6 @@ public class MMAcquisitionEngineMT implements AcquisitionEngine {
 
       // processing for the first image in the entire sequence
       if (sliceIdx==0 && channelIdx==0 && frameCount_ == 0) {
-
          if (!useMultiplePositions_ || posMode_ == PositionMode.TIME_LAPSE) {
             if (posIdx == 0) {
                setupImage5d(posIdx);
@@ -1711,8 +1735,7 @@ public class MMAcquisitionEngineMT implements AcquisitionEngine {
       }
 
       // set Image5D
-//!!!
-      if (null != i5dWin_[posIndexNormalized])
+      if (!singleWindow_ && i5dWin_[posIndexNormalized] != null)
       {
     	  img5d_[posIndexNormalized].setPixels(img, channelIdx+1, sliceIdx+1, actualFrameCount + 1);
     	  if (!i5dWin_[posIndexNormalized].isPlaybackRunning())
@@ -1726,13 +1749,9 @@ public class MMAcquisitionEngineMT implements AcquisitionEngine {
     		  double max = stats.max;
     		  img5d_[posIndexNormalized].setChannelMinMax(channelIdx+1, min, max);                  
     	  }
-      }
-//!!!
-      if (null != i5dWin_[posIndexNormalized])
-      {
-    	  RefreshI5d refresh = new RefreshI5d(i5dWin_[posIndexNormalized]);                            
-    	  //SwingUtilities.invokeAndWait(refresh);
-    	  SwingUtilities.invokeLater(refresh);
+    	  
+    	   RefreshI5d refresh = new RefreshI5d(i5dWin_[posIndexNormalized]); 
+         SwingUtilities.invokeLater(refresh);
       }
 
       // generate meta-data
