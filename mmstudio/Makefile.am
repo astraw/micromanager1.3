@@ -8,7 +8,7 @@ MMJ_.jar:  \
 	$(srcdir)/src/org/micromanager/CalibrationListDlg.java \
 	$(srcdir)/src/org/micromanager/CalibrationEditor.java \
 	$(srcdir)/src/org/micromanager/ConfigGroupPad.java \
-	$(srcdir)/src/org/micromanager/CoreAutoFocus.java \
+	$(srcdir)/src/org/micromanager/CoreAutofocus.java \
 	$(srcdir)/src/org/micromanager/FastAcqDlg.java \
 	$(srcdir)/src/org/micromanager/GroupEditor.java \
 	$(srcdir)/src/org/micromanager/MMAboutDlg.java \
