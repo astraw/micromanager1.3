@@ -151,8 +151,8 @@ if test "$IMAGEJDIR" != "no" ; then
    # Find swingx.jar in ImageJ plugins directory
    #----------------------------------------------------------------
    AC_MSG_CHECKING(for swingx jar file in ImageJ plugins directory)
-   if test -r "$IJPATH/plugins/swingx-0.9.5.jar" ; then
-      SWINGXJARPATH="$IJPATH/plugins/swingx-0.9.5.jar"
+   if test -r "$IJPATH/plugins/swingx-0.9.6.jar" ; then
+      SWINGXJARPATH="$IJPATH/plugins/swingx-0.9.6.jar"
       AC_MSG_RESULT($SWINGXJARPATH)
    fi
    if test -r "/usr/share/java/swingx.jar" ; then
