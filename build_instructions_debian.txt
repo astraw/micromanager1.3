@@ -1,7 +1,7 @@
 This is tested on Ubuntu 8.04 but debian should be fine too I think
 
 1. install packages:
-sun-java6-sdk or better/equivalent
+sun-java6-jdk or better/equivalent
 autoconf
 automake
 swig
