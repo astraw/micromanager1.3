@@ -15,6 +15,7 @@ import ij.process.ByteProcessor;
 import ij.process.ColorProcessor;
 import ij.process.FloatProcessor;
 import ij.process.ImageProcessor;
+import ij.process.LUT;
 import ij.process.ShortProcessor;
 
 import java.awt.Color;
@@ -167,47 +168,6 @@ public class Image5D extends ImagePlus {
       this (title, stack, 1, 1, stack.getSize());
    }
 		
-      /*
-		super(title, stack);
-		if(IJ.versionLessThan("1.34p")) throw new IllegalArgumentException("too old ImageJ version");
-		
-		// Initialize Image5D:currentPosition, imageData reference.
-		for (int i=0; i<nDimensions; i++) {
-			currentPosition[i] = 0;
-		}
-		
-		imageStack = stack;
-		imageStackSize = getStackSize();
-
-      chCalibration = new ChannelCalibration[1];
-      chCalibration[0] = new ChannelCalibration();
-        
-      chDisplayProps = new ChannelDisplayProperties[1];
-		chDisplayProps[0] = new ChannelDisplayProperties();
-		chDisplayProps[0].setColorModel(ip.getColorModel());
-		chDisplayProps[0].setMinValue(ip.getMin());
-		chDisplayProps[0].setMaxValue(ip.getMax());
-		chDisplayProps[0].setMinThreshold(ip.getMinThreshold());
-		chDisplayProps[0].setMaxThreshold(ip.getMaxThreshold());
-		chDisplayProps[0].setLutUpdateMode(ip.getLutUpdateMode());
-		chDisplayProps[0].setDisplayedGray(false);
-        
-		
-		//displayMode = ChannelControl.OVERLAY;
-      displayMode = ChannelControl.ONE_CHANNEL_COLOR;
-		displayAllGray = false;
-		channelIPs[0] = getProcessor();
-		
-		grayColorModel = ChannelDisplayProperties.createModelFromColor(Color.white);
-		
-		imageStack.setColorModel(grayColorModel);
-        
-        setCalibration(super.getCalibration());
-		
-		isInitialized = true;
-	}
-   */
-
     /**
      * Makes an Image5D from an ImageStack and dimension sizes.
      * All other constructors of Image5D eventually call this one. So changes that apply to all 
@@ -303,6 +263,7 @@ public class Image5D extends ImagePlus {
 	Type ColorRGB is not permitted.
 	If the Image5D is initialized, stack type and dimensions have to match to current type/dims.*/
 	public void setStack(String title, ImageStack stack) {
+      System.out.println("setStack called");
 		// Exception, if dimensions or data type don't match. 
 		if (stack.getProcessor(1) instanceof ColorProcessor)
 			throw new IllegalArgumentException("Cannot accept RGB stack for Image5D.");
@@ -683,6 +644,22 @@ public class Image5D extends ImagePlus {
         chDisplayProps[channel-1].setMaxValue(maxValue);
         restoreChannelProperties(channel);
     }
+
+   /**
+    * Overrides method in ImagePlus available since ImageJ version 1.42m
+    * This methods is used by the ImageJ Hyperstack->Stack command to determine
+    * which colors to use for the Hyperstack channels
+    * TODO: make this work for our Image5D
+    */
+    public LUT[] getLuts() {
+       LUT[] luts = new LUT[getNChannels()];
+       for (int i=0; i < getNChannels(); i++) {
+          luts[i] = new LUT( (IndexColorModel)chDisplayProps[i].getColorModel(), chDisplayProps[i].getMinValue(), chDisplayProps[i].getMaxValue() );
+       }
+       return luts;
+    }
+   
+
 //	/** Returns, whether the given channel is selected to be displayed in grayscale.
 //	 * 
 //	 * @param channel

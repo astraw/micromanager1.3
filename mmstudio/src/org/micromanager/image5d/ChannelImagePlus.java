@@ -6,6 +6,10 @@ import ij.gui.PlotWindow;
 import ij.gui.Roi;
 import ij.measure.Calibration;
 import ij.process.ImageProcessor;
+import ij.process.LUT;
+
+import java.awt.image.ColorModel;
+import java.awt.image.IndexColorModel;
 
 import java.awt.Rectangle;
 
@@ -72,6 +76,5 @@ public class ChannelImagePlus extends ImagePlus {
         
         draw();
     }
-    
     
 }
