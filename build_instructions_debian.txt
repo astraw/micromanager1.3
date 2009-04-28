@@ -16,6 +16,10 @@ http://launchpadlibrarian.net/16007457/imagej_1.40a-1ubuntu1_all.deb
 If you cannot use the package, get ImageJ source code. Download and install from
 http://rsb.info.nih.gov/ij/download.html.
 
+You will also need to download swingx and beanshell and place them in
+ImageJ/plugins. Download from http://www.beanshell.org/download.html
+and http://swinglabs.org/downloads.jsp
+
 2. ./mmUnixBuild.sh
 
 3. ./configure
