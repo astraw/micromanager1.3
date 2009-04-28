@@ -3,10 +3,18 @@
 #include <fstream>
 
 #include "MMACELogger.h"
+#ifndef _REENTRANT
+#define MM_CORE_UTILS_UNDFINE__REENTRANT
+#define _REENTRANT
+#endif
 #include <ace/Log_Msg.h>
 #include <ace/Log_Priority.h>
 #include <ace/Process.h>
 #include <ace/String_Base.h>
+#ifdef MM_CORE_UTILS_UNDFINE__REENTRANT
+#undef _REENTRANT
+#undef MM_CORE_UTILS_UNDFINE__REENTRANT
+#endif
 
 #include "CoreUtils.h"
 #include "../MMDevice/DeviceThreads.h"

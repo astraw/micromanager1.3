@@ -26,8 +26,16 @@
 #pragma once
 
 #include "../MMDevice/MMDevice.h"
+#ifndef _REENTRANT
+#define MM_CORE_UTILS_UNDFINE__REENTRANT
+#define _REENTRANT
+#endif
 #include "ace/High_Res_Timer.h"
 #include "ace/Log_Msg.h"
+#ifdef MM_CORE_UTILS_UNDFINE__REENTRANT
+#undef _REENTRANT
+#undef MM_CORE_UTILS_UNDFINE__REENTRANT
+#endif
 
 #define CORE_LOG_PREFIX "LOG(%P, %t:): "
 

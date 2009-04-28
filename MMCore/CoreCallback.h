@@ -28,8 +28,16 @@
 #pragma warning (disable : 4312 4244)
 #endif
 
+#ifndef _REENTRANT
+#define MM_CORE_UTILS_UNDFINE__REENTRANT
+#define _REENTRANT
+#endif
 #include <ace/OS.h>
 #include <ace/High_Res_Timer.h>
+#ifdef MM_CORE_UTILS_UNDFINE__REENTRANT
+#undef _REENTRANT
+#undef MM_CORE_UTILS_UNDFINE__REENTRANT
+#endif
 #include <ace/Log_Msg.h>
 
 #ifdef WIN32
